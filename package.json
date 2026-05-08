@@ -1,0 +1,16 @@
+{
+  "name": "harpoon-story-engine",
+  "version": "0.1.0",
+  "description": "Renders Harpoon Story Engine JSON content files into HTML publications",
+  "main": "render.js",
+  "scripts": {
+    "render": "node render.js",
+    "test": "node test.js"
+  },
+  "keywords": ["harpoon", "story-engine", "publishing"],
+  "author": "Harpoon Productions Ltd",
+  "license": "UNLICENSED",
+  "dependencies": {
+    "ajv": "^8.17.1"
+  }
+}

@@ -1,0 +1,502 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Harpoon Story Engine — Content Schema v1.2",
+  "description": "Single JSON file driving all page generation. One file per project.",
+  "type": "object",
+  "required": ["meta", "cover", "sections"],
+  "properties": {
+    "meta": {
+      "type": "object",
+      "description": "Project-level metadata",
+      "properties": {
+        "project_id": {
+          "type": "string",
+          "description": "Unique slug, e.g. oceans-2026"
+        },
+        "title": { "type": "string", "description": "Publication title" },
+        "language": {
+          "type": "string",
+          "description": "BCP-47 lang code, e.g. en"
+        },
+        "client": { "type": "string" },
+        "event": {
+          "type": "string",
+          "description": "Conference, report or event name"
+        },
+        "date": {
+          "type": "string",
+          "description": "Publication date, ISO 8601"
+        },
+        "logo_url": {
+          "type": "string",
+          "description": "Client logo, used in nav"
+        },
+        "accent_color": {
+          "type": "string",
+          "description": "Primary brand hex, e.g. #1A3F6F"
+        },
+        "accent_color_2": {
+          "type": "string",
+          "description": "Secondary brand hex for bleed effects"
+        },
+        "last_saved": { "type": "string" },
+        "version": { "type": "integer" }
+      }
+    },
+
+    "config": {
+      "type": "object",
+      "description": "Rendering and delivery configuration — not content",
+      "properties": {
+        "layout_mode": {
+          "type": "string",
+          "enum": ["single-page", "multi-page"],
+          "default": "multi-page",
+          "description": "single-page: one scrolling HTML document with anchor sections. multi-page: one HTML file per section."
+        },
+        "password_gate": {
+          "type": "object",
+          "properties": {
+            "enabled": { "type": "boolean", "default": false },
+            "password": { "type": "string" }
+          }
+        },
+        "pwa": {
+          "type": "object",
+          "properties": {
+            "enabled": { "type": "boolean", "default": false },
+            "theme_color": { "type": "string" },
+            "background_color": { "type": "string" },
+            "offline_sections": {
+              "type": "array",
+              "items": { "type": "string" },
+              "description": "Section IDs to bake into the PWA shell. Others lazy-load when connected."
+            }
+          }
+        },
+        "analytics": {
+          "type": "object",
+          "properties": {
+            "plausible_domain": {
+              "type": "string",
+              "description": "Domain registered in Plausible CE"
+            }
+          }
+        }
+      }
+    },
+
+    "cover": {
+      "type": "object",
+      "description": "Cover / landing page. Always rendered first.",
+      "properties": {
+        "kicker": {
+          "type": "string",
+          "description": "Eyebrow line above headline"
+        },
+        "headline": { "type": "string" },
+        "headline_em": {
+          "type": "string",
+          "description": "Italic or accented portion of headline"
+        },
+        "body": { "type": "string", "description": "Intro paragraph" },
+        "hero_image": { "$ref": "#/definitions/image" },
+        "hero_video": { "$ref": "#/definitions/video" },
+        "interstitial_image": { "$ref": "#/definitions/image" },
+        "footer_image": { "$ref": "#/definitions/image" },
+        "cta_primary": { "$ref": "#/definitions/button" },
+        "cta_secondary": { "$ref": "#/definitions/button" },
+        "colophon": { "type": "string", "description": "Footer credit line" }
+      }
+    },
+
+    "sections": {
+      "type": "array",
+      "description": "One entry per section. In single-page mode: scroll anchors. In multi-page mode: separate HTML files.",
+      "items": { "$ref": "#/definitions/section" }
+    }
+  },
+
+  "definitions": {
+
+    "image": {
+      "type": "object",
+      "description": "Reusable image block",
+      "properties": {
+        "url": { "type": "string" },
+        "alt": { "type": "string" },
+        "caption": { "type": "string" }
+      }
+    },
+
+    "video": {
+      "type": "object",
+      "description": "Reusable video block. Typically used as a cover background. autoplay, loop and muted should all be true for ambient/hero use.",
+      "properties": {
+        "url": {
+          "type": "string",
+          "description": "URL of the video file (MP4 preferred)"
+        },
+        "poster": {
+          "type": "string",
+          "description": "URL of a fallback image shown before the video loads or if video is unsupported"
+        },
+        "autoplay": { "type": "boolean", "default": true },
+        "loop": { "type": "boolean", "default": true },
+        "muted": { "type": "boolean", "default": true }
+      },
+      "required": ["url"]
+    },
+
+    "button": {
+      "type": "object",
+      "description": "CTA or navigation link",
+      "properties": {
+        "label": { "type": "string" },
+        "href": { "type": "string" }
+      }
+    },
+
+    "pull_quote": {
+      "type": "object",
+      "properties": {
+        "text": { "type": "string" },
+        "attribution": { "type": "string" }
+      }
+    },
+
+    "stat": {
+      "type": "object",
+      "description": "A single pull-out statistic",
+      "properties": {
+        "value": {
+          "type": "string",
+          "description": "Display value, e.g. 169,432 or +41%"
+        },
+        "label": {
+          "type": "string",
+          "description": "Supporting label below the value"
+        },
+        "animate": {
+          "type": "boolean",
+          "default": false,
+          "description": "true = odometer count-up on scroll entry"
+        }
+      }
+    },
+
+    "photo_cluster": {
+      "type": "object",
+      "description": "A composed group of images rendered as a visual unit. Used for editorial photo layouts within or between sections.",
+      "properties": {
+        "layout": {
+          "type": "string",
+          "enum": ["solo", "duo", "trio", "quad"],
+          "description": "solo: one full-width image. duo: two equal images side by side. trio: one wide image above two equal images. quad: 2×2 grid."
+        },
+        "images": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 4,
+          "items": { "$ref": "#/definitions/image" },
+          "description": "Number of images must match the chosen layout: solo=1, duo=2, trio=3, quad=4."
+        },
+        "caption": {
+          "type": "string",
+          "description": "Optional caption displayed beneath the cluster"
+        }
+      },
+      "required": ["layout", "images"]
+    },
+
+    "crossfade_phase": {
+      "type": "object",
+      "description": "One text phase within a reveal-crossfade section",
+      "properties": {
+        "text": {
+          "type": "string",
+          "description": "Blockquote or short editorial text shown during this phase"
+        },
+        "attribution": {
+          "type": "string",
+          "description": "Optional citation or caption"
+        }
+      },
+      "required": ["text"]
+    },
+
+    "briefing_engine": {
+      "type": "object",
+      "description": "Stub configuration for an embedded Briefing Engine panel. The Briefing Engine is a separate Harpoon product — this block declares intent and provides the display config. Full integration is a distinct workstream.",
+      "properties": {
+        "report_id": {
+          "type": "string",
+          "description": "Identifier for the trained dataset / knowledge base this Briefing Engine instance is connected to"
+        },
+        "title": {
+          "type": "string",
+          "description": "Display name shown in the chat header, e.g. 'Briefing Engine — Cities at the Threshold'"
+        },
+        "welcome_message": {
+          "type": "string",
+          "description": "Opening message from the agent shown when the panel loads"
+        },
+        "suggested_questions": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Prompt chips shown to the user as starting-point questions",
+          "maxItems": 6
+        }
+      },
+      "required": ["report_id", "title"]
+    },
+
+    "contributor": {
+      "type": "object",
+      "description": "Author or contributor card",
+      "properties": {
+        "name": { "type": "string" },
+        "title": { "type": "string" },
+        "bio": { "type": "string" },
+        "image": { "$ref": "#/definitions/image" },
+        "links": {
+          "type": "array",
+          "items": { "$ref": "#/definitions/button" },
+          "description": "Optional profile or social links"
+        }
+      }
+    },
+
+    "toggle_panel": {
+      "type": "object",
+      "description": "One panel within a toggle/tab block",
+      "properties": {
+        "id": { "type": "string" },
+        "label": {
+          "type": "string",
+          "description": "Button label, e.g. Blue oceans"
+        },
+        "icon": {
+          "type": "string",
+          "description": "Icon name from the Harpoon icon set"
+        },
+        "body": {
+          "type": "string",
+          "description": "HTML string — main panel content"
+        },
+        "image": { "$ref": "#/definitions/image" }
+      }
+    },
+
+    "card": {
+      "type": "object",
+      "description": "A single card within a stackable-cards or cascading-slides block",
+      "properties": {
+        "id": { "type": "string" },
+        "title": { "type": "string" },
+        "body": { "type": "string" },
+        "image": { "$ref": "#/definitions/image" },
+        "tag": {
+          "type": "string",
+          "description": "Category label, e.g. Applications"
+        },
+        "link": { "$ref": "#/definitions/button" }
+      }
+    },
+
+    "sticky_step": {
+      "type": "object",
+      "description": "One step within a sticky-steps section. Visual stays fixed; text scrolls.",
+      "properties": {
+        "id": { "type": "string" },
+        "title": { "type": "string" },
+        "body": { "type": "string" },
+        "image": { "$ref": "#/definitions/image" },
+        "icon": { "type": "string" }
+      }
+    },
+
+    "signup": {
+      "type": "object",
+      "description": "Email capture block",
+      "properties": {
+        "heading": { "type": "string" },
+        "body": { "type": "string" },
+        "endpoint": {
+          "type": "string",
+          "description": "Form POST endpoint URL"
+        },
+        "fields": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "name": { "type": "string" },
+              "label": { "type": "string" },
+              "type": { "type": "string", "enum": ["text", "email", "tel"] },
+              "required": { "type": "boolean" }
+            }
+          }
+        },
+        "submit_label": { "type": "string", "default": "Sign up" },
+        "success_message": { "type": "string" }
+      }
+    },
+
+    "accordion_item": {
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "title": { "type": "string" },
+        "thumbnail": { "$ref": "#/definitions/image" },
+        "images": {
+          "type": "array",
+          "maxItems": 3,
+          "items": { "$ref": "#/definitions/image" },
+          "description": "1 = full width; 2 = duo; 3 = trio (wide + two)"
+        },
+        "body": {
+          "type": "string",
+          "description": "HTML string from rich text editor"
+        },
+        "pull_quote": { "$ref": "#/definitions/pull_quote" },
+        "stats": { "type": "array", "items": { "$ref": "#/definitions/stat" } }
+      }
+    },
+
+    "section": {
+      "type": "object",
+      "description": "A single section of the story",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "URL-safe slug, e.g. ocean-forecasting"
+        },
+        "num": { "type": "integer", "description": "Display number" },
+        "title": { "type": "string" },
+
+        "nav_label": {
+          "type": "string",
+          "description": "Short nav label if title is too long for the menu"
+        },
+        "nav_exclude": {
+          "type": "boolean",
+          "default": false,
+          "description": "true = omit from navigation entirely (transition or visual interlude sections)"
+        },
+
+        "layout": {
+          "type": "string",
+          "enum": [
+            "default",
+            "sticky-steps",
+            "parallax",
+            "stackable-cards",
+            "cascading-slides",
+            "fullbleed-quote",
+            "reveal-crossfade"
+          ],
+          "default": "default",
+          "description": "Rendering template for this section. fullbleed-quote: full-viewport hero_image with pull_quote overlaid. reveal-crossfade: two images crossfade on scroll, driven by crossfade_images and crossfade_phases."
+        },
+
+        "icon": {
+          "type": "string",
+          "description": "Icon name from Harpoon icon set, shown in nav and section header"
+        },
+        "card_image": {
+          "$ref": "#/definitions/image",
+          "description": "Thumbnail used on cover page section cards"
+        },
+        "hero_image": { "$ref": "#/definitions/image" },
+
+        "color_bleed": {
+          "type": "boolean",
+          "default": false,
+          "description": "true = brand colour from this section bleeds into the next section background"
+        },
+
+        "intro": {
+          "type": "string",
+          "description": "One or two sentence section intro"
+        },
+        "pull_quote": { "$ref": "#/definitions/pull_quote" },
+
+        "interstitial_image": { "$ref": "#/definitions/image" },
+
+        "stat_block": {
+          "type": "array",
+          "items": { "$ref": "#/definitions/stat" },
+          "description": "One or more pull-out stats. Set animate: true on individual stats for odometer effect."
+        },
+
+        "toggle_panels": {
+          "type": "array",
+          "items": { "$ref": "#/definitions/toggle_panel" },
+          "description": "Tabbed or toggled content panels"
+        },
+
+        "accordion_items": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 10,
+          "items": { "$ref": "#/definitions/accordion_item" }
+        },
+
+        "cards": {
+          "type": "array",
+          "items": { "$ref": "#/definitions/card" },
+          "description": "Used by stackable-cards and cascading-slides layouts"
+        },
+
+        "sticky_steps": {
+          "type": "array",
+          "items": { "$ref": "#/definitions/sticky_step" },
+          "description": "Used by sticky-steps layout. Each step locks a visual to the viewport while text scrolls."
+        },
+
+        "photo_clusters": {
+          "type": "array",
+          "items": { "$ref": "#/definitions/photo_cluster" },
+          "description": "One or more composed photo groups within this section. Rendered in order between body content."
+        },
+
+        "crossfade_images": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "items": { "$ref": "#/definitions/image" },
+          "description": "Used by reveal-crossfade layout. Exactly two images: the first is shown initially and fades out as the second fades in on scroll."
+        },
+
+        "crossfade_phases": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "items": { "$ref": "#/definitions/crossfade_phase" },
+          "description": "Used by reveal-crossfade layout. Exactly two text phases corresponding to the two crossfade_images."
+        },
+
+        "contributors": {
+          "type": "array",
+          "items": { "$ref": "#/definitions/contributor" },
+          "description": "Author or contributor grid"
+        },
+
+        "signup": { "$ref": "#/definitions/signup" },
+
+        "briefing_engine": { "$ref": "#/definitions/briefing_engine" },
+
+        "custom_html": {
+          "type": "string",
+          "description": "Escape hatch for one-off components (e.g. 3D globe, bespoke maps). Raw HTML injected directly. Use sparingly."
+        },
+
+        "onward_links": {
+          "type": "array",
+          "items": { "$ref": "#/definitions/button" }
+        }
+      }
+    }
+  }
+}

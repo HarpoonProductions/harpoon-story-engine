@@ -1,0 +1,181 @@
+/*
+ * Harpoon Story Engine — Base Styles
+ * base.css
+ *
+ * Reset, body defaults, typography scale, shared utilities.
+ * Import after tokens.css.
+ */
+
+/* ── Reset ─────────────────────────────────────────────────────── */
+
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  font-size: 16px;
+  scroll-behavior: smooth;
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  background: var(--hse-ink);
+  color: var(--hse-warm);
+  font-family: var(--hse-font-body);
+  font-weight: 300;
+  line-height: 1.65;
+  overflow-x: hidden;
+}
+
+img, video {
+  max-width: 100%;
+  display: block;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+/* ── Progress bar ───────────────────────────────────────────────── */
+
+#hse-progress {
+  position: fixed;
+  top: 0; left: 0;
+  height: 2px;
+  width: 0%;
+  background: var(--hse-accent);
+  z-index: var(--hse-z-overlay);
+  transition: width 0.1s linear;
+  pointer-events: none;
+}
+
+/* ── Typography scale ───────────────────────────────────────────── */
+
+.hse-eyebrow {
+  font-family: var(--hse-font-mono);
+  font-size: 0.68rem;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: var(--hse-accent);
+}
+
+.hse-display {
+  font-family: var(--hse-font-display);
+  font-weight: 400;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+  color: var(--hse-warm);
+}
+
+.hse-display em {
+  font-style: italic;
+  color: var(--hse-warm-2);
+}
+
+.hse-heading {
+  font-family: var(--hse-font-display);
+  font-size: clamp(2rem, 4vw, 3.2rem);
+  font-weight: 400;
+  line-height: 1.15;
+  color: var(--hse-warm);
+}
+
+.hse-heading em {
+  font-style: italic;
+  color: var(--hse-warm-2);
+}
+
+.hse-body {
+  font-size: 1rem;
+  line-height: 1.8;
+  color: var(--hse-warm-2);
+}
+
+.hse-label {
+  font-family: var(--hse-font-mono);
+  font-size: 0.65rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--hse-warm-3);
+}
+
+/* ── Section wrapper ────────────────────────────────────────────── */
+
+.hse-section {
+  position: relative;
+  width: 100%;
+}
+
+.hse-inner {
+  max-width: var(--hse-max-w);
+  margin: 0 auto;
+  padding: var(--hse-space-xl) var(--hse-page-pad);
+}
+
+/* ── Section intro ──────────────────────────────────────────────── */
+
+.hse-section-intro {
+  max-width: var(--hse-text-w);
+  font-size: 1.05rem;
+  line-height: 1.8;
+  color: var(--hse-warm-2);
+  margin-bottom: var(--hse-space-lg);
+}
+
+/* ── Scroll reveal utility ──────────────────────────────────────── */
+
+.hse-reveal {
+  opacity: 0;
+  transform: translateY(24px);
+}
+
+.hse-reveal.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+  transition:
+    opacity var(--hse-duration-slow) var(--hse-ease-out),
+    transform var(--hse-duration-slow) var(--hse-ease-out);
+}
+
+.hse-reveal-delay-1 { transition-delay: 0.1s; }
+.hse-reveal-delay-2 { transition-delay: 0.22s; }
+.hse-reveal-delay-3 { transition-delay: 0.36s; }
+
+/* ── Onward links ───────────────────────────────────────────────── */
+
+.hse-onward-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--hse-space-sm);
+  margin-top: var(--hse-space-lg);
+}
+
+.hse-onward-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.65rem 1.25rem;
+  border: 1px solid var(--hse-rule);
+  font-family: var(--hse-font-mono);
+  font-size: 0.65rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--hse-warm-2);
+  transition: border-color var(--hse-duration-fast), color var(--hse-duration-fast);
+}
+
+.hse-onward-link:hover {
+  border-color: var(--hse-accent);
+  color: var(--hse-accent);
+}
+
+/* ── Responsive ─────────────────────────────────────────────────── */
+
+@media (max-width: 640px) {
+  .hse-inner {
+    padding: var(--hse-space-lg) var(--hse-page-pad);
+  }
+}
