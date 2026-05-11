@@ -1,1 +1,56 @@
-/* Harpoon Story Engine — default.css — stub, content coming */
+/* Harpoon Story Engine — Default Layout */
+
+.hse-section--default { background: var(--hse-ink); }
+
+.hse-section--default + .hse-section--default {
+  border-top: 1px solid var(--hse-rule);
+}
+
+.hse-section__hero {
+  width: 100%;
+  margin-bottom: 0;
+}
+
+.hse-section__hero img {
+  width: 100%;
+  max-height: 520px;
+  object-fit: cover;
+}
+
+.hse-section__hero figcaption {
+  padding: 0.6rem var(--hse-page-pad);
+  background: var(--hse-ink-2);
+  border-bottom: 1px solid var(--hse-rule);
+}
+
+.hse-section-header {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-bottom: var(--hse-space-md);
+  padding-bottom: var(--hse-space-md);
+  border-bottom: 1px solid var(--hse-rule);
+}
+
+.hse-section-header__num {
+  color: var(--hse-accent);
+}
+
+.hse-section__interstitial {
+  margin: var(--hse-space-lg) 0;
+}
+
+.hse-section__interstitial img {
+  width: 100%;
+  max-height: 400px;
+  object-fit: cover;
+}
+
+/* Color bleed effect */
+.hse-section--color-bleed {
+  background: linear-gradient(
+    to bottom,
+    var(--hse-ink) 0%,
+    color-mix(in srgb, var(--hse-accent) 8%, var(--hse-ink)) 100%
+  );
+}

@@ -7,6 +7,9 @@ const { renderHead }  = require('./shell/head');
 const { renderNav }   = require('./shell/nav');
 const { renderCover } = require('./render-cover');
 
+// Layout renderers — expand as each is built
+const { renderDefault } = require('./layouts/default');
+
 /**
  * Top-level render function.
  * Reads the content object, writes HTML files to outputDir.
@@ -95,25 +98,33 @@ ${bodyScript}
 </html>`;
 }
 
-// ── Section renderer (dispatcher) ────────────────────────────────
-// Each layout will get its own module. For now, a readable stub
-// so the full page renders end-to-end.
+// ── Section renderer (dispatcher) ─────────────────────────────────────
+// Routes each section to the appropriate layout renderer.
+// Add new cases here as layout renderers are built.
 
 function renderSection(section) {
-  // TODO: import and call layout-specific renderers as they are built.
-  // For now, render a placeholder that shows the section exists.
-  const label = esc(section.nav_label || section.title || section.id);
-  return `
-<!-- Section: ${section.id} | layout: ${section.layout || 'default'} -->
-<section class="hse-section" id="${section.id}" data-layout="${section.layout || 'default'}">
+  const layout = section.layout || 'default';
+  switch (layout) {
+    case 'default':
+      return renderDefault(section);
+    // Coming next:
+    // case 'sticky-steps':     return renderStickySteps(section);
+    // case 'stackable-cards':  return renderStackableCards(section);
+    // case 'fullbleed-quote':  return renderFullbleedQuote(section);
+    // case 'reveal-crossfade': return renderRevealCrossfade(section);
+    // case 'parallax':         return renderParallax(section);
+    // case 'cascading-slides': return renderCascadingSlides(section);
+    default:
+      // Graceful stub for layouts not yet implemented
+      return `<!-- Section: ${section.id} | layout: ${layout} — renderer pending -->
+<section class="hse-section hse-section--stub" id="${section.id}" data-layout="${layout}">
   <div class="hse-inner">
-    <p class="hse-eyebrow">${label}</p>
+    <p class="hse-eyebrow">${esc(section.nav_label || section.title || section.id)}</p>
     ${section.intro ? `<p class="hse-section-intro hse-reveal">${esc(section.intro)}</p>` : ''}
-    <p style="font-family:var(--hse-font-mono);font-size:0.62rem;color:var(--hse-warm-3);margin-top:1rem;">
-      ⚙ Renderer for layout <em>${section.layout || 'default'}</em> — coming next
-    </p>
+    <p class="hse-label" style="margin-top:1rem;opacity:0.4;">Layout renderer: ${layout} — coming soon</p>
   </div>
-</section>`.trim();
+</section>`;
+  }
 }
 
 // ── Body JavaScript ───────────────────────────────────────────────
