@@ -8,7 +8,11 @@ const { renderNav }   = require('./shell/nav');
 const { renderCover } = require('./render-cover');
 
 // Layout renderers — expand as each is built
-const { renderDefault } = require('./layouts/default');
+const { renderDefault }         = require('./layouts/default');
+const { renderStickySteps }     = require('./layouts/sticky-steps');
+const { renderFullbleedQuote }  = require('./layouts/fullbleed-quote');
+const { renderRevealCrossfade } = require('./layouts/reveal-crossfade');
+const { renderStackableCards }  = require('./layouts/stackable-cards');
 
 /**
  * Top-level render function.
@@ -107,11 +111,15 @@ function renderSection(section) {
   switch (layout) {
     case 'default':
       return renderDefault(section);
-    // Coming next:
-    // case 'sticky-steps':     return renderStickySteps(section);
-    // case 'stackable-cards':  return renderStackableCards(section);
-    // case 'fullbleed-quote':  return renderFullbleedQuote(section);
-    // case 'reveal-crossfade': return renderRevealCrossfade(section);
+    case 'sticky-steps':
+      return renderStickySteps(section);
+    case 'fullbleed-quote':
+      return renderFullbleedQuote(section);
+    case 'reveal-crossfade':
+      return renderRevealCrossfade(section);
+    case 'stackable-cards':
+      return renderStackableCards(section);
+    // Coming later:
     // case 'parallax':         return renderParallax(section);
     // case 'cascading-slides': return renderCascadingSlides(section);
     default:
@@ -203,6 +211,57 @@ function setActiveNav(id) {
     a.classList.toggle('is-active', a.getAttribute('href') === '#' + id);
   });
 }
+
+// ── Fullbleed Quote: entrance animation ───────────────────────────
+gsap.utils.toArray('.hse-section--fullbleed-quote').forEach(section => {
+  ScrollTrigger.create({
+    trigger: section,
+    start: 'top 80%',
+    once: true,
+    onEnter: () => section.classList.add('is-visible'),
+  });
+});
+
+// ── Sticky Steps: image crossfade + step activation ───────────────
+gsap.utils.toArray('.hse-section--sticky-steps').forEach(section => {
+  const steps  = section.querySelectorAll('.hse-ss__step');
+  const imgs   = section.querySelectorAll('.hse-ss__visual-img');
+  const pips   = section.querySelectorAll('.hse-ss__progress-pip');
+
+  function activateStep(index) {
+    steps.forEach((s, i) => s.classList.toggle('is-active', i === index));
+    imgs.forEach((img, i)  => img.classList.toggle('is-active', i === index));
+    pips.forEach((pip, i)  => pip.classList.toggle('is-active', i === index));
+  }
+
+  steps.forEach((step, i) => {
+    ScrollTrigger.create({
+      trigger: step,
+      start: 'top 55%',
+      end: 'bottom 55%',
+      onEnter:     () => activateStep(i),
+      onEnterBack: () => activateStep(i),
+    });
+  });
+});
+
+// ── Reveal Crossfade: phase visibility + image crossfade ──────────
+gsap.utils.toArray('.hse-section--reveal-crossfade').forEach(section => {
+  const phases = section.querySelectorAll('.hse-cf__phase');
+
+  phases.forEach((phase, i) => {
+    ScrollTrigger.create({
+      trigger: phase,
+      start: 'top 65%',
+      once: true,
+      onEnter: () => {
+        phase.classList.add('is-visible');
+        // Crossfade fires when the second phase enters
+        if (i === 1) section.classList.add('is-revealed');
+      },
+    });
+  });
+});
 `.trim();
 }
 

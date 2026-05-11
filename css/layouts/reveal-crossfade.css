@@ -1,1 +1,109 @@
-/* Harpoon Story Engine — reveal-crossfade.css — stub, content coming */
+/* Harpoon Story Engine — Reveal Crossfade Layout */
+
+.hse-section--reveal-crossfade {
+  position: relative;
+}
+
+/* ── Sticky image canvas ─────────────────────────────────────────── */
+
+.hse-cf__sticky-wrap {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  z-index: 0;
+  pointer-events: none;
+}
+
+.hse-cf__canvas {
+  position: absolute;
+  inset: 0;
+}
+
+.hse-cf__image {
+  position: absolute;
+  inset: 0;
+  background-size: cover;
+  background-position: center;
+}
+
+.hse-cf__image--a {
+  opacity: 1;
+  transition: opacity var(--hse-duration-slow) var(--hse-ease-in-out);
+}
+
+.hse-cf__image--b {
+  opacity: 0;
+  transition: opacity var(--hse-duration-slow) var(--hse-ease-in-out);
+}
+
+/* JS adds .is-revealed to the section to trigger the crossfade */
+.hse-section--reveal-crossfade.is-revealed .hse-cf__image--a { opacity: 0; }
+.hse-section--reveal-crossfade.is-revealed .hse-cf__image--b { opacity: 1; }
+
+.hse-cf__gradient {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to bottom,
+    rgba(10,10,12,0.1) 0%,
+    rgba(10,10,12,0.5) 50%,
+    rgba(10,10,12,0.85) 100%
+  );
+}
+
+/* ── Scrolling phases ────────────────────────────────────────────── */
+
+.hse-cf__phases {
+  position: relative;
+  z-index: 2;
+  margin-top: -100vh; /* overlap the sticky canvas */
+}
+
+.hse-cf__phase {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  padding: 0 var(--hse-page-pad) clamp(4rem, 10vh, 8rem);
+  max-width: 720px;
+  opacity: 0;
+  transform: translateY(24px);
+  transition:
+    opacity var(--hse-duration-slow) var(--hse-ease-out),
+    transform var(--hse-duration-slow) var(--hse-ease-out);
+}
+
+.hse-cf__phase.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.hse-cf__phase-rule {
+  width: 40px;
+  height: 2px;
+  background: var(--hse-accent);
+  margin-bottom: 1.5rem;
+}
+
+.hse-cf__phase-text {
+  font-family: var(--hse-font-display);
+  font-style: italic;
+  font-size: clamp(1.4rem, 3vw, 2.2rem);
+  line-height: 1.4;
+  color: var(--hse-warm);
+  margin-bottom: 1.25rem;
+}
+
+.hse-cf__phase-attribution {
+  font-family: var(--hse-font-mono);
+  font-size: 0.62rem;
+  letter-spacing: 0.18em;
+  color: var(--hse-warm-3);
+  font-style: normal;
+}
+
+@media (max-width: 640px) {
+  .hse-cf__phase {
+    min-height: 80vh;
+  }
+}

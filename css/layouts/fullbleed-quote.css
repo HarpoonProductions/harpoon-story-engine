@@ -1,1 +1,86 @@
-/* Harpoon Story Engine — fullbleed-quote.css — stub, content coming */
+/* Harpoon Story Engine — Fullbleed Quote Layout */
+
+.hse-section--fullbleed-quote {
+  position: relative;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  overflow: hidden;
+}
+
+.hse-fbq__bg {
+  position: absolute;
+  inset: 0;
+  background-size: cover;
+  background-position: center;
+  transform: scale(1.04);
+  transition: transform 8s var(--hse-ease-out);
+}
+
+.hse-section--fullbleed-quote.is-visible .hse-fbq__bg {
+  transform: scale(1);
+}
+
+.hse-fbq__grain {
+  position: absolute;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+  opacity: 0.4;
+  pointer-events: none;
+}
+
+.hse-fbq__gradient {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    135deg,
+    rgba(10, 10, 12, 0.82) 0%,
+    rgba(10, 10, 12, 0.45) 60%,
+    rgba(10, 10, 12, 0.70) 100%
+  );
+}
+
+.hse-fbq__content {
+  position: relative;
+  z-index: 2;
+  padding-top: var(--hse-space-2xl);
+  padding-bottom: var(--hse-space-2xl);
+}
+
+.hse-fbq__quote {
+  max-width: 680px;
+  opacity: 0;
+  transform: translateY(28px);
+  transition:
+    opacity var(--hse-duration-slow) var(--hse-ease-out),
+    transform var(--hse-duration-slow) var(--hse-ease-out);
+}
+
+.hse-section--fullbleed-quote.is-visible .hse-fbq__quote {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.hse-fbq__rule {
+  width: 48px;
+  height: 2px;
+  background: var(--hse-accent);
+  margin-bottom: 2rem;
+}
+
+.hse-fbq__text {
+  font-family: var(--hse-font-display);
+  font-style: italic;
+  font-size: clamp(1.6rem, 3.5vw, 2.8rem);
+  line-height: 1.35;
+  color: var(--hse-warm);
+  margin-bottom: 1.5rem;
+}
+
+.hse-fbq__attribution {
+  font-family: var(--hse-font-mono);
+  font-size: 0.65rem;
+  letter-spacing: 0.18em;
+  color: var(--hse-warm-3);
+  font-style: normal;
+}
