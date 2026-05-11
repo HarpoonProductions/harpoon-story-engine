@@ -1,0 +1,802 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>The Voices That Remain</title>
+  <script defer data-domain="opera-voices-2026.harpoon.productions" src="https://analytics.harpoonproductions.com/js/script.js"></script>
+  <meta name="theme-color" content="#0D0005">
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,700;1,400;1,500&family=DM+Sans:wght@300;400;500&family=DM+Mono:wght@400&display=swap" rel="stylesheet">
+
+  <!-- GSAP + ScrollTrigger -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+
+  <!-- Story Engine styles -->
+  <link rel="stylesheet" href="/opera-voices-2026/css/tokens.css">
+  <link rel="stylesheet" href="/opera-voices-2026/css/base.css">
+  <link rel="stylesheet" href="/opera-voices-2026/css/nav.css">
+  <link rel="stylesheet" href="/opera-voices-2026/css/cover.css">
+  <link rel="stylesheet" href="/opera-voices-2026/css/blocks/pull-quote.css">
+  <link rel="stylesheet" href="/opera-voices-2026/css/blocks/stat-block.css">
+  <link rel="stylesheet" href="/opera-voices-2026/css/blocks/photo-cluster.css">
+  <link rel="stylesheet" href="/opera-voices-2026/css/blocks/toggle-panels.css">
+  <link rel="stylesheet" href="/opera-voices-2026/css/blocks/accordion.css">
+  <link rel="stylesheet" href="/opera-voices-2026/css/blocks/cards.css">
+  <link rel="stylesheet" href="/opera-voices-2026/css/blocks/contributors.css">
+  <link rel="stylesheet" href="/opera-voices-2026/css/blocks/briefing-engine.css">
+  <link rel="stylesheet" href="/opera-voices-2026/css/layouts/default.css">
+  <link rel="stylesheet" href="/opera-voices-2026/css/layouts/sticky-steps.css">
+  <link rel="stylesheet" href="/opera-voices-2026/css/layouts/stackable-cards.css">
+  <link rel="stylesheet" href="/opera-voices-2026/css/layouts/cascading-slides.css">
+  <link rel="stylesheet" href="/opera-voices-2026/css/layouts/parallax.css">
+  <link rel="stylesheet" href="/opera-voices-2026/css/layouts/fullbleed-quote.css">
+  <link rel="stylesheet" href="/opera-voices-2026/css/layouts/reveal-crossfade.css">
+
+  <!-- Per-project brand tokens -->
+  <style>
+    :root {
+      --hse-accent:   #8B0000;
+      --hse-accent-2: #C9A84C;
+    }
+  </style>
+</head>
+<body>
+
+<div id="hse-progress"></div>
+
+<nav id="hse-nav">
+  <span class="hse-nav__brand">The Voices That Remain</span>
+  <ul class="hse-nav__links">
+    <li><a href="#overture">Overture</a></li>
+      <li><a href="#the-voice">The Voice</a></li>
+      <li><a href="#new-works">New Works</a></li>
+      <li><a href="#audiences">Audiences</a></li>
+      <li><a href="#contributors">The Company</a></li>
+      <li><a href="#briefing">Briefing</a></li>
+  </ul>
+</nav>
+
+<section id="hse-cover">
+  <video class="hse-cover__bg-video" autoplay muted loop playsinline poster="https://assets.roh.org.uk/images/cover-poster-2026.jpg">
+    <source src="https://assets.roh.org.uk/film/curtain-rise-2026-hpn.mp4" type="video/mp4">
+  </video>
+  <div class="hse-cover__grain"></div>
+  <div class="hse-cover__gradient"></div>
+  <div class="hse-cover__content">
+    <p class="hse-cover__kicker hse-reveal">Royal Opera House · Annual Report 2026</p>
+    <h1 class="hse-cover__headline hse-reveal hse-reveal-delay-1">
+      The Voices<br><em>That Remain</em>
+    </h1>
+    <p class="hse-cover__body hse-reveal hse-reveal-delay-2">Opera is in perpetual crisis. It is also, as it has always been, irrepressibly alive. This report explores what the art form is becoming — and why that matters more than ever.</p>
+    <div class="hse-cover__ctas hse-reveal hse-reveal-delay-3">
+    <a href="#overture" class="hse-btn hse-btn--primary">Read the report</a>
+    <a href="https://www.roh.org.uk/film/voices-2026" class="hse-btn hse-btn--secondary">Watch the film</a>
+  </div>
+    <p class="hse-cover__colophon hse-reveal">Produced by the Royal Opera House with Harpoon Productions</p>
+  </div>
+  <div class="hse-cover__scroll-cue">
+    <span>Scroll</span>
+    <div class="hse-cover__scroll-line"></div>
+  </div>
+</section>
+
+<section class="hse-section hse-section--default" id="overture" data-layout="default">
+  <figure class="hse-image hse-section__hero hse-reveal">
+  <img
+    src="https://assets.roh.org.uk/images/sections/overture-hero.jpg"
+    alt="The Royal Opera House auditorium, seen from the stage"
+    loading="lazy"
+    decoding="async">
+  <figcaption class="hse-image__caption hse-label">The auditorium of the Royal Opera House, Covent Garden</figcaption>
+</figure>
+  <div class="hse-inner">
+    <header class="hse-section-header">
+      <span class="hse-section-header__num hse-eyebrow">01</span>
+      <h2 class="hse-heading hse-reveal">Overture</h2>
+    </header>
+    <p class="hse-section-intro hse-reveal">Opera was invented to resurrect something that had been lost. The Florentine Camerata, attempting to revive the drama of ancient Greece, accidentally created the most expensive, most demanding and most emotionally overwhelming art form the world has ever seen. It has been in crisis ever since. It has also never stopped.</p>
+    <blockquote class="hse-pull-quote hse-reveal">
+  <div class="hse-pull-quote__rule"></div>
+  <p class="hse-pull-quote__text">Every generation believes it will be the last to hear a live orchestra in a great opera house. Every generation has been wrong.</p>
+  <cite class="hse-pull-quote__attribution">Sir Antonio Pappano, Music Director, Royal Opera House</cite>
+</blockquote>
+    <div class="hse-stat-block" data-count="3">
+<div class="hse-stat hse-reveal hse-reveal-delay-1">
+  <span class="hse-stat__value">£147m</span>
+  <span class="hse-stat__label">Total revenue in 2025–26, the highest in the company's history</span>
+</div>
+<div class="hse-stat hse-reveal hse-reveal-delay-2" data-odometer="true">
+  <span class="hse-stat__value">486,000</span>
+  <span class="hse-stat__label">Audience members who attended a live performance this season</span>
+</div>
+<div class="hse-stat hse-reveal hse-reveal-delay-3" data-odometer="true">
+  <span class="hse-stat__value">23m</span>
+  <span class="hse-stat__label">Streams and cinema broadcasts reaching audiences in 54 countries</span>
+</div>
+</div>
+    <figure class="hse-photo-cluster hse-photo-cluster--trio hse-reveal">
+<figure class="hse-image hse-photo-cluster__img hse-photo-cluster__img--1">
+  <img
+    src="https://assets.roh.org.uk/images/clusters/overture-wide.jpg"
+    alt="Full stage of La Traviata, Act II"
+    loading="lazy"
+    decoding="async">
+  <figcaption class="hse-image__caption hse-label">La Traviata, Act II — new production, 2025</figcaption>
+</figure>
+<figure class="hse-image hse-photo-cluster__img hse-photo-cluster__img--2">
+  <img
+    src="https://assets.roh.org.uk/images/clusters/overture-detail-a.jpg"
+    alt="Soprano in rehearsal"
+    loading="lazy"
+    decoding="async">
+  
+</figure>
+<figure class="hse-image hse-photo-cluster__img hse-photo-cluster__img--3">
+  <img
+    src="https://assets.roh.org.uk/images/clusters/overture-detail-b.jpg"
+    alt="Costume fitting backstage"
+    loading="lazy"
+    decoding="async">
+  
+</figure>
+<figcaption class="hse-photo-cluster__caption hse-label">Behind the scenes of the 2025–26 season</figcaption>
+</figure>
+    
+    
+    
+    
+    
+    
+    
+  </div>
+</section>
+
+<section
+  class="hse-section hse-section--sticky-steps"
+  id="the-voice"
+  data-layout="sticky-steps"
+  data-step-count="4">
+
+  <!-- Section header -->
+  <div class="hse-ss__header hse-inner">
+    <span class="hse-eyebrow" style="color:var(--hse-accent)">02</span>
+    <h2 class="hse-heading">The Voice</h2>
+    <p class="hse-section-intro">The trained operatic voice is one of the rarest and most fragile instruments in existence. It takes a decade to form, a lifetime to master, and a single illness to silence. This section examines how the voice is made — and what the industry is doing to protect it.</p>
+  </div>
+
+  <!-- Two-column sticky layout -->
+  <div class="hse-ss__body">
+
+    <!-- Left: sticky visual -->
+    <div class="hse-ss__visual-col">
+      <div class="hse-ss__visual" aria-hidden="true">
+    <div class="hse-ss__visual-inner">
+      <img
+            class="hse-ss__visual-img is-active"
+            src="https://assets.roh.org.uk/images/steps/voice-formation.jpg"
+            alt="Young singers in a conservatoire vocal class"
+            data-step="0">
+      <img
+              class="hse-ss__visual-img"
+              src="https://assets.roh.org.uk/images/steps/voice-range.jpg"
+              alt="Voice range diagram illustrated across a piano keyboard"
+              data-step="1">
+<img
+              class="hse-ss__visual-img"
+              src="https://assets.roh.org.uk/images/steps/voice-endurance.jpg"
+              alt="Soprano performing the Immolation Scene from Götterdämmerung"
+              data-step="2">
+<img
+              class="hse-ss__visual-img"
+              src="https://assets.roh.org.uk/images/steps/voice-protection.jpg"
+              alt="Singer in consultation with the ROH voice health team"
+              data-step="3">
+    </div>
+    <div class="hse-ss__progress">
+      <div class="hse-ss__progress-pip is-active" data-step="0"></div>
+<div class="hse-ss__progress-pip" data-step="1"></div>
+<div class="hse-ss__progress-pip" data-step="2"></div>
+<div class="hse-ss__progress-pip" data-step="3"></div>
+    </div>
+  </div>
+    </div>
+
+    <!-- Right: scrolling steps -->
+    <div class="hse-ss__text-col">
+      <div
+    class="hse-ss__step is-active"
+    data-step="0"
+    id="the-voice-step-0">
+    <div class="hse-ss__step-icon" aria-hidden="true">◆</div>
+    <h3 class="hse-ss__step-title">Formation</h3>
+    <p class="hse-ss__step-body">The voice begins to mature in adolescence but rarely reaches full operatic capability before the late twenties. Most conservatoires now delay heavy repertoire training until singers are physiologically ready — a shift from the 20th-century practice of pushing voices young and fast.</p>
+  </div>
+<div
+    class="hse-ss__step"
+    data-step="1"
+    id="the-voice-step-1">
+    <div class="hse-ss__step-icon" aria-hidden="true">◆</div>
+    <h3 class="hse-ss__step-title">Range and Register</h3>
+    <p class="hse-ss__step-body">The operatic Fach system classifies voices into approximately twenty categories — from the lyric soprano to the Heldentenor to the basso profondo. A singer's Fach determines their repertoire, their career arc, and often the roles that will define them.</p>
+  </div>
+<div
+    class="hse-ss__step"
+    data-step="2"
+    id="the-voice-step-2">
+    <div class="hse-ss__step-icon" aria-hidden="true">◆</div>
+    <h3 class="hse-ss__step-title">Endurance</h3>
+    <p class="hse-ss__step-body">A dramatic soprano singing Brünnhilde in Wagner's Ring Cycle must sustain three to four hours of vocally demanding performance across four evenings. The physical demands are comparable to an elite athlete. Rest, hydration and repertoire management are not optional — they are the career.</p>
+  </div>
+<div
+    class="hse-ss__step"
+    data-step="3"
+    id="the-voice-step-3">
+    <div class="hse-ss__step-icon" aria-hidden="true">◆</div>
+    <h3 class="hse-ss__step-title">Protection</h3>
+    <p class="hse-ss__step-body">The ROH now employs a resident voice health team — laryngologists, speech therapists and physiotherapists — embedded in the rehearsal process. Vocal fatigue indicators are tracked across the season. The days of singing through illness are ending.</p>
+  </div>
+    </div>
+
+  </div>
+
+</section>
+
+<section class="hse-section hse-section--fullbleed-quote" id="drama-interlude" data-layout="fullbleed-quote">
+  <div class="hse-fbq__bg" style="background-image: url('https://assets.roh.org.uk/images/sections/drama-fullbleed.jpg')"
+       role="img" aria-label="Tenor and soprano in the final act of Tosca, Castel Sant'Angelo set"></div>
+  <div class="hse-fbq__grain"></div>
+  <div class="hse-fbq__gradient"></div>
+  <div class="hse-fbq__content hse-inner">
+    <blockquote class="hse-fbq__quote">
+        <div class="hse-fbq__rule"></div>
+        <p class="hse-fbq__text">Opera is the only art form in which a human being can make you weep simply by standing still and opening their mouth.</p>
+        <cite class="hse-fbq__attribution">Cecilia Bartoli, mezzo-soprano</cite>
+      </blockquote>
+  </div>
+</section>
+
+<section
+  class="hse-section hse-section--stackable-cards"
+  id="new-works"
+  data-layout="stackable-cards">
+
+  <div class="hse-inner">
+    <header class="hse-section-header">
+      <span class="hse-eyebrow" style="color:var(--hse-accent)">04</span>
+      <h2 class="hse-heading hse-reveal">New Works</h2>
+    </header>
+    <p class="hse-section-intro hse-reveal">This season the ROH premiered four new operas — more than any season in the past thirty years. Each one asked a different question of the form.</p>
+  </div>
+
+  <div class="hse-sc__grid-wrap">
+    <div class="hse-sc__grid hse-inner" data-count="4">
+      <article
+    class="hse-sc__card hse-reveal"
+    style="--card-index: 0"
+    id="sc-card-estuary">
+    <div class="hse-sc__card-image">
+          <img src="https://assets.roh.org.uk/images/cards/estuary.jpg" alt="Production shot from Estuary" loading="lazy">
+        </div>
+    <div class="hse-sc__card-body">
+      <span class="hse-sc__card-tag hse-eyebrow">World Premiere</span>
+      <h3 class="hse-sc__card-title">Estuary</h3>
+      <p class="hse-sc__card-text">A chamber opera for six voices set entirely on a Thames houseboat, exploring grief and inheritance across three generations of a London-Irish family. Music by Tansy Davies; libretto by Nick Drake. World premiere, Linbury Theatre, October 2025.</p>
+      <a href="https://www.roh.org.uk/productions/estuary" class="hse-sc__card-link hse-label">Read more →</a>
+    </div>
+  </article>
+<article
+    class="hse-sc__card hse-reveal"
+    style="--card-index: 1"
+    id="sc-card-antigone">
+    <div class="hse-sc__card-image">
+          <img src="https://assets.roh.org.uk/images/cards/antigone.jpg" alt="Soprano as Antigone against a stark limestone set" loading="lazy">
+        </div>
+    <div class="hse-sc__card-body">
+      <span class="hse-sc__card-tag hse-eyebrow">Main Stage</span>
+      <h3 class="hse-sc__card-title">Antigone</h3>
+      <p class="hse-sc__card-text">A full-scale reworking of the Sophocles tragedy for dramatic soprano and large orchestra. Music by George Benjamin; libretto by Martin Crimp. The third collaboration between Benjamin and Crimp, following Written on Skin and Lessons in Love and Violence. Main Stage premiere, January 2026.</p>
+      <a href="https://www.roh.org.uk/productions/antigone" class="hse-sc__card-link hse-label">Read more →</a>
+    </div>
+  </article>
+<article
+    class="hse-sc__card hse-reveal"
+    style="--card-index: 2"
+    id="sc-card-salt">
+    <div class="hse-sc__card-image">
+          <img src="https://assets.roh.org.uk/images/cards/salt.jpg" alt="Ensemble in Salt" loading="lazy">
+        </div>
+    <div class="hse-sc__card-body">
+      <span class="hse-sc__card-tag hse-eyebrow">Co-Production</span>
+      <h3 class="hse-sc__card-title">Salt</h3>
+      <p class="hse-sc__card-text">An opera in one act exploring the transatlantic slave trade through the voices of those who were never recorded in the historical archive. Music by Errollyn Wallen; libretto by Lemn Sissay. Co-production with English National Opera and the Barbados National Cultural Foundation.</p>
+      <a href="https://www.roh.org.uk/productions/salt" class="hse-sc__card-link hse-label">Read more →</a>
+    </div>
+  </article>
+<article
+    class="hse-sc__card hse-reveal"
+    style="--card-index: 3"
+    id="sc-card-machine">
+    <div class="hse-sc__card-image">
+          <img src="https://assets.roh.org.uk/images/cards/machine.jpg" alt="The vast digital set of The Machine Stops" loading="lazy">
+        </div>
+    <div class="hse-sc__card-body">
+      <span class="hse-sc__card-tag hse-eyebrow">International Co-Production</span>
+      <h3 class="hse-sc__card-title">The Machine Stops</h3>
+      <p class="hse-sc__card-text">Based on E.M. Forster's 1909 short story, this digital-native opera was designed from the outset for live performance and simultaneous global broadcast. Music by Nico Muhly; libretto by Meredith Oakes. A co-production with the Metropolitan Opera, New York, and the Opéra national de Paris.</p>
+      <a href="https://www.roh.org.uk/productions/the-machine-stops" class="hse-sc__card-link hse-label">Read more →</a>
+    </div>
+  </article>
+    </div>
+  </div>
+
+</section>
+
+<section
+  class="hse-section hse-section--reveal-crossfade"
+  id="voices-crossfade"
+  data-layout="reveal-crossfade">
+
+  <!-- Sticky image canvas -->
+  <div class="hse-cf__sticky-wrap">
+    <div class="hse-cf__canvas">
+
+      <!-- Image A (initial) -->
+      <div
+        class="hse-cf__image hse-cf__image--a"
+        style="background-image: url('https://assets.roh.org.uk/images/crossfade/rehearsal-room.jpg')"
+        role="img"
+        aria-label="Empty rehearsal room with piano, morning light">
+      </div>
+
+      <!-- Image B (revealed) -->
+      <div
+        class="hse-cf__image hse-cf__image--b"
+        style="background-image: url('https://assets.roh.org.uk/images/crossfade/full-stage.jpg')"
+        role="img"
+        aria-label="Full company on stage, opening night">
+      </div>
+
+      <!-- Overlay gradient -->
+      <div class="hse-cf__gradient"></div>
+
+    </div>
+  </div>
+
+  <!-- Scrolling text phases -->
+  <div class="hse-cf__phases">
+    <div class="hse-cf__phase" data-phase="0">
+      <div class="hse-cf__phase-rule"></div>
+      <p class="hse-cf__phase-text">Every opera begins in a room with a piano and a handful of people who believe in something that does not yet exist.</p>
+      <cite class="hse-cf__phase-attribution">From the rehearsal diary of Director Deborah Warner</cite>
+    </div>
+    <div class="hse-cf__phase" data-phase="1">
+      <div class="hse-cf__phase-rule"></div>
+      <p class="hse-cf__phase-text">On opening night, that belief becomes audible to two thousand people simultaneously. Nothing else does that.</p>
+      <cite class="hse-cf__phase-attribution">From the rehearsal diary of Director Deborah Warner</cite>
+    </div>
+  </div>
+
+</section>
+
+<section class="hse-section hse-section--default" id="audiences" data-layout="default">
+  <figure class="hse-image hse-section__hero hse-reveal">
+  <img
+    src="https://assets.roh.org.uk/images/sections/audiences-hero.jpg"
+    alt="Diverse audience members in the foyer during interval"
+    loading="lazy"
+    decoding="async">
+  
+</figure>
+  <div class="hse-inner">
+    <header class="hse-section-header">
+      <span class="hse-section-header__num hse-eyebrow">06</span>
+      <h2 class="hse-heading hse-reveal">Who Comes</h2>
+    </header>
+    <p class="hse-section-intro hse-reveal">The question of who opera is for has haunted the form since its invention. The short answer — everyone — has never been self-evident in practice. This season, for the first time, the ROH published a full audience diversity report.</p>
+    
+    
+    <figure class="hse-photo-cluster hse-photo-cluster--duo hse-reveal">
+<figure class="hse-image hse-photo-cluster__img hse-photo-cluster__img--1">
+  <img
+    src="https://assets.roh.org.uk/images/clusters/schools-visit.jpg"
+    alt="School group on stage during an education day"
+    loading="lazy"
+    decoding="async">
+  <figcaption class="hse-image__caption hse-label">ROH Education: 38,000 young people engaged this season</figcaption>
+</figure>
+<figure class="hse-image hse-photo-cluster__img hse-photo-cluster__img--2">
+  <img
+    src="https://assets.roh.org.uk/images/clusters/foyer-event.jpg"
+    alt="Free outdoor screening in the ROH Piazza"
+    loading="lazy"
+    decoding="async">
+  <figcaption class="hse-image__caption hse-label">Free piazza screenings reached 12,000 people</figcaption>
+</figure>
+
+</figure>
+    <div class="hse-toggle" role="tablist">
+  <div class="hse-toggle__buttons">
+    <button
+  class="hse-toggle__btn is-active"
+  data-panel="panel-age"
+  aria-selected="true"
+  role="tab">
+  <span class="hse-toggle__btn-icon" aria-hidden="true">◆</span>
+  Age
+</button>
+<button
+  class="hse-toggle__btn"
+  data-panel="panel-geography"
+  aria-selected="false"
+  role="tab">
+  <span class="hse-toggle__btn-icon" aria-hidden="true">◆</span>
+  Geography
+</button>
+<button
+  class="hse-toggle__btn"
+  data-panel="panel-access"
+  aria-selected="false"
+  role="tab">
+  <span class="hse-toggle__btn-icon" aria-hidden="true">◆</span>
+  Access
+</button>
+  </div>
+  <div class="hse-toggle__panels">
+    <div
+  class="hse-toggle__panel is-active"
+  id="panel-panel-age"
+  role="tabpanel"
+  hidden="false">
+  <div class="hse-toggle__panel-inner">
+    <div class="hse-toggle__panel-body"><p>The median age of a first-time ROH visitor fell to 34 this season — the lowest recorded figure. The under-35 audience grew by 19% year-on-year, driven by the £10 Friday Rush ticket scheme and expanded school-visit programme. The over-65 audience remains the largest single cohort at 31% of all attendances.</p></div>
+    <figure class="hse-image hse-toggle__panel-image">
+  <img
+    src="https://assets.roh.org.uk/images/toggles/audience-age.jpg"
+    alt="Young and older audience members in conversation"
+    loading="lazy"
+    decoding="async">
+  
+</figure>
+  </div>
+</div>
+<div
+  class="hse-toggle__panel"
+  id="panel-panel-geography"
+  role="tabpanel"
+  hidden="true">
+  <div class="hse-toggle__panel-inner">
+    <div class="hse-toggle__panel-body"><p>48% of live audience members travelled from outside Greater London this season. International visitors — attending as part of a planned trip to the UK — accounted for 22% of Main Stage attendances, reflecting London's role as a global operatic destination. Regional touring reached 14 cities.</p></div>
+    <figure class="hse-image hse-toggle__panel-image">
+  <img
+    src="https://assets.roh.org.uk/images/toggles/audience-geography.jpg"
+    alt="Map showing audience origin data across the UK"
+    loading="lazy"
+    decoding="async">
+  
+</figure>
+  </div>
+</div>
+<div
+  class="hse-toggle__panel"
+  id="panel-panel-access"
+  role="tabpanel"
+  hidden="true">
+  <div class="hse-toggle__panel-inner">
+    <div class="hse-toggle__panel-body"><p>Audio description, captioning and British Sign Language-interpreted performances are now standard across all Main Stage productions. The ROH's relaxed performances — designed for neurodivergent audience members and those with sensory sensitivities — sold out every date this season, prompting an expansion to eight performances per season from 2026–27.</p></div>
+    <figure class="hse-image hse-toggle__panel-image">
+  <img
+    src="https://assets.roh.org.uk/images/toggles/audience-access.jpg"
+    alt="BSL interpreter alongside performers on stage"
+    loading="lazy"
+    decoding="async">
+  
+</figure>
+  </div>
+</div>
+  </div>
+</div>
+    
+    
+    
+    
+    
+    
+  </div>
+</section>
+
+<section class="hse-section hse-section--default" id="contributors" data-layout="default">
+  
+  <div class="hse-inner">
+    <header class="hse-section-header">
+      <span class="hse-section-header__num hse-eyebrow">07</span>
+      <h2 class="hse-heading hse-reveal">The Company</h2>
+    </header>
+    <p class="hse-section-intro hse-reveal">The voices behind this season.</p>
+    
+    
+    
+    
+    
+    
+    <div class="hse-contributors" data-count="3">
+<div class="hse-contributor hse-reveal hse-reveal-delay-1">
+  <figure class="hse-image hse-contributor__image">
+  <img
+    src="https://assets.roh.org.uk/images/contributors/grigorian.jpg"
+    alt="Asmik Grigorian"
+    loading="lazy"
+    decoding="async">
+  
+</figure>
+  <div class="hse-contributor__info">
+    <p class="hse-contributor__name">Asmik Grigorian</p>
+    <p class="hse-contributor__title hse-eyebrow">Soprano</p>
+    <p class="hse-contributor__bio">Armenian-Lithuanian soprano Asmik Grigorian made her ROH debut this season as Violetta in a new production of La Traviata. Her Salzburg Salome is already considered one of the defining operatic performances of the 21st century.</p>
+    <div class="hse-contributor__links">
+          <a href="https://www.roh.org.uk/people/asmik-grigorian" class="hse-contributor__link hse-label">Artist profile</a>
+        </div>
+  </div>
+</div>
+<div class="hse-contributor hse-reveal hse-reveal-delay-2">
+  <figure class="hse-image hse-contributor__image">
+  <img
+    src="https://assets.roh.org.uk/images/contributors/finley.jpg"
+    alt="Gerald Finley"
+    loading="lazy"
+    decoding="async">
+  
+</figure>
+  <div class="hse-contributor__info">
+    <p class="hse-contributor__name">Gerald Finley</p>
+    <p class="hse-contributor__title hse-eyebrow">Baritone</p>
+    <p class="hse-contributor__bio">Canadian baritone Gerald Finley returned to the ROH this season for his fifth Golaud in Pelléas et Mélisande, a role he has made definitive across three decades. He also premiered the title role in Antigone.</p>
+    <div class="hse-contributor__links">
+          <a href="https://www.roh.org.uk/people/gerald-finley" class="hse-contributor__link hse-label">Artist profile</a>
+        </div>
+  </div>
+</div>
+<div class="hse-contributor hse-reveal hse-reveal-delay-3">
+  <figure class="hse-image hse-contributor__image">
+  <img
+    src="https://assets.roh.org.uk/images/contributors/young.jpg"
+    alt="Simone Young"
+    loading="lazy"
+    decoding="async">
+  
+</figure>
+  <div class="hse-contributor__info">
+    <p class="hse-contributor__name">Simone Young</p>
+    <p class="hse-contributor__title hse-eyebrow">Chief Conductor</p>
+    <p class="hse-contributor__bio">Australian conductor Simone Young became the first woman to conduct the Vienna Philharmonic and the first to conduct the complete Ring cycle at the Vienna State Opera. She begins her tenure as ROH Chief Conductor in the 2026–27 season.</p>
+    <div class="hse-contributor__links">
+          <a href="https://www.roh.org.uk/people/simone-young" class="hse-contributor__link hse-label">Artist profile</a>
+        </div>
+  </div>
+</div>
+</div>
+    
+    
+    <nav class="hse-onward-links" aria-label="Further reading">
+        <a href="https://www.roh.org.uk/about/the-company" class="hse-onward-link">Full company listing</a>
+      </nav>
+  </div>
+</section>
+
+<section class="hse-section hse-section--default" id="briefing" data-layout="default">
+  
+  <div class="hse-inner">
+    <header class="hse-section-header">
+      <span class="hse-section-header__num hse-eyebrow">08</span>
+      <h2 class="hse-heading hse-reveal">Ask the Report</h2>
+    </header>
+    <p class="hse-section-intro hse-reveal">The Briefing Engine is trained on the full text of this report, the ROH's archive of production notes, and the 2025–26 season programme books. Ask it anything.</p>
+    
+    
+    
+    
+    
+    
+    
+    <div
+  class="hse-briefing-engine"
+  data-report-id="roh-annual-report-2026"
+  aria-label="Briefing Engine — The Voices That Remain">
+
+  <div class="hse-be__header">
+    <span class="hse-eyebrow">Briefing Engine</span>
+    <h3 class="hse-be__title">Briefing Engine — The Voices That Remain</h3>
+  </div>
+
+  <div class="hse-be__chat">
+    <div class="hse-be__messages" role="log" aria-live="polite">
+      <div class="hse-be__message hse-be__message--agent">
+        <p>Hello. I'm trained on this report and the full ROH 2025–26 season archive. You can ask me about any production, any artist, the audience data, the new commissions, or opera more broadly. What would you like to know?</p>
+      </div>
+    </div>
+    <div class="hse-be__chips">
+        <button class="hse-be__chip" data-question="Which new opera premiered this season got the best reviews?">Which new opera premiered this season got the best reviews?</button>
+<button class="hse-be__chip" data-question="How has the ROH's under-35 audience changed in the last five years?">How has the ROH's under-35 audience changed in the last five years?</button>
+<button class="hse-be__chip" data-question="Tell me about the Ring Cycle and who has conducted it at Covent Garden">Tell me about the Ring Cycle and who has conducted it at Covent Garden</button>
+<button class="hse-be__chip" data-question="What is the Fach system and why does it matter?">What is the Fach system and why does it matter?</button>
+<button class="hse-be__chip" data-question="How does the ROH compare to the Met in terms of new commissions?">How does the ROH compare to the Met in terms of new commissions?</button>
+<button class="hse-be__chip" data-question="Who is singing Brünnhilde next season?">Who is singing Brünnhilde next season?</button>
+      </div>
+    <div class="hse-be__input-row">
+      <input
+        type="text"
+        class="hse-be__input"
+        placeholder="Ask a question…"
+        aria-label="Ask the Briefing Engine a question">
+      <button class="hse-be__send hse-btn hse-btn--primary" aria-label="Send">→</button>
+    </div>
+  </div>
+
+  <p class="hse-be__notice hse-label">
+    Briefing Engine integration pending — report ID: roh-annual-report-2026
+  </p>
+
+</div>
+    
+    
+  </div>
+</section>
+
+<footer class="hse-footer">
+  <span class="hse-footer__brand">The Voices That Remain</span>
+  <span class="hse-footer__credit">Produced with the Harpoon Story Engine</span>
+</footer>
+
+<style>
+.hse-footer {
+  border-top: 1px solid var(--hse-rule);
+  padding: 2.5rem var(--hse-page-pad);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+.hse-footer__brand {
+  font-family: var(--hse-font-mono);
+  font-size: 0.65rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--hse-warm-3);
+}
+.hse-footer__credit {
+  font-family: var(--hse-font-mono);
+  font-size: 0.6rem;
+  letter-spacing: 0.12em;
+  color: var(--hse-warm-3);
+  opacity: 0.5;
+}
+</style>
+
+<script>
+// ── Harpoon Story Engine — Runtime ───────────────────────────────
+
+gsap.registerPlugin(ScrollTrigger);
+
+// Progress bar
+gsap.to('#hse-progress', {
+  width: '100%',
+  ease: 'none',
+  scrollTrigger: {
+    trigger: 'body',
+    start: 'top top',
+    end: 'bottom bottom',
+    scrub: 0.3,
+  }
+});
+
+// Nav scroll state
+ScrollTrigger.create({
+  start: '80px top',
+  onEnter:     () => document.getElementById('hse-nav').classList.add('hse-nav--solid'),
+  onLeaveBack: () => document.getElementById('hse-nav').classList.remove('hse-nav--solid'),
+});
+
+// Cover entrance
+const coverTl = gsap.timeline({ delay: 0.3 });
+coverTl
+  .to('.hse-cover__kicker',   { opacity: 1, y: 0, duration: 0.8, ease: 'power2.out' }, 0.4)
+  .to('.hse-cover__headline', { opacity: 1, y: 0, duration: 0.9, ease: 'power2.out' }, 0.65)
+  .to('.hse-cover__body',     { opacity: 1, y: 0, duration: 0.9, ease: 'power2.out' }, 0.85)
+  .to('.hse-cover__ctas',     { opacity: 1,        duration: 0.8, ease: 'power2.out' }, 1.1)
+  .to('.hse-cover__colophon', { opacity: 1,        duration: 0.8, ease: 'power2.out' }, 1.2)
+  .to('.hse-cover__scroll-cue', { opacity: 1,      duration: 0.8, ease: 'power2.out' }, 1.5);
+
+// General scroll reveal
+gsap.utils.toArray('.hse-reveal').forEach(el => {
+  gsap.to(el, {
+    opacity: 1,
+    y: 0,
+    duration: 0.75,
+    ease: 'power2.out',
+    scrollTrigger: {
+      trigger: el,
+      start: 'top 85%',
+      once: true,
+    }
+  });
+});
+
+// Active nav link on scroll
+const navSectionIds = ['overture', 'the-voice', 'new-works', 'audiences', 'contributors', 'briefing'];
+navSectionIds.forEach(id => {
+  const el = document.getElementById(id);
+  if (!el) return;
+  ScrollTrigger.create({
+    trigger: el,
+    start: 'top 50%',
+    end: 'bottom 50%',
+    onEnter:      () => setActiveNav(id),
+    onEnterBack:  () => setActiveNav(id),
+  });
+});
+
+function setActiveNav(id) {
+  document.querySelectorAll('.hse-nav__links a').forEach(a => {
+    a.classList.toggle('is-active', a.getAttribute('href') === '#' + id);
+  });
+}
+
+// ── Fullbleed Quote: entrance animation ───────────────────────────
+gsap.utils.toArray('.hse-section--fullbleed-quote').forEach(section => {
+  ScrollTrigger.create({
+    trigger: section,
+    start: 'top 80%',
+    once: true,
+    onEnter: () => section.classList.add('is-visible'),
+  });
+});
+
+// ── Sticky Steps: image crossfade + step activation ───────────────
+gsap.utils.toArray('.hse-section--sticky-steps').forEach(section => {
+  const steps  = section.querySelectorAll('.hse-ss__step');
+  const imgs   = section.querySelectorAll('.hse-ss__visual-img');
+  const pips   = section.querySelectorAll('.hse-ss__progress-pip');
+
+  function activateStep(index) {
+    steps.forEach((s, i) => s.classList.toggle('is-active', i === index));
+    imgs.forEach((img, i)  => img.classList.toggle('is-active', i === index));
+    pips.forEach((pip, i)  => pip.classList.toggle('is-active', i === index));
+  }
+
+  steps.forEach((step, i) => {
+    ScrollTrigger.create({
+      trigger: step,
+      start: 'top 55%',
+      end: 'bottom 55%',
+      onEnter:     () => activateStep(i),
+      onEnterBack: () => activateStep(i),
+    });
+  });
+});
+
+// ── Reveal Crossfade: phase visibility + image crossfade ──────────
+gsap.utils.toArray('.hse-section--reveal-crossfade').forEach(section => {
+  const phases = section.querySelectorAll('.hse-cf__phase');
+
+  phases.forEach((phase, i) => {
+    ScrollTrigger.create({
+      trigger: phase,
+      start: 'top 65%',
+      once: true,
+      onEnter: () => {
+        phase.classList.add('is-visible');
+        // Crossfade fires when the second phase enters
+        if (i === 1) section.classList.add('is-revealed');
+      },
+    });
+  });
+});
+</script>
+
+</body>
+</html>

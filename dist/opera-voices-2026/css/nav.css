@@ -1,0 +1,58 @@
+/*
+ * Harpoon Story Engine — Navigation
+ * nav.css
+ */
+
+#hse-nav {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  z-index: var(--hse-z-nav);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1.5rem var(--hse-page-pad);
+  transition:
+    background var(--hse-duration-mid),
+    backdrop-filter var(--hse-duration-mid);
+}
+
+#hse-nav.hse-nav--solid {
+  background: rgba(10, 10, 12, 0.92);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-bottom: 1px solid var(--hse-rule);
+}
+
+.hse-nav__brand {
+  font-family: var(--hse-font-mono);
+  font-size: 0.68rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--hse-warm-2);
+}
+
+.hse-nav__links {
+  display: flex;
+  gap: 2.5rem;
+  list-style: none;
+}
+
+.hse-nav__links a {
+  font-family: var(--hse-font-mono);
+  font-size: 0.62rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--hse-warm-3);
+  transition: color var(--hse-duration-fast);
+}
+
+.hse-nav__links a:hover,
+.hse-nav__links a.is-active {
+  color: var(--hse-accent);
+}
+
+@media (max-width: 640px) {
+  .hse-nav__links {
+    display: none;
+  }
+}

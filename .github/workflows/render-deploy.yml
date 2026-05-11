@@ -27,11 +27,9 @@ jobs:
     name: Render → Test → Deploy
 
     steps:
-      # ── Checkout ──────────────────────────────────────────────────
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # ── Node setup ────────────────────────────────────────────────
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
@@ -41,11 +39,9 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      # ── Test suite ────────────────────────────────────────────────
       - name: Run test suite
         run: node test.js
 
-      # ── Render all projects ───────────────────────────────────────
       - name: Render projects
         run: |
           set -e
@@ -77,7 +73,6 @@ jobs:
             echo "Rendered $RENDERED project(s)"
           fi
 
-      # ── Upload to S3 ──────────────────────────────────────────────
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
@@ -85,47 +80,59 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ secrets.AWS_REGION }}
 
-      - name: Sync output to S3
+      - name: Sync HTML files to S3
         run: |
           set -e
-
-          INPUT_PROJECT="${{ github.event.inputs.project }}"
           S3_BUCKET="${{ secrets.S3_BUCKET }}"
+          INPUT_PROJECT="${{ github.event.inputs.project }}"
 
           if [ -n "$INPUT_PROJECT" ]; then
-            aws s3 sync "dist/${INPUT_PROJECT}/" \
-              "s3://${S3_BUCKET}/${INPUT_PROJECT}/" \
-              --delete \
-              --cache-control "public, max-age=300" \
-              --exclude ".DS_Store"
-
-            aws s3 cp "s3://${S3_BUCKET}/${INPUT_PROJECT}/css/" \
-              "s3://${S3_BUCKET}/${INPUT_PROJECT}/css/" \
-              --recursive \
-              --metadata-directive REPLACE \
-              --cache-control "public, max-age=86400"
-
-            echo "✓ Deployed: s3://${S3_BUCKET}/${INPUT_PROJECT}/"
+            DIRS="dist/${INPUT_PROJECT}"
           else
-            for OUTPUT_DIR in dist/*/; do
-              PROJECT_ID=$(basename "$OUTPUT_DIR")
-              aws s3 sync "$OUTPUT_DIR" \
-                "s3://${S3_BUCKET}/${PROJECT_ID}/" \
-                --delete \
-                --cache-control "public, max-age=300" \
-                --exclude ".DS_Store"
-
-              aws s3 cp "s3://${S3_BUCKET}/${PROJECT_ID}/css/" \
-                "s3://${S3_BUCKET}/${PROJECT_ID}/css/" \
-                --recursive \
-                --metadata-directive REPLACE \
-                --cache-control "public, max-age=86400"
-
-              echo "✓ Deployed: s3://${S3_BUCKET}/${PROJECT_ID}/"
-            done
+            DIRS=$(ls -d dist/*/)
           fi
 
-      # ── Summary ───────────────────────────────────────────────────
+          for DIR in $DIRS; do
+            PROJECT_ID=$(basename "$DIR")
+
+            # Sync HTML with correct content type
+            aws s3 sync "$DIR" "s3://${S3_BUCKET}/${PROJECT_ID}/" \
+              --delete \
+              --exclude "*" \
+              --include "*.html" \
+              --content-type "text/html; charset=utf-8" \
+              --cache-control "public, max-age=300"
+
+            # Sync CSS with correct content type
+            aws s3 sync "$DIR" "s3://${S3_BUCKET}/${PROJECT_ID}/" \
+              --exclude "*" \
+              --include "*.css" \
+              --content-type "text/css" \
+              --cache-control "public, max-age=86400"
+
+            # Sync JS with correct content type
+            aws s3 sync "$DIR" "s3://${S3_BUCKET}/${PROJECT_ID}/" \
+              --exclude "*" \
+              --include "*.js" \
+              --content-type "application/javascript" \
+              --cache-control "public, max-age=86400"
+
+            # Sync everything else (images etc)
+            aws s3 sync "$DIR" "s3://${S3_BUCKET}/${PROJECT_ID}/" \
+              --exclude "*.html" \
+              --exclude "*.css" \
+              --exclude "*.js" \
+              --cache-control "public, max-age=86400"
+
+            echo "✓ Deployed: s3://${S3_BUCKET}/${PROJECT_ID}/"
+          done
+
+      - name: Invalidate CloudFront cache
+        run: |
+          aws cloudfront create-invalidation \
+            --distribution-id ${{ secrets.CLOUDFRONT_DISTRIBUTION_ID }} \
+            --paths "/*"
+
       - name: Deployment summary
         run: |
           echo "## Harpoon Story Engine — Deploy complete" >> $GITHUB_STEP_SUMMARY
