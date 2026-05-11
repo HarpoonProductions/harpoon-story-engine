@@ -13,6 +13,8 @@ const { renderStickySteps }     = require('./layouts/sticky-steps');
 const { renderFullbleedQuote }  = require('./layouts/fullbleed-quote');
 const { renderRevealCrossfade } = require('./layouts/reveal-crossfade');
 const { renderStackableCards }  = require('./layouts/stackable-cards');
+const { renderParallax }        = require('./layouts/parallax');
+const { renderCascadingSlides } = require('./layouts/cascading-slides');
 
 /**
  * Top-level render function.
@@ -119,9 +121,10 @@ function renderSection(section) {
       return renderRevealCrossfade(section);
     case 'stackable-cards':
       return renderStackableCards(section);
-    // Coming later:
-    // case 'parallax':         return renderParallax(section);
-    // case 'cascading-slides': return renderCascadingSlides(section);
+    case 'parallax':
+      return renderParallax(section);
+    case 'cascading-slides':
+      return renderCascadingSlides(section);
     default:
       // Graceful stub for layouts not yet implemented
       return `<!-- Section: ${section.id} | layout: ${layout} — renderer pending -->
