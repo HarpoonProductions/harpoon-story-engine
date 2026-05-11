@@ -33,8 +33,12 @@ function render(content, outputDir) {
   // Copy CSS to output directory
   copyCss(outputDir);
 
+  // Derive root-relative base path from project_id
+  // e.g. project_id 'opera-voices-2026' -> basePath '/opera-voices-2026'
+  const basePath = meta.project_id || '';
+
   // Build the single-page HTML document
-  const html = buildPage(meta, config, cover, sections);
+  const html = buildPage(meta, config, cover, sections, basePath);
 
   const outPath = path.join(outputDir, 'index.html');
   fs.writeFileSync(outPath, html, 'utf8');
@@ -44,8 +48,8 @@ function render(content, outputDir) {
 
 // ── Page assembly ─────────────────────────────────────────────────
 
-function buildPage(meta, config, cover, sections) {
-  const head = renderHead(meta, config, null);
+function buildPage(meta, config, cover, sections, basePath) {
+  const head = renderHead(meta, config, null, basePath);
   const nav  = renderNav(meta, sections);
   const coverHtml = renderCover(cover);
 

@@ -4,18 +4,26 @@
  * Renders the <head> block for a Story Engine page.
  * Injects per-project CSS custom property overrides from meta.
  *
- * @param {object} meta    - content.meta
- * @param {object} config  - content.config
- * @param {string} title   - page title (may differ from meta.title for section pages)
+ * @param {object} meta      - content.meta
+ * @param {object} config    - content.config
+ * @param {string} title     - page title (may differ from meta.title for section pages)
+ * @param {string} basePath  - root-relative base path, e.g. '/opera-voices-2026'
  * @returns {string} HTML string
  */
-function renderHead(meta, config, title) {
+function renderHead(meta, config, title, basePath) {
   const pageTitle = title
     ? `${title} — ${meta.title}`
     : meta.title;
 
   const accentColor  = meta.accent_color  || '#1A3F6F';
   const accentColor2 = meta.accent_color_2 || '#C9A84C';
+
+  // Normalise basePath: ensure leading slash, no trailing slash
+  const base = basePath
+    ? '/' + basePath.replace(/^\//, '').replace(/\/$/, '')
+    : '';
+
+  const css = (file) => `${base}/${file}`;
 
   const plausibleScript = config?.analytics?.plausible_domain
     ? `<script defer data-domain="${config.analytics.plausible_domain}" src="https://analytics.harpoonproductions.com/js/script.js"></script>`
@@ -44,23 +52,25 @@ function renderHead(meta, config, title) {
   <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
 
   <!-- Story Engine styles -->
-  <link rel="stylesheet" href="css/tokens.css">
-  <link rel="stylesheet" href="css/base.css">
-  <link rel="stylesheet" href="css/nav.css">
-  <link rel="stylesheet" href="css/cover.css">
-  <link rel="stylesheet" href="css/blocks/pull-quote.css">
-  <link rel="stylesheet" href="css/blocks/stat-block.css">
-  <link rel="stylesheet" href="css/blocks/photo-cluster.css">
-  <link rel="stylesheet" href="css/blocks/toggle-panels.css">
-  <link rel="stylesheet" href="css/blocks/accordion.css">
-  <link rel="stylesheet" href="css/blocks/cards.css">
-  <link rel="stylesheet" href="css/blocks/contributors.css">
-  <link rel="stylesheet" href="css/blocks/briefing-engine.css">
-  <link rel="stylesheet" href="css/layouts/default.css">
-  <link rel="stylesheet" href="css/layouts/sticky-steps.css">
-  <link rel="stylesheet" href="css/layouts/stackable-cards.css">
-  <link rel="stylesheet" href="css/layouts/fullbleed-quote.css">
-  <link rel="stylesheet" href="css/layouts/reveal-crossfade.css">
+  <link rel="stylesheet" href="${css('css/tokens.css')}">
+  <link rel="stylesheet" href="${css('css/base.css')}">
+  <link rel="stylesheet" href="${css('css/nav.css')}">
+  <link rel="stylesheet" href="${css('css/cover.css')}">
+  <link rel="stylesheet" href="${css('css/blocks/pull-quote.css')}">
+  <link rel="stylesheet" href="${css('css/blocks/stat-block.css')}">
+  <link rel="stylesheet" href="${css('css/blocks/photo-cluster.css')}">
+  <link rel="stylesheet" href="${css('css/blocks/toggle-panels.css')}">
+  <link rel="stylesheet" href="${css('css/blocks/accordion.css')}">
+  <link rel="stylesheet" href="${css('css/blocks/cards.css')}">
+  <link rel="stylesheet" href="${css('css/blocks/contributors.css')}">
+  <link rel="stylesheet" href="${css('css/blocks/briefing-engine.css')}">
+  <link rel="stylesheet" href="${css('css/layouts/default.css')}">
+  <link rel="stylesheet" href="${css('css/layouts/sticky-steps.css')}">
+  <link rel="stylesheet" href="${css('css/layouts/stackable-cards.css')}">
+  <link rel="stylesheet" href="${css('css/layouts/cascading-slides.css')}">
+  <link rel="stylesheet" href="${css('css/layouts/parallax.css')}">
+  <link rel="stylesheet" href="${css('css/layouts/fullbleed-quote.css')}">
+  <link rel="stylesheet" href="${css('css/layouts/reveal-crossfade.css')}">
 
   <!-- Per-project brand tokens -->
   <style>
