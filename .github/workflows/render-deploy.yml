@@ -5,16 +5,16 @@ on:
     branches:
       - main
     paths:
-      - 'projects/**'
-      - 'schema/**'
-      - 'renderer/**'
-      - 'css/**'
+      - "projects/**"
+      - "schema/**"
+      - "renderer/**"
+      - "css/**"
   workflow_dispatch:
     inputs:
       project:
-        description: 'Project ID to render (e.g. opera-voices-2026). Leave blank to render all.'
+        description: "Project ID to render (e.g. opera-voices-2026). Leave blank to render all."
         required: false
-        default: ''
+        default: ""
 
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
@@ -27,7 +27,6 @@ jobs:
     name: Render → Test → Deploy
 
     steps:
-
       # ── Checkout ──────────────────────────────────────────────────
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -36,8 +35,8 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
-          cache: 'npm'
+          node-version: "20"
+          cache: "npm"
 
       - name: Install dependencies
         run: npm ci
@@ -60,7 +59,7 @@ jobs:
               exit 1
             fi
             echo "Rendering single project: $INPUT_PROJECT"
-            node render.js "$PROJECT_FILE" --out "output/${INPUT_PROJECT}"
+            node render.js "$PROJECT_FILE" --out "dist/${INPUT_PROJECT}"
           else
             if [ ! -d "projects" ]; then
               echo "No projects/ directory found — nothing to render."
@@ -71,7 +70,7 @@ jobs:
             for PROJECT_JSON in projects/*/content.json; do
               PROJECT_ID=$(basename $(dirname "$PROJECT_JSON"))
               echo "Rendering: $PROJECT_ID"
-              node render.js "$PROJECT_JSON" --out "output/${PROJECT_ID}"
+              node render.js "$PROJECT_JSON" --out "dist/${PROJECT_ID}"
               RENDERED=$((RENDERED + 1))
             done
 
@@ -82,9 +81,9 @@ jobs:
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          aws-access-key-id:     ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region:            ${{ secrets.AWS_REGION }}
+          aws-region: ${{ secrets.AWS_REGION }}
 
       - name: Sync output to S3
         run: |
@@ -94,7 +93,7 @@ jobs:
           S3_BUCKET="${{ secrets.S3_BUCKET }}"
 
           if [ -n "$INPUT_PROJECT" ]; then
-            aws s3 sync "output/${INPUT_PROJECT}/" \
+            aws s3 sync "dist/${INPUT_PROJECT}/" \
               "s3://${S3_BUCKET}/${INPUT_PROJECT}/" \
               --delete \
               --cache-control "public, max-age=300" \
@@ -108,7 +107,7 @@ jobs:
 
             echo "✓ Deployed: s3://${S3_BUCKET}/${INPUT_PROJECT}/"
           else
-            for OUTPUT_DIR in output/*/; do
+            for OUTPUT_DIR in dist/*/; do
               PROJECT_ID=$(basename "$OUTPUT_DIR")
               aws s3 sync "$OUTPUT_DIR" \
                 "s3://${S3_BUCKET}/${PROJECT_ID}/" \
@@ -133,7 +132,7 @@ jobs:
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "| Project | URL |" >> $GITHUB_STEP_SUMMARY
           echo "|---------|-----|" >> $GITHUB_STEP_SUMMARY
-          for OUTPUT_DIR in output/*/; do
+          for OUTPUT_DIR in dist/*/; do
             PROJECT_ID=$(basename "$OUTPUT_DIR")
             echo "| \`${PROJECT_ID}\` | https://${{ secrets.DELIVERY_DOMAIN }}/${PROJECT_ID}/ |" >> $GITHUB_STEP_SUMMARY
           done
