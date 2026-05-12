@@ -9,10 +9,9 @@
     "logo_url": "https://assets.roh.org.uk/logo/roh-white.svg",
     "accent_color": "#8B0000",
     "accent_color_2": "#C9A84C",
-    "last_saved": "2026-05-12T09:00:00Z",
-    "version": 2
+    "last_saved": "2026-05-12T14:00:00Z",
+    "version": 3
   },
-
   "config": {
     "layout_mode": "multi-page",
     "password_gate": {
@@ -28,17 +27,11 @@
       "plausible_domain": "opera-voices-2026.harpoon.productions"
     }
   },
-
   "cover": {
     "kicker": "Royal Opera House · Annual Report 2026",
     "headline": "The Voices",
     "headline_em": "That Remain",
     "body": "Opera is in perpetual crisis. It is also, as it has always been, irrepressibly alive. This report explores what the art form is becoming — and why that matters more than ever.",
-    "hero_image": {
-      "url": "https://images.unsplash.com/photo-1507838153414-b4b713384a76?w=1800&q=80",
-      "alt": "Grand opera house interior, stage lit in dramatic light",
-      "poster": "https://images.unsplash.com/photo-1507838153414-b4b713384a76?w=1200&q=60"
-    },
     "cta_primary": {
       "label": "Read the report",
       "href": "#overture"
@@ -47,9 +40,15 @@
       "label": "Watch the film",
       "href": "https://www.roh.org.uk/film/voices-2026"
     },
-    "colophon": "Produced by the Royal Opera House with Harpoon Productions"
+    "colophon": "Produced by the Royal Opera House with Harpoon Productions",
+    "hero_video": {
+      "url": "https://stories.har.pn/opera-voices-2026/images/opera-AdobeStock_619983025.mp4",
+      "poster": "https://stories.har.pn/opera-voices-2026/images/opera-AdobeStock_591210749.jpeg-hpn2560.jpg",
+      "autoplay": true,
+      "loop": true,
+      "muted": true
+    }
   },
-
   "sections": [
     {
       "id": "overture",
@@ -63,7 +62,7 @@
         "alt": "Conductor raises baton at the Royal Opera House"
       },
       "hero_image": {
-        "url": "https://images.unsplash.com/photo-1514320291840-2e0a9bf2a9ae?w=1600&q=80",
+        "url": "https://stories.har.pn/opera-voices-2026/images/opera-AdobeStock_591210749.jpeg-hpn2560.jpg",
         "alt": "The Royal Opera House auditorium, seen from the stage",
         "caption": "The auditorium of the Royal Opera House, Covent Garden"
       },
@@ -94,7 +93,7 @@
           "layout": "trio",
           "images": [
             {
-              "url": "https://images.unsplash.com/photo-1568085665599-7a1b974e6f45?w=1200&q=80",
+              "url": "https://stories.har.pn/opera-voices-2026/images/opera-AdobeStock_220275532.jpeg-hpn2560.jpg",
               "alt": "Full stage of La Traviata, Act II",
               "caption": "La Traviata, Act II — new production, 2025"
             },
@@ -111,7 +110,6 @@
         }
       ]
     },
-
     {
       "id": "the-voice",
       "num": 2,
@@ -124,7 +122,7 @@
         "alt": "Soprano mid-phrase, eyes closed"
       },
       "hero_image": {
-        "url": "https://images.unsplash.com/photo-1516280440614-37939bbacd81?w=1600&q=80",
+        "url": "https://stories.har.pn/opera-voices-2026/images/opera-AdobeStock_156137275.jpeg-hpn2560.jpg",
         "alt": "Close detail of a singer's face in performance"
       },
       "intro": "The trained operatic voice is one of the rarest and most fragile instruments in existence. It takes a decade to form, a lifetime to master, and a single illness to silence. This section examines how the voice is made — and what the industry is doing to protect it.",
@@ -134,7 +132,7 @@
           "title": "Formation",
           "body": "The voice begins to mature in adolescence but rarely reaches full operatic capability before the late twenties. Most conservatoires now delay heavy repertoire training until singers are physiologically ready — a shift from the 20th-century practice of pushing voices young and fast.",
           "image": {
-            "url": "https://images.unsplash.com/photo-1525201548942-d8732f6617a0?w=900&q=80",
+            "url": "https://stories.har.pn/opera-voices-2026/images/opera-AdobeStock_156137275.jpeg-hpn2560.jpg",
             "alt": "Young singers in a conservatoire vocal class"
           },
           "icon": "seedling"
@@ -144,7 +142,7 @@
           "title": "Range and Register",
           "body": "The operatic Fach system classifies voices into approximately twenty categories — from the lyric soprano to the Heldentenor to the basso profondo. A singer's Fach determines their repertoire, their career arc, and often the roles that will define them.",
           "image": {
-            "url": "https://images.unsplash.com/photo-1520523839897-bd0b52f945a0?w=900&q=80",
+            "url": "https://stories.har.pn/opera-voices-2026/images/opera-AdobeStock_591210749.jpeg-hpn2560.jpg",
             "alt": "Grand piano keys, detail"
           },
           "icon": "bar-chart"
@@ -154,7 +152,7 @@
           "title": "Endurance",
           "body": "A dramatic soprano singing Brünnhilde in Wagner's Ring Cycle must sustain three to four hours of vocally demanding performance across four evenings. The physical demands are comparable to an elite athlete. Rest, hydration and repertoire management are not optional — they are the career.",
           "image": {
-            "url": "https://images.unsplash.com/photo-1568085665599-7a1b974e6f45?w=900&q=80",
+            "url": "https://stories.har.pn/opera-voices-2026/images/opera-AdobeStock_220275532.jpeg-hpn2560.jpg",
             "alt": "Soprano performing on a grand stage"
           },
           "icon": "flame"
@@ -164,14 +162,13 @@
           "title": "Protection",
           "body": "The ROH now employs a resident voice health team — laryngologists, speech therapists and physiotherapists — embedded in the rehearsal process. Vocal fatigue indicators are tracked across the season. The days of singing through illness are ending.",
           "image": {
-            "url": "https://images.unsplash.com/photo-1576091160550-2173dba999ef?w=900&q=80",
+            "url": "https://stories.har.pn/opera-voices-2026/images/opera-AdobeStock_150971585.jpeg-hpn2560.jpg",
             "alt": "Medical consultation, health professional"
           },
           "icon": "shield"
         }
       ]
     },
-
     {
       "id": "drama-interlude",
       "num": 3,
@@ -179,7 +176,7 @@
       "nav_exclude": true,
       "layout": "fullbleed-quote",
       "hero_image": {
-        "url": "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=1800&q=80",
+        "url": "https://stories.har.pn/opera-voices-2026/images/opera-AdobeStock_150971585.jpeg-hpn2560.jpg",
         "alt": "Dramatic stage lighting, performance in progress"
       },
       "pull_quote": {
@@ -187,7 +184,6 @@
         "attribution": "Cecilia Bartoli, mezzo-soprano"
       }
     },
-
     {
       "id": "new-works",
       "num": 4,
@@ -259,7 +255,6 @@
         }
       ]
     },
-
     {
       "id": "voices-crossfade",
       "num": 5,
@@ -268,11 +263,11 @@
       "layout": "reveal-crossfade",
       "crossfade_images": [
         {
-          "url": "https://images.unsplash.com/photo-1520523839897-bd0b52f945a0?w=1600&q=80",
+          "url": "https://stories.har.pn/opera-voices-2026/images/opera-AdobeStock_156137275.jpeg-hpn2560.jpg",
           "alt": "Empty rehearsal room with grand piano, morning light"
         },
         {
-          "url": "https://images.unsplash.com/photo-1514320291840-2e0a9bf2a9ae?w=1600&q=80",
+          "url": "https://stories.har.pn/opera-voices-2026/images/opera-AdobeStock_220275532.jpeg-hpn2560.jpg",
           "alt": "Full company on stage, opening night, auditorium packed"
         }
       ],
@@ -287,7 +282,6 @@
         }
       ]
     },
-
     {
       "id": "audiences",
       "num": 6,
@@ -300,7 +294,7 @@
         "alt": "Audience in a theatre auditorium before curtain up"
       },
       "hero_image": {
-        "url": "https://images.unsplash.com/photo-1501281668745-f7f57925c3b4?w=1600&q=80",
+        "url": "https://stories.har.pn/opera-voices-2026/images/opera-AdobeStock_591210749.jpeg-hpn2560.jpg",
         "alt": "Diverse audience members in a theatre foyer"
       },
       "intro": "The question of who opera is for has haunted the form since its invention. The short answer — everyone — has never been self-evident in practice. This season, for the first time, the ROH published a full audience diversity report.",
@@ -354,7 +348,6 @@
         }
       ]
     },
-
     {
       "id": "contributors",
       "num": 7,
@@ -417,7 +410,6 @@
         }
       ]
     },
-
     {
       "id": "briefing",
       "num": 8,

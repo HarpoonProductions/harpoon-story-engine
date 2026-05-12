@@ -9,10 +9,9 @@
     "logo_url": "https://assets.ecb.co.uk/logo/ecb-white.svg",
     "accent_color": "#003580",
     "accent_color_2": "#C8102E",
-    "last_saved": "2026-05-12T09:00:00Z",
-    "version": 2
+    "last_saved": "2026-05-12T14:00:00Z",
+    "version": 3
   },
-
   "config": {
     "layout_mode": "multi-page",
     "password_gate": {
@@ -28,16 +27,11 @@
       "plausible_domain": "cricket-test-nation-2026.harpoon.productions"
     }
   },
-
   "cover": {
     "kicker": "England and Wales Cricket Board · Annual Review 2026",
     "headline": "Test",
     "headline_em": "Nation",
     "body": "Three years of Bazball. The reinvention of an Ashes rivalry. The quiet revolution in women's cricket. And a question that refuses to go away: what does it mean to play Test cricket in the 21st century?",
-    "hero_image": {
-      "url": "https://images.unsplash.com/photo-1540747913346-19e32dc3e97e?w=1800&q=80",
-      "alt": "Cricket ground panorama, green outfield in summer light"
-    },
     "cta_primary": {
       "label": "Read the review",
       "href": "#opening"
@@ -46,9 +40,15 @@
       "label": "View the season statistics",
       "href": "https://www.ecb.co.uk/stats/2025-26"
     },
-    "colophon": "Produced by the England and Wales Cricket Board with Harpoon Productions"
+    "colophon": "Produced by the England and Wales Cricket Board with Harpoon Productions",
+    "hero_video": {
+      "url": "https://stories.har.pn/cricket-test-nation-2026/images/cricketAdobeStock_169922170.mp4",
+      "poster": "https://stories.har.pn/cricket-test-nation-2026/images/AdobeStock_247707715.jpeg-hpn2560.jpg",
+      "autoplay": true,
+      "loop": true,
+      "muted": true
+    }
   },
-
   "sections": [
     {
       "id": "opening",
@@ -62,7 +62,7 @@
         "alt": "Cricket players walking onto the field"
       },
       "hero_image": {
-        "url": "https://images.unsplash.com/photo-1540747913346-19e32dc3e97e?w=1600&q=80",
+        "url": "https://stories.har.pn/cricket-test-nation-2026/images/AdobeStock_247707715.jpeg-hpn2560.jpg",
         "alt": "Empty cricket ground at dawn, covers on the pitch",
         "caption": "Lord's Cricket Ground, St John's Wood, London"
       },
@@ -93,7 +93,7 @@
           "layout": "trio",
           "images": [
             {
-              "url": "https://images.unsplash.com/photo-1624526267942-ab0ff8a3e972?w=1200&q=80",
+              "url": "https://stories.har.pn/cricket-test-nation-2026/images/AdobeStock_247707715.jpeg-hpn2560.jpg",
               "alt": "Cricket ground full on an Ashes Test day",
               "caption": "The Ashes, Second Test, Lord's, July 2025"
             },
@@ -110,7 +110,6 @@
         }
       ]
     },
-
     {
       "id": "bazball",
       "num": 2,
@@ -123,7 +122,7 @@
         "alt": "Batsman driving through the covers"
       },
       "hero_image": {
-        "url": "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=1600&q=80",
+        "url": "https://stories.har.pn/cricket-test-nation-2026/images/AdobeStock_247707715.jpeg-hpn2560.jpg",
         "alt": "England batters running between wickets at pace"
       },
       "intro": "The word is a tabloid coinage that became a philosophy. Under Brendon McCullum and Ben Stokes, England's Test team adopted a set of principles that sound simple and are extraordinarily difficult to execute: bat without fear, set the pace, never allow the opposition to dictate terms.",
@@ -133,7 +132,7 @@
           "title": "Intent",
           "body": "The first principle is non-negotiable: every ball is there to be scored off. This does not mean recklessness — it means that defence is a tactical choice, not a default. England's average first-session scoring rate since 2022 is 4.3 runs per over, compared to a global Test average of 3.1.",
           "image": {
-            "url": "https://images.unsplash.com/photo-1578674473215-9e07ee2e577d?w=900&q=80",
+            "url": "https://stories.har.pn/cricket-test-nation-2026/images/AdobeStock_247707715.jpeg-hpn2560.jpg",
             "alt": "Batsman playing an attacking shot"
           },
           "icon": "arrow-up-right"
@@ -143,7 +142,7 @@
           "title": "Trust",
           "body": "McCullum's signal achievement has been convincing players that failure is not career-ending. England's top-order batters average more than 50 balls faced before they are dismissed — a higher average than at any point in the previous decade — but they are also dismissed more often for scores below 20. The trust cuts both ways.",
           "image": {
-            "url": "https://images.unsplash.com/photo-1531415074968-036ba1b575da?w=900&q=80",
+            "url": "https://stories.har.pn/cricket-test-nation-2026/images/AdobeStock_247707715.jpeg-hpn2560.jpg",
             "alt": "Two cricketers in conversation in the field"
           },
           "icon": "handshake"
@@ -153,7 +152,7 @@
           "title": "The Chases",
           "body": "The statistical hallmark of the Stokes era is England's fourth-innings record. They have successfully chased 21 targets in 30 attempts since June 2022 — a conversion rate of 70%, compared to a global Test average of 41%. Three of those chases exceeded 350 runs, a figure previously achieved only once in Test history.",
           "image": {
-            "url": "https://images.unsplash.com/photo-1624526267942-ab0ff8a3e972?w=900&q=80",
+            "url": "https://stories.har.pn/cricket-test-nation-2026/images/AdobeStock_247707715.jpeg-hpn2560.jpg",
             "alt": "England players watching from the balcony"
           },
           "icon": "target"
@@ -163,14 +162,13 @@
           "title": "The Limits",
           "body": "Bazball has not been universally successful. On rank-turning pitches in South Asia, the approach requires modification that has not always been convincingly made. The 2025 tour of India — lost 3–1 — exposed the limits of aggressive intent against world-class spin on home pitches. The question of adaptability remains open.",
           "image": {
-            "url": "https://images.unsplash.com/photo-1593341646782-e0b495cff86d?w=900&q=80",
+            "url": "https://stories.har.pn/cricket-test-nation-2026/images/AdobeStock_247707715.jpeg-hpn2560.jpg",
             "alt": "Spin bowler in his delivery stride"
           },
           "icon": "alert-circle"
         }
       ]
     },
-
     {
       "id": "ashes-interlude",
       "num": 3,
@@ -178,7 +176,7 @@
       "nav_exclude": true,
       "layout": "fullbleed-quote",
       "hero_image": {
-        "url": "https://images.unsplash.com/photo-1540747913346-19e32dc3e97e?w=1800&q=80",
+        "url": "https://stories.har.pn/cricket-test-nation-2026/images/AdobeStock_247707715.jpeg-hpn2560.jpg",
         "alt": "Cricket ground at close of play, long shadows across the outfield"
       },
       "pull_quote": {
@@ -186,7 +184,6 @@
         "attribution": "Joe Root, England batter"
       }
     },
-
     {
       "id": "the-ashes",
       "num": 4,
@@ -258,7 +255,6 @@
         }
       ]
     },
-
     {
       "id": "summer-crossfade",
       "num": 5,
@@ -267,11 +263,11 @@
       "layout": "reveal-crossfade",
       "crossfade_images": [
         {
-          "url": "https://images.unsplash.com/photo-1540747913346-19e32dc3e97e?w=1600&q=80",
+          "url": "https://stories.har.pn/cricket-test-nation-2026/images/AdobeStock_247707715.jpeg-hpn2560.jpg",
           "alt": "Ground staff removing covers at dawn, heavy dew on the outfield"
         },
         {
-          "url": "https://images.unsplash.com/photo-1624526267942-ab0ff8a3e972?w=1600&q=80",
+          "url": "https://stories.har.pn/cricket-test-nation-2026/images/AdobeStock_247707715.jpeg-hpn2560.jpg",
           "alt": "Full ground at evening, long shadows across the outfield"
         }
       ],
@@ -286,7 +282,6 @@
         }
       ]
     },
-
     {
       "id": "womens-cricket",
       "num": 6,
@@ -353,7 +348,6 @@
         }
       ]
     },
-
     {
       "id": "county-game",
       "num": 7,
@@ -366,7 +360,7 @@
         "alt": "A county ground on a sunny afternoon, sparse crowd"
       },
       "hero_image": {
-        "url": "https://images.unsplash.com/photo-1540747913346-19e32dc3e97e?w=1600&q=80",
+        "url": "https://stories.har.pn/cricket-test-nation-2026/images/AdobeStock_247707715.jpeg-hpn2560.jpg",
         "alt": "County cricket ground on a quiet championship morning"
       },
       "intro": "The County Championship is the engine room of English cricket. It is also its most contested institution — perpetually debated, restructured and defended. The 2025 season produced the closest title race in twenty years.",
@@ -384,8 +378,16 @@
             "attribution": "Gareth Batty, Surrey head coach"
           },
           "stats": [
-            { "value": "14", "label": "Championship wins in 2025", "animate": true },
-            { "value": "1,412", "label": "Rory Burns: runs in the Championship season", "animate": true }
+            {
+              "value": "14",
+              "label": "Championship wins in 2025",
+              "animate": true
+            },
+            {
+              "value": "1,412",
+              "label": "Rory Burns: runs in the Championship season",
+              "animate": true
+            }
           ]
         },
         {
@@ -397,7 +399,11 @@
           },
           "body": "<p>Lancashire pushed Surrey to the final week of the season, ultimately finishing four points behind. Their top-order batting — anchored by Keaton Jennings and the emerging Josh Bohannon — was the strongest in the division. Lancashire's failure to win the Championship has become one of county cricket's recurring narratives; they have finished second or third in six of the past ten seasons.</p>",
           "stats": [
-            { "value": "4", "label": "Points separating Surrey and Lancashire at the final reckoning", "animate": false }
+            {
+              "value": "4",
+              "label": "Points separating Surrey and Lancashire at the final reckoning",
+              "animate": false
+            }
           ]
         },
         {
@@ -409,12 +415,15 @@
           },
           "body": "<p>Derbyshire's promotion from Division Two was the story of the domestic season. Under new head coach Andy Hurry, they developed three England-qualified seamers under 23 and won nine of their fourteen Championship matches. Their return to the top flight after four seasons away was comfortable and convincing.</p>",
           "stats": [
-            { "value": "9", "label": "Championship wins in Division Two", "animate": true }
+            {
+              "value": "9",
+              "label": "Championship wins in Division Two",
+              "animate": true
+            }
           ]
         }
       ]
     },
-
     {
       "id": "voices",
       "num": 8,
@@ -433,7 +442,10 @@
             "alt": "Ben Stokes"
           },
           "links": [
-            { "label": "Player profile", "href": "https://www.ecb.co.uk/players/ben-stokes" }
+            {
+              "label": "Player profile",
+              "href": "https://www.ecb.co.uk/players/ben-stokes"
+            }
           ]
         },
         {
@@ -445,7 +457,10 @@
             "alt": "Brendon McCullum"
           },
           "links": [
-            { "label": "Coaching profile", "href": "https://www.ecb.co.uk/team/coaching-staff" }
+            {
+              "label": "Coaching profile",
+              "href": "https://www.ecb.co.uk/team/coaching-staff"
+            }
           ]
         },
         {
@@ -457,12 +472,14 @@
             "alt": "Nat Sciver-Brunt"
           },
           "links": [
-            { "label": "Player profile", "href": "https://www.ecb.co.uk/players/nat-sciver-brunt" }
+            {
+              "label": "Player profile",
+              "href": "https://www.ecb.co.uk/players/nat-sciver-brunt"
+            }
           ]
         }
       ]
     },
-
     {
       "id": "briefing",
       "num": 9,
