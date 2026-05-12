@@ -9,8 +9,8 @@
     "logo_url": "https://assets.roh.org.uk/logo/roh-white.svg",
     "accent_color": "#8B0000",
     "accent_color_2": "#C9A84C",
-    "last_saved": "2026-05-08T09:00:00Z",
-    "version": 1
+    "last_saved": "2026-05-12T09:00:00Z",
+    "version": 2
   },
 
   "config": {
@@ -34,12 +34,10 @@
     "headline": "The Voices",
     "headline_em": "That Remain",
     "body": "Opera is in perpetual crisis. It is also, as it has always been, irrepressibly alive. This report explores what the art form is becoming — and why that matters more than ever.",
-    "hero_video": {
-      "url": "https://assets.roh.org.uk/film/curtain-rise-2026-hpn.mp4",
-      "poster": "https://assets.roh.org.uk/images/cover-poster-2026.jpg",
-      "autoplay": true,
-      "loop": true,
-      "muted": true
+    "hero_image": {
+      "url": "https://images.unsplash.com/photo-1507838153414-b4b713384a76?w=1800&q=80",
+      "alt": "Grand opera house interior, stage lit in dramatic light",
+      "poster": "https://images.unsplash.com/photo-1507838153414-b4b713384a76?w=1200&q=60"
     },
     "cta_primary": {
       "label": "Read the report",
@@ -61,11 +59,11 @@
       "layout": "default",
       "icon": "music",
       "card_image": {
-        "url": "https://assets.roh.org.uk/images/cards/overture.jpg",
+        "url": "https://images.unsplash.com/photo-1514320291840-2e0a9bf2a9ae?w=800&q=80",
         "alt": "Conductor raises baton at the Royal Opera House"
       },
       "hero_image": {
-        "url": "https://assets.roh.org.uk/images/sections/overture-hero.jpg",
+        "url": "https://images.unsplash.com/photo-1514320291840-2e0a9bf2a9ae?w=1600&q=80",
         "alt": "The Royal Opera House auditorium, seen from the stage",
         "caption": "The auditorium of the Royal Opera House, Covent Garden"
       },
@@ -96,16 +94,16 @@
           "layout": "trio",
           "images": [
             {
-              "url": "https://assets.roh.org.uk/images/clusters/overture-wide.jpg",
+              "url": "https://images.unsplash.com/photo-1568085665599-7a1b974e6f45?w=1200&q=80",
               "alt": "Full stage of La Traviata, Act II",
               "caption": "La Traviata, Act II — new production, 2025"
             },
             {
-              "url": "https://assets.roh.org.uk/images/clusters/overture-detail-a.jpg",
+              "url": "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=800&q=80",
               "alt": "Soprano in rehearsal"
             },
             {
-              "url": "https://assets.roh.org.uk/images/clusters/overture-detail-b.jpg",
+              "url": "https://images.unsplash.com/photo-1555685812-4b943f1cb0eb?w=800&q=80",
               "alt": "Costume fitting backstage"
             }
           ],
@@ -122,11 +120,11 @@
       "layout": "sticky-steps",
       "icon": "mic",
       "card_image": {
-        "url": "https://assets.roh.org.uk/images/cards/voice.jpg",
+        "url": "https://images.unsplash.com/photo-1516280440614-37939bbacd81?w=800&q=80",
         "alt": "Soprano mid-phrase, eyes closed"
       },
       "hero_image": {
-        "url": "https://assets.roh.org.uk/images/sections/voice-hero.jpg",
+        "url": "https://images.unsplash.com/photo-1516280440614-37939bbacd81?w=1600&q=80",
         "alt": "Close detail of a singer's face in performance"
       },
       "intro": "The trained operatic voice is one of the rarest and most fragile instruments in existence. It takes a decade to form, a lifetime to master, and a single illness to silence. This section examines how the voice is made — and what the industry is doing to protect it.",
@@ -136,7 +134,7 @@
           "title": "Formation",
           "body": "The voice begins to mature in adolescence but rarely reaches full operatic capability before the late twenties. Most conservatoires now delay heavy repertoire training until singers are physiologically ready — a shift from the 20th-century practice of pushing voices young and fast.",
           "image": {
-            "url": "https://assets.roh.org.uk/images/steps/voice-formation.jpg",
+            "url": "https://images.unsplash.com/photo-1525201548942-d8732f6617a0?w=900&q=80",
             "alt": "Young singers in a conservatoire vocal class"
           },
           "icon": "seedling"
@@ -146,8 +144,8 @@
           "title": "Range and Register",
           "body": "The operatic Fach system classifies voices into approximately twenty categories — from the lyric soprano to the Heldentenor to the basso profondo. A singer's Fach determines their repertoire, their career arc, and often the roles that will define them.",
           "image": {
-            "url": "https://assets.roh.org.uk/images/steps/voice-range.jpg",
-            "alt": "Voice range diagram illustrated across a piano keyboard"
+            "url": "https://images.unsplash.com/photo-1520523839897-bd0b52f945a0?w=900&q=80",
+            "alt": "Grand piano keys, detail"
           },
           "icon": "bar-chart"
         },
@@ -156,8 +154,8 @@
           "title": "Endurance",
           "body": "A dramatic soprano singing Brünnhilde in Wagner's Ring Cycle must sustain three to four hours of vocally demanding performance across four evenings. The physical demands are comparable to an elite athlete. Rest, hydration and repertoire management are not optional — they are the career.",
           "image": {
-            "url": "https://assets.roh.org.uk/images/steps/voice-endurance.jpg",
-            "alt": "Soprano performing the Immolation Scene from Götterdämmerung"
+            "url": "https://images.unsplash.com/photo-1568085665599-7a1b974e6f45?w=900&q=80",
+            "alt": "Soprano performing on a grand stage"
           },
           "icon": "flame"
         },
@@ -166,8 +164,8 @@
           "title": "Protection",
           "body": "The ROH now employs a resident voice health team — laryngologists, speech therapists and physiotherapists — embedded in the rehearsal process. Vocal fatigue indicators are tracked across the season. The days of singing through illness are ending.",
           "image": {
-            "url": "https://assets.roh.org.uk/images/steps/voice-protection.jpg",
-            "alt": "Singer in consultation with the ROH voice health team"
+            "url": "https://images.unsplash.com/photo-1576091160550-2173dba999ef?w=900&q=80",
+            "alt": "Medical consultation, health professional"
           },
           "icon": "shield"
         }
@@ -181,8 +179,8 @@
       "nav_exclude": true,
       "layout": "fullbleed-quote",
       "hero_image": {
-        "url": "https://assets.roh.org.uk/images/sections/drama-fullbleed.jpg",
-        "alt": "Tenor and soprano in the final act of Tosca, Castel Sant'Angelo set"
+        "url": "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=1800&q=80",
+        "alt": "Dramatic stage lighting, performance in progress"
       },
       "pull_quote": {
         "text": "Opera is the only art form in which a human being can make you weep simply by standing still and opening their mouth.",
@@ -198,7 +196,7 @@
       "layout": "stackable-cards",
       "icon": "pen",
       "card_image": {
-        "url": "https://assets.roh.org.uk/images/cards/new-works.jpg",
+        "url": "https://images.unsplash.com/photo-1460723237483-7a6dc9d0b212?w=800&q=80",
         "alt": "Set model for a new commission"
       },
       "intro": "This season the ROH premiered four new operas — more than any season in the past thirty years. Each one asked a different question of the form.",
@@ -208,8 +206,8 @@
           "title": "Estuary",
           "body": "A chamber opera for six voices set entirely on a Thames houseboat, exploring grief and inheritance across three generations of a London-Irish family. Music by Tansy Davies; libretto by Nick Drake. World premiere, Linbury Theatre, October 2025.",
           "image": {
-            "url": "https://assets.roh.org.uk/images/cards/estuary.jpg",
-            "alt": "Production shot from Estuary"
+            "url": "https://images.unsplash.com/photo-1547595628-c61a29f496f0?w=800&q=80",
+            "alt": "Thames riverbank at dusk, moody light"
           },
           "tag": "World Premiere",
           "link": {
@@ -220,10 +218,10 @@
         {
           "id": "card-antigone",
           "title": "Antigone",
-          "body": "A full-scale reworking of the Sophocles tragedy for dramatic soprano and large orchestra. Music by George Benjamin; libretto by Martin Crimp. The third collaboration between Benjamin and Crimp, following Written on Skin and Lessons in Love and Violence. Main Stage premiere, January 2026.",
+          "body": "A full-scale reworking of the Sophocles tragedy for dramatic soprano and large orchestra. Music by George Benjamin; libretto by Martin Crimp. The third collaboration between Benjamin and Crimp. Main Stage premiere, January 2026.",
           "image": {
-            "url": "https://assets.roh.org.uk/images/cards/antigone.jpg",
-            "alt": "Soprano as Antigone against a stark limestone set"
+            "url": "https://images.unsplash.com/photo-1568085665599-7a1b974e6f45?w=800&q=80",
+            "alt": "Soprano against a stark stage set"
           },
           "tag": "Main Stage",
           "link": {
@@ -234,10 +232,10 @@
         {
           "id": "card-salt",
           "title": "Salt",
-          "body": "An opera in one act exploring the transatlantic slave trade through the voices of those who were never recorded in the historical archive. Music by Errollyn Wallen; libretto by Lemn Sissay. Co-production with English National Opera and the Barbados National Cultural Foundation.",
+          "body": "An opera in one act exploring the transatlantic slave trade through the voices of those who were never recorded in the historical archive. Music by Errollyn Wallen; libretto by Lemn Sissay. Co-production with English National Opera.",
           "image": {
-            "url": "https://assets.roh.org.uk/images/cards/salt.jpg",
-            "alt": "Ensemble in Salt"
+            "url": "https://images.unsplash.com/photo-1460723237483-7a6dc9d0b212?w=800&q=80",
+            "alt": "Ensemble on stage, dramatic lighting"
           },
           "tag": "Co-Production",
           "link": {
@@ -248,10 +246,10 @@
         {
           "id": "card-machine",
           "title": "The Machine Stops",
-          "body": "Based on E.M. Forster's 1909 short story, this digital-native opera was designed from the outset for live performance and simultaneous global broadcast. Music by Nico Muhly; libretto by Meredith Oakes. A co-production with the Metropolitan Opera, New York, and the Opéra national de Paris.",
+          "body": "Based on E.M. Forster's 1909 short story, this digital-native opera was designed from the outset for live performance and simultaneous global broadcast. Music by Nico Muhly; libretto by Meredith Oakes.",
           "image": {
-            "url": "https://assets.roh.org.uk/images/cards/machine.jpg",
-            "alt": "The vast digital set of The Machine Stops"
+            "url": "https://images.unsplash.com/photo-1518770660439-4636190af475?w=800&q=80",
+            "alt": "Digital technology, circuit board detail"
           },
           "tag": "International Co-Production",
           "link": {
@@ -270,12 +268,12 @@
       "layout": "reveal-crossfade",
       "crossfade_images": [
         {
-          "url": "https://assets.roh.org.uk/images/crossfade/rehearsal-room.jpg",
-          "alt": "Empty rehearsal room with piano, morning light"
+          "url": "https://images.unsplash.com/photo-1520523839897-bd0b52f945a0?w=1600&q=80",
+          "alt": "Empty rehearsal room with grand piano, morning light"
         },
         {
-          "url": "https://assets.roh.org.uk/images/crossfade/full-stage.jpg",
-          "alt": "Full company on stage, opening night"
+          "url": "https://images.unsplash.com/photo-1514320291840-2e0a9bf2a9ae?w=1600&q=80",
+          "alt": "Full company on stage, opening night, auditorium packed"
         }
       ],
       "crossfade_phases": [
@@ -298,12 +296,12 @@
       "layout": "default",
       "icon": "users",
       "card_image": {
-        "url": "https://assets.roh.org.uk/images/cards/audiences.jpg",
-        "alt": "Audience in the ROH auditorium before curtain up"
+        "url": "https://images.unsplash.com/photo-1501281668745-f7f57925c3b4?w=800&q=80",
+        "alt": "Audience in a theatre auditorium before curtain up"
       },
       "hero_image": {
-        "url": "https://assets.roh.org.uk/images/sections/audiences-hero.jpg",
-        "alt": "Diverse audience members in the foyer during interval"
+        "url": "https://images.unsplash.com/photo-1501281668745-f7f57925c3b4?w=1600&q=80",
+        "alt": "Diverse audience members in a theatre foyer"
       },
       "intro": "The question of who opera is for has haunted the form since its invention. The short answer — everyone — has never been self-evident in practice. This season, for the first time, the ROH published a full audience diversity report.",
       "toggle_panels": [
@@ -313,8 +311,8 @@
           "icon": "calendar",
           "body": "<p>The median age of a first-time ROH visitor fell to 34 this season — the lowest recorded figure. The under-35 audience grew by 19% year-on-year, driven by the £10 Friday Rush ticket scheme and expanded school-visit programme. The over-65 audience remains the largest single cohort at 31% of all attendances.</p>",
           "image": {
-            "url": "https://assets.roh.org.uk/images/toggles/audience-age.jpg",
-            "alt": "Young and older audience members in conversation"
+            "url": "https://images.unsplash.com/photo-1529156069898-49953e39b3ac?w=800&q=80",
+            "alt": "Mixed age group of people in conversation"
           }
         },
         {
@@ -323,8 +321,8 @@
           "icon": "map-pin",
           "body": "<p>48% of live audience members travelled from outside Greater London this season. International visitors — attending as part of a planned trip to the UK — accounted for 22% of Main Stage attendances, reflecting London's role as a global operatic destination. Regional touring reached 14 cities.</p>",
           "image": {
-            "url": "https://assets.roh.org.uk/images/toggles/audience-geography.jpg",
-            "alt": "Map showing audience origin data across the UK"
+            "url": "https://images.unsplash.com/photo-1486325212027-8081e485255e?w=800&q=80",
+            "alt": "Aerial view of London at dusk"
           }
         },
         {
@@ -333,8 +331,8 @@
           "icon": "accessibility",
           "body": "<p>Audio description, captioning and British Sign Language-interpreted performances are now standard across all Main Stage productions. The ROH's relaxed performances — designed for neurodivergent audience members and those with sensory sensitivities — sold out every date this season, prompting an expansion to eight performances per season from 2026–27.</p>",
           "image": {
-            "url": "https://assets.roh.org.uk/images/toggles/audience-access.jpg",
-            "alt": "BSL interpreter alongside performers on stage"
+            "url": "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=800&q=80",
+            "alt": "Inclusive performance, diverse audience"
           }
         }
       ],
@@ -343,13 +341,13 @@
           "layout": "duo",
           "images": [
             {
-              "url": "https://assets.roh.org.uk/images/clusters/schools-visit.jpg",
-              "alt": "School group on stage during an education day",
+              "url": "https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?w=900&q=80",
+              "alt": "School group enjoying a theatre education day",
               "caption": "ROH Education: 38,000 young people engaged this season"
             },
             {
-              "url": "https://assets.roh.org.uk/images/clusters/foyer-event.jpg",
-              "alt": "Free outdoor screening in the ROH Piazza",
+              "url": "https://images.unsplash.com/photo-1470229722913-7c0e2dbbafd3?w=900&q=80",
+              "alt": "Outdoor performance with crowd gathered",
               "caption": "Free piazza screenings reached 12,000 people"
             }
           ]
@@ -371,11 +369,14 @@
           "title": "Soprano",
           "bio": "Armenian-Lithuanian soprano Asmik Grigorian made her ROH debut this season as Violetta in a new production of La Traviata. Her Salzburg Salome is already considered one of the defining operatic performances of the 21st century.",
           "image": {
-            "url": "https://assets.roh.org.uk/images/contributors/grigorian.jpg",
+            "url": "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=600&q=80",
             "alt": "Asmik Grigorian"
           },
           "links": [
-            { "label": "Artist profile", "href": "https://www.roh.org.uk/people/asmik-grigorian" }
+            {
+              "label": "Artist profile",
+              "href": "https://www.roh.org.uk/people/asmik-grigorian"
+            }
           ]
         },
         {
@@ -383,11 +384,14 @@
           "title": "Baritone",
           "bio": "Canadian baritone Gerald Finley returned to the ROH this season for his fifth Golaud in Pelléas et Mélisande, a role he has made definitive across three decades. He also premiered the title role in Antigone.",
           "image": {
-            "url": "https://assets.roh.org.uk/images/contributors/finley.jpg",
+            "url": "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=600&q=80",
             "alt": "Gerald Finley"
           },
           "links": [
-            { "label": "Artist profile", "href": "https://www.roh.org.uk/people/gerald-finley" }
+            {
+              "label": "Artist profile",
+              "href": "https://www.roh.org.uk/people/gerald-finley"
+            }
           ]
         },
         {
@@ -395,11 +399,14 @@
           "title": "Chief Conductor",
           "bio": "Australian conductor Simone Young became the first woman to conduct the Vienna Philharmonic and the first to conduct the complete Ring cycle at the Vienna State Opera. She begins her tenure as ROH Chief Conductor in the 2026–27 season.",
           "image": {
-            "url": "https://assets.roh.org.uk/images/contributors/young.jpg",
+            "url": "https://images.unsplash.com/photo-1508214751196-bcfd4ca60f91?w=600&q=80",
             "alt": "Simone Young"
           },
           "links": [
-            { "label": "Artist profile", "href": "https://www.roh.org.uk/people/simone-young" }
+            {
+              "label": "Artist profile",
+              "href": "https://www.roh.org.uk/people/simone-young"
+            }
           ]
         }
       ],
