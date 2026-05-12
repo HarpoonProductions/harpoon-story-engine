@@ -49,14 +49,13 @@ function render(content, outputDir) {
 // ── Page assembly ─────────────────────────────────────────────────
 
 function buildPage(meta, config, cover, sections, basePath) {
+  const base = basePath ? '/' + basePath.replace(/^\//, '').replace(/\/$/, '') : '';
   const head = renderHead(meta, config, null, basePath);
   const nav  = renderNav(meta, sections);
   const coverHtml = renderCover(cover);
 
   // Sections: render each, or stub if renderer not yet built
   const sectionsHtml = sections.map(section => renderSection(section)).join('\n\n');
-
-  const bodyScript = buildBodyScript(meta, sections);
 
   return `${head}
 <body>
@@ -100,9 +99,7 @@ ${sectionsHtml}
 }
 </style>
 
-<script>
-${bodyScript}
-</script>
+<script src="${base}/js/runtime.js"></script>
 
 </body>
 </html>`;
@@ -278,6 +275,10 @@ function copyCss(outputDir) {
   const cssSource = path.join(__dirname, '../css');
   const cssDest   = path.join(outputDir, 'css');
   copyDirRecursive(cssSource, cssDest);
+
+  const jsSource = path.join(__dirname, '../js');
+  const jsDest   = path.join(outputDir, 'js');
+  copyDirRecursive(jsSource, jsDest);
 }
 
 function copyDirRecursive(src, dest) {
