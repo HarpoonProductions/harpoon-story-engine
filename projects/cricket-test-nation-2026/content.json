@@ -1,0 +1,489 @@
+{
+  "meta": {
+    "project_id": "cricket-test-nation-2026",
+    "title": "Test Nation",
+    "language": "en",
+    "client": "England and Wales Cricket Board",
+    "event": "The State of English Cricket — Annual Review 2026",
+    "date": "2026-04-01",
+    "logo_url": "https://assets.ecb.co.uk/logo/ecb-white.svg",
+    "accent_color": "#003580",
+    "accent_color_2": "#C8102E",
+    "last_saved": "2026-05-12T09:00:00Z",
+    "version": 2
+  },
+
+  "config": {
+    "layout_mode": "multi-page",
+    "password_gate": {
+      "enabled": false
+    },
+    "pwa": {
+      "enabled": true,
+      "theme_color": "#001A3D",
+      "background_color": "#001A3D",
+      "offline_sections": ["opening", "bazball"]
+    },
+    "analytics": {
+      "plausible_domain": "cricket-test-nation-2026.harpoon.productions"
+    }
+  },
+
+  "cover": {
+    "kicker": "England and Wales Cricket Board · Annual Review 2026",
+    "headline": "Test",
+    "headline_em": "Nation",
+    "body": "Three years of Bazball. The reinvention of an Ashes rivalry. The quiet revolution in women's cricket. And a question that refuses to go away: what does it mean to play Test cricket in the 21st century?",
+    "hero_image": {
+      "url": "https://images.unsplash.com/photo-1540747913346-19e32dc3e97e?w=1800&q=80",
+      "alt": "Cricket ground panorama, green outfield in summer light"
+    },
+    "cta_primary": {
+      "label": "Read the review",
+      "href": "#opening"
+    },
+    "cta_secondary": {
+      "label": "View the season statistics",
+      "href": "https://www.ecb.co.uk/stats/2025-26"
+    },
+    "colophon": "Produced by the England and Wales Cricket Board with Harpoon Productions"
+  },
+
+  "sections": [
+    {
+      "id": "opening",
+      "num": 1,
+      "title": "Opening",
+      "nav_label": "Opening",
+      "layout": "default",
+      "icon": "flag",
+      "card_image": {
+        "url": "https://images.unsplash.com/photo-1531415074968-036ba1b575da?w=800&q=80",
+        "alt": "Cricket players walking onto the field"
+      },
+      "hero_image": {
+        "url": "https://images.unsplash.com/photo-1540747913346-19e32dc3e97e?w=1600&q=80",
+        "alt": "Empty cricket ground at dawn, covers on the pitch",
+        "caption": "Lord's Cricket Ground, St John's Wood, London"
+      },
+      "intro": "Test cricket is the longest argument in sport. It began in 1877 and has been revised, challenged, mourned and resurrected in every decade since. What makes this moment different is not the pace at which England are scoring runs — it is the conviction with which they have decided that the game's future depends on making it worth watching again.",
+      "pull_quote": {
+        "text": "We don't play Test cricket to survive. We play it to find out what we're made of — and to make it worth two thousand people getting up at 3am on the other side of the world.",
+        "attribution": "Ben Stokes, England Test Captain"
+      },
+      "stat_block": [
+        {
+          "value": "5.01",
+          "label": "England's runs-per-over rate in Test cricket since June 2022 — the highest sustained rate in Test history",
+          "animate": false
+        },
+        {
+          "value": "83%",
+          "label": "Win rate in completed Test series since the Stokes–McCullum era began",
+          "animate": true
+        },
+        {
+          "value": "2.4m",
+          "label": "Tickets sold across all domestic and international cricket in 2025 — a post-pandemic record",
+          "animate": true
+        }
+      ],
+      "photo_clusters": [
+        {
+          "layout": "trio",
+          "images": [
+            {
+              "url": "https://images.unsplash.com/photo-1624526267942-ab0ff8a3e972?w=1200&q=80",
+              "alt": "Cricket ground full on an Ashes Test day",
+              "caption": "The Ashes, Second Test, Lord's, July 2025"
+            },
+            {
+              "url": "https://images.unsplash.com/photo-1531415074968-036ba1b575da?w=800&q=80",
+              "alt": "Cricketer celebrates a wicket"
+            },
+            {
+              "url": "https://images.unsplash.com/photo-1540747913346-19e32dc3e97e?w=800&q=80",
+              "alt": "Cricket dressing room atmosphere"
+            }
+          ],
+          "caption": "The 2025 Ashes series"
+        }
+      ]
+    },
+
+    {
+      "id": "bazball",
+      "num": 2,
+      "title": "Bazball",
+      "nav_label": "Bazball",
+      "layout": "sticky-steps",
+      "icon": "zap",
+      "card_image": {
+        "url": "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=800&q=80",
+        "alt": "Batsman driving through the covers"
+      },
+      "hero_image": {
+        "url": "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=1600&q=80",
+        "alt": "England batters running between wickets at pace"
+      },
+      "intro": "The word is a tabloid coinage that became a philosophy. Under Brendon McCullum and Ben Stokes, England's Test team adopted a set of principles that sound simple and are extraordinarily difficult to execute: bat without fear, set the pace, never allow the opposition to dictate terms.",
+      "sticky_steps": [
+        {
+          "id": "step-intent",
+          "title": "Intent",
+          "body": "The first principle is non-negotiable: every ball is there to be scored off. This does not mean recklessness — it means that defence is a tactical choice, not a default. England's average first-session scoring rate since 2022 is 4.3 runs per over, compared to a global Test average of 3.1.",
+          "image": {
+            "url": "https://images.unsplash.com/photo-1578674473215-9e07ee2e577d?w=900&q=80",
+            "alt": "Batsman playing an attacking shot"
+          },
+          "icon": "arrow-up-right"
+        },
+        {
+          "id": "step-trust",
+          "title": "Trust",
+          "body": "McCullum's signal achievement has been convincing players that failure is not career-ending. England's top-order batters average more than 50 balls faced before they are dismissed — a higher average than at any point in the previous decade — but they are also dismissed more often for scores below 20. The trust cuts both ways.",
+          "image": {
+            "url": "https://images.unsplash.com/photo-1531415074968-036ba1b575da?w=900&q=80",
+            "alt": "Two cricketers in conversation in the field"
+          },
+          "icon": "handshake"
+        },
+        {
+          "id": "step-chases",
+          "title": "The Chases",
+          "body": "The statistical hallmark of the Stokes era is England's fourth-innings record. They have successfully chased 21 targets in 30 attempts since June 2022 — a conversion rate of 70%, compared to a global Test average of 41%. Three of those chases exceeded 350 runs, a figure previously achieved only once in Test history.",
+          "image": {
+            "url": "https://images.unsplash.com/photo-1624526267942-ab0ff8a3e972?w=900&q=80",
+            "alt": "England players watching from the balcony"
+          },
+          "icon": "target"
+        },
+        {
+          "id": "step-limits",
+          "title": "The Limits",
+          "body": "Bazball has not been universally successful. On rank-turning pitches in South Asia, the approach requires modification that has not always been convincingly made. The 2025 tour of India — lost 3–1 — exposed the limits of aggressive intent against world-class spin on home pitches. The question of adaptability remains open.",
+          "image": {
+            "url": "https://images.unsplash.com/photo-1593341646782-e0b495cff86d?w=900&q=80",
+            "alt": "Spin bowler in his delivery stride"
+          },
+          "icon": "alert-circle"
+        }
+      ]
+    },
+
+    {
+      "id": "ashes-interlude",
+      "num": 3,
+      "title": "The Ashes",
+      "nav_exclude": true,
+      "layout": "fullbleed-quote",
+      "hero_image": {
+        "url": "https://images.unsplash.com/photo-1540747913346-19e32dc3e97e?w=1800&q=80",
+        "alt": "Cricket ground at close of play, long shadows across the outfield"
+      },
+      "pull_quote": {
+        "text": "There is no series in world cricket that carries this weight. We never stop being aware of it, and we never stop pretending that we aren't.",
+        "attribution": "Joe Root, England batter"
+      }
+    },
+
+    {
+      "id": "the-ashes",
+      "num": 4,
+      "title": "The Ashes 2025",
+      "nav_label": "The Ashes",
+      "layout": "stackable-cards",
+      "icon": "trophy",
+      "card_image": {
+        "url": "https://images.unsplash.com/photo-1624526267942-ab0ff8a3e972?w=800&q=80",
+        "alt": "Cricket trophy on display"
+      },
+      "intro": "England retained the Ashes in 2025, winning the series 3–1 with a match to spare. It was the first time England had retained the urn in successive series since 1986–87. These are the five Tests that defined the summer.",
+      "cards": [
+        {
+          "id": "card-test1",
+          "title": "First Test · Headingley · England won by 9 wickets",
+          "body": "England's Ollie Pope scored 196 on the first day — the highest score by an England batter at Headingley since Len Hutton's 202 in 1939. Australia were bowled out for 147 in their second innings as Mark Wood took 5–32 at 95mph.",
+          "image": {
+            "url": "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=800&q=80",
+            "alt": "Batsman drives through the covers at Headingley"
+          },
+          "tag": "England won",
+          "link": {
+            "label": "Match scorecard",
+            "href": "https://www.ecb.co.uk/cricket/matches/test1-ashes-2025"
+          }
+        },
+        {
+          "id": "card-test2",
+          "title": "Second Test · Lord's · Australia won by 43 runs",
+          "body": "Australia's Pat Cummins was magnificent in both innings, taking nine wickets in the match. England, set 271 to win, were bowled out for 227 in the final session as Nathan Lyon turned the ball sharply on a deteriorating surface.",
+          "image": {
+            "url": "https://images.unsplash.com/photo-1593341646782-e0b495cff86d?w=800&q=80",
+            "alt": "Fast bowler celebrates a wicket at Lord's"
+          },
+          "tag": "Australia won",
+          "link": {
+            "label": "Match scorecard",
+            "href": "https://www.ecb.co.uk/cricket/matches/test2-ashes-2025"
+          }
+        },
+        {
+          "id": "card-test3",
+          "title": "Third Test · Edgbaston · England won by an innings and 47 runs",
+          "body": "The decisive match of the series. Joe Root scored 262 — his highest Test score — in a first-innings total of 657. Australia never recovered. England's Gus Atkinson took ten wickets in the match on his home ground.",
+          "image": {
+            "url": "https://images.unsplash.com/photo-1578674473215-9e07ee2e577d?w=800&q=80",
+            "alt": "Batsman raises his bat after reaching a milestone at Edgbaston"
+          },
+          "tag": "England won",
+          "link": {
+            "label": "Match scorecard",
+            "href": "https://www.ecb.co.uk/cricket/matches/test3-ashes-2025"
+          }
+        },
+        {
+          "id": "card-test4",
+          "title": "Fourth Test · Old Trafford · England won by 5 wickets",
+          "body": "England retained the Ashes with a Test to spare. Ben Stokes, under the floodlights of a sold-out Old Trafford, hit the winning runs in the final over. It was his first fifty of the series. The crowd were still singing at midnight.",
+          "image": {
+            "url": "https://images.unsplash.com/photo-1531415074968-036ba1b575da?w=800&q=80",
+            "alt": "England players celebrate on the outfield at Old Trafford"
+          },
+          "tag": "England won · Ashes retained",
+          "link": {
+            "label": "Match scorecard",
+            "href": "https://www.ecb.co.uk/cricket/matches/test4-ashes-2025"
+          }
+        }
+      ]
+    },
+
+    {
+      "id": "summer-crossfade",
+      "num": 5,
+      "title": "The Season",
+      "nav_exclude": true,
+      "layout": "reveal-crossfade",
+      "crossfade_images": [
+        {
+          "url": "https://images.unsplash.com/photo-1540747913346-19e32dc3e97e?w=1600&q=80",
+          "alt": "Ground staff removing covers at dawn, heavy dew on the outfield"
+        },
+        {
+          "url": "https://images.unsplash.com/photo-1624526267942-ab0ff8a3e972?w=1600&q=80",
+          "alt": "Full ground at evening, long shadows across the outfield"
+        }
+      ],
+      "crossfade_phases": [
+        {
+          "text": "A Test match begins before a ball is bowled — in the decisions about the pitch, the weather, the squad, the toss.",
+          "attribution": "From the ECB's 2025 season review"
+        },
+        {
+          "text": "It ends, five days later, with something that could not have been predicted from the first morning's play. That is why we come back.",
+          "attribution": "From the ECB's 2025 season review"
+        }
+      ]
+    },
+
+    {
+      "id": "womens-cricket",
+      "num": 6,
+      "title": "The Women's Game",
+      "nav_label": "Women's Cricket",
+      "layout": "default",
+      "icon": "star",
+      "card_image": {
+        "url": "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=800&q=80",
+        "alt": "England Women celebrate a wicket"
+      },
+      "hero_image": {
+        "url": "https://images.unsplash.com/photo-1578674473215-9e07ee2e577d?w=1600&q=80",
+        "alt": "England Women's captain drives through the off side"
+      },
+      "intro": "England Women have won successive Ashes series, a World T20 title and a first women's Test at Lord's in forty years. They are no longer the secondary story. They are, in many respects, the more interesting one.",
+      "toggle_panels": [
+        {
+          "id": "panel-test",
+          "label": "Test Cricket",
+          "icon": "book-open",
+          "body": "<p>England Women played four Test matches in 2025 — more than in any year since 1998. The return of multi-Test series, including the first women's Test at Lord's since 1984, represents a structural commitment to the long form of the women's game that was previously absent. Attendance at the Lord's Test was 22,000 across four days.</p>",
+          "image": {
+            "url": "https://images.unsplash.com/photo-1624526267942-ab0ff8a3e972?w=800&q=80",
+            "alt": "England Women at Lord's, women's Test, 2025"
+          }
+        },
+        {
+          "id": "panel-t20",
+          "label": "T20 World Cup",
+          "icon": "zap",
+          "body": "<p>England Women won the ICC T20 World Cup in Bangladesh in October 2025, defeating Australia in the final by 8 runs. It was England's first global women's title since the 2009 T20 World Cup. Sophie Ecclestone was named Player of the Tournament after taking 17 wickets at an average of 8.2.</p>",
+          "image": {
+            "url": "https://images.unsplash.com/photo-1531415074968-036ba1b575da?w=800&q=80",
+            "alt": "England Women lift the T20 World Cup trophy"
+          }
+        },
+        {
+          "id": "panel-participation",
+          "label": "Participation",
+          "icon": "users",
+          "body": "<p>Recreational women's and girls' cricket participation reached 460,000 registered players in 2025 — a 34% increase since 2022. The ECB's Dynamos Cricket programme now reaches 180,000 girls aged 8–11 annually. The pipeline from grassroots to county to international is, for the first time, genuinely continuous.</p>",
+          "image": {
+            "url": "https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?w=800&q=80",
+            "alt": "Girls in a junior cricket coaching session"
+          }
+        }
+      ],
+      "photo_clusters": [
+        {
+          "layout": "duo",
+          "images": [
+            {
+              "url": "https://images.unsplash.com/photo-1578674473215-9e07ee2e577d?w=900&q=80",
+              "alt": "England's leading all-rounder batting",
+              "caption": "Nat Sciver-Brunt: 847 runs and 24 wickets in 2025"
+            },
+            {
+              "url": "https://images.unsplash.com/photo-1593341646782-e0b495cff86d?w=900&q=80",
+              "alt": "England's leading spinner in her delivery stride",
+              "caption": "Sophie Ecclestone: world's number one ranked women's bowler"
+            }
+          ]
+        }
+      ]
+    },
+
+    {
+      "id": "county-game",
+      "num": 7,
+      "title": "The County Game",
+      "nav_label": "County Cricket",
+      "layout": "default",
+      "icon": "map",
+      "card_image": {
+        "url": "https://images.unsplash.com/photo-1540747913346-19e32dc3e97e?w=800&q=80",
+        "alt": "A county ground on a sunny afternoon, sparse crowd"
+      },
+      "hero_image": {
+        "url": "https://images.unsplash.com/photo-1540747913346-19e32dc3e97e?w=1600&q=80",
+        "alt": "County cricket ground on a quiet championship morning"
+      },
+      "intro": "The County Championship is the engine room of English cricket. It is also its most contested institution — perpetually debated, restructured and defended. The 2025 season produced the closest title race in twenty years.",
+      "accordion_items": [
+        {
+          "id": "county-surrey",
+          "title": "Surrey — County Champions 2025",
+          "thumbnail": {
+            "url": "https://images.unsplash.com/photo-1624526267942-ab0ff8a3e972?w=200&q=80",
+            "alt": "Surrey lift the County Championship pennant"
+          },
+          "body": "<p>Surrey won the County Championship for the third time in four seasons, confirming their position as the dominant county side of the mid-2020s. Their success has been built on an exceptional pace attack — Atkinson, Overton and Clarke took 187 Championship wickets between them — allied to the reliable batting of Rory Burns, who scored 1,412 runs in the season at an average of 58.</p>",
+          "pull_quote": {
+            "text": "We don't talk about legacy at Surrey. We talk about what we're doing tomorrow.",
+            "attribution": "Gareth Batty, Surrey head coach"
+          },
+          "stats": [
+            { "value": "14", "label": "Championship wins in 2025", "animate": true },
+            { "value": "1,412", "label": "Rory Burns: runs in the Championship season", "animate": true }
+          ]
+        },
+        {
+          "id": "county-lancashire",
+          "title": "Lancashire — Runners-Up",
+          "thumbnail": {
+            "url": "https://images.unsplash.com/photo-1531415074968-036ba1b575da?w=200&q=80",
+            "alt": "Lancashire players in the field"
+          },
+          "body": "<p>Lancashire pushed Surrey to the final week of the season, ultimately finishing four points behind. Their top-order batting — anchored by Keaton Jennings and the emerging Josh Bohannon — was the strongest in the division. Lancashire's failure to win the Championship has become one of county cricket's recurring narratives; they have finished second or third in six of the past ten seasons.</p>",
+          "stats": [
+            { "value": "4", "label": "Points separating Surrey and Lancashire at the final reckoning", "animate": false }
+          ]
+        },
+        {
+          "id": "county-derbyshire",
+          "title": "Derbyshire — Promoted from Division Two",
+          "thumbnail": {
+            "url": "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=200&q=80",
+            "alt": "Derbyshire celebrate promotion"
+          },
+          "body": "<p>Derbyshire's promotion from Division Two was the story of the domestic season. Under new head coach Andy Hurry, they developed three England-qualified seamers under 23 and won nine of their fourteen Championship matches. Their return to the top flight after four seasons away was comfortable and convincing.</p>",
+          "stats": [
+            { "value": "9", "label": "Championship wins in Division Two", "animate": true }
+          ]
+        }
+      ]
+    },
+
+    {
+      "id": "voices",
+      "num": 8,
+      "title": "Voices of the Game",
+      "nav_label": "Voices",
+      "layout": "default",
+      "icon": "mic",
+      "intro": "The people who shaped English cricket in 2025.",
+      "contributors": [
+        {
+          "name": "Ben Stokes",
+          "title": "England Test Captain",
+          "bio": "In three years as captain, Ben Stokes has transformed England's Test team from a demoralised group finishing the 2021–22 Ashes without a win to the most watchable Test side in the world. His own performances — 847 runs and 34 wickets in 2025 — suggest that the captaincy has liberated rather than burdened him.",
+          "image": {
+            "url": "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=600&q=80",
+            "alt": "Ben Stokes"
+          },
+          "links": [
+            { "label": "Player profile", "href": "https://www.ecb.co.uk/players/ben-stokes" }
+          ]
+        },
+        {
+          "name": "Brendon McCullum",
+          "title": "England Test Head Coach",
+          "bio": "The New Zealander brought to English cricket something it had spent thirty years trying to manufacture: genuine fearlessness. His coaching philosophy — outlined in the now-famous 'Headingley meeting' of June 2022 — has become a case study in sports leadership internationally.",
+          "image": {
+            "url": "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=600&q=80",
+            "alt": "Brendon McCullum"
+          },
+          "links": [
+            { "label": "Coaching profile", "href": "https://www.ecb.co.uk/team/coaching-staff" }
+          ]
+        },
+        {
+          "name": "Nat Sciver-Brunt",
+          "title": "England Women's Captain",
+          "bio": "The finest all-round cricketer England have produced in a generation, Nat Sciver-Brunt leads the women's team with the same combination of authority and warmth that defines her batting. Her return from a period of mental health leave in 2023 has been one of sport's more remarkable comebacks.",
+          "image": {
+            "url": "https://images.unsplash.com/photo-1508214751196-bcfd4ca60f91?w=600&q=80",
+            "alt": "Nat Sciver-Brunt"
+          },
+          "links": [
+            { "label": "Player profile", "href": "https://www.ecb.co.uk/players/nat-sciver-brunt" }
+          ]
+        }
+      ]
+    },
+
+    {
+      "id": "briefing",
+      "num": 9,
+      "title": "Ask the Review",
+      "nav_label": "Briefing",
+      "layout": "default",
+      "icon": "message-circle",
+      "intro": "The Briefing Engine is trained on this review, the full ECB statistical archive, and match reports from the 2025 season. Ask it anything.",
+      "briefing_engine": {
+        "report_id": "ecb-annual-review-2026",
+        "title": "Briefing Engine — Test Nation",
+        "welcome_message": "Hello. I'm trained on this review and the ECB's full 2025 season archive, including scorecards, match reports, and player statistics. Ask me about any match, any player, or the broader state of English cricket.",
+        "suggested_questions": [
+          "What was England's highest successful run chase under Stokes?",
+          "Compare England's bowling attack in 2025 to the 2005 Ashes side",
+          "Which county produced the most England Test players this season?",
+          "How has women's cricket attendance changed since 2020?",
+          "Who holds the record for most runs in a single Ashes series?",
+          "What is the Duckworth-Lewis-Stern method and when does it apply?"
+        ]
+      }
+    }
+  ]
+}
