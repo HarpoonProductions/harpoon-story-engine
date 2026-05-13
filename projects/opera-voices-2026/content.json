@@ -21,7 +21,10 @@
       "enabled": true,
       "theme_color": "#0D0005",
       "background_color": "#0D0005",
-      "offline_sections": ["overture", "the-voice"]
+      "offline_sections": [
+        "overture",
+        "the-voice"
+      ]
     },
     "analytics": {
       "plausible_domain": "opera-voices-2026.harpoon.productions"

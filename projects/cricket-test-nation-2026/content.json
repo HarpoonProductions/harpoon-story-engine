@@ -21,7 +21,10 @@
       "enabled": true,
       "theme_color": "#001A3D",
       "background_color": "#001A3D",
-      "offline_sections": ["opening", "bazball"]
+      "offline_sections": [
+        "opening",
+        "bazball"
+      ]
     },
     "analytics": {
       "plausible_domain": "cricket-test-nation-2026.harpoon.productions"

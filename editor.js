@@ -276,21 +276,21 @@ app.get('/edit/:id', (req, res) => {
 // On S3/CloudFront this resolves to the bucket root correctly.
 // Locally we intercept these and serve from .preview/<projectId>/
 
-app.get('/:projectId/css/*', (req, res) => {
-  const filePath = path.join(PREVIEW_DIR, req.params.projectId, 'css', req.params[0]);
+app.get('/:projectId/css/:file(*)', (req, res) => {
+  const filePath = path.join(PREVIEW_DIR, req.params.projectId, 'css', req.params.file);
   if (!fs.existsSync(filePath)) return res.status(404).send('Not found');
   res.setHeader('Content-Type', 'text/css');
   res.sendFile(filePath);
 });
 
-app.get('/:projectId/js/*', (req, res) => {
-  const filePath = path.join(PREVIEW_DIR, req.params.projectId, 'js', req.params[0]);
+app.get('/:projectId/js/:file(*)', (req, res) => {
+  const filePath = path.join(PREVIEW_DIR, req.params.projectId, 'js', req.params.file);
   if (!fs.existsSync(filePath)) return res.status(404).send('Not found');
   res.setHeader('Content-Type', 'application/javascript');
   res.sendFile(filePath);
 });
 
-app.get('/:projectId/images/*', (req, res) => {
+app.get('/:projectId/images/:file(*)', (req, res) => {
   // Images live on S3 in production — graceful 404 locally
   res.status(404).send('Image not available in local preview');
 });
