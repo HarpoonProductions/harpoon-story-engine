@@ -276,23 +276,37 @@ app.get('/edit/:id', (req, res) => {
 // On S3/CloudFront this resolves to the bucket root correctly.
 // Locally we intercept these and serve from .preview/<projectId>/
 
-app.get('/:projectId/css/:file(*)', (req, res) => {
-  const filePath = path.join(PREVIEW_DIR, req.params.projectId, 'css', req.params.file);
-  if (!fs.existsSync(filePath)) return res.status(404).send('Not found');
-  res.setHeader('Content-Type', 'text/css');
-  res.sendFile(filePath);
-});
+// Asset passthrough middleware — handles /projectId/css/..., /projectId/js/...
+// Must come before the file watcher and after the /edit/:id route.
+app.use((req, res, next) => {
+  // Only intercept paths that look like /<projectId>/<assetType>/...
+  const parts = req.path.split('/').filter(Boolean);
+  if (parts.length < 2) return next();
 
-app.get('/:projectId/js/:file(*)', (req, res) => {
-  const filePath = path.join(PREVIEW_DIR, req.params.projectId, 'js', req.params.file);
-  if (!fs.existsSync(filePath)) return res.status(404).send('Not found');
-  res.setHeader('Content-Type', 'application/javascript');
-  res.sendFile(filePath);
-});
+  const [projectId, assetType, ...rest] = parts;
 
-app.get('/:projectId/images/:file(*)', (req, res) => {
-  // Images live on S3 in production — graceful 404 locally
-  res.status(404).send('Image not available in local preview');
+  // Don't intercept editor or API routes
+  if (projectId === 'api' || projectId === 'edit' || projectId === 'preview' || projectId === 'editor') return next();
+
+  const mimeMap = {
+    '.css':  'text/css',
+    '.js':   'application/javascript',
+    '.html': 'text/html; charset=utf-8',
+    '.json': 'application/json',
+    '.png':  'image/png',
+    '.jpg':  'image/jpeg',
+    '.jpeg': 'image/jpeg',
+    '.svg':  'image/svg+xml',
+    '.webp': 'image/webp',
+    '.mp4':  'video/mp4',
+  };
+
+  const filePath = path.join(PREVIEW_DIR, projectId, assetType, ...rest);
+  if (!fs.existsSync(filePath)) return res.status(404).send('Not found');
+
+  const ext = path.extname(filePath).toLowerCase();
+  if (mimeMap[ext]) res.setHeader('Content-Type', mimeMap[ext]);
+  res.sendFile(filePath);
 });
 
 // ── File watcher (dev convenience) ───────────────────────────────
