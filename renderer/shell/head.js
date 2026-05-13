@@ -19,11 +19,13 @@ function renderHead(meta, config, title, basePath) {
   const accentColor2 = meta.accent_color_2 || '#C9A84C';
 
   // Normalise basePath: ensure leading slash, no trailing slash
+  // Empty string = relative paths for local preview
+  // Non-empty = root-relative paths for S3/CloudFront
   const base = basePath
     ? '/' + basePath.replace(/^\//, '').replace(/\/$/, '')
     : '';
 
-  const css = (file) => `${base}/${file}`;
+  const css = (file) => base ? `${base}/${file}` : file;
 
   const plausibleScript = config?.analytics?.plausible_domain
     ? `<script defer data-domain="${config.analytics.plausible_domain}" src="https://analytics.harpoonproductions.com/js/script.js"></script>`

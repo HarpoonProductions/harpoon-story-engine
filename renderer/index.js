@@ -27,15 +27,18 @@ const { renderCascadingSlides } = require('./layouts/cascading-slides');
  * @param {string} outputDir  - absolute path to output directory
  * @returns {string[]} Array of absolute paths to written files
  */
-function render(content, outputDir) {
+function render(content, outputDir, options) {
   const { meta, config, cover, sections } = content;
+  const opts = options || {};
 
   // Copy CSS to output directory
   copyCss(outputDir);
 
-  // Derive root-relative base path from project_id
-  // e.g. project_id 'opera-voices-2026' -> basePath '/opera-voices-2026'
-  const basePath = meta.project_id || '';
+  // basePath: root-relative for S3/CloudFront deployment (default)
+  // Pass options.basePath = '' for local preview (relative paths)
+  const basePath = opts.hasOwnProperty('basePath')
+    ? opts.basePath
+    : (meta.project_id || '');
 
   // Build the single-page HTML document
   const html = buildPage(meta, config, cover, sections, basePath);
@@ -99,7 +102,7 @@ ${sectionsHtml}
 }
 </style>
 
-<script src="${base}/js/runtime.js"></script>
+<script src="${base ? base + '/js/runtime.js' : 'js/runtime.js'}"></script>
 
 </body>
 </html>`;
