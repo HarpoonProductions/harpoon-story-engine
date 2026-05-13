@@ -1,0 +1,593 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Harpoon Story Engine</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=DM+Mono:wght@300;400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --ink:      #0A0A0C;
+      --ink-2:    #111116;
+      --ink-3:    #1C1C24;
+      --warm:     #F2EDE6;
+      --warm-2:   #C8BFB0;
+      --warm-3:   #7A7268;
+      --accent:   #8B3A2A;
+      --rule:     rgba(242,237,230,0.08);
+      --font-display: 'Playfair Display', Georgia, serif;
+      --font-body:    'DM Sans', system-ui, sans-serif;
+      --font-mono:    'DM Mono', monospace;
+    }
+
+    html, body {
+      height: 100%;
+      background: var(--ink);
+      color: var(--warm);
+      font-family: var(--font-body);
+      font-weight: 300;
+      line-height: 1.6;
+      overflow-x: hidden;
+    }
+
+    /* ── Grain overlay ── */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.035'/%3E%3C/svg%3E");
+      pointer-events: none;
+      z-index: 9999;
+      opacity: 0.6;
+    }
+
+    /* ── Layout ── */
+    .shell {
+      min-height: 100vh;
+      display: grid;
+      grid-template-rows: auto 1fr auto;
+    }
+
+    /* ── Header ── */
+    header {
+      padding: 2rem 3rem;
+      border-bottom: 1px solid var(--rule);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .wordmark {
+      display: flex;
+      flex-direction: column;
+      gap: 0.15rem;
+    }
+
+    .wordmark__harpoon {
+      font-family: var(--font-mono);
+      font-size: 0.6rem;
+      letter-spacing: 0.35em;
+      text-transform: uppercase;
+      color: var(--accent);
+    }
+
+    .wordmark__title {
+      font-family: var(--font-display);
+      font-size: 1.1rem;
+      font-weight: 400;
+      color: var(--warm);
+      letter-spacing: 0.01em;
+    }
+
+    .header-actions {
+      display: flex;
+      gap: 0.75rem;
+      align-items: center;
+    }
+
+    /* ── Main ── */
+    main {
+      padding: 4rem 3rem;
+      max-width: 1100px;
+    }
+
+    /* ── Section label ── */
+    .section-label {
+      font-family: var(--font-mono);
+      font-size: 0.6rem;
+      letter-spacing: 0.3em;
+      text-transform: uppercase;
+      color: var(--warm-3);
+      margin-bottom: 1.5rem;
+    }
+
+    /* ── Project grid ── */
+    .project-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 1px;
+      background: var(--rule);
+      border: 1px solid var(--rule);
+      margin-bottom: 4rem;
+    }
+
+    .project-card {
+      background: var(--ink);
+      padding: 1.75rem;
+      cursor: pointer;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      text-decoration: none;
+      color: inherit;
+      transition: background 0.2s;
+      min-height: 160px;
+    }
+
+    .project-card:hover { background: var(--ink-2); }
+
+    .project-card__accent {
+      position: absolute;
+      top: 0; left: 0;
+      width: 3px;
+      height: 100%;
+    }
+
+    .project-card__client {
+      font-family: var(--font-mono);
+      font-size: 0.58rem;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: var(--warm-3);
+    }
+
+    .project-card__title {
+      font-family: var(--font-display);
+      font-size: 1.1rem;
+      font-weight: 400;
+      line-height: 1.3;
+      color: var(--warm);
+      flex: 1;
+    }
+
+    .project-card__meta {
+      font-family: var(--font-mono);
+      font-size: 0.58rem;
+      color: var(--warm-3);
+      letter-spacing: 0.1em;
+      margin-top: auto;
+    }
+
+    .project-card__arrow {
+      position: absolute;
+      top: 1.75rem;
+      right: 1.75rem;
+      font-size: 0.8rem;
+      color: var(--warm-3);
+      transition: transform 0.2s, color 0.2s;
+    }
+
+    .project-card:hover .project-card__arrow {
+      transform: translate(3px, -3px);
+      color: var(--warm);
+    }
+
+    /* ── Empty state ── */
+    .empty-state {
+      padding: 3rem;
+      border: 1px dashed var(--rule);
+      text-align: center;
+      color: var(--warm-3);
+    }
+
+    .empty-state p {
+      font-family: var(--font-mono);
+      font-size: 0.7rem;
+      letter-spacing: 0.15em;
+    }
+
+    /* ── Action strip ── */
+    .action-strip {
+      display: flex;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+
+    /* ── Buttons ── */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.7rem 1.4rem;
+      font-family: var(--font-mono);
+      font-size: 0.62rem;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      cursor: pointer;
+      border-radius: 1px;
+      transition: all 0.2s;
+      text-decoration: none;
+    }
+
+    .btn--primary {
+      background: var(--accent);
+      color: var(--warm);
+      border: 1px solid var(--accent);
+    }
+
+    .btn--primary:hover {
+      background: transparent;
+      color: var(--accent);
+    }
+
+    .btn--ghost {
+      background: transparent;
+      color: var(--warm-2);
+      border: 1px solid var(--rule);
+    }
+
+    .btn--ghost:hover {
+      border-color: var(--warm-3);
+      color: var(--warm);
+    }
+
+    /* ── Footer ── */
+    footer {
+      padding: 1.5rem 3rem;
+      border-top: 1px solid var(--rule);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .footer-note {
+      font-family: var(--font-mono);
+      font-size: 0.58rem;
+      letter-spacing: 0.14em;
+      color: var(--warm-3);
+      opacity: 0.5;
+    }
+
+    /* ── Modal ── */
+    .modal-backdrop {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(10,10,12,0.85);
+      z-index: 1000;
+      align-items: center;
+      justify-content: center;
+      backdrop-filter: blur(8px);
+    }
+
+    .modal-backdrop.is-open { display: flex; }
+
+    .modal {
+      background: var(--ink-2);
+      border: 1px solid var(--rule);
+      padding: 2.5rem;
+      width: 480px;
+      max-width: calc(100vw - 3rem);
+    }
+
+    .modal__title {
+      font-family: var(--font-display);
+      font-size: 1.4rem;
+      font-weight: 400;
+      margin-bottom: 0.35rem;
+    }
+
+    .modal__subtitle {
+      font-family: var(--font-mono);
+      font-size: 0.6rem;
+      letter-spacing: 0.18em;
+      color: var(--warm-3);
+      text-transform: uppercase;
+      margin-bottom: 2rem;
+    }
+
+    .field {
+      margin-bottom: 1.25rem;
+    }
+
+    .field label {
+      display: block;
+      font-family: var(--font-mono);
+      font-size: 0.6rem;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--warm-3);
+      margin-bottom: 0.5rem;
+    }
+
+    .field input[type="text"],
+    .field input[type="color"] {
+      width: 100%;
+      background: var(--ink-3);
+      border: 1px solid var(--rule);
+      color: var(--warm);
+      font-family: var(--font-mono);
+      font-size: 0.85rem;
+      padding: 0.65rem 0.85rem;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    .field input[type="text"]:focus {
+      border-color: var(--accent);
+    }
+
+    .field input[type="color"] {
+      padding: 0.3rem 0.5rem;
+      height: 40px;
+      cursor: pointer;
+    }
+
+    .field-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+    }
+
+    .field-hint {
+      font-family: var(--font-mono);
+      font-size: 0.58rem;
+      color: var(--warm-3);
+      margin-top: 0.4rem;
+      opacity: 0.7;
+    }
+
+    .modal__actions {
+      display: flex;
+      gap: 0.75rem;
+      justify-content: flex-end;
+      margin-top: 2rem;
+      padding-top: 1.5rem;
+      border-top: 1px solid var(--rule);
+    }
+
+    .modal__error {
+      font-family: var(--font-mono);
+      font-size: 0.65rem;
+      color: #C0392B;
+      margin-top: 0.75rem;
+      display: none;
+    }
+
+    /* ── Entrance animation ── */
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(16px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .project-grid, .action-strip, .section-label {
+      animation: fadeUp 0.6s ease both;
+    }
+
+    .section-label    { animation-delay: 0.1s; }
+    .project-grid     { animation-delay: 0.2s; }
+    .action-strip     { animation-delay: 0.35s; }
+  </style>
+</head>
+<body>
+<div class="shell">
+
+  <header>
+    <div class="wordmark">
+      <span class="wordmark__harpoon">Harpoon Productions</span>
+      <span class="wordmark__title">Story Engine</span>
+    </div>
+    <div class="header-actions">
+      <button class="btn btn--ghost" onclick="openNewModal()">+ New story</button>
+    </div>
+  </header>
+
+  <main>
+    <p class="section-label">Projects</p>
+
+    <div class="project-grid" id="projectGrid">
+      <div class="empty-state" id="emptyState" style="display:none">
+        <p>No projects yet — create your first story</p>
+      </div>
+    </div>
+
+    <div class="action-strip">
+      <button class="btn btn--primary" onclick="openNewModal()">+ New story</button>
+      <button class="btn btn--ghost" onclick="openExisting()">Open existing JSON</button>
+    </div>
+  </main>
+
+  <footer>
+    <span class="footer-note">Harpoon Story Engine — Local Editor</span>
+    <span class="footer-note" id="serverNote">http://localhost:3001</span>
+  </footer>
+
+</div>
+
+<!-- New story modal -->
+<div class="modal-backdrop" id="newModal">
+  <div class="modal">
+    <h2 class="modal__title">New story</h2>
+    <p class="modal__subtitle">Set up your project</p>
+
+    <div class="field">
+      <label>Story title</label>
+      <input type="text" id="newTitle" placeholder="e.g. The State of the Oceans">
+    </div>
+
+    <div class="field">
+      <label>Client name</label>
+      <input type="text" id="newClient" placeholder="e.g. Royal Opera House">
+    </div>
+
+    <div class="field">
+      <label>Project ID <span class="field-hint">URL-safe slug, auto-generated</span></label>
+      <input type="text" id="newId" placeholder="e.g. oceans-2026">
+    </div>
+
+    <div class="field-row">
+      <div class="field">
+        <label>Primary colour</label>
+        <input type="color" id="newAccent" value="#1A3F6F">
+      </div>
+      <div class="field">
+        <label>Secondary colour</label>
+        <input type="color" id="newAccent2" value="#C9A84C">
+      </div>
+    </div>
+
+    <div class="modal__error" id="newError"></div>
+
+    <div class="modal__actions">
+      <button class="btn btn--ghost" onclick="closeNewModal()">Cancel</button>
+      <button class="btn btn--primary" onclick="createProject()">Create story →</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  // ── Load projects ──────────────────────────────────────────────
+
+  async function loadProjects() {
+    const res  = await fetch('/api/projects');
+    const data = await res.json();
+    renderGrid(data.projects);
+  }
+
+  function timeAgo(isoString) {
+    if (!isoString) return 'Never edited';
+    const diff = Date.now() - new Date(isoString).getTime();
+    const mins  = Math.floor(diff / 60000);
+    const hours = Math.floor(diff / 3600000);
+    const days  = Math.floor(diff / 86400000);
+    if (mins < 1)   return 'Just now';
+    if (mins < 60)  return `${mins}m ago`;
+    if (hours < 24) return `${hours}h ago`;
+    return `${days}d ago`;
+  }
+
+  function renderGrid(projects) {
+    const grid  = document.getElementById('projectGrid');
+    const empty = document.getElementById('emptyState');
+
+    // Clear existing cards
+    Array.from(grid.children).forEach(c => {
+      if (c !== empty) c.remove();
+    });
+
+    if (projects.length === 0) {
+      empty.style.display = 'block';
+      return;
+    }
+
+    empty.style.display = 'none';
+
+    projects.forEach(p => {
+      const card = document.createElement('a');
+      card.className = 'project-card';
+      card.href = `/edit/${p.id}`;
+      card.innerHTML = `
+        <div class="project-card__accent" style="background:${p.accent_color}"></div>
+        <span class="project-card__client">${p.client || '—'}</span>
+        <span class="project-card__title">${p.title}</span>
+        <span class="project-card__meta">${p.id} · ${timeAgo(p.last_saved)}</span>
+        <span class="project-card__arrow">↗</span>
+      `;
+      grid.appendChild(card);
+    });
+  }
+
+  // ── New story modal ────────────────────────────────────────────
+
+  function openNewModal() {
+    document.getElementById('newModal').classList.add('is-open');
+    document.getElementById('newTitle').focus();
+  }
+
+  function closeNewModal() {
+    document.getElementById('newModal').classList.remove('is-open');
+    document.getElementById('newError').style.display = 'none';
+  }
+
+  // Auto-generate project ID from title
+  document.getElementById('newTitle').addEventListener('input', function () {
+    const slug = this.value
+      .toLowerCase()
+      .replace(/[^a-z0-9\s-]/g, '')
+      .trim()
+      .replace(/\s+/g, '-');
+    const year = new Date().getFullYear();
+    document.getElementById('newId').value = slug ? `${slug}-${year}` : '';
+  });
+
+  // Close modal on backdrop click
+  document.getElementById('newModal').addEventListener('click', function (e) {
+    if (e.target === this) closeNewModal();
+  });
+
+  // Close modal on Escape
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape') closeNewModal();
+  });
+
+  async function createProject() {
+    const id      = document.getElementById('newId').value.trim();
+    const title   = document.getElementById('newTitle').value.trim();
+    const client  = document.getElementById('newClient').value.trim();
+    const accent  = document.getElementById('newAccent').value;
+    const accent2 = document.getElementById('newAccent2').value;
+    const errEl   = document.getElementById('newError');
+
+    if (!title || !id) {
+      errEl.textContent = 'Title and project ID are required.';
+      errEl.style.display = 'block';
+      return;
+    }
+
+    if (!/^[a-z0-9-]+$/.test(id)) {
+      errEl.textContent = 'Project ID must contain only lowercase letters, numbers and hyphens.';
+      errEl.style.display = 'block';
+      return;
+    }
+
+    errEl.style.display = 'none';
+
+    const res  = await fetch('/api/project/create', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id, title, client, accent_color: accent, accent_color_2: accent2 }),
+    });
+    const data = await res.json();
+
+    if (!res.ok) {
+      errEl.textContent = data.error || 'Something went wrong.';
+      errEl.style.display = 'block';
+      return;
+    }
+
+    window.location.href = `/edit/${id}`;
+  }
+
+  // ── Open existing ──────────────────────────────────────────────
+
+  function openExisting() {
+    // For now, prompt for project ID — will become a file picker
+    const id = prompt('Enter project ID (folder name in projects/):');
+    if (id) window.location.href = `/edit/${id.trim()}`;
+  }
+
+  // ── Enter key in modal ─────────────────────────────────────────
+  document.getElementById('newModal').addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') createProject();
+  });
+
+  // ── Init ───────────────────────────────────────────────────────
+  loadProjects();
+</script>
+</body>
+</html>

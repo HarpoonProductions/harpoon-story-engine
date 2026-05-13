@@ -1,0 +1,1095 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Story Engine Editor</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=DM+Mono:wght@300;400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --ink:       #0A0A0C;
+      --ink-2:     #111116;
+      --ink-3:     #1C1C24;
+      --warm:      #F2EDE6;
+      --warm-2:    #C8BFB0;
+      --warm-3:    #7A7268;
+      --accent:    #8B3A2A;
+      --rule:      rgba(242,237,230,0.08);
+      --rule-2:    rgba(242,237,230,0.04);
+      --success:   #2ECC71;
+      --error:     #C0392B;
+      --font-display: 'Playfair Display', Georgia, serif;
+      --font-body:    'DM Sans', system-ui, sans-serif;
+      --font-mono:    'DM Mono', monospace;
+      --sidebar-w: 340px;
+      --toolbar-h: 52px;
+    }
+
+    html, body { height: 100%; overflow: hidden; background: var(--ink); color: var(--warm); font-family: var(--font-body); font-weight: 300; }
+
+    /* ── Shell ── */
+    .shell {
+      height: 100vh;
+      display: grid;
+      grid-template-rows: var(--toolbar-h) 1fr;
+      grid-template-columns: var(--sidebar-w) 1fr;
+      grid-template-areas:
+        "toolbar toolbar"
+        "sidebar preview";
+    }
+
+    /* ── Toolbar ── */
+    .toolbar {
+      grid-area: toolbar;
+      border-bottom: 1px solid var(--rule);
+      display: flex;
+      align-items: center;
+      padding: 0 1.25rem;
+      gap: 1rem;
+      background: var(--ink-2);
+    }
+
+    .toolbar__back {
+      font-family: var(--font-mono);
+      font-size: 0.58rem;
+      letter-spacing: 0.18em;
+      color: var(--warm-3);
+      text-decoration: none;
+      text-transform: uppercase;
+      transition: color 0.15s;
+    }
+    .toolbar__back:hover { color: var(--warm); }
+
+    .toolbar__sep { width: 1px; height: 18px; background: var(--rule); }
+
+    .toolbar__project {
+      font-family: var(--font-mono);
+      font-size: 0.65rem;
+      letter-spacing: 0.14em;
+      color: var(--warm-2);
+      flex: 1;
+    }
+
+    .toolbar__status {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-family: var(--font-mono);
+      font-size: 0.58rem;
+      letter-spacing: 0.12em;
+      color: var(--warm-3);
+    }
+
+    .status-dot {
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: var(--warm-3);
+      transition: background 0.3s;
+    }
+    .status-dot.saving  { background: #F39C12; }
+    .status-dot.saved   { background: var(--success); }
+    .status-dot.error   { background: var(--error); }
+
+    .toolbar__actions { display: flex; gap: 0.5rem; }
+
+    .tbtn {
+      padding: 0.35rem 0.85rem;
+      font-family: var(--font-mono);
+      font-size: 0.58rem;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      cursor: pointer;
+      border-radius: 1px;
+      transition: all 0.15s;
+    }
+
+    .tbtn--ghost {
+      background: transparent;
+      border: 1px solid var(--rule);
+      color: var(--warm-3);
+    }
+    .tbtn--ghost:hover { border-color: var(--warm-3); color: var(--warm); }
+
+    /* ── Sidebar ── */
+    .sidebar {
+      grid-area: sidebar;
+      border-right: 1px solid var(--rule);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      background: var(--ink);
+    }
+
+    .sidebar__tabs {
+      display: flex;
+      border-bottom: 1px solid var(--rule);
+      flex-shrink: 0;
+    }
+
+    .sidebar__tab {
+      flex: 1;
+      padding: 0.65rem;
+      font-family: var(--font-mono);
+      font-size: 0.55rem;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      text-align: center;
+      cursor: pointer;
+      color: var(--warm-3);
+      border: none;
+      background: none;
+      border-bottom: 2px solid transparent;
+      transition: all 0.15s;
+    }
+
+    .sidebar__tab.is-active { color: var(--warm); border-bottom-color: var(--accent); }
+    .sidebar__tab:hover:not(.is-active) { color: var(--warm-2); }
+
+    .sidebar__body {
+      flex: 1;
+      overflow-y: auto;
+      padding: 1.25rem;
+      scrollbar-width: thin;
+      scrollbar-color: var(--ink-3) transparent;
+    }
+
+    /* ── Section list ── */
+    .section-list { display: flex; flex-direction: column; gap: 2px; }
+
+    .section-item {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      padding: 0.65rem 0.75rem;
+      cursor: pointer;
+      border: 1px solid transparent;
+      transition: all 0.15s;
+      border-radius: 1px;
+    }
+
+    .section-item:hover { background: var(--ink-2); border-color: var(--rule); }
+    .section-item.is-active { background: var(--ink-3); border-color: var(--rule); }
+
+    .section-item__num {
+      font-family: var(--font-mono);
+      font-size: 0.55rem;
+      color: var(--accent);
+      letter-spacing: 0.1em;
+      width: 20px;
+      flex-shrink: 0;
+    }
+
+    .section-item__label {
+      font-size: 0.82rem;
+      color: var(--warm-2);
+      flex: 1;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .section-item__layout {
+      font-family: var(--font-mono);
+      font-size: 0.5rem;
+      letter-spacing: 0.12em;
+      color: var(--warm-3);
+      text-transform: uppercase;
+    }
+
+    .section-item__drag {
+      color: var(--warm-3);
+      cursor: grab;
+      font-size: 0.7rem;
+      opacity: 0.5;
+    }
+
+    .add-section-btn {
+      margin-top: 0.75rem;
+      width: 100%;
+      padding: 0.65rem;
+      background: transparent;
+      border: 1px dashed var(--rule);
+      color: var(--warm-3);
+      font-family: var(--font-mono);
+      font-size: 0.58rem;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .add-section-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+    /* ── Form fields ── */
+    .form-group { margin-bottom: 1.1rem; }
+
+    .form-label {
+      display: block;
+      font-family: var(--font-mono);
+      font-size: 0.56rem;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: var(--warm-3);
+      margin-bottom: 0.4rem;
+    }
+
+    .form-input,
+    .form-textarea,
+    .form-select {
+      width: 100%;
+      background: var(--ink-2);
+      border: 1px solid var(--rule);
+      color: var(--warm);
+      font-family: var(--font-mono);
+      font-size: 0.78rem;
+      padding: 0.55rem 0.75rem;
+      outline: none;
+      transition: border-color 0.15s;
+      border-radius: 1px;
+    }
+
+    .form-input:focus,
+    .form-textarea:focus,
+    .form-select:focus { border-color: var(--accent); }
+
+    .form-textarea {
+      resize: vertical;
+      min-height: 80px;
+      line-height: 1.6;
+      font-family: var(--font-body);
+      font-size: 0.82rem;
+    }
+
+    .form-select { cursor: pointer; }
+
+    .form-color-row {
+      display: grid;
+      grid-template-columns: 40px 1fr;
+      gap: 0.5rem;
+      align-items: center;
+    }
+
+    .form-color-swatch {
+      width: 40px; height: 34px;
+      border: 1px solid var(--rule);
+      cursor: pointer;
+      padding: 2px;
+    }
+
+    .form-hint {
+      font-family: var(--font-mono);
+      font-size: 0.56rem;
+      color: var(--warm-3);
+      margin-top: 0.3rem;
+      opacity: 0.7;
+      letter-spacing: 0.08em;
+    }
+
+    .form-toggle-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .toggle {
+      position: relative;
+      width: 32px; height: 18px;
+    }
+    .toggle input { display: none; }
+    .toggle__track {
+      position: absolute;
+      inset: 0;
+      background: var(--ink-3);
+      border: 1px solid var(--rule);
+      border-radius: 9px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .toggle input:checked + .toggle__track { background: var(--accent); border-color: var(--accent); }
+    .toggle__track::after {
+      content: '';
+      position: absolute;
+      width: 12px; height: 12px;
+      background: var(--warm-3);
+      border-radius: 50%;
+      top: 2px; left: 2px;
+      transition: transform 0.2s, background 0.2s;
+    }
+    .toggle input:checked + .toggle__track::after {
+      transform: translateX(14px);
+      background: var(--warm);
+    }
+
+    .form-section-title {
+      font-family: var(--font-mono);
+      font-size: 0.58rem;
+      letter-spacing: 0.24em;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin: 1.5rem 0 1rem;
+      padding-bottom: 0.5rem;
+      border-bottom: 1px solid var(--rule-2);
+    }
+
+    /* ── Preview panel ── */
+    .preview {
+      grid-area: preview;
+      display: flex;
+      flex-direction: column;
+      background: var(--ink-3);
+      overflow: hidden;
+    }
+
+    .preview__toolbar {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      padding: 0 1.25rem;
+      height: 40px;
+      border-bottom: 1px solid var(--rule);
+      background: var(--ink-2);
+      flex-shrink: 0;
+    }
+
+    .preview__label {
+      font-family: var(--font-mono);
+      font-size: 0.56rem;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--warm-3);
+    }
+
+    .preview__label strong {
+      color: var(--warm-2);
+      font-weight: 400;
+    }
+
+    .preview__viewports {
+      flex: 1;
+      display: grid;
+      grid-template-columns: 395px 1fr;
+      gap: 1px;
+      background: var(--rule);
+      overflow: hidden;
+      padding: 1.5rem;
+      gap: 1.5rem;
+      align-items: start;
+    }
+
+    .viewport {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      height: 100%;
+    }
+
+    .viewport__label {
+      font-family: var(--font-mono);
+      font-size: 0.54rem;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: var(--warm-3);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      flex-shrink: 0;
+    }
+
+    .viewport__label::before {
+      content: '';
+      display: inline-block;
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: var(--warm-3);
+    }
+
+    .viewport--mobile .viewport__label::before { background: #3498DB; }
+    .viewport--desktop .viewport__label::before { background: #9B59B6; }
+
+    .viewport__frame-wrap {
+      flex: 1;
+      overflow: hidden;
+      border: 1px solid var(--rule);
+      background: white;
+      position: relative;
+    }
+
+    .viewport--mobile .viewport__frame-wrap {
+      width: 375px;
+      /* Show a scrollable mobile height */
+      height: calc(100vh - var(--toolbar-h) - 40px - 3rem - 1.5rem);
+      overflow-y: auto;
+      overflow-x: hidden;
+    }
+
+    .viewport--desktop .viewport__frame-wrap {
+      height: calc(100vh - var(--toolbar-h) - 40px - 3rem - 1.5rem);
+      overflow: hidden;
+    }
+
+    iframe {
+      border: none;
+      display: block;
+    }
+
+    .viewport--mobile iframe {
+      width: 375px;
+      height: 100%;
+    }
+
+    .viewport--desktop iframe {
+      width: 1280px;
+      height: 100%;
+      transform-origin: top left;
+    }
+
+    /* Rendering overlay */
+    .rendering-overlay {
+      position: absolute;
+      inset: 0;
+      background: rgba(10,10,12,0.6);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s;
+    }
+
+    .rendering-overlay.is-visible { opacity: 1; pointer-events: all; }
+
+    .rendering-spinner {
+      font-family: var(--font-mono);
+      font-size: 0.6rem;
+      letter-spacing: 0.2em;
+      color: var(--warm-3);
+      text-transform: uppercase;
+    }
+
+    /* ── Tab panels ── */
+    .tab-panel { display: none; }
+    .tab-panel.is-active { display: block; }
+
+    /* ── Image field ── */
+    .image-field {
+      display: grid;
+      grid-template-columns: 48px 1fr;
+      gap: 0.5rem;
+      align-items: start;
+    }
+
+    .image-thumb {
+      width: 48px; height: 36px;
+      background: var(--ink-3);
+      border: 1px solid var(--rule);
+      object-fit: cover;
+      display: block;
+    }
+
+    .image-thumb.is-broken { opacity: 0.3; }
+
+    /* ── Section delete button ── */
+    .section-delete {
+      padding: 0.3rem 0.6rem;
+      background: transparent;
+      border: 1px solid var(--rule);
+      color: var(--error);
+      font-family: var(--font-mono);
+      font-size: 0.55rem;
+      letter-spacing: 0.14em;
+      cursor: pointer;
+      transition: all 0.15s;
+      opacity: 0.6;
+    }
+    .section-delete:hover { opacity: 1; border-color: var(--error); background: rgba(192,57,43,0.1); }
+
+    /* ── Scrollbar ── */
+    .sidebar__body::-webkit-scrollbar { width: 4px; }
+    .sidebar__body::-webkit-scrollbar-track { background: transparent; }
+    .sidebar__body::-webkit-scrollbar-thumb { background: var(--ink-3); border-radius: 2px; }
+  </style>
+</head>
+<body>
+<div class="shell">
+
+  <!-- Toolbar -->
+  <div class="toolbar">
+    <a href="/" class="toolbar__back">← Projects</a>
+    <div class="toolbar__sep"></div>
+    <span class="toolbar__project" id="toolbarProject">Loading…</span>
+    <div class="toolbar__status">
+      <div class="status-dot" id="statusDot"></div>
+      <span id="statusText">—</span>
+    </div>
+    <div class="toolbar__actions">
+      <button class="tbtn tbtn--ghost" onclick="openPreviewInBrowser()">Open in browser ↗</button>
+    </div>
+  </div>
+
+  <!-- Sidebar -->
+  <div class="sidebar">
+    <div class="sidebar__tabs">
+      <button class="sidebar__tab is-active" onclick="switchTab('meta', this)">Meta</button>
+      <button class="sidebar__tab" onclick="switchTab('cover', this)">Cover</button>
+      <button class="sidebar__tab" onclick="switchTab('sections', this)">Sections</button>
+    </div>
+    <div class="sidebar__body">
+
+      <!-- Meta tab -->
+      <div class="tab-panel is-active" id="tab-meta">
+        <div class="form-group">
+          <label class="form-label">Publication title</label>
+          <input class="form-input" data-path="meta.title" placeholder="The Voices That Remain">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Client</label>
+          <input class="form-input" data-path="meta.client" placeholder="Royal Opera House">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Event / report name</label>
+          <input class="form-input" data-path="meta.event" placeholder="Annual Report 2026">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Publication date</label>
+          <input class="form-input" type="date" data-path="meta.date">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Language</label>
+          <input class="form-input" data-path="meta.language" placeholder="en">
+        </div>
+
+        <p class="form-section-title">Brand</p>
+        <div class="form-group">
+          <label class="form-label">Primary colour</label>
+          <div class="form-color-row">
+            <input type="color" class="form-color-swatch" data-path="meta.accent_color" value="#1A3F6F">
+            <input class="form-input" data-path="meta.accent_color" placeholder="#1A3F6F">
+          </div>
+          <p class="form-hint">Used for nav accents, stat values, CTAs</p>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Secondary colour</label>
+          <div class="form-color-row">
+            <input type="color" class="form-color-swatch" data-path="meta.accent_color_2" value="#C9A84C">
+            <input class="form-input" data-path="meta.accent_color_2" placeholder="#C9A84C">
+          </div>
+          <p class="form-hint">Used for colour bleed effects</p>
+        </div>
+
+        <p class="form-section-title">Analytics</p>
+        <div class="form-group">
+          <label class="form-label">Plausible domain</label>
+          <input class="form-input" data-path="config.analytics.plausible_domain" placeholder="project.harpoon.productions">
+        </div>
+      </div>
+
+      <!-- Cover tab -->
+      <div class="tab-panel" id="tab-cover">
+        <div class="form-group">
+          <label class="form-label">Kicker</label>
+          <input class="form-input" data-path="cover.kicker" placeholder="Client · Event name">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Headline</label>
+          <input class="form-input" data-path="cover.headline" placeholder="Main headline">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Headline (italic portion)</label>
+          <input class="form-input" data-path="cover.headline_em" placeholder="Emphasised words">
+          <p class="form-hint">Rendered in italic below the main headline</p>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Intro paragraph</label>
+          <textarea class="form-textarea" data-path="cover.body" placeholder="Opening paragraph…"></textarea>
+        </div>
+
+        <p class="form-section-title">Hero background</p>
+        <div class="form-group">
+          <label class="form-label">Image URL</label>
+          <div class="image-field">
+            <img class="image-thumb" id="coverImgThumb" src="" onerror="this.classList.add('is-broken')">
+            <input class="form-input" data-path="cover.hero_image.url" placeholder="https://…" oninput="updateThumb('coverImgThumb', this.value)">
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Alt text</label>
+          <input class="form-input" data-path="cover.hero_image.alt" placeholder="Describe the image">
+        </div>
+
+        <p class="form-section-title">Video (overrides image)</p>
+        <div class="form-group">
+          <label class="form-label">Video URL (MP4)</label>
+          <input class="form-input" data-path="cover.hero_video.url" placeholder="https://…/video.mp4">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Poster image URL</label>
+          <input class="form-input" data-path="cover.hero_video.poster" placeholder="https://… (shown before video loads)">
+        </div>
+
+        <p class="form-section-title">CTAs</p>
+        <div class="form-group">
+          <label class="form-label">Primary CTA label</label>
+          <input class="form-input" data-path="cover.cta_primary.label" placeholder="Read the report">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Primary CTA link</label>
+          <input class="form-input" data-path="cover.cta_primary.href" placeholder="#section-id">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Secondary CTA label</label>
+          <input class="form-input" data-path="cover.cta_secondary.label" placeholder="Watch the film">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Secondary CTA link</label>
+          <input class="form-input" data-path="cover.cta_secondary.href" placeholder="https://…">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Colophon</label>
+          <input class="form-input" data-path="cover.colophon" placeholder="Produced by…">
+        </div>
+      </div>
+
+      <!-- Sections tab -->
+      <div class="tab-panel" id="tab-sections">
+        <div class="section-list" id="sectionList"></div>
+        <button class="add-section-btn" onclick="addSection()">+ Add section</button>
+
+        <!-- Active section editor -->
+        <div id="sectionEditor" style="display:none; margin-top:1.5rem; padding-top:1.5rem; border-top:1px solid var(--rule);">
+          <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:1rem;">
+            <span class="form-section-title" style="margin:0; border:none; padding:0;" id="sectionEditorTitle">Section</span>
+            <button class="section-delete" id="sectionDeleteBtn">Delete</button>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Section ID</label>
+            <input class="form-input" id="sec-id" placeholder="url-safe-slug">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Title</label>
+            <input class="form-input" id="sec-title" placeholder="Section title">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Nav label <span class="form-hint" style="display:inline">(if title is too long)</span></label>
+            <input class="form-input" id="sec-nav-label" placeholder="Short label">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Layout</label>
+            <select class="form-select" id="sec-layout">
+              <option value="default">Default</option>
+              <option value="sticky-steps">Sticky Steps</option>
+              <option value="stackable-cards">Stackable Cards</option>
+              <option value="cascading-slides">Cascading Slides</option>
+              <option value="fullbleed-quote">Fullbleed Quote</option>
+              <option value="reveal-crossfade">Reveal Crossfade</option>
+              <option value="parallax">Parallax</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Intro paragraph</label>
+            <textarea class="form-textarea" id="sec-intro" placeholder="One or two sentence section intro…"></textarea>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Hero image URL</label>
+            <input class="form-input" id="sec-hero-url" placeholder="https://…">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Hero image alt text</label>
+            <input class="form-input" id="sec-hero-alt" placeholder="Describe the image">
+          </div>
+          <div class="form-group">
+            <div class="form-toggle-row">
+              <label class="form-label" style="margin:0">Exclude from nav</label>
+              <label class="toggle">
+                <input type="checkbox" id="sec-nav-exclude">
+                <div class="toggle__track"></div>
+              </label>
+            </div>
+            <p class="form-hint">Use for interlude/transition sections</p>
+          </div>
+          <div class="form-group">
+            <div class="form-toggle-row">
+              <label class="form-label" style="margin:0">Colour bleed</label>
+              <label class="toggle">
+                <input type="checkbox" id="sec-color-bleed">
+                <div class="toggle__track"></div>
+              </label>
+            </div>
+            <p class="form-hint">Brand colour bleeds into next section</p>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Pull quote text</label>
+            <textarea class="form-textarea" id="sec-pq-text" placeholder="Quote…" style="min-height:60px"></textarea>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Pull quote attribution</label>
+            <input class="form-input" id="sec-pq-attr" placeholder="Name, Title">
+          </div>
+
+          <p style="font-family:var(--font-mono);font-size:0.56rem;letter-spacing:0.16em;color:var(--warm-3);margin-top:1rem;opacity:0.6;">
+            For cards, sticky steps, accordion items and other complex blocks — edit the JSON directly for now. Full block editors coming next.
+          </p>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Preview panel -->
+  <div class="preview">
+    <div class="preview__toolbar">
+      <span class="preview__label">📱 <strong>Mobile</strong> — 375px</span>
+      <span style="flex:1"></span>
+      <span class="preview__label">🖥 <strong>Desktop</strong> — 1280px (scaled)</span>
+    </div>
+    <div class="preview__viewports">
+
+      <div class="viewport viewport--mobile">
+        <div class="viewport__label">Mobile · 375px</div>
+        <div class="viewport__frame-wrap" id="mobileWrap">
+          <iframe id="mobileFrame" src="" title="Mobile preview"></iframe>
+          <div class="rendering-overlay" id="mobileOverlay">
+            <span class="rendering-spinner">Rendering…</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="viewport viewport--desktop">
+        <div class="viewport__label">Desktop · 1280px</div>
+        <div class="viewport__frame-wrap" id="desktopWrap">
+          <iframe id="desktopFrame" src="" title="Desktop preview"></iframe>
+          <div class="rendering-overlay" id="desktopOverlay">
+            <span class="rendering-spinner">Rendering…</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+</div>
+
+<script>
+'use strict';
+
+// ── State ──────────────────────────────────────────────────────────
+
+const projectId  = location.pathname.split('/').pop();
+let   content    = null;
+let   saveTimer  = null;
+let   activeSectionIndex = -1;
+let   isDirty    = false;
+
+// ── Boot ───────────────────────────────────────────────────────────
+
+async function boot() {
+  // Scale desktop iframe to fit its container
+  scaleDesktopFrame();
+  window.addEventListener('resize', scaleDesktopFrame);
+
+  // Load project
+  const res = await fetch(`/api/project/${projectId}`);
+  if (!res.ok) {
+    document.getElementById('toolbarProject').textContent = 'Project not found';
+    return;
+  }
+  content = await res.json();
+
+  // Set toolbar title
+  document.getElementById('toolbarProject').textContent =
+    (content.meta.client ? content.meta.client + ' · ' : '') + content.meta.title;
+
+  // Populate all form fields
+  populateForm();
+
+  // Load preview
+  loadPreviews();
+
+  // Render section list
+  renderSectionList();
+
+  // Wire up all data-path inputs
+  wireInputs();
+}
+
+// ── Preview ────────────────────────────────────────────────────────
+
+function loadPreviews() {
+  const url = `/preview/${projectId}/`;
+  document.getElementById('mobileFrame').src  = url;
+  document.getElementById('desktopFrame').src = url;
+}
+
+function reloadPreviews() {
+  const url = `/preview/${projectId}/?t=${Date.now()}`;
+  showRenderingOverlay(true);
+  document.getElementById('mobileFrame').src  = url;
+  document.getElementById('desktopFrame').src = url;
+  document.getElementById('mobileFrame').onload = () => showRenderingOverlay(false);
+}
+
+function showRenderingOverlay(show) {
+  document.getElementById('mobileOverlay').classList.toggle('is-visible', show);
+  document.getElementById('desktopOverlay').classList.toggle('is-visible', show);
+}
+
+function scaleDesktopFrame() {
+  const wrap  = document.getElementById('desktopWrap');
+  const frame = document.getElementById('desktopFrame');
+  if (!wrap || !frame) return;
+  const scale = wrap.clientWidth / 1280;
+  frame.style.transform = `scale(${scale})`;
+  frame.style.width  = '1280px';
+  frame.style.height = (wrap.clientHeight / scale) + 'px';
+}
+
+function openPreviewInBrowser() {
+  window.open(`/preview/${projectId}/`, '_blank');
+}
+
+// ── Autosave ───────────────────────────────────────────────────────
+
+function scheduleAutosave() {
+  isDirty = true;
+  setStatus('saving', 'Saving…');
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(doSave, 500);
+}
+
+async function doSave() {
+  try {
+    const res  = await fetch(`/api/project/${projectId}/save`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(content),
+    });
+    const data = await res.json();
+
+    if (data.ok) {
+      isDirty = false;
+      setStatus('saved', 'Saved');
+      reloadPreviews();
+      setTimeout(() => { if (!isDirty) setStatus('', '—'); }, 3000);
+    } else {
+      setStatus('error', data.error || 'Save failed');
+    }
+  } catch (err) {
+    setStatus('error', 'Save failed');
+  }
+}
+
+function setStatus(type, text) {
+  const dot  = document.getElementById('statusDot');
+  const span = document.getElementById('statusText');
+  dot.className  = 'status-dot' + (type ? ' ' + type : '');
+  span.textContent = text;
+}
+
+// ── Deep path utilities ────────────────────────────────────────────
+
+function getPath(obj, path) {
+  return path.split('.').reduce((o, k) => (o && o[k] !== undefined ? o[k] : ''), obj);
+}
+
+function setPath(obj, path, value) {
+  const keys = path.split('.');
+  let cur = obj;
+  for (let i = 0; i < keys.length - 1; i++) {
+    if (!cur[keys[i]] || typeof cur[keys[i]] !== 'object') cur[keys[i]] = {};
+    cur = cur[keys[i]];
+  }
+  cur[keys[keys.length - 1]] = value;
+}
+
+// ── Form population ────────────────────────────────────────────────
+
+function populateForm() {
+  document.querySelectorAll('[data-path]').forEach(el => {
+    const val = getPath(content, el.dataset.path) || '';
+    if (el.type === 'checkbox') {
+      el.checked = !!val;
+    } else {
+      el.value = val;
+    }
+  });
+}
+
+// ── Wire all data-path inputs ──────────────────────────────────────
+
+function wireInputs() {
+  document.querySelectorAll('[data-path]').forEach(el => {
+    el.addEventListener('input', () => {
+      const val = el.type === 'checkbox' ? el.checked : el.value;
+      setPath(content, el.dataset.path, val);
+
+      // Sync colour pickers and text inputs that share data-path
+      if (el.type === 'color' || el.dataset.path.includes('accent')) {
+        document.querySelectorAll(`[data-path="${el.dataset.path}"]`).forEach(other => {
+          if (other !== el) other.value = val;
+        });
+      }
+
+      scheduleAutosave();
+    });
+  });
+}
+
+// ── Tab switching ──────────────────────────────────────────────────
+
+function switchTab(name, btn) {
+  document.querySelectorAll('.sidebar__tab').forEach(t => t.classList.remove('is-active'));
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('is-active'));
+  btn.classList.add('is-active');
+  document.getElementById(`tab-${name}`).classList.add('is-active');
+}
+
+// ── Section list ───────────────────────────────────────────────────
+
+function renderSectionList() {
+  const list = document.getElementById('sectionList');
+  list.innerHTML = '';
+
+  (content.sections || []).forEach((section, i) => {
+    const item = document.createElement('div');
+    item.className = 'section-item' + (i === activeSectionIndex ? ' is-active' : '');
+    item.innerHTML = `
+      <span class="section-item__drag">⠿</span>
+      <span class="section-item__num">${String(section.num || i + 1).padStart(2,'0')}</span>
+      <span class="section-item__label">${section.title || section.id || 'Untitled'}</span>
+      <span class="section-item__layout">${section.layout || 'default'}</span>
+    `;
+    item.addEventListener('click', () => editSection(i));
+    list.appendChild(item);
+  });
+}
+
+// ── Section editor ─────────────────────────────────────────────────
+
+function editSection(index) {
+  activeSectionIndex = index;
+  const section = content.sections[index];
+
+  // Show editor panel
+  document.getElementById('sectionEditor').style.display = 'block';
+  document.getElementById('sectionEditorTitle').textContent =
+    section.title || section.id || 'Section ' + (index + 1);
+
+  // Populate fields
+  document.getElementById('sec-id').value         = section.id || '';
+  document.getElementById('sec-title').value      = section.title || '';
+  document.getElementById('sec-nav-label').value  = section.nav_label || '';
+  document.getElementById('sec-layout').value     = section.layout || 'default';
+  document.getElementById('sec-intro').value      = section.intro || '';
+  document.getElementById('sec-hero-url').value   = (section.hero_image && section.hero_image.url) || '';
+  document.getElementById('sec-hero-alt').value   = (section.hero_image && section.hero_image.alt) || '';
+  document.getElementById('sec-nav-exclude').checked  = !!section.nav_exclude;
+  document.getElementById('sec-color-bleed').checked  = !!section.color_bleed;
+  document.getElementById('sec-pq-text').value    = (section.pull_quote && section.pull_quote.text) || '';
+  document.getElementById('sec-pq-attr').value    = (section.pull_quote && section.pull_quote.attribution) || '';
+
+  // Wire section fields
+  wireSectionEditor(index);
+
+  // Highlight in list
+  renderSectionList();
+
+  // Delete button
+  document.getElementById('sectionDeleteBtn').onclick = () => deleteSection(index);
+}
+
+function wireSectionEditor(index) {
+  const fields = {
+    'sec-id':          (v) => { content.sections[index].id = v; },
+    'sec-title':       (v) => { content.sections[index].title = v; renderSectionList(); },
+    'sec-nav-label':   (v) => { content.sections[index].nav_label = v; },
+    'sec-layout':      (v) => { content.sections[index].layout = v; renderSectionList(); },
+    'sec-intro':       (v) => { content.sections[index].intro = v; },
+    'sec-hero-url':    (v) => {
+      if (!content.sections[index].hero_image) content.sections[index].hero_image = {};
+      content.sections[index].hero_image.url = v;
+    },
+    'sec-hero-alt':    (v) => {
+      if (!content.sections[index].hero_image) content.sections[index].hero_image = {};
+      content.sections[index].hero_image.alt = v;
+    },
+    'sec-nav-exclude': (v) => { content.sections[index].nav_exclude = v; },
+    'sec-color-bleed': (v) => { content.sections[index].color_bleed = v; },
+    'sec-pq-text':     (v) => {
+      if (!content.sections[index].pull_quote) content.sections[index].pull_quote = {};
+      content.sections[index].pull_quote.text = v;
+    },
+    'sec-pq-attr':     (v) => {
+      if (!content.sections[index].pull_quote) content.sections[index].pull_quote = {};
+      content.sections[index].pull_quote.attribution = v;
+    },
+  };
+
+  Object.entries(fields).forEach(([id, setter]) => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    // Remove old listeners by cloning
+    const fresh = el.cloneNode(true);
+    el.parentNode.replaceChild(fresh, el);
+    fresh.addEventListener('input', () => {
+      setter(fresh.type === 'checkbox' ? fresh.checked : fresh.value);
+      scheduleAutosave();
+    });
+  });
+}
+
+// ── Add section ────────────────────────────────────────────────────
+
+function addSection() {
+  const num = (content.sections || []).length + 1;
+  const newSection = {
+    id:     `section-${num}`,
+    num,
+    title:  `Section ${num}`,
+    layout: 'default',
+    intro:  '',
+  };
+  if (!content.sections) content.sections = [];
+  content.sections.push(newSection);
+  renderSectionList();
+  editSection(content.sections.length - 1);
+  scheduleAutosave();
+}
+
+// ── Delete section ─────────────────────────────────────────────────
+
+function deleteSection(index) {
+  if (!confirm(`Delete "${content.sections[index].title || content.sections[index].id}"?`)) return;
+  content.sections.splice(index, 1);
+  activeSectionIndex = -1;
+  document.getElementById('sectionEditor').style.display = 'none';
+  renderSectionList();
+  scheduleAutosave();
+}
+
+// ── Image thumbnail helper ─────────────────────────────────────────
+
+function updateThumb(imgId, url) {
+  const img = document.getElementById(imgId);
+  if (!img) return;
+  img.src = url;
+  img.classList.remove('is-broken');
+}
+
+// ── Warn on unsaved changes ────────────────────────────────────────
+
+window.addEventListener('beforeunload', e => {
+  if (isDirty) {
+    e.preventDefault();
+    e.returnValue = '';
+  }
+});
+
+// ── Boot ───────────────────────────────────────────────────────────
+boot();
+</script>
+</body>
+</html>
