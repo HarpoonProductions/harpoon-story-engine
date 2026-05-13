@@ -37,11 +37,33 @@ fs.mkdirSync(EDITOR_DIR,   { recursive: true });
 
 app.use(express.json({ limit: '10mb' }));
 
+// Explicit MIME types — express.static can misserve .css as octet-stream
+const mime = {
+  '.html': 'text/html; charset=utf-8',
+  '.css':  'text/css',
+  '.js':   'application/javascript',
+  '.json': 'application/json',
+  '.mp4':  'video/mp4',
+  '.jpg':  'image/jpeg',
+  '.jpeg': 'image/jpeg',
+  '.png':  'image/png',
+  '.svg':  'image/svg+xml',
+  '.webp': 'image/webp',
+  '.woff2':'font/woff2',
+};
+
+const staticOpts = {
+  setHeaders(res, filePath) {
+    const ext = require('path').extname(filePath).toLowerCase();
+    if (mime[ext]) res.setHeader('Content-Type', mime[ext]);
+  }
+};
+
 // Serve editor UI static files
-app.use('/editor', express.static(EDITOR_DIR));
+app.use('/editor', express.static(EDITOR_DIR, staticOpts));
 
 // Serve preview output
-app.use('/preview', express.static(PREVIEW_DIR));
+app.use('/preview', express.static(PREVIEW_DIR, staticOpts));
 
 // ── Recent projects ───────────────────────────────────────────────
 
