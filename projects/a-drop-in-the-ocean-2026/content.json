@@ -1,0 +1,32 @@
+{
+  "meta": {
+    "project_id": "a-drop-in-the-ocean-2026",
+    "title": "A drop in the ocean",
+    "language": "en",
+    "client": "Mercator",
+    "date": "2026-05-14",
+    "accent_color": "#1a3f6f",
+    "accent_color_2": "#c9a84c",
+    "last_saved": "2026-05-14T11:19:12.326Z",
+    "version": 1
+  },
+  "config": {
+    "layout_mode": "multi-page",
+    "password_gate": {
+      "enabled": false
+    },
+    "pwa": {
+      "enabled": false
+    },
+    "analytics": {}
+  },
+  "cover": {
+    "headline": "A drop in the ocean",
+    "body": "",
+    "cta_primary": {
+      "label": "Read more",
+      "href": "#section-1"
+    }
+  },
+  "sections": []
+}

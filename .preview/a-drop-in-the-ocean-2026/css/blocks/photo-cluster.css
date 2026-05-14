@@ -1,0 +1,66 @@
+/* Harpoon Story Engine — Photo Cluster */
+
+.hse-photo-cluster {
+  margin: var(--hse-space-lg) 0;
+  display: grid;
+  gap: 4px;
+}
+
+.hse-photo-cluster--solo { grid-template-columns: 1fr; }
+
+.hse-photo-cluster--duo {
+  grid-template-columns: 1fr 1fr;
+}
+
+.hse-photo-cluster--trio {
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: auto auto;
+}
+.hse-photo-cluster--trio .hse-photo-cluster__img--1 {
+  grid-column: 1 / -1;
+}
+
+.hse-photo-cluster--quad {
+  grid-template-columns: 1fr 1fr;
+}
+
+.hse-photo-cluster .hse-image { margin: 0; }
+
+.hse-photo-cluster img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.hse-photo-cluster--duo img,
+.hse-photo-cluster--trio img,
+.hse-photo-cluster--quad img {
+  aspect-ratio: 4/3;
+}
+
+.hse-photo-cluster--trio .hse-photo-cluster__img--1 img {
+  aspect-ratio: 16/7;
+}
+
+.hse-photo-cluster__caption {
+  grid-column: 1 / -1;
+  padding-top: 0.75rem;
+  color: var(--hse-warm-3);
+}
+
+.hse-image__caption {
+  margin-top: 0.5rem;
+  color: var(--hse-warm-3);
+}
+
+@media (max-width: 480px) {
+  .hse-photo-cluster--duo,
+  .hse-photo-cluster--trio,
+  .hse-photo-cluster--quad {
+    grid-template-columns: 1fr;
+  }
+  .hse-photo-cluster--trio .hse-photo-cluster__img--1 {
+    grid-column: 1;
+  }
+}
