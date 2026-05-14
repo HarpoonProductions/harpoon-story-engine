@@ -29,182 +29,70 @@
 
     html, body { height: 100%; overflow: hidden; background: var(--bg); color: var(--ink); font-family: var(--font-body); font-size: 12px; }
 
+    /* Focus visible */
+    :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 2px; }
+    :focus:not(:focus-visible) { outline: none; }
+
     /* ── Shell ── */
     .shell { height: 100vh; display: flex; flex-direction: column; }
 
     /* ── Toolbar ── */
-    .toolbar {
-      height: var(--toolbar-h); flex-shrink: 0;
-      border-bottom: 1px solid var(--rule);
-      display: flex; align-items: center;
-      padding: 0 1rem; gap: 0.75rem;
-      background: white;
-    }
-
+    .toolbar { height: var(--toolbar-h); flex-shrink: 0; border-bottom: 1px solid var(--rule); display: flex; align-items: center; padding: 0 1rem; gap: 0.75rem; background: white; }
     .toolbar__back { font-family: var(--font-mono); font-size: 0.56rem; letter-spacing: 0.16em; text-transform: uppercase; color: var(--ink-3); text-decoration: none; transition: color 0.12s; white-space: nowrap; }
     .toolbar__back:hover { color: var(--ink); }
     .toolbar__sep { width: 1px; height: 14px; background: var(--rule); flex-shrink: 0; }
     .toolbar__project { font-family: var(--font-mono); font-size: 0.62rem; letter-spacing: 0.1em; color: var(--ink-2); flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-
     .toolbar__status { display: flex; align-items: center; gap: 0.4rem; font-family: var(--font-mono); font-size: 0.56rem; letter-spacing: 0.1em; color: var(--ink-3); white-space: nowrap; }
     .status-dot { width: 5px; height: 5px; border-radius: 50%; background: var(--bg-3); transition: background 0.25s; }
     .status-dot.saving { background: #E67E22; }
     .status-dot.saved  { background: var(--success); }
     .status-dot.error  { background: var(--error-col); }
-
-    .tbtn { padding: 0.3rem 0.7rem; font-family: var(--font-mono); font-size: 0.56rem; letter-spacing: 0.12em; text-transform: uppercase; cursor: pointer; border-radius: 2px; transition: all 0.12s; white-space: nowrap; }
+    .tbtn { padding: 0.3rem 0.7rem; font-family: var(--font-mono); font-size: 0.56rem; letter-spacing: 0.12em; text-transform: uppercase; cursor: pointer; border-radius: 2px; transition: all 0.12s; }
     .tbtn--ghost { background: transparent; border: 1px solid var(--rule); color: var(--ink-3); }
     .tbtn--ghost:hover { border-color: var(--ink-3); color: var(--ink); }
 
-    /* ── Body (sidebar + divider + preview) ── */
-    .body {
-      flex: 1;
-      display: flex;
-      overflow: hidden;
-    }
+    /* ── Body ── */
+    .body { flex: 1; display: flex; overflow: hidden; }
 
     /* ── Sidebar ── */
-    .sidebar {
-      width: var(--sidebar-w);
-      min-width: 200px;
-      max-width: 520px;
-      flex-shrink: 0;
-      border-right: 1px solid var(--rule);
-      display: flex; flex-direction: column;
-      overflow: hidden; background: white;
-    }
-
+    .sidebar { width: var(--sidebar-w); min-width: 200px; max-width: 520px; flex-shrink: 0; border-right: 1px solid var(--rule); display: flex; flex-direction: column; overflow: hidden; background: white; }
     .sidebar__tabs { display: flex; border-bottom: 1px solid var(--rule); flex-shrink: 0; }
     .sidebar__tab { flex: 1; padding: 0.55rem 0.5rem; font-family: var(--font-mono); font-size: 0.54rem; letter-spacing: 0.18em; text-transform: uppercase; text-align: center; cursor: pointer; color: var(--ink-3); border: none; background: none; border-bottom: 2px solid transparent; transition: all 0.12s; }
     .sidebar__tab.is-active { color: var(--accent); border-bottom-color: var(--accent); background: var(--bg); }
     .sidebar__tab:hover:not(.is-active) { color: var(--ink-2); background: var(--bg); }
-
     .sidebar__body { flex: 1; overflow-y: auto; padding: 1rem; scrollbar-width: thin; scrollbar-color: var(--bg-3) transparent; }
     .sidebar__body::-webkit-scrollbar { width: 3px; }
     .sidebar__body::-webkit-scrollbar-thumb { background: var(--bg-3); border-radius: 2px; }
 
-    /* ── Drag divider ── */
-    .divider {
-      width: 5px;
-      flex-shrink: 0;
-      background: var(--rule);
-      cursor: col-resize;
-      position: relative;
-      transition: background 0.12s;
-      user-select: none;
-    }
-    .divider:hover, .divider.is-dragging { background: var(--accent); }
-    .divider::after {
-      content: '';
-      position: absolute;
-      top: 50%; left: 50%;
-      transform: translate(-50%, -50%);
-      width: 1px; height: 32px;
-      background: rgba(26,25,22,0.2);
-      border-radius: 1px;
-    }
-
-    /* ── Preview ── */
-    .preview { flex: 1; display: flex; flex-direction: column; background: var(--bg-2); overflow: hidden; min-width: 0; }
-
-    .preview__toolbar { display: flex; align-items: center; gap: 1rem; padding: 0 1rem; height: var(--preview-toolbar-h); border-bottom: 1px solid var(--rule); background: var(--bg); flex-shrink: 0; }
-    .preview__label { font-family: var(--font-mono); font-size: 0.54rem; letter-spacing: 0.16em; text-transform: uppercase; color: var(--ink-3); white-space: nowrap; }
-    .preview__label strong { color: var(--ink-2); font-weight: 500; }
-
-    .preview__viewports { flex: 1; display: flex; gap: 1rem; padding: 1rem; overflow: hidden; }
-
-    /* ── Viewports ── */
-    .viewport { display: flex; flex-direction: column; gap: 0.4rem; }
-    .viewport--mobile { flex-shrink: 0; }
-    .viewport--desktop { flex: 1; min-width: 0; }
-
-    .viewport__label { font-family: var(--font-mono); font-size: 0.52rem; letter-spacing: 0.18em; text-transform: uppercase; color: var(--ink-3); display: flex; align-items: center; gap: 0.35rem; }
-    .viewport__label::before { content: ''; display: inline-block; width: 5px; height: 5px; border-radius: 50%; }
-    .viewport--mobile .viewport__label::before { background: #2980B9; }
-    .viewport--desktop .viewport__label::before { background: #8E44AD; }
-
-    /* 
-      Mobile viewport: show a phone-width preview.
-      We render at 375px then use CSS zoom to scale it down.
-      The outer container clips to the scaled size.
-    */
-    .mobile-clip {
-      overflow: hidden;
-      border: 1px solid var(--rule);
-      background: white;
-      box-shadow: 0 2px 8px rgba(26,25,22,0.1);
-      flex-shrink: 0;
-      position: relative;
-    }
-
-    /* iframe renders at 375px then gets zoomed */
-    #mobileFrame {
-      border: none;
-      display: block;
-      width: 375px;
-      transform-origin: top left;
-    }
-
-    .desktop-clip {
-      flex: 1;
-      min-width: 0;
-      overflow: hidden;
-      border: 1px solid var(--rule);
-      background: white;
-      box-shadow: 0 2px 8px rgba(26,25,22,0.1);
-      position: relative;
-    }
-
-    /* iframe renders at 1280px then gets scaled */
-    #desktopFrame {
-      border: none;
-      display: block;
-      width: 1280px;
-      transform-origin: top left;
-    }
-
-    .rendering-veil { position: absolute; inset: 0; background: rgba(247,246,243,0.75); display: flex; align-items: center; justify-content: center; opacity: 0; pointer-events: none; transition: opacity 0.15s; z-index: 10; }
-    .rendering-veil.is-on { opacity: 1; pointer-events: all; }
-    .rendering-veil span { font-family: var(--font-mono); font-size: 0.56rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--ink-3); }
-
     /* ── Form ── */
-    .tab-panel { display: none; }
-    .tab-panel.is-active { display: block; }
-
     .form-group { margin-bottom: 0.85rem; }
     .form-label { display: block; font-family: var(--font-mono); font-size: 0.54rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--ink-3); margin-bottom: 0.25rem; }
-
-    .form-input, .form-textarea, .form-select {
-      width: 100%; background: var(--bg); border: 1px solid var(--rule);
-      color: var(--ink); font-family: var(--font-mono); font-size: 0.75rem;
-      padding: 0.38rem 0.55rem; outline: none; transition: border-color 0.12s; border-radius: 1px;
-    }
+    .form-input, .form-textarea, .form-select { width: 100%; background: var(--bg); border: 1px solid var(--rule); color: var(--ink); font-family: var(--font-mono); font-size: 0.75rem; padding: 0.38rem 0.55rem; outline: none; transition: border-color 0.12s; border-radius: 1px; }
     .form-input:focus, .form-textarea:focus, .form-select:focus { border-color: var(--accent); background: white; }
     .form-textarea { resize: vertical; min-height: 60px; font-family: var(--font-body); font-size: 0.78rem; line-height: 1.5; }
     .form-select { cursor: pointer; }
-
     .form-color-row { display: grid; grid-template-columns: 28px 1fr; gap: 0.4rem; align-items: center; }
     .form-color-swatch { width: 28px; height: 26px; border: 1px solid var(--rule); cursor: pointer; padding: 1px; border-radius: 1px; }
     .form-hint { font-size: 0.66rem; color: var(--ink-3); margin-top: 0.2rem; line-height: 1.4; }
-
     .form-toggle-row { display: flex; align-items: center; justify-content: space-between; }
     .toggle { position: relative; width: 28px; height: 16px; flex-shrink: 0; }
-    .toggle input { display: none; }
-    .toggle__track { position: absolute; inset: 0; background: var(--bg-3); border: 1px solid var(--rule); border-radius: 8px; cursor: pointer; transition: background 0.15s; }
-    .toggle input:checked + .toggle__track { background: var(--accent); border-color: var(--accent); }
+    .toggle input { position: absolute; opacity: 0; width: 100%; height: 100%; cursor: pointer; margin: 0; }
+    .toggle__track { position: absolute; inset: 0; background: var(--bg-3); border: 1px solid var(--rule); border-radius: 8px; pointer-events: none; transition: background 0.15s; }
+    .toggle input:checked ~ .toggle__track { background: var(--accent); border-color: var(--accent); }
+    .toggle input:focus-visible ~ .toggle__track { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 8px; }
     .toggle__track::after { content: ''; position: absolute; width: 10px; height: 10px; background: white; border-radius: 50%; top: 2px; left: 2px; transition: transform 0.15s; box-shadow: 0 1px 2px rgba(0,0,0,0.15); }
-    .toggle input:checked + .toggle__track::after { transform: translateX(12px); }
-
+    .toggle input:checked ~ .toggle__track::after { transform: translateX(12px); }
     .form-section-title { font-family: var(--font-mono); font-size: 0.54rem; letter-spacing: 0.22em; text-transform: uppercase; color: var(--accent); margin: 1.25rem 0 0.75rem; padding-bottom: 0.4rem; border-bottom: 1px solid var(--rule-2); }
 
+    /* ── Section list ── */
     .section-list { display: flex; flex-direction: column; gap: 1px; }
-    .section-item { display: flex; align-items: center; gap: 0.5rem; padding: 0.5rem 0.6rem; cursor: pointer; border: 1px solid transparent; transition: all 0.1s; border-radius: 1px; }
+    .section-item { display: flex; align-items: center; gap: 0.5rem; padding: 0.5rem 0.6rem; cursor: pointer; border: 1px solid transparent; transition: all 0.1s; border-radius: 1px; background: none; width: 100%; text-align: left; font-family: inherit; font-size: inherit; color: inherit; }
     .section-item:hover { background: var(--bg); border-color: var(--rule); }
     .section-item.is-active { background: var(--bg-2); border-color: var(--bg-3); }
+    .section-item:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
     .section-item__num { font-family: var(--font-mono); font-size: 0.52rem; color: var(--accent); width: 18px; flex-shrink: 0; }
     .section-item__label { font-size: 0.78rem; color: var(--ink-2); flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .section-item__layout { font-family: var(--font-mono); font-size: 0.48rem; letter-spacing: 0.1em; color: var(--ink-3); text-transform: uppercase; white-space: nowrap; }
-
     .add-section-btn { margin-top: 0.5rem; width: 100%; padding: 0.5rem; background: transparent; border: 1px dashed var(--rule); color: var(--ink-3); font-family: var(--font-mono); font-size: 0.56rem; letter-spacing: 0.16em; text-transform: uppercase; cursor: pointer; transition: all 0.12s; border-radius: 1px; }
     .add-section-btn:hover { border-color: var(--accent); color: var(--accent); background: rgba(139,58,42,0.04); }
 
@@ -213,106 +101,156 @@
     .section-editor-title { font-family: var(--font-mono); font-size: 0.56rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--accent); }
     .section-delete { padding: 0.25rem 0.5rem; background: transparent; border: 1px solid var(--rule); color: var(--error-col); font-family: var(--font-mono); font-size: 0.5rem; letter-spacing: 0.12em; cursor: pointer; transition: all 0.12s; opacity: 0.6; border-radius: 1px; }
     .section-delete:hover { opacity: 1; border-color: var(--error-col); background: rgba(192,57,43,0.06); }
-
     .coming-note { font-family: var(--font-mono); font-size: 0.56rem; letter-spacing: 0.08em; color: var(--ink-3); margin-top: 0.75rem; padding: 0.6rem 0.75rem; background: var(--bg); border-left: 2px solid var(--bg-3); line-height: 1.5; }
+
+    /* ── Tab panels ── */
+    .tab-panel { display: none; }
+    .tab-panel.is-active { display: block; }
+
+    /* ── Drag divider ── */
+    .divider { width: 5px; flex-shrink: 0; background: var(--rule); cursor: col-resize; position: relative; transition: background 0.12s; user-select: none; }
+    .divider:hover, .divider.is-dragging { background: var(--accent); }
+    .divider:focus-visible { background: var(--accent); outline: none; }
+    .divider::after { content: ''; position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); width: 1px; height: 32px; background: rgba(26,25,22,0.2); border-radius: 1px; }
+
+    /* ── Preview ── */
+    .preview { flex: 1; display: flex; flex-direction: column; background: var(--bg-2); overflow: hidden; min-width: 0; }
+    .preview__toolbar { display: flex; align-items: center; gap: 0.75rem; padding: 0 1rem; height: var(--preview-toolbar-h); border-bottom: 1px solid var(--rule); background: var(--bg); flex-shrink: 0; flex-wrap: wrap; }
+    .preview__label { font-family: var(--font-mono); font-size: 0.54rem; letter-spacing: 0.16em; text-transform: uppercase; color: var(--ink-3); white-space: nowrap; }
+    .preview__label strong { color: var(--ink-2); font-weight: 500; }
+
+    .viewport-select { font-family: var(--font-mono); font-size: 0.52rem; letter-spacing: 0.1em; background: var(--bg); border: 1px solid var(--rule); color: var(--ink-2); padding: 0.2rem 0.4rem; border-radius: 1px; cursor: pointer; outline: none; transition: border-color 0.12s; }
+    .viewport-select:focus-visible { border-color: var(--accent); outline: 2px solid var(--accent); outline-offset: 1px; }
+
+    .preview__viewports { flex: 1; display: flex; gap: 1rem; padding: 1rem; overflow: hidden; }
+
+    .viewport { display: flex; flex-direction: column; gap: 0.4rem; }
+    .viewport--mobile { flex-shrink: 0; }
+    .viewport--desktop { flex: 1; min-width: 0; }
+
+    .viewport__header { display: flex; align-items: center; gap: 0.5rem; }
+    .viewport__label { font-family: var(--font-mono); font-size: 0.52rem; letter-spacing: 0.18em; text-transform: uppercase; color: var(--ink-3); display: flex; align-items: center; gap: 0.35rem; }
+    .viewport__label::before { content: ''; display: inline-block; width: 5px; height: 5px; border-radius: 50%; }
+    .viewport--mobile .viewport__label::before { background: #2980B9; }
+    .viewport--desktop .viewport__label::before { background: #8E44AD; }
+
+    .mobile-clip, .desktop-clip { border: 1px solid var(--rule); background: white; position: relative; overflow: hidden; box-shadow: 0 2px 8px rgba(26,25,22,0.08); }
+    .desktop-clip { flex: 1; min-width: 0; }
+
+    iframe { border: none; display: block; }
+
+    .rendering-veil { position: absolute; inset: 0; background: rgba(247,246,243,0.75); display: flex; align-items: center; justify-content: center; opacity: 0; pointer-events: none; transition: opacity 0.15s; z-index: 10; }
+    .rendering-veil.is-on { opacity: 1; pointer-events: all; }
+    .rendering-veil span { font-family: var(--font-mono); font-size: 0.56rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--ink-3); }
+
+    .device-hint { font-family: var(--font-mono); font-size: 0.5rem; letter-spacing: 0.1em; color: var(--ink-3); text-align: center; margin-top: 0.25rem; }
+
+    @media (prefers-reduced-motion: reduce) {
+      * { transition-duration: 0.01ms !important; animation-duration: 0.01ms !important; }
+    }
   </style>
 </head>
 <body>
 <div class="shell">
 
   <!-- Toolbar -->
-  <div class="toolbar">
-    <a href="/" class="toolbar__back">← Projects</a>
-    <div class="toolbar__sep"></div>
-    <span class="toolbar__project" id="toolbarProject">Loading…</span>
-    <div class="toolbar__status">
-      <div class="status-dot" id="statusDot"></div>
+  <div class="toolbar" role="banner">
+    <a href="/" class="toolbar__back" aria-label="Back to projects">← Projects</a>
+    <div class="toolbar__sep" aria-hidden="true"></div>
+    <span class="toolbar__project" id="toolbarProject" aria-live="polite">Loading…</span>
+    <div class="toolbar__status" role="status" aria-live="polite" aria-atomic="true">
+      <div class="status-dot" id="statusDot" aria-hidden="true"></div>
       <span id="statusText">—</span>
     </div>
-    <button class="tbtn tbtn--ghost" onclick="openPreviewInBrowser()">Open in browser ↗</button>
+    <button class="tbtn tbtn--ghost" onclick="openPreviewInBrowser()" aria-label="Open preview in a new browser tab">Open in browser ↗</button>
   </div>
 
-  <!-- Body: sidebar + divider + preview -->
+  <!-- Body -->
   <div class="body">
 
     <!-- Sidebar -->
-    <div class="sidebar" id="sidebar">
-      <div class="sidebar__tabs">
-        <button class="sidebar__tab is-active" onclick="switchTab('meta',this)">Meta</button>
-        <button class="sidebar__tab" onclick="switchTab('cover',this)">Cover</button>
-        <button class="sidebar__tab" onclick="switchTab('sections',this)">Sections</button>
+    <div class="sidebar" id="sidebar" role="complementary" aria-label="Story editor">
+      <div class="sidebar__tabs" role="tablist" aria-label="Editor sections">
+        <button class="sidebar__tab is-active" role="tab" aria-selected="true" aria-controls="tab-meta" id="tab-btn-meta" onclick="switchTab('meta',this)">Meta</button>
+        <button class="sidebar__tab" role="tab" aria-selected="false" aria-controls="tab-cover" id="tab-btn-cover" onclick="switchTab('cover',this)">Cover</button>
+        <button class="sidebar__tab" role="tab" aria-selected="false" aria-controls="tab-sections" id="tab-btn-sections" onclick="switchTab('sections',this)">Sections</button>
       </div>
 
       <div class="sidebar__body">
 
-        <!-- Meta -->
-        <div class="tab-panel is-active" id="tab-meta">
-          <div class="form-group"><label class="form-label">Publication title</label><input class="form-input" data-path="meta.title" placeholder="The Voices That Remain"></div>
-          <div class="form-group"><label class="form-label">Client</label><input class="form-input" data-path="meta.client" placeholder="Royal Opera House"></div>
-          <div class="form-group"><label class="form-label">Event / report name</label><input class="form-input" data-path="meta.event" placeholder="Annual Report 2026"></div>
-          <div class="form-group"><label class="form-label">Publication date</label><input class="form-input" type="date" data-path="meta.date"></div>
-          <div class="form-group"><label class="form-label">Language</label><input class="form-input" data-path="meta.language" placeholder="en"></div>
+        <!-- Meta tab -->
+        <div class="tab-panel is-active" id="tab-meta" role="tabpanel" aria-labelledby="tab-btn-meta" tabindex="0">
+          <div class="form-group"><label class="form-label" for="meta-title">Publication title</label><input class="form-input" id="meta-title" data-path="meta.title" placeholder="The Voices That Remain"></div>
+          <div class="form-group"><label class="form-label" for="meta-client">Client</label><input class="form-input" id="meta-client" data-path="meta.client" placeholder="Royal Opera House"></div>
+          <div class="form-group"><label class="form-label" for="meta-event">Event / report name</label><input class="form-input" id="meta-event" data-path="meta.event" placeholder="Annual Report 2026"></div>
+          <div class="form-group"><label class="form-label" for="meta-date">Publication date</label><input class="form-input" id="meta-date" type="date" data-path="meta.date"></div>
+          <div class="form-group"><label class="form-label" for="meta-language">Language</label><input class="form-input" id="meta-language" data-path="meta.language" placeholder="en"></div>
 
           <p class="form-section-title">Brand</p>
           <div class="form-group">
-            <label class="form-label">Primary colour</label>
+            <label class="form-label" for="meta-accent">Primary colour</label>
             <div class="form-color-row">
-              <input type="color" class="form-color-swatch" data-path="meta.accent_color" value="#1A3F6F">
-              <input class="form-input" data-path="meta.accent_color" placeholder="#1A3F6F">
+              <input type="color" class="form-color-swatch" id="meta-accent-swatch" data-path="meta.accent_color" value="#1A3F6F" aria-label="Primary colour picker">
+              <input class="form-input" id="meta-accent" data-path="meta.accent_color" placeholder="#1A3F6F">
             </div>
-            <p class="form-hint">Nav, stats, CTAs, section accents</p>
+            <p class="form-hint" id="accent-hint">Nav, stats, CTAs, section accents</p>
           </div>
           <div class="form-group">
-            <label class="form-label">Secondary colour</label>
+            <label class="form-label" for="meta-accent2">Secondary colour</label>
             <div class="form-color-row">
-              <input type="color" class="form-color-swatch" data-path="meta.accent_color_2" value="#C9A84C">
-              <input class="form-input" data-path="meta.accent_color_2" placeholder="#C9A84C">
+              <input type="color" class="form-color-swatch" id="meta-accent2-swatch" data-path="meta.accent_color_2" value="#C9A84C" aria-label="Secondary colour picker">
+              <input class="form-input" id="meta-accent2" data-path="meta.accent_color_2" placeholder="#C9A84C">
             </div>
             <p class="form-hint">Colour bleed effects</p>
           </div>
 
           <p class="form-section-title">Analytics</p>
-          <div class="form-group"><label class="form-label">Plausible domain</label><input class="form-input" data-path="config.analytics.plausible_domain" placeholder="project.harpoon.productions"></div>
+          <div class="form-group"><label class="form-label" for="meta-plausible">Plausible domain</label><input class="form-input" id="meta-plausible" data-path="config.analytics.plausible_domain" placeholder="project.harpoon.productions"></div>
         </div>
 
-        <!-- Cover -->
-        <div class="tab-panel" id="tab-cover">
-          <div class="form-group"><label class="form-label">Kicker</label><input class="form-input" data-path="cover.kicker" placeholder="Client · Event"></div>
-          <div class="form-group"><label class="form-label">Headline</label><input class="form-input" data-path="cover.headline" placeholder="Main headline"></div>
-          <div class="form-group"><label class="form-label">Headline italic</label><input class="form-input" data-path="cover.headline_em" placeholder="Emphasised portion"><p class="form-hint">Rendered in italic below the main headline</p></div>
-          <div class="form-group"><label class="form-label">Intro</label><textarea class="form-textarea" data-path="cover.body" placeholder="Opening paragraph…"></textarea></div>
+        <!-- Cover tab -->
+        <div class="tab-panel" id="tab-cover" role="tabpanel" aria-labelledby="tab-btn-cover" tabindex="0">
+          <div class="form-group"><label class="form-label" for="cover-kicker">Kicker</label><input class="form-input" id="cover-kicker" data-path="cover.kicker" placeholder="Client · Event"></div>
+          <div class="form-group"><label class="form-label" for="cover-headline">Headline</label><input class="form-input" id="cover-headline" data-path="cover.headline" placeholder="Main headline"></div>
+          <div class="form-group">
+            <label class="form-label" for="cover-headline-em">Headline italic</label>
+            <input class="form-input" id="cover-headline-em" data-path="cover.headline_em" placeholder="Emphasised portion">
+            <p class="form-hint">Rendered in italic below the main headline</p>
+          </div>
+          <div class="form-group"><label class="form-label" for="cover-body">Intro</label><textarea class="form-textarea" id="cover-body" data-path="cover.body" placeholder="Opening paragraph…"></textarea></div>
 
           <p class="form-section-title">Hero</p>
-          <div class="form-group"><label class="form-label">Image URL</label><input class="form-input" data-path="cover.hero_image.url" placeholder="https://…"></div>
-          <div class="form-group"><label class="form-label">Image alt</label><input class="form-input" data-path="cover.hero_image.alt" placeholder="Describe the image"></div>
+          <div class="form-group"><label class="form-label" for="cover-hero-url">Image URL</label><input class="form-input" id="cover-hero-url" data-path="cover.hero_image.url" placeholder="https://…"></div>
+          <div class="form-group"><label class="form-label" for="cover-hero-alt">Image alt text</label><input class="form-input" id="cover-hero-alt" data-path="cover.hero_image.alt" placeholder="Describe the image"></div>
 
-          <p class="form-section-title">Video (overrides image)</p>
-          <div class="form-group"><label class="form-label">Video URL (MP4)</label><input class="form-input" data-path="cover.hero_video.url" placeholder="https://…/video.mp4"></div>
-          <div class="form-group"><label class="form-label">Poster image URL</label><input class="form-input" data-path="cover.hero_video.poster" placeholder="Shown before video loads"></div>
+          <p class="form-section-title">Video <span style="font-weight:300;text-transform:none;letter-spacing:0">(overrides image)</span></p>
+          <div class="form-group"><label class="form-label" for="cover-video-url">Video URL (MP4)</label><input class="form-input" id="cover-video-url" data-path="cover.hero_video.url" placeholder="https://…/video.mp4"></div>
+          <div class="form-group"><label class="form-label" for="cover-video-poster">Poster image URL</label><input class="form-input" id="cover-video-poster" data-path="cover.hero_video.poster" placeholder="Shown before video loads"></div>
 
           <p class="form-section-title">CTAs</p>
-          <div class="form-group"><label class="form-label">Primary label</label><input class="form-input" data-path="cover.cta_primary.label" placeholder="Read the report"></div>
-          <div class="form-group"><label class="form-label">Primary link</label><input class="form-input" data-path="cover.cta_primary.href" placeholder="#section-id"></div>
-          <div class="form-group"><label class="form-label">Secondary label</label><input class="form-input" data-path="cover.cta_secondary.label" placeholder="Watch the film"></div>
-          <div class="form-group"><label class="form-label">Secondary link</label><input class="form-input" data-path="cover.cta_secondary.href" placeholder="https://…"></div>
-          <div class="form-group"><label class="form-label">Colophon</label><input class="form-input" data-path="cover.colophon" placeholder="Produced by…"></div>
+          <div class="form-group"><label class="form-label" for="cover-cta1-label">Primary label</label><input class="form-input" id="cover-cta1-label" data-path="cover.cta_primary.label" placeholder="Read the report"></div>
+          <div class="form-group"><label class="form-label" for="cover-cta1-href">Primary link</label><input class="form-input" id="cover-cta1-href" data-path="cover.cta_primary.href" placeholder="#section-id"></div>
+          <div class="form-group"><label class="form-label" for="cover-cta2-label">Secondary label</label><input class="form-input" id="cover-cta2-label" data-path="cover.cta_secondary.label" placeholder="Watch the film"></div>
+          <div class="form-group"><label class="form-label" for="cover-cta2-href">Secondary link</label><input class="form-input" id="cover-cta2-href" data-path="cover.cta_secondary.href" placeholder="https://…"></div>
+          <div class="form-group"><label class="form-label" for="cover-colophon">Colophon</label><input class="form-input" id="cover-colophon" data-path="cover.colophon" placeholder="Produced by…"></div>
         </div>
 
-        <!-- Sections -->
-        <div class="tab-panel" id="tab-sections">
-          <div class="section-list" id="sectionList"></div>
-          <button class="add-section-btn" onclick="addSection()">+ Add section</button>
+        <!-- Sections tab -->
+        <div class="tab-panel" id="tab-sections" role="tabpanel" aria-labelledby="tab-btn-sections" tabindex="0">
+          <div class="section-list" id="sectionList" role="listbox" aria-label="Story sections" aria-activedescendant=""></div>
+          <button class="add-section-btn" onclick="addSection()" aria-label="Add a new section to the story">+ Add section</button>
 
-          <div class="section-editor" id="sectionEditor">
+          <div class="section-editor" id="sectionEditor" aria-live="polite">
             <div class="section-editor-header">
-              <span class="section-editor-title" id="sectionEditorTitle">Section</span>
-              <button class="section-delete" id="sectionDeleteBtn">Delete</button>
+              <span class="section-editor-title" id="sectionEditorTitle" aria-live="polite">Section</span>
+              <button class="section-delete" id="sectionDeleteBtn" aria-label="Delete this section">Delete</button>
             </div>
-            <div class="form-group"><label class="form-label">Section ID</label><input class="form-input" id="sec-id" placeholder="url-safe-slug"></div>
-            <div class="form-group"><label class="form-label">Title</label><input class="form-input" id="sec-title" placeholder="Section title"></div>
-            <div class="form-group"><label class="form-label">Nav label</label><input class="form-input" id="sec-nav-label" placeholder="Short label"><p class="form-hint">Only if title is too long for nav</p></div>
+
+            <div class="form-group"><label class="form-label" for="sec-id">Section ID</label><input class="form-input" id="sec-id" placeholder="url-safe-slug" aria-describedby="sec-id-hint"><p class="form-hint" id="sec-id-hint">URL-safe slug used for navigation anchors</p></div>
+            <div class="form-group"><label class="form-label" for="sec-title">Title</label><input class="form-input" id="sec-title" placeholder="Section title"></div>
+            <div class="form-group"><label class="form-label" for="sec-nav-label">Nav label</label><input class="form-input" id="sec-nav-label" placeholder="Short label"><p class="form-hint">Only needed if title is too long for the nav</p></div>
             <div class="form-group">
-              <label class="form-label">Layout</label>
+              <label class="form-label" for="sec-layout">Layout</label>
               <select class="form-select" id="sec-layout">
                 <option value="default">Default</option>
                 <option value="sticky-steps">Sticky Steps</option>
@@ -323,21 +261,27 @@
                 <option value="parallax">Parallax</option>
               </select>
             </div>
-            <div class="form-group"><label class="form-label">Intro</label><textarea class="form-textarea" id="sec-intro" placeholder="One or two sentence intro…"></textarea></div>
-            <div class="form-group"><label class="form-label">Hero image URL</label><input class="form-input" id="sec-hero-url" placeholder="https://…"></div>
-            <div class="form-group"><label class="form-label">Hero image alt</label><input class="form-input" id="sec-hero-alt" placeholder="Describe the image"></div>
-            <div class="form-group"><label class="form-label">Pull quote</label><textarea class="form-textarea" id="sec-pq-text" placeholder="Quote text…" style="min-height:48px"></textarea></div>
-            <div class="form-group"><label class="form-label">Pull quote attribution</label><input class="form-input" id="sec-pq-attr" placeholder="Name, Title"></div>
+            <div class="form-group"><label class="form-label" for="sec-intro">Intro</label><textarea class="form-textarea" id="sec-intro" placeholder="One or two sentence intro…"></textarea></div>
+            <div class="form-group"><label class="form-label" for="sec-hero-url">Hero image URL</label><input class="form-input" id="sec-hero-url" placeholder="https://…"></div>
+            <div class="form-group"><label class="form-label" for="sec-hero-alt">Hero image alt text</label><input class="form-input" id="sec-hero-alt" placeholder="Describe the image"></div>
+            <div class="form-group"><label class="form-label" for="sec-pq-text">Pull quote</label><textarea class="form-textarea" id="sec-pq-text" placeholder="Quote text…" style="min-height:48px"></textarea></div>
+            <div class="form-group"><label class="form-label" for="sec-pq-attr">Pull quote attribution</label><input class="form-input" id="sec-pq-attr" placeholder="Name, Title"></div>
             <div class="form-group">
               <div class="form-toggle-row">
-                <label class="form-label" style="margin:0">Exclude from nav</label>
-                <label class="toggle"><input type="checkbox" id="sec-nav-exclude"><div class="toggle__track"></div></label>
+                <label class="form-label" for="sec-nav-exclude" style="margin:0">Exclude from nav</label>
+                <label class="toggle">
+                  <input type="checkbox" id="sec-nav-exclude">
+                  <div class="toggle__track" aria-hidden="true"></div>
+                </label>
               </div>
             </div>
             <div class="form-group">
               <div class="form-toggle-row">
-                <label class="form-label" style="margin:0">Colour bleed</label>
-                <label class="toggle"><input type="checkbox" id="sec-color-bleed"><div class="toggle__track"></div></label>
+                <label class="form-label" for="sec-color-bleed" style="margin:0">Colour bleed</label>
+                <label class="toggle">
+                  <input type="checkbox" id="sec-color-bleed">
+                  <div class="toggle__track" aria-hidden="true"></div>
+                </label>
               </div>
             </div>
             <p class="coming-note">Cards, sticky steps, accordion items, photo clusters — edit the JSON directly for now. Full block editors coming next.</p>
@@ -348,38 +292,62 @@
     </div>
 
     <!-- Drag divider -->
-    <div class="divider" id="divider"></div>
+    <div class="divider" id="divider" role="separator" aria-label="Resize sidebar" tabindex="0" title="Drag to resize"></div>
 
     <!-- Preview -->
     <div class="preview" id="previewPanel">
-      <div class="preview__toolbar">
-        <span class="preview__label">📱 <strong>Mobile</strong> 375px</span>
+      <div class="preview__toolbar" role="toolbar" aria-label="Preview controls">
+        <span class="preview__label">📱 Mobile</span>
+        <label class="sr-only" for="mobilePreset">Mobile viewport</label>
+        <select class="viewport-select" id="mobilePreset" onchange="applyPreset('mobile')" aria-label="Mobile viewport size">
+          <option value="390:844">iPhone 15 (390×844)</option>
+          <option value="375:667">iPhone SE (375×667)</option>
+          <option value="430:932">iPhone 15 Pro Max (430×932)</option>
+          <option value="360:800">Android (360×800)</option>
+          <option value="768:1024">iPad Mini (768×1024)</option>
+        </select>
         <span style="flex:1"></span>
-        <span class="preview__label">🖥 <strong>Desktop</strong> 1280px</span>
+        <span class="preview__label">🖥 Desktop</span>
+        <label class="sr-only" for="desktopPreset">Desktop viewport</label>
+        <select class="viewport-select" id="desktopPreset" onchange="applyPreset('desktop')" aria-label="Desktop viewport size">
+          <option value="1280:800">Small laptop (1280×800)</option>
+          <option value="1440:900">MacBook Air (1440×900)</option>
+          <option value="1920:1080">Full HD (1920×1080)</option>
+          <option value="2560:1440">Wide (2560×1440)</option>
+          <option value="1024:768">iPad landscape (1024×768)</option>
+        </select>
       </div>
-      <div class="preview__viewports" id="viewports">
 
+      <div class="preview__viewports" id="viewports">
         <div class="viewport viewport--mobile">
-          <div class="viewport__label">Mobile</div>
-          <div class="mobile-clip" id="mobileClip">
-            <iframe id="mobileFrame" title="Mobile preview" src="" scrolling="yes"></iframe>
-            <div class="rendering-veil" id="mobileVeil"><span>Rendering…</span></div>
+          <div class="viewport__header">
+            <div class="viewport__label">Mobile</div>
           </div>
+          <div class="mobile-clip" id="mobileClip">
+            <iframe id="mobileFrame" title="Mobile preview of the story" src="" scrolling="yes"></iframe>
+            <div class="rendering-veil" id="mobileVeil" aria-hidden="true"><span>Rendering…</span></div>
+          </div>
+          <div class="device-hint" id="mobileHint" aria-live="polite">390 × 844</div>
         </div>
 
         <div class="viewport viewport--desktop">
-          <div class="viewport__label">Desktop</div>
-          <div class="desktop-clip" id="desktopClip">
-            <iframe id="desktopFrame" title="Desktop preview" src="" scrolling="yes"></iframe>
-            <div class="rendering-veil" id="desktopVeil"><span>Rendering…</span></div>
+          <div class="viewport__header">
+            <div class="viewport__label">Desktop</div>
           </div>
+          <div class="desktop-clip" id="desktopClip">
+            <iframe id="desktopFrame" title="Desktop preview of the story" src="" scrolling="yes"></iframe>
+            <div class="rendering-veil" id="desktopVeil" aria-hidden="true"><span>Rendering…</span></div>
+          </div>
+          <div class="device-hint" id="desktopHint" aria-live="polite">1280 × 800</div>
         </div>
-
       </div>
     </div>
 
   </div>
 </div>
+
+<!-- Visually hidden utility class -->
+<style>.sr-only { position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; border:0; }</style>
 
 <script>
 'use strict';
@@ -389,6 +357,17 @@ let content     = null;
 let saveTimer   = null;
 let isDirty     = false;
 let activeSectionIndex = -1;
+
+// ── Viewport preset state ─────────────────────────────────────────
+
+const PRESETS = { mobile: { w: 390, h: 844 }, desktop: { w: 1280, h: 800 } };
+
+function applyPreset(which) {
+  const select = document.getElementById(which === 'mobile' ? 'mobilePreset' : 'desktopPreset');
+  const [w, h] = select.value.split(':').map(Number);
+  PRESETS[which] = { w, h };
+  scaleFrames();
+}
 
 // ── Boot ───────────────────────────────────────────────────────────
 
@@ -412,60 +391,73 @@ async function boot() {
 }
 
 // ── Frame scaling ──────────────────────────────────────────────────
-// Mobile: clip container is ~240px wide; iframe renders at 375px and is scaled down
-// Desktop: clip container fills remaining space; iframe renders at 1280px and is scaled down
 
 function scaleFrames() {
-  const viewports    = document.getElementById('viewports');
-  const mClip        = document.getElementById('mobileClip');
-  const dClip        = document.getElementById('desktopClip');
-  const mFrame       = document.getElementById('mobileFrame');
-  const dFrame       = document.getElementById('desktopFrame');
+  const viewports = document.getElementById('viewports');
+  const mClip     = document.getElementById('mobileClip');
+  const dClip     = document.getElementById('desktopClip');
+  const mFrame    = document.getElementById('mobileFrame');
+  const dFrame    = document.getElementById('desktopFrame');
 
-  const availH = viewports.clientHeight - 40 - 16; // subtract label + padding
-  const mW     = 220;  // mobile clip target width
-  const mScale = mW / 375;
-  const mH     = availH;
+  const availH = viewports.clientHeight - 52;
 
-  // Set mobile clip size and scale iframe inside
-  mClip.style.width  = mW + 'px';
-  mClip.style.height = mH + 'px';
-  mFrame.style.transform = `scale(${mScale})`;
-  mFrame.style.width  = '375px';
-  mFrame.style.height = Math.round(mH / mScale) + 'px';
+  const mp      = PRESETS.mobile;
+  const mMaxW   = Math.floor(viewports.clientWidth * 0.35);
+  const mScaleW = mMaxW / mp.w;
+  const mScaleH = availH / mp.h;
+  const mScale  = Math.min(mScaleW, mScaleH);
+  const mClipW  = Math.round(mp.w * mScale);
+  const mClipH  = Math.round(mp.h * mScale);
 
-  // Desktop: use remaining width
-  const dW     = dClip.clientWidth;
-  const dScale = dW / 1280;
-  dClip.style.height = mH + 'px';
-  dFrame.style.transform = `scale(${dScale})`;
-  dFrame.style.width  = '1280px';
-  dFrame.style.height = Math.round(mH / dScale) + 'px';
+  mClip.style.width  = mClipW + 'px';
+  mClip.style.height = mClipH + 'px';
+  mFrame.style.transform       = `scale(${mScale})`;
+  mFrame.style.transformOrigin = 'top left';
+  mFrame.style.width           = mp.w + 'px';
+  mFrame.style.height          = mp.h + 'px';
+
+  const mHint = document.getElementById('mobileHint');
+  if (mHint) mHint.textContent = `${mp.w} × ${mp.h} · ${Math.round(mScale * 100)}%`;
+
+  const dp      = PRESETS.desktop;
+  const dAvailW = dClip.clientWidth;
+  const dScaleW = dAvailW / dp.w;
+  const dScaleH = availH / dp.h;
+  const dScale  = Math.min(dScaleW, dScaleH);
+  const dClipW  = Math.round(dp.w * dScale);
+  const dClipH  = Math.round(dp.h * dScale);
+
+  dClip.style.width  = dClipW + 'px';
+  dClip.style.height = dClipH + 'px';
+  dFrame.style.transform       = `scale(${dScale})`;
+  dFrame.style.transformOrigin = 'top left';
+  dFrame.style.width           = dp.w + 'px';
+  dFrame.style.height          = dp.h + 'px';
+
+  const dHint = document.getElementById('desktopHint');
+  if (dHint) dHint.textContent = `${dp.w} × ${dp.h} · ${Math.round(dScale * 100)}%`;
 }
 
 // ── Draggable divider ──────────────────────────────────────────────
 
 function setupDivider() {
-  const divider  = document.getElementById('divider');
-  const sidebar  = document.getElementById('sidebar');
-  let dragging   = false;
-  let startX     = 0;
-  let startW     = 0;
+  const divider = document.getElementById('divider');
+  const sidebar = document.getElementById('sidebar');
+  let dragging  = false;
+  let startX    = 0;
+  let startW    = 0;
 
   divider.addEventListener('mousedown', e => {
-    dragging = true;
-    startX   = e.clientX;
-    startW   = sidebar.offsetWidth;
+    dragging = true; startX = e.clientX; startW = sidebar.offsetWidth;
     divider.classList.add('is-dragging');
-    document.body.style.cursor    = 'col-resize';
+    document.body.style.cursor = 'col-resize';
     document.body.style.userSelect = 'none';
     e.preventDefault();
   });
 
   document.addEventListener('mousemove', e => {
     if (!dragging) return;
-    const delta = e.clientX - startX;
-    const newW  = Math.max(200, Math.min(520, startW + delta));
+    const newW = Math.max(200, Math.min(520, startW + e.clientX - startX));
     sidebar.style.width = newW + 'px';
     scaleFrames();
   });
@@ -474,27 +466,37 @@ function setupDivider() {
     if (!dragging) return;
     dragging = false;
     divider.classList.remove('is-dragging');
-    document.body.style.cursor     = '';
+    document.body.style.cursor = '';
     document.body.style.userSelect = '';
+    scaleFrames();
+  });
+
+  // Keyboard resize: arrow keys when divider is focused
+  divider.addEventListener('keydown', e => {
+    const sidebar = document.getElementById('sidebar');
+    let w = sidebar.offsetWidth;
+    if (e.key === 'ArrowRight') { w = Math.min(520, w + 20); }
+    else if (e.key === 'ArrowLeft') { w = Math.max(200, w - 20); }
+    else return;
+    e.preventDefault();
+    sidebar.style.width = w + 'px';
     scaleFrames();
   });
 }
 
-// ── Preview loading ────────────────────────────────────────────────
+// ── Preview ────────────────────────────────────────────────────────
 
 function loadPreviews() {
   const url = `/preview/${projectId}/`;
   document.getElementById('mobileFrame').src  = url;
   document.getElementById('desktopFrame').src = url;
-  document.getElementById('mobileFrame').onload = scaleFrames;
+  document.getElementById('mobileFrame').onload  = scaleFrames;
   document.getElementById('desktopFrame').onload = scaleFrames;
 }
 
 function reloadPreviews() {
   const mf = document.getElementById('mobileFrame');
   const df = document.getElementById('desktopFrame');
-
-  // Capture scroll positions
   let mSY = 0, dSY = 0;
   try { mSY = mf.contentWindow.scrollY || 0; } catch {}
   try { dSY = df.contentWindow.scrollY || 0; } catch {}
@@ -503,17 +505,8 @@ function reloadPreviews() {
   const url = `/preview/${projectId}/?t=${Date.now()}`;
   let mc = false, dc = false;
 
-  mf.onload = () => {
-    try { mf.contentWindow.scrollTo(0, mSY); } catch {}
-    scaleFrames();
-    mc = true; if (mc && dc) showVeil(false);
-  };
-  df.onload = () => {
-    try { df.contentWindow.scrollTo(0, dSY); } catch {}
-    scaleFrames();
-    dc = true; if (mc && dc) showVeil(false);
-  };
-
+  mf.onload = () => { try { mf.contentWindow.scrollTo(0, mSY); } catch {} scaleFrames(); mc = true; if (mc && dc) showVeil(false); };
+  df.onload = () => { try { df.contentWindow.scrollTo(0, dSY); } catch {} scaleFrames(); dc = true; if (mc && dc) showVeil(false); };
   mf.src = url;
   df.src = url;
 }
@@ -537,8 +530,7 @@ function scheduleAutosave() {
 async function doSave() {
   try {
     const res  = await fetch(`/api/project/${projectId}/save`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(content),
     });
     const data = await res.json();
@@ -576,7 +568,7 @@ function setPath(obj, path, value) {
   cur[keys[keys.length - 1]] = value;
 }
 
-// ── Form ───────────────────────────────────────────────────────────
+// ── Form population ────────────────────────────────────────────────
 
 function populateForm() {
   document.querySelectorAll('[data-path]').forEach(el => {
@@ -590,6 +582,7 @@ function wireInputs() {
     el.addEventListener('input', () => {
       const val = el.type === 'checkbox' ? el.checked : el.value;
       setPath(content, el.dataset.path, val);
+      // Sync colour pairs (swatch ↔ text input)
       document.querySelectorAll(`[data-path="${el.dataset.path}"]`).forEach(o => { if (o !== el) o.value = val; });
       scheduleAutosave();
     });
@@ -599,28 +592,70 @@ function wireInputs() {
 // ── Tabs ───────────────────────────────────────────────────────────
 
 function switchTab(name, btn) {
-  document.querySelectorAll('.sidebar__tab').forEach(t => t.classList.remove('is-active'));
+  document.querySelectorAll('.sidebar__tab').forEach(t => {
+    t.classList.remove('is-active');
+    t.setAttribute('aria-selected', 'false');
+  });
   document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('is-active'));
   btn.classList.add('is-active');
+  btn.setAttribute('aria-selected', 'true');
   document.getElementById(`tab-${name}`).classList.add('is-active');
 }
 
-// ── Sections ───────────────────────────────────────────────────────
+// Arrow key navigation between tabs
+document.querySelector('.sidebar__tabs').addEventListener('keydown', e => {
+  const tabs  = Array.from(document.querySelectorAll('.sidebar__tab'));
+  const idx   = tabs.indexOf(document.activeElement);
+  if (idx === -1) return;
+  let next = -1;
+  if (e.key === 'ArrowRight') next = (idx + 1) % tabs.length;
+  if (e.key === 'ArrowLeft')  next = (idx - 1 + tabs.length) % tabs.length;
+  if (next >= 0) { e.preventDefault(); tabs[next].focus(); tabs[next].click(); }
+});
+
+// ── Section list ───────────────────────────────────────────────────
 
 function renderSectionList() {
   const list = document.getElementById('sectionList');
   list.innerHTML = '';
   (content.sections || []).forEach((s, i) => {
-    const item = document.createElement('div');
+    const item = document.createElement('button');
     item.className = 'section-item' + (i === activeSectionIndex ? ' is-active' : '');
+    item.setAttribute('role', 'option');
+    item.setAttribute('aria-selected', i === activeSectionIndex ? 'true' : 'false');
+    item.setAttribute('id', `section-item-${i}`);
+    item.setAttribute('aria-label', `${s.title || s.id || 'Untitled'}, ${s.layout || 'default'} layout`);
     item.innerHTML = `
-      <span class="section-item__num">${String(s.num || i+1).padStart(2,'0')}</span>
-      <span class="section-item__label">${s.title || s.id || 'Untitled'}</span>
-      <span class="section-item__layout">${s.layout || 'default'}</span>`;
+      <span class="section-item__num" aria-hidden="true">${String(s.num || i+1).padStart(2,'0')}</span>
+      <span class="section-item__label" aria-hidden="true">${s.title || s.id || 'Untitled'}</span>
+      <span class="section-item__layout" aria-hidden="true">${s.layout || 'default'}</span>`;
     item.addEventListener('click', () => editSection(i));
     list.appendChild(item);
   });
+
+  // Update aria-activedescendant
+  const list2 = document.getElementById('sectionList');
+  if (activeSectionIndex >= 0) {
+    list2.setAttribute('aria-activedescendant', `section-item-${activeSectionIndex}`);
+  } else {
+    list2.removeAttribute('aria-activedescendant');
+  }
 }
+
+// Arrow key navigation within section list
+document.getElementById('sectionList').addEventListener('keydown', e => {
+  const items = Array.from(document.querySelectorAll('.section-item'));
+  if (!items.length) return;
+  const idx = items.indexOf(document.activeElement);
+  let next = -1;
+  if (e.key === 'ArrowDown') next = Math.min(idx + 1, items.length - 1);
+  if (e.key === 'ArrowUp')   next = Math.max(idx - 1, 0);
+  if (e.key === 'Home') next = 0;
+  if (e.key === 'End')  next = items.length - 1;
+  if (next >= 0 && next !== idx) { e.preventDefault(); items[next].focus(); items[next].click(); }
+});
+
+// ── Section editor ─────────────────────────────────────────────────
 
 function editSection(index) {
   activeSectionIndex = index;
@@ -643,6 +678,8 @@ function editSection(index) {
   wireSectionEditor(index);
   renderSectionList();
   document.getElementById('sectionDeleteBtn').onclick = () => deleteSection(index);
+  // Move focus to first field in section editor
+  document.getElementById('sec-id').focus();
 }
 
 function wireSectionEditor(index) {
@@ -675,6 +712,9 @@ function addSection() {
   renderSectionList();
   editSection(content.sections.length - 1);
   scheduleAutosave();
+  // Switch to sections tab if not already there
+  const sectionsTab = document.getElementById('tab-btn-sections');
+  if (!sectionsTab.classList.contains('is-active')) { sectionsTab.click(); }
 }
 
 function deleteSection(index) {
@@ -684,6 +724,7 @@ function deleteSection(index) {
   document.getElementById('sectionEditor').style.display = 'none';
   renderSectionList();
   scheduleAutosave();
+  document.querySelector('.add-section-btn').focus();
 }
 
 window.addEventListener('beforeunload', e => { if (isDirty) { e.preventDefault(); e.returnValue = ''; } });
