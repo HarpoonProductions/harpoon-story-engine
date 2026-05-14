@@ -1,771 +1,312 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Story Engine Editor</title>
-  <style>
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-    :root {
-      --bg:        #F7F6F3;
-      --bg-2:      #EEECEA;
-      --bg-3:      #E4E2DE;
-      --white:     #FFFFFF;
-      --ink:       #1A1916;
-      --ink-2:     #3D3C39;
-      --ink-3:     #7A7870;
-      --accent:    #8B3A2A;
-      --rule:      rgba(26,25,22,0.09);
-      --rule-2:    rgba(26,25,22,0.05);
-      --success:   #2D7D46;
-      --error-col: #C0392B;
-      --font-body: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
-      --font-mono: 'SF Mono', 'Fira Code', 'Roboto Mono', monospace;
-      --toolbar-h: 44px;
-      --preview-toolbar-h: 34px;
-      --sidebar-w: 300px;
-    }
-
-    html, body { height: 100%; overflow: hidden; background: var(--bg); color: var(--ink); font-family: var(--font-body); font-size: 12px; }
-
-    /* ── Shell ── */
-    .shell { height: 100vh; display: flex; flex-direction: column; }
-
-    /* ── Toolbar ── */
-    .toolbar {
-      height: var(--toolbar-h); flex-shrink: 0;
-      border-bottom: 1px solid var(--rule);
-      display: flex; align-items: center;
-      padding: 0 1rem; gap: 0.75rem;
-      background: white;
-    }
-
-    .toolbar__back { font-family: var(--font-mono); font-size: 0.56rem; letter-spacing: 0.16em; text-transform: uppercase; color: var(--ink-3); text-decoration: none; transition: color 0.12s; white-space: nowrap; }
-    .toolbar__back:hover { color: var(--ink); }
-    .toolbar__sep { width: 1px; height: 14px; background: var(--rule); flex-shrink: 0; }
-    .toolbar__project { font-family: var(--font-mono); font-size: 0.62rem; letter-spacing: 0.1em; color: var(--ink-2); flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-
-    .toolbar__status { display: flex; align-items: center; gap: 0.4rem; font-family: var(--font-mono); font-size: 0.56rem; letter-spacing: 0.1em; color: var(--ink-3); white-space: nowrap; }
-    .status-dot { width: 5px; height: 5px; border-radius: 50%; background: var(--bg-3); transition: background 0.25s; }
-    .status-dot.saving { background: #E67E22; }
-    .status-dot.saved  { background: var(--success); }
-    .status-dot.error  { background: var(--error-col); }
-
-    .tbtn { padding: 0.3rem 0.7rem; font-family: var(--font-mono); font-size: 0.56rem; letter-spacing: 0.12em; text-transform: uppercase; cursor: pointer; border-radius: 2px; transition: all 0.12s; white-space: nowrap; }
-    .tbtn--ghost { background: transparent; border: 1px solid var(--rule); color: var(--ink-3); }
-    .tbtn--ghost:hover { border-color: var(--ink-3); color: var(--ink); }
-
-    /* ── Body (sidebar + divider + preview) ── */
-    .body {
-      flex: 1;
-      display: flex;
-      overflow: hidden;
-    }
-
-    /* ── Sidebar ── */
-    .sidebar {
-      width: var(--sidebar-w);
-      min-width: 200px;
-      max-width: 520px;
-      flex-shrink: 0;
-      border-right: 1px solid var(--rule);
-      display: flex; flex-direction: column;
-      overflow: hidden; background: white;
-    }
-
-    .sidebar__tabs { display: flex; border-bottom: 1px solid var(--rule); flex-shrink: 0; }
-    .sidebar__tab { flex: 1; padding: 0.55rem 0.5rem; font-family: var(--font-mono); font-size: 0.54rem; letter-spacing: 0.18em; text-transform: uppercase; text-align: center; cursor: pointer; color: var(--ink-3); border: none; background: none; border-bottom: 2px solid transparent; transition: all 0.12s; }
-    .sidebar__tab.is-active { color: var(--accent); border-bottom-color: var(--accent); background: var(--bg); }
-    .sidebar__tab:hover:not(.is-active) { color: var(--ink-2); background: var(--bg); }
-
-    .sidebar__body { flex: 1; overflow-y: auto; padding: 1rem; scrollbar-width: thin; scrollbar-color: var(--bg-3) transparent; }
-    .sidebar__body::-webkit-scrollbar { width: 3px; }
-    .sidebar__body::-webkit-scrollbar-thumb { background: var(--bg-3); border-radius: 2px; }
-
-    /* ── Drag divider ── */
-    .divider {
-      width: 5px;
-      flex-shrink: 0;
-      background: var(--rule);
-      cursor: col-resize;
-      position: relative;
-      transition: background 0.12s;
-      user-select: none;
-    }
-    .divider:hover, .divider.is-dragging { background: var(--accent); }
-    .divider::after {
-      content: '';
-      position: absolute;
-      top: 50%; left: 50%;
-      transform: translate(-50%, -50%);
-      width: 1px; height: 32px;
-      background: rgba(26,25,22,0.2);
-      border-radius: 1px;
-    }
-
-    /* ── Preview ── */
-    .preview { flex: 1; display: flex; flex-direction: column; background: var(--bg-2); overflow: hidden; min-width: 0; }
-
-    .preview__toolbar { display: flex; align-items: center; gap: 1rem; padding: 0 1rem; height: var(--preview-toolbar-h); border-bottom: 1px solid var(--rule); background: var(--bg); flex-shrink: 0; }
-    .preview__label { font-family: var(--font-mono); font-size: 0.54rem; letter-spacing: 0.16em; text-transform: uppercase; color: var(--ink-3); white-space: nowrap; }
-    .preview__label strong { color: var(--ink-2); font-weight: 500; }
-
-    .preview__viewports { flex: 1; display: flex; gap: 1rem; padding: 1rem; overflow: hidden; }
-
-    /* ── Viewports ── */
-    .viewport { display: flex; flex-direction: column; gap: 0.4rem; }
-    .viewport--mobile { flex-shrink: 0; }
-    .viewport--desktop { flex: 1; min-width: 0; }
-
-    .viewport__label { font-family: var(--font-mono); font-size: 0.52rem; letter-spacing: 0.18em; text-transform: uppercase; color: var(--ink-3); display: flex; align-items: center; gap: 0.35rem; }
-    .viewport__label::before { content: ''; display: inline-block; width: 5px; height: 5px; border-radius: 50%; }
-    .viewport--mobile .viewport__label::before { background: #2980B9; }
-    .viewport--desktop .viewport__label::before { background: #8E44AD; }
-
-    /*
-      Mobile viewport: show a phone-width preview.
-      We render at 375px then use CSS zoom to scale it down.
-      The outer container clips to the scaled size.
-    */
-    .mobile-clip {
-      overflow: hidden;
-      border: 1px solid var(--rule);
-      background: white;
-      box-shadow: 0 2px 8px rgba(26,25,22,0.1);
-      flex-shrink: 0;
-      position: relative;
-    }
-
-    /* iframe renders at 375px then gets zoomed */
-    #mobileFrame {
-      border: none;
-      display: block;
-      width: 375px;
-      transform-origin: top left;
-    }
-
-    .desktop-clip {
-      flex: 1;
-      min-width: 0;
-      overflow: hidden;
-      border: 1px solid var(--rule);
-      background: white;
-      box-shadow: 0 2px 8px rgba(26,25,22,0.1);
-      position: relative;
-    }
-
-    /* iframe renders at 1280px then gets scaled */
-    #desktopFrame {
-      border: none;
-      display: block;
-      width: 1280px;
-      transform-origin: top left;
-    }
-
-    .rendering-veil { position: absolute; inset: 0; background: rgba(247,246,243,0.75); display: flex; align-items: center; justify-content: center; opacity: 0; pointer-events: none; transition: opacity 0.15s; z-index: 10; }
-    .rendering-veil.is-on { opacity: 1; pointer-events: all; }
-    .rendering-veil span { font-family: var(--font-mono); font-size: 0.56rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--ink-3); }
-
-    /* ── Viewport preset selects ── */
-    .viewport-select {
-      font-family: var(--font-mono); font-size: 0.52rem; letter-spacing: 0.1em;
-      background: var(--bg); border: 1px solid var(--rule); color: var(--ink-2);
-      padding: 0.2rem 0.4rem; border-radius: 1px; cursor: pointer;
-      outline: none; transition: border-color 0.12s;
-    }
-    .viewport-select:focus, .viewport-select:hover { border-color: var(--ink-3); }
-
-    .viewport__header { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.4rem; }
-    .viewport__header .viewport__label { margin-bottom: 0; }
-
-    /* Device frame hint */
-    .device-hint {
-      font-family: var(--font-mono); font-size: 0.5rem; letter-spacing: 0.1em;
-      color: var(--ink-3); margin-top: 0.25rem; text-align: center;
-    }
-
-    /* ── Form ── */
-    .tab-panel { display: none; }
-    .tab-panel.is-active { display: block; }
-
-    .form-group { margin-bottom: 0.85rem; }
-    .form-label { display: block; font-family: var(--font-mono); font-size: 0.54rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--ink-3); margin-bottom: 0.25rem; }
-
-    .form-input, .form-textarea, .form-select {
-      width: 100%; background: var(--bg); border: 1px solid var(--rule);
-      color: var(--ink); font-family: var(--font-mono); font-size: 0.75rem;
-      padding: 0.38rem 0.55rem; outline: none; transition: border-color 0.12s; border-radius: 1px;
-    }
-    .form-input:focus, .form-textarea:focus, .form-select:focus { border-color: var(--accent); background: white; }
-    .form-textarea { resize: vertical; min-height: 60px; font-family: var(--font-body); font-size: 0.78rem; line-height: 1.5; }
-    .form-select { cursor: pointer; }
-
-    .form-color-row { display: grid; grid-template-columns: 28px 1fr; gap: 0.4rem; align-items: center; }
-    .form-color-swatch { width: 28px; height: 26px; border: 1px solid var(--rule); cursor: pointer; padding: 1px; border-radius: 1px; }
-    .form-hint { font-size: 0.66rem; color: var(--ink-3); margin-top: 0.2rem; line-height: 1.4; }
-
-    .form-toggle-row { display: flex; align-items: center; justify-content: space-between; }
-    .toggle { position: relative; width: 28px; height: 16px; flex-shrink: 0; }
-    .toggle input { display: none; }
-    .toggle__track { position: absolute; inset: 0; background: var(--bg-3); border: 1px solid var(--rule); border-radius: 8px; cursor: pointer; transition: background 0.15s; }
-    .toggle input:checked + .toggle__track { background: var(--accent); border-color: var(--accent); }
-    .toggle__track::after { content: ''; position: absolute; width: 10px; height: 10px; background: white; border-radius: 50%; top: 2px; left: 2px; transition: transform 0.15s; box-shadow: 0 1px 2px rgba(0,0,0,0.15); }
-    .toggle input:checked + .toggle__track::after { transform: translateX(12px); }
-
-    .form-section-title { font-family: var(--font-mono); font-size: 0.54rem; letter-spacing: 0.22em; text-transform: uppercase; color: var(--accent); margin: 1.25rem 0 0.75rem; padding-bottom: 0.4rem; border-bottom: 1px solid var(--rule-2); }
-
-    .section-list { display: flex; flex-direction: column; gap: 1px; }
-    .section-item { display: flex; align-items: center; gap: 0.5rem; padding: 0.5rem 0.6rem; cursor: pointer; border: 1px solid transparent; transition: all 0.1s; border-radius: 1px; }
-    .section-item:hover { background: var(--bg); border-color: var(--rule); }
-    .section-item.is-active { background: var(--bg-2); border-color: var(--bg-3); }
-    .section-item__num { font-family: var(--font-mono); font-size: 0.52rem; color: var(--accent); width: 18px; flex-shrink: 0; }
-    .section-item__label { font-size: 0.78rem; color: var(--ink-2); flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .section-item__layout { font-family: var(--font-mono); font-size: 0.48rem; letter-spacing: 0.1em; color: var(--ink-3); text-transform: uppercase; white-space: nowrap; }
-
-    .add-section-btn { margin-top: 0.5rem; width: 100%; padding: 0.5rem; background: transparent; border: 1px dashed var(--rule); color: var(--ink-3); font-family: var(--font-mono); font-size: 0.56rem; letter-spacing: 0.16em; text-transform: uppercase; cursor: pointer; transition: all 0.12s; border-radius: 1px; }
-    .add-section-btn:hover { border-color: var(--accent); color: var(--accent); background: rgba(139,58,42,0.04); }
-
-    .section-editor { margin-top: 1.25rem; padding-top: 1.25rem; border-top: 1px solid var(--rule); display: none; }
-    .section-editor-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.75rem; }
-    .section-editor-title { font-family: var(--font-mono); font-size: 0.56rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--accent); }
-    .section-delete { padding: 0.25rem 0.5rem; background: transparent; border: 1px solid var(--rule); color: var(--error-col); font-family: var(--font-mono); font-size: 0.5rem; letter-spacing: 0.12em; cursor: pointer; transition: all 0.12s; opacity: 0.6; border-radius: 1px; }
-    .section-delete:hover { opacity: 1; border-color: var(--error-col); background: rgba(192,57,43,0.06); }
-
-    .coming-note { font-family: var(--font-mono); font-size: 0.56rem; letter-spacing: 0.08em; color: var(--ink-3); margin-top: 0.75rem; padding: 0.6rem 0.75rem; background: var(--bg); border-left: 2px solid var(--bg-3); line-height: 1.5; }
-  </style>
-</head>
-<body>
-<div class="shell">
-
-  <!-- Toolbar -->
-  <div class="toolbar">
-    <a href="/" class="toolbar__back">← Projects</a>
-    <div class="toolbar__sep"></div>
-    <span class="toolbar__project" id="toolbarProject">Loading…</span>
-    <div class="toolbar__status">
-      <div class="status-dot" id="statusDot"></div>
-      <span id="statusText">—</span>
-    </div>
-    <button class="tbtn tbtn--ghost" onclick="openPreviewInBrowser()">Open in browser ↗</button>
-  </div>
-
-  <!-- Body: sidebar + divider + preview -->
-  <div class="body">
-
-    <!-- Sidebar -->
-    <div class="sidebar" id="sidebar">
-      <div class="sidebar__tabs">
-        <button class="sidebar__tab is-active" onclick="switchTab('meta',this)">Meta</button>
-        <button class="sidebar__tab" onclick="switchTab('cover',this)">Cover</button>
-        <button class="sidebar__tab" onclick="switchTab('sections',this)">Sections</button>
-      </div>
-
-      <div class="sidebar__body">
-
-        <!-- Meta -->
-        <div class="tab-panel is-active" id="tab-meta">
-          <div class="form-group"><label class="form-label">Publication title</label><input class="form-input" data-path="meta.title" placeholder="The Voices That Remain"></div>
-          <div class="form-group"><label class="form-label">Client</label><input class="form-input" data-path="meta.client" placeholder="Royal Opera House"></div>
-          <div class="form-group"><label class="form-label">Event / report name</label><input class="form-input" data-path="meta.event" placeholder="Annual Report 2026"></div>
-          <div class="form-group"><label class="form-label">Publication date</label><input class="form-input" type="date" data-path="meta.date"></div>
-          <div class="form-group"><label class="form-label">Language</label><input class="form-input" data-path="meta.language" placeholder="en"></div>
-
-          <p class="form-section-title">Brand</p>
-          <div class="form-group">
-            <label class="form-label">Primary colour</label>
-            <div class="form-color-row">
-              <input type="color" class="form-color-swatch" data-path="meta.accent_color" value="#1A3F6F">
-              <input class="form-input" data-path="meta.accent_color" placeholder="#1A3F6F">
-            </div>
-            <p class="form-hint">Nav, stats, CTAs, section accents</p>
-          </div>
-          <div class="form-group">
-            <label class="form-label">Secondary colour</label>
-            <div class="form-color-row">
-              <input type="color" class="form-color-swatch" data-path="meta.accent_color_2" value="#C9A84C">
-              <input class="form-input" data-path="meta.accent_color_2" placeholder="#C9A84C">
-            </div>
-            <p class="form-hint">Colour bleed effects</p>
-          </div>
-
-          <p class="form-section-title">Analytics</p>
-          <div class="form-group"><label class="form-label">Plausible domain</label><input class="form-input" data-path="config.analytics.plausible_domain" placeholder="project.harpoon.productions"></div>
-        </div>
-
-        <!-- Cover -->
-        <div class="tab-panel" id="tab-cover">
-          <div class="form-group"><label class="form-label">Kicker</label><input class="form-input" data-path="cover.kicker" placeholder="Client · Event"></div>
-          <div class="form-group"><label class="form-label">Headline</label><input class="form-input" data-path="cover.headline" placeholder="Main headline"></div>
-          <div class="form-group"><label class="form-label">Headline italic</label><input class="form-input" data-path="cover.headline_em" placeholder="Emphasised portion"><p class="form-hint">Rendered in italic below the main headline</p></div>
-          <div class="form-group"><label class="form-label">Intro</label><textarea class="form-textarea" data-path="cover.body" placeholder="Opening paragraph…"></textarea></div>
-
-          <p class="form-section-title">Hero</p>
-          <div class="form-group"><label class="form-label">Image URL</label><input class="form-input" data-path="cover.hero_image.url" placeholder="https://…"></div>
-          <div class="form-group"><label class="form-label">Image alt</label><input class="form-input" data-path="cover.hero_image.alt" placeholder="Describe the image"></div>
-
-          <p class="form-section-title">Video (overrides image)</p>
-          <div class="form-group"><label class="form-label">Video URL (MP4)</label><input class="form-input" data-path="cover.hero_video.url" placeholder="https://…/video.mp4"></div>
-          <div class="form-group"><label class="form-label">Poster image URL</label><input class="form-input" data-path="cover.hero_video.poster" placeholder="Shown before video loads"></div>
-
-          <p class="form-section-title">CTAs</p>
-          <div class="form-group"><label class="form-label">Primary label</label><input class="form-input" data-path="cover.cta_primary.label" placeholder="Read the report"></div>
-          <div class="form-group"><label class="form-label">Primary link</label><input class="form-input" data-path="cover.cta_primary.href" placeholder="#section-id"></div>
-          <div class="form-group"><label class="form-label">Secondary label</label><input class="form-input" data-path="cover.cta_secondary.label" placeholder="Watch the film"></div>
-          <div class="form-group"><label class="form-label">Secondary link</label><input class="form-input" data-path="cover.cta_secondary.href" placeholder="https://…"></div>
-          <div class="form-group"><label class="form-label">Colophon</label><input class="form-input" data-path="cover.colophon" placeholder="Produced by…"></div>
-        </div>
-
-        <!-- Sections -->
-        <div class="tab-panel" id="tab-sections">
-          <div class="section-list" id="sectionList"></div>
-          <button class="add-section-btn" onclick="addSection()">+ Add section</button>
-
-          <div class="section-editor" id="sectionEditor">
-            <div class="section-editor-header">
-              <span class="section-editor-title" id="sectionEditorTitle">Section</span>
-              <button class="section-delete" id="sectionDeleteBtn">Delete</button>
-            </div>
-            <div class="form-group"><label class="form-label">Section ID</label><input class="form-input" id="sec-id" placeholder="url-safe-slug"></div>
-            <div class="form-group"><label class="form-label">Title</label><input class="form-input" id="sec-title" placeholder="Section title"></div>
-            <div class="form-group"><label class="form-label">Nav label</label><input class="form-input" id="sec-nav-label" placeholder="Short label"><p class="form-hint">Only if title is too long for nav</p></div>
-            <div class="form-group">
-              <label class="form-label">Layout</label>
-              <select class="form-select" id="sec-layout">
-                <option value="default">Default</option>
-                <option value="sticky-steps">Sticky Steps</option>
-                <option value="stackable-cards">Stackable Cards</option>
-                <option value="cascading-slides">Cascading Slides</option>
-                <option value="fullbleed-quote">Fullbleed Quote</option>
-                <option value="reveal-crossfade">Reveal Crossfade</option>
-                <option value="parallax">Parallax</option>
-              </select>
-            </div>
-            <div class="form-group"><label class="form-label">Intro</label><textarea class="form-textarea" id="sec-intro" placeholder="One or two sentence intro…"></textarea></div>
-            <div class="form-group"><label class="form-label">Hero image URL</label><input class="form-input" id="sec-hero-url" placeholder="https://…"></div>
-            <div class="form-group"><label class="form-label">Hero image alt</label><input class="form-input" id="sec-hero-alt" placeholder="Describe the image"></div>
-            <div class="form-group"><label class="form-label">Pull quote</label><textarea class="form-textarea" id="sec-pq-text" placeholder="Quote text…" style="min-height:48px"></textarea></div>
-            <div class="form-group"><label class="form-label">Pull quote attribution</label><input class="form-input" id="sec-pq-attr" placeholder="Name, Title"></div>
-            <div class="form-group">
-              <div class="form-toggle-row">
-                <label class="form-label" style="margin:0">Exclude from nav</label>
-                <label class="toggle"><input type="checkbox" id="sec-nav-exclude"><div class="toggle__track"></div></label>
-              </div>
-            </div>
-            <div class="form-group">
-              <div class="form-toggle-row">
-                <label class="form-label" style="margin:0">Colour bleed</label>
-                <label class="toggle"><input type="checkbox" id="sec-color-bleed"><div class="toggle__track"></div></label>
-              </div>
-            </div>
-            <p class="coming-note">Cards, sticky steps, accordion items, photo clusters — edit the JSON directly for now. Full block editors coming next.</p>
-          </div>
-        </div>
-
-      </div>
-    </div>
-
-    <!-- Drag divider -->
-    <div class="divider" id="divider"></div>
-
-    <!-- Preview -->
-    <div class="preview" id="previewPanel">
-      <div class="preview__toolbar">
-        <span class="preview__label">📱 Mobile</span>
-        <select class="viewport-select" id="mobilePreset" onchange="applyPreset('mobile')">
-          <option value="390:844">iPhone 15 (390×844)</option>
-          <option value="375:667">iPhone SE (375×667)</option>
-          <option value="430:932">iPhone 15 Pro Max (430×932)</option>
-          <option value="360:800">Android (360×800)</option>
-          <option value="768:1024">iPad Mini (768×1024)</option>
-        </select>
-        <span style="flex:1"></span>
-        <span class="preview__label">🖥 Desktop</span>
-        <select class="viewport-select" id="desktopPreset" onchange="applyPreset('desktop')">
-          <option value="1280:800">Small laptop (1280×800)</option>
-          <option value="1440:900">MacBook Air (1440×900)</option>
-          <option value="1920:1080">Full HD (1920×1080)</option>
-          <option value="2560:1440">Wide (2560×1440)</option>
-          <option value="1024:768">iPad landscape (1024×768)</option>
-        </select>
-      </div>
-      <div class="preview__viewports" id="viewports">
-
-        <div class="viewport viewport--mobile">
-          <div class="viewport__header">
-            <div class="viewport__label">Mobile</div>
-          </div>
-          <div class="mobile-clip" id="mobileClip">
-            <iframe id="mobileFrame" title="Mobile preview" src="" scrolling="yes"></iframe>
-            <div class="rendering-veil" id="mobileVeil"><span>Rendering…</span></div>
-          </div>
-          <div class="device-hint" id="mobileHint">390 × 844 · 43%</div>
-        </div>
-
-        <div class="viewport viewport--desktop">
-          <div class="viewport__header">
-            <div class="viewport__label">Desktop</div>
-          </div>
-          <div class="desktop-clip" id="desktopClip">
-            <iframe id="desktopFrame" title="Desktop preview" src="" scrolling="yes"></iframe>
-            <div class="rendering-veil" id="desktopVeil"><span>Rendering…</span></div>
-          </div>
-          <div class="device-hint" id="desktopHint">1280 × 800 · 56%</div>
-        </div>
-
-      </div>
-    </div>
-
-  </div>
-</div>
-
-<script>
 'use strict';
 
-const projectId = location.pathname.split('/').pop();
-let content     = null;
-let saveTimer   = null;
-let isDirty     = false;
-let activeSectionIndex = -1;
+/**
+ * Harpoon Story Engine — Editor Server
+ * editor.js
+ *
+ * Local authoring server. Run with: node editor.js
+ * Opens at http://localhost:3001
+ */
 
-// ── Boot ───────────────────────────────────────────────────────────
+const express  = require('express');
+const fs       = require('fs');
+const path     = require('path');
+const chokidar = require('chokidar');
 
-async function boot() {
-  setupDivider();
-  scaleFrames();
-  window.addEventListener('resize', scaleFrames);
+const { validate } = require('./renderer/validate');
+const { render }   = require('./renderer/index');
 
-  const res = await fetch(`/api/project/${projectId}`);
-  if (!res.ok) { document.getElementById('toolbarProject').textContent = 'Project not found'; return; }
-  content = await res.json();
+const app  = express();
+const PORT = 3001;
 
-  document.title = content.meta.title + ' — Story Engine';
-  document.getElementById('toolbarProject').textContent =
-    (content.meta.client ? content.meta.client + ' · ' : '') + content.meta.title;
+// ── Paths ─────────────────────────────────────────────────────────
 
-  populateForm();
-  wireInputs();
-  renderSectionList();
-  loadPreviews();
-}
+const ROOT         = __dirname;
+const PROJECTS_DIR = path.join(ROOT, 'projects');
+const PREVIEW_DIR  = path.join(ROOT, '.preview');
+const EDITOR_DIR   = path.join(ROOT, 'editor');
+const RECENT_FILE  = path.join(ROOT, '.editor-recent.json');
+const SCHEMA_FILE  = path.join(ROOT, 'schema', 'content.schema.json');
 
-// ── Viewport preset state ─────────────────────────────────────────
+// Ensure directories exist
+fs.mkdirSync(PROJECTS_DIR, { recursive: true });
+fs.mkdirSync(PREVIEW_DIR,  { recursive: true });
+fs.mkdirSync(EDITOR_DIR,   { recursive: true });
 
-const PRESETS = {
-  mobile:  { w: 390, h: 844 },
-  desktop: { w: 1280, h: 800 },
+// ── Middleware ────────────────────────────────────────────────────
+
+app.use(express.json({ limit: '10mb' }));
+
+// Explicit MIME types — express.static can misserve .css as octet-stream
+const mime = {
+  '.html': 'text/html; charset=utf-8',
+  '.css':  'text/css',
+  '.js':   'application/javascript',
+  '.json': 'application/json',
+  '.mp4':  'video/mp4',
+  '.jpg':  'image/jpeg',
+  '.jpeg': 'image/jpeg',
+  '.png':  'image/png',
+  '.svg':  'image/svg+xml',
+  '.webp': 'image/webp',
+  '.woff2':'font/woff2',
 };
 
-function applyPreset(which) {
-  const select = document.getElementById(which === 'mobile' ? 'mobilePreset' : 'desktopPreset');
-  const [w, h] = select.value.split(':').map(Number);
-  PRESETS[which] = { w, h };
-  scaleFrames();
-}
+const staticOpts = {
+  setHeaders(res, filePath) {
+    const ext = require('path').extname(filePath).toLowerCase();
+    if (mime[ext]) res.setHeader('Content-Type', mime[ext]);
+  }
+};
 
-// ── Frame scaling ──────────────────────────────────────────────────
-// Each viewport is scaled to fit its clip container while preserving
-// the exact aspect ratio of the chosen device. The user sees the full
-// page content, just smaller — no clipping, no scrolling needed to
-// understand the layout.
+// Serve editor UI static files
+app.use('/editor', express.static(EDITOR_DIR, staticOpts));
 
-function scaleFrames() {
-  const viewports = document.getElementById('viewports');
-  const mClip     = document.getElementById('mobileClip');
-  const dClip     = document.getElementById('desktopClip');
-  const mFrame    = document.getElementById('mobileFrame');
-  const dFrame    = document.getElementById('desktopFrame');
+// Serve preview output
+app.use('/preview', express.static(PREVIEW_DIR, staticOpts));
 
-  // Available height: viewports height minus label row and padding
-  const availH = viewports.clientHeight - 52;
+// ── Recent projects ───────────────────────────────────────────────
 
-  // ── Mobile ──────────────────────────────────────────────────────
-  const mp      = PRESETS.mobile;
-  // Width is constrained to ~35% of the preview panel, height is constrained to availH
-  // Scale to fit whichever dimension runs out first
-  const mMaxW   = Math.floor(viewports.clientWidth * 0.35);
-  const mScaleW = mMaxW / mp.w;
-  const mScaleH = availH / mp.h;
-  const mScale  = Math.min(mScaleW, mScaleH);
-  const mClipW  = Math.round(mp.w * mScale);
-  const mClipH  = Math.round(mp.h * mScale);
-
-  mClip.style.width  = mClipW + 'px';
-  mClip.style.height = mClipH + 'px';
-  mFrame.style.transform       = `scale(${mScale})`;
-  mFrame.style.transformOrigin = 'top left';
-  mFrame.style.width           = mp.w + 'px';
-  mFrame.style.height          = mp.h + 'px';
-
-  const mHint = document.getElementById('mobileHint');
-  if (mHint) mHint.textContent = `${mp.w} × ${mp.h} · ${Math.round(mScale * 100)}%`;
-
-  // ── Desktop ──────────────────────────────────────────────────────
-  const dp      = PRESETS.desktop;
-  const dAvailW = dClip.clientWidth;
-  const dScaleW = dAvailW / dp.w;
-  const dScaleH = availH / dp.h;
-  const dScale  = Math.min(dScaleW, dScaleH);
-  const dClipW  = Math.round(dp.w * dScale);
-  const dClipH  = Math.round(dp.h * dScale);
-
-  dClip.style.width  = dClipW + 'px';
-  dClip.style.height = dClipH + 'px';
-  dFrame.style.transform       = `scale(${dScale})`;
-  dFrame.style.transformOrigin = 'top left';
-  dFrame.style.width           = dp.w + 'px';
-  dFrame.style.height          = dp.h + 'px';
-
-  const dHint = document.getElementById('desktopHint');
-  if (dHint) dHint.textContent = `${dp.w} × ${dp.h} · ${Math.round(dScale * 100)}%`;
-}
-
-// ── Draggable divider ──────────────────────────────────────────────
-
-function setupDivider() {
-  const divider  = document.getElementById('divider');
-  const sidebar  = document.getElementById('sidebar');
-  let dragging   = false;
-  let startX     = 0;
-  let startW     = 0;
-
-  divider.addEventListener('mousedown', e => {
-    dragging = true;
-    startX   = e.clientX;
-    startW   = sidebar.offsetWidth;
-    divider.classList.add('is-dragging');
-    document.body.style.cursor    = 'col-resize';
-    document.body.style.userSelect = 'none';
-    e.preventDefault();
-  });
-
-  document.addEventListener('mousemove', e => {
-    if (!dragging) return;
-    const delta = e.clientX - startX;
-    const newW  = Math.max(200, Math.min(520, startW + delta));
-    sidebar.style.width = newW + 'px';
-    scaleFrames();
-  });
-
-  document.addEventListener('mouseup', () => {
-    if (!dragging) return;
-    dragging = false;
-    divider.classList.remove('is-dragging');
-    document.body.style.cursor     = '';
-    document.body.style.userSelect = '';
-    scaleFrames();
-  });
-}
-
-// ── Preview loading ────────────────────────────────────────────────
-
-function loadPreviews() {
-  const url = `/preview/${projectId}/`;
-  document.getElementById('mobileFrame').src  = url;
-  document.getElementById('desktopFrame').src = url;
-  document.getElementById('mobileFrame').onload = scaleFrames;
-  document.getElementById('desktopFrame').onload = scaleFrames;
-}
-
-function reloadPreviews() {
-  const mf = document.getElementById('mobileFrame');
-  const df = document.getElementById('desktopFrame');
-
-  // Capture scroll positions
-  let mSY = 0, dSY = 0;
-  try { mSY = mf.contentWindow.scrollY || 0; } catch {}
-  try { dSY = df.contentWindow.scrollY || 0; } catch {}
-
-  showVeil(true);
-  const url = `/preview/${projectId}/?t=${Date.now()}`;
-  let mc = false, dc = false;
-
-  mf.onload = () => {
-    try { mf.contentWindow.scrollTo(0, mSY); } catch {}
-    scaleFrames();
-    mc = true; if (mc && dc) showVeil(false);
-  };
-  df.onload = () => {
-    try { df.contentWindow.scrollTo(0, dSY); } catch {}
-    scaleFrames();
-    dc = true; if (mc && dc) showVeil(false);
-  };
-
-  mf.src = url;
-  df.src = url;
-}
-
-function showVeil(on) {
-  document.getElementById('mobileVeil').classList.toggle('is-on', on);
-  document.getElementById('desktopVeil').classList.toggle('is-on', on);
-}
-
-function openPreviewInBrowser() { window.open(`/preview/${projectId}/`, '_blank'); }
-
-// ── Autosave ───────────────────────────────────────────────────────
-
-function scheduleAutosave() {
-  isDirty = true;
-  setStatus('saving', 'Saving…');
-  clearTimeout(saveTimer);
-  saveTimer = setTimeout(doSave, 500);
-}
-
-async function doSave() {
+function getRecent() {
   try {
-    const res  = await fetch(`/api/project/${projectId}/save`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(content),
-    });
-    const data = await res.json();
-    if (data.ok) {
-      isDirty = false;
-      setStatus('saved', 'Saved');
-      reloadPreviews();
-      setTimeout(() => { if (!isDirty) setStatus('', '—'); }, 2500);
-    } else {
-      setStatus('error', data.error || 'Save failed');
-    }
+    return JSON.parse(fs.readFileSync(RECENT_FILE, 'utf8'));
   } catch {
-    setStatus('error', 'Save failed');
+    return [];
   }
 }
 
-function setStatus(type, text) {
-  document.getElementById('statusDot').className = 'status-dot' + (type ? ' ' + type : '');
-  document.getElementById('statusText').textContent = text;
+function addRecent(projectId) {
+  let recent = getRecent().filter(id => id !== projectId);
+  recent.unshift(projectId);
+  recent = recent.slice(0, 8);
+  fs.writeFileSync(RECENT_FILE, JSON.stringify(recent), 'utf8');
 }
 
-// ── Deep path get/set ──────────────────────────────────────────────
+// ── Render a project to .preview/ ────────────────────────────────
 
-function getPath(obj, path) {
-  return path.split('.').reduce((o, k) => (o && o[k] !== undefined ? o[k] : ''), obj);
-}
+function renderToPreview(projectId) {
+  const contentPath = path.join(PROJECTS_DIR, projectId, 'content.json');
+  if (!fs.existsSync(contentPath)) return { ok: false, error: 'Project not found' };
 
-function setPath(obj, path, value) {
-  const keys = path.split('.');
-  let cur = obj;
-  for (let i = 0; i < keys.length - 1; i++) {
-    if (!cur[keys[i]] || typeof cur[keys[i]] !== 'object') cur[keys[i]] = {};
-    cur = cur[keys[i]];
+  let content;
+  try {
+    content = JSON.parse(fs.readFileSync(contentPath, 'utf8'));
+  } catch (err) {
+    return { ok: false, error: 'Invalid JSON: ' + err.message };
   }
-  cur[keys[keys.length - 1]] = value;
+
+  const errors = validate(content);
+  if (errors.length > 0) {
+    return { ok: false, errors };
+  }
+
+  const outDir = path.join(PREVIEW_DIR, projectId);
+  try {
+    // Empty basePath = relative CSS/JS paths, which work correctly
+    // when served from /preview/<projectId>/ by the local server
+    render(content, outDir, { basePath: '' });
+    return { ok: true };
+  } catch (err) {
+    return { ok: false, error: err.message };
+  }
 }
 
-// ── Form ───────────────────────────────────────────────────────────
+// ── API routes ────────────────────────────────────────────────────
 
-function populateForm() {
-  document.querySelectorAll('[data-path]').forEach(el => {
-    const val = getPath(content, el.dataset.path) || '';
-    el.type === 'checkbox' ? (el.checked = !!val) : (el.value = val);
+// List all projects
+app.get('/api/projects', (req, res) => {
+  let projects = [];
+  if (fs.existsSync(PROJECTS_DIR)) {
+    projects = fs.readdirSync(PROJECTS_DIR, { withFileTypes: true })
+      .filter(e => e.isDirectory())
+      .map(e => {
+        const contentPath = path.join(PROJECTS_DIR, e.name, 'content.json');
+        let meta = {};
+        try {
+          const content = JSON.parse(fs.readFileSync(contentPath, 'utf8'));
+          meta = content.meta || {};
+        } catch {}
+        const stat = fs.existsSync(contentPath)
+          ? fs.statSync(contentPath)
+          : null;
+        return {
+          id:           e.name,
+          title:        meta.title || e.name,
+          client:       meta.client || '',
+          last_saved:   stat ? stat.mtime.toISOString() : null,
+          accent_color: meta.accent_color || '#1A3F6F',
+        };
+      });
+  }
+
+  const recent = getRecent();
+  projects.sort((a, b) => {
+    const ai = recent.indexOf(a.id);
+    const bi = recent.indexOf(b.id);
+    if (ai === -1 && bi === -1) return 0;
+    if (ai === -1) return 1;
+    if (bi === -1) return -1;
+    return ai - bi;
   });
-}
 
-function wireInputs() {
-  document.querySelectorAll('[data-path]').forEach(el => {
-    el.addEventListener('input', () => {
-      const val = el.type === 'checkbox' ? el.checked : el.value;
-      setPath(content, el.dataset.path, val);
-      document.querySelectorAll(`[data-path="${el.dataset.path}"]`).forEach(o => { if (o !== el) o.value = val; });
-      scheduleAutosave();
-    });
-  });
-}
+  res.json({ projects, recent });
+});
 
-// ── Tabs ───────────────────────────────────────────────────────────
+// Get a single project's content
+app.get('/api/project/:id', (req, res) => {
+  const contentPath = path.join(PROJECTS_DIR, req.params.id, 'content.json');
+  if (!fs.existsSync(contentPath)) {
+    return res.status(404).json({ error: 'Project not found' });
+  }
+  try {
+    const content = JSON.parse(fs.readFileSync(contentPath, 'utf8'));
+    addRecent(req.params.id);
+    res.json(content);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
 
-function switchTab(name, btn) {
-  document.querySelectorAll('.sidebar__tab').forEach(t => t.classList.remove('is-active'));
-  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('is-active'));
-  btn.classList.add('is-active');
-  document.getElementById(`tab-${name}`).classList.add('is-active');
-}
+// Save a project (autosave endpoint)
+app.post('/api/project/:id/save', (req, res) => {
+  const projectId  = req.params.id;
+  const projectDir = path.join(PROJECTS_DIR, projectId);
+  fs.mkdirSync(projectDir, { recursive: true });
 
-// ── Sections ───────────────────────────────────────────────────────
+  const contentPath = path.join(projectDir, 'content.json');
+  const content     = req.body;
 
-function renderSectionList() {
-  const list = document.getElementById('sectionList');
-  list.innerHTML = '';
-  (content.sections || []).forEach((s, i) => {
-    const item = document.createElement('div');
-    item.className = 'section-item' + (i === activeSectionIndex ? ' is-active' : '');
-    item.innerHTML = `
-      <span class="section-item__num">${String(s.num || i+1).padStart(2,'0')}</span>
-      <span class="section-item__label">${s.title || s.id || 'Untitled'}</span>
-      <span class="section-item__layout">${s.layout || 'default'}</span>`;
-    item.addEventListener('click', () => editSection(i));
-    list.appendChild(item);
-  });
-}
+  // Update last_saved
+  if (content.meta) {
+    content.meta.last_saved = new Date().toISOString();
+  }
 
-function editSection(index) {
-  activeSectionIndex = index;
-  const s = content.sections[index];
-  document.getElementById('sectionEditor').style.display = 'block';
-  document.getElementById('sectionEditorTitle').textContent = s.title || s.id || `Section ${index+1}`;
+  // Write JSON
+  try {
+    fs.writeFileSync(contentPath, JSON.stringify(content, null, 2), 'utf8');
+  } catch (err) {
+    return res.status(500).json({ ok: false, error: err.message });
+  }
 
-  document.getElementById('sec-id').value         = s.id || '';
-  document.getElementById('sec-title').value      = s.title || '';
-  document.getElementById('sec-nav-label').value  = s.nav_label || '';
-  document.getElementById('sec-layout').value     = s.layout || 'default';
-  document.getElementById('sec-intro').value      = s.intro || '';
-  document.getElementById('sec-hero-url').value   = (s.hero_image && s.hero_image.url) || '';
-  document.getElementById('sec-hero-alt').value   = (s.hero_image && s.hero_image.alt) || '';
-  document.getElementById('sec-nav-exclude').checked = !!s.nav_exclude;
-  document.getElementById('sec-color-bleed').checked = !!s.color_bleed;
-  document.getElementById('sec-pq-text').value    = (s.pull_quote && s.pull_quote.text) || '';
-  document.getElementById('sec-pq-attr').value    = (s.pull_quote && s.pull_quote.attribution) || '';
+  // Render to preview
+  const result = renderToPreview(projectId);
+  addRecent(projectId);
 
-  wireSectionEditor(index);
-  renderSectionList();
-  document.getElementById('sectionDeleteBtn').onclick = () => deleteSection(index);
-}
+  res.json(result);
+});
 
-function wireSectionEditor(index) {
-  const map = {
-    'sec-id':          v => { content.sections[index].id = v; },
-    'sec-title':       v => { content.sections[index].title = v; renderSectionList(); document.getElementById('sectionEditorTitle').textContent = v || 'Section'; },
-    'sec-nav-label':   v => { content.sections[index].nav_label = v; },
-    'sec-layout':      v => { content.sections[index].layout = v; renderSectionList(); },
-    'sec-intro':       v => { content.sections[index].intro = v; },
-    'sec-hero-url':    v => { if (!content.sections[index].hero_image) content.sections[index].hero_image = {}; content.sections[index].hero_image.url = v; },
-    'sec-hero-alt':    v => { if (!content.sections[index].hero_image) content.sections[index].hero_image = {}; content.sections[index].hero_image.alt = v; },
-    'sec-nav-exclude': v => { content.sections[index].nav_exclude = v; },
-    'sec-color-bleed': v => { content.sections[index].color_bleed = v; },
-    'sec-pq-text':     v => { if (!content.sections[index].pull_quote) content.sections[index].pull_quote = {}; content.sections[index].pull_quote.text = v; },
-    'sec-pq-attr':     v => { if (!content.sections[index].pull_quote) content.sections[index].pull_quote = {}; content.sections[index].pull_quote.attribution = v; },
+// Create a new project
+app.post('/api/project/create', (req, res) => {
+  const { id, title, client, accent_color, accent_color_2 } = req.body;
+
+  if (!id || !title) {
+    return res.status(400).json({ error: 'id and title are required' });
+  }
+
+  const projectDir  = path.join(PROJECTS_DIR, id);
+  const contentPath = path.join(projectDir, 'content.json');
+
+  if (fs.existsSync(contentPath)) {
+    return res.status(409).json({ error: 'Project already exists' });
+  }
+
+  fs.mkdirSync(projectDir, { recursive: true });
+
+  const content = {
+    meta: {
+      project_id:   id,
+      title,
+      language:     'en',
+      client:       client || '',
+      date:         new Date().toISOString().split('T')[0],
+      accent_color:  accent_color  || '#1A3F6F',
+      accent_color_2: accent_color_2 || '#C9A84C',
+      last_saved:   new Date().toISOString(),
+      version:      1,
+    },
+    config: {
+      layout_mode: 'multi-page',
+      password_gate: { enabled: false },
+      pwa: { enabled: false },
+      analytics: {},
+    },
+    cover: {
+      headline: title,
+      body: '',
+      cta_primary: { label: 'Read more', href: '#section-1' },
+    },
+    sections: [],
   };
-  Object.entries(map).forEach(([id, setter]) => {
-    const el = document.getElementById(id);
-    if (!el) return;
-    const fresh = el.cloneNode(true);
-    el.parentNode.replaceChild(fresh, el);
-    fresh.addEventListener('input', () => { setter(fresh.type === 'checkbox' ? fresh.checked : fresh.value); scheduleAutosave(); });
-  });
+
+  try {
+    fs.writeFileSync(contentPath, JSON.stringify(content, null, 2), 'utf8');
+    renderToPreview(id);
+    addRecent(id);
+    res.json({ ok: true, id });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Serve the schema
+app.get('/api/schema', (req, res) => {
+  try {
+    res.json(JSON.parse(fs.readFileSync(SCHEMA_FILE, 'utf8')));
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Trigger a manual re-render
+app.post('/api/project/:id/render', (req, res) => {
+  const result = renderToPreview(req.params.id);
+  res.json(result);
+});
+
+// ── Home screen ───────────────────────────────────────────────────
+
+app.get('/', (req, res) => {
+  res.sendFile(path.join(EDITOR_DIR, 'home.html'));
+});
+
+
+app.get('/edit/:id', (req, res) => {
+  res.sendFile(path.join(EDITOR_DIR, 'editor.html'));
+});
+
+
+
+// ── File watcher (dev convenience) ───────────────────────────────
+// If content.json is edited externally, re-render automatically
+
+chokidar.watch(path.join(PROJECTS_DIR, '**', 'content.json'), {
+  ignoreInitial: true,
+  awaitWriteFinish: { stabilityThreshold: 300 },
+}).on('change', filePath => {
+  const projectId = path.basename(path.dirname(filePath));
+  console.log(`↺  Re-rendering ${projectId}...`);
+  renderToPreview(projectId);
+});
+
+// ── Start ─────────────────────────────────────────────────────────
+
+// Pre-render all existing projects on startup
+if (fs.existsSync(PROJECTS_DIR)) {
+  fs.readdirSync(PROJECTS_DIR, { withFileTypes: true })
+    .filter(e => e.isDirectory())
+    .forEach(e => {
+      const result = renderToPreview(e.name);
+      if (result.ok) {
+        console.log(`✓  Pre-rendered ${e.name}`);
+      }
+    });
 }
 
-function addSection() {
-  if (!content.sections) content.sections = [];
-  const n = content.sections.length + 1;
-  content.sections.push({ id: `section-${n}`, num: n, title: `Section ${n}`, layout: 'default', intro: '' });
-  renderSectionList();
-  editSection(content.sections.length - 1);
-  scheduleAutosave();
-}
+app.listen(PORT, () => {
+  console.log(`\n  Harpoon Story Engine — Editor`);
+  console.log(`  http://localhost:${PORT}\n`);
 
-function deleteSection(index) {
-  if (!confirm(`Delete "${content.sections[index].title || content.sections[index].id}"?`)) return;
-  content.sections.splice(index, 1);
-  activeSectionIndex = -1;
-  document.getElementById('sectionEditor').style.display = 'none';
-  renderSectionList();
-  scheduleAutosave();
-}
-
-window.addEventListener('beforeunload', e => { if (isDirty) { e.preventDefault(); e.returnValue = ''; } });
-
-boot();
-</script>
-</body>
-</html>
+  // Auto-open in browser on Mac
+  const { exec } = require('child_process');
+  exec(`open http://localhost:${PORT}`);
+});

@@ -47,11 +47,13 @@
 </head>
 <body>
 
-<div id="hse-progress"></div>
+<a href="#hse-main" class="hse-skip-link">Skip to main content</a>
 
-<nav id="hse-nav">
-  <span class="hse-nav__brand">Test Nation</span>
-  <ul class="hse-nav__links">
+<div id="hse-progress" role="presentation" aria-hidden="true"></div>
+
+<nav id="hse-nav" aria-label="Publication sections">
+  <a class="hse-nav__brand" href="#hse-cover">Test Nation</a>
+  <ul class="hse-nav__links" role="list">
     <li><a href="#opening">Opening</a></li>
       <li><a href="#bazball">Bazball</a></li>
       <li><a href="#the-ashes">The Ashes</a></li>
@@ -85,6 +87,8 @@
     <div class="hse-cover__scroll-line"></div>
   </div>
 </section>
+
+<main id="hse-main">
 
 <section class="hse-section hse-section--default" id="opening" data-layout="default">
   <figure class="hse-image hse-section__hero hse-reveal">
@@ -757,7 +761,9 @@
   </div>
 </section>
 
-<footer class="hse-footer">
+</main>
+
+<footer class="hse-footer" role="contentinfo">
   <span class="hse-footer__brand">Test Nation</span>
   <span class="hse-footer__credit">Produced with the Harpoon Story Engine</span>
 </footer>
