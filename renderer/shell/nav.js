@@ -19,9 +19,9 @@ function renderNav(meta, sections) {
   }).join('\n      ');
 
   return `
-<nav id="hse-nav">
-  <span class="hse-nav__brand">${escHtml(meta.title)}</span>
-  <ul class="hse-nav__links">
+<nav id="hse-nav" aria-label="Publication sections">
+  <a class="hse-nav__brand" href="#hse-cover">${escHtml(meta.title)}</a>
+  <ul class="hse-nav__links" role="list">
     ${links}
   </ul>
 </nav>`.trim();

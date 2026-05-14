@@ -63,15 +63,21 @@ function buildPage(meta, config, cover, sections, basePath) {
   return `${head}
 <body>
 
-<div id="hse-progress"></div>
+<a href="#hse-main" class="hse-skip-link">Skip to main content</a>
+
+<div id="hse-progress" role="presentation" aria-hidden="true"></div>
 
 ${nav}
 
 ${coverHtml}
 
+<main id="hse-main">
+
 ${sectionsHtml}
 
-<footer class="hse-footer">
+</main>
+
+<footer class="hse-footer" role="contentinfo">
   <span class="hse-footer__brand">${esc(meta.title)}</span>
   <span class="hse-footer__credit">Produced with the Harpoon Story Engine</span>
 </footer>
