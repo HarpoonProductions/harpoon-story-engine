@@ -1,0 +1,104 @@
+/* Harpoon Story Engine — Accordion */
+
+.hse-accordion { margin: var(--hse-space-lg) 0; }
+
+.hse-accordion__item {
+  border-bottom: 1px solid var(--hse-rule);
+}
+
+.hse-accordion__trigger {
+  width: 100%;
+  background: none;
+  border: none;
+  padding: 1.5rem 0;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  cursor: pointer;
+  text-align: left;
+  color: var(--hse-warm);
+  transition: color var(--hse-duration-fast);
+}
+
+.hse-accordion__trigger:hover { color: var(--hse-accent); }
+
+.hse-accordion__thumb {
+  flex-shrink: 0;
+  width: 64px;
+  height: 64px;
+}
+
+.hse-accordion__thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.hse-accordion__title {
+  flex: 1;
+  font-family: var(--hse-font-display);
+  font-size: clamp(1.1rem, 2vw, 1.4rem);
+  font-weight: 400;
+}
+
+.hse-accordion__chevron {
+  flex-shrink: 0;
+  width: 20px;
+  height: 20px;
+  position: relative;
+  transition: transform var(--hse-duration-fast);
+}
+
+.hse-accordion__chevron::before,
+.hse-accordion__chevron::after {
+  content: '';
+  position: absolute;
+  background: currentColor;
+  border-radius: 1px;
+}
+.hse-accordion__chevron::before {
+  width: 10px; height: 1.5px;
+  top: 50%; left: 2px;
+  transform: translateY(-50%) rotate(-45deg);
+}
+.hse-accordion__chevron::after {
+  width: 10px; height: 1.5px;
+  top: 50%; right: 2px;
+  transform: translateY(-50%) rotate(45deg);
+}
+
+.hse-accordion__item.is-open .hse-accordion__chevron::before {
+  transform: translateY(-50%) rotate(45deg);
+}
+.hse-accordion__item.is-open .hse-accordion__chevron::after {
+  transform: translateY(-50%) rotate(-45deg);
+}
+
+.hse-accordion__body {
+  padding: 0 0 var(--hse-space-md);
+}
+
+.hse-accordion__images {
+  display: grid;
+  gap: 4px;
+  margin-bottom: var(--hse-space-md);
+}
+.hse-accordion__images--1 { grid-template-columns: 1fr; }
+.hse-accordion__images--2 { grid-template-columns: 1fr 1fr; }
+.hse-accordion__images--3 { grid-template-columns: 2fr 1fr 1fr; }
+
+.hse-accordion__images img {
+  width: 100%; height: 100%;
+  object-fit: cover;
+  aspect-ratio: 16/9;
+}
+
+.hse-accordion__content {
+  max-width: var(--hse-text-w);
+  font-size: 1rem;
+  line-height: 1.8;
+  color: var(--hse-warm-2);
+  margin-bottom: var(--hse-space-md);
+}
+
+.hse-accordion__content p { margin-bottom: 1em; }

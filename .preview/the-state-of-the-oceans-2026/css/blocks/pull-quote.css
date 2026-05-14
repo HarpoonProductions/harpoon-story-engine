@@ -1,0 +1,32 @@
+/* Harpoon Story Engine — Pull Quote */
+
+.hse-pull-quote {
+  position: relative;
+  margin: var(--hse-space-lg) 0;
+  padding-left: 2rem;
+  max-width: var(--hse-text-w);
+}
+
+.hse-pull-quote__rule {
+  position: absolute;
+  left: 0; top: 0; bottom: 0;
+  width: 2px;
+  background: var(--hse-accent);
+}
+
+.hse-pull-quote__text {
+  font-family: var(--hse-font-display);
+  font-style: italic;
+  font-size: clamp(1.25rem, 2.5vw, 1.75rem);
+  line-height: 1.4;
+  color: var(--hse-warm);
+  margin-bottom: 1rem;
+}
+
+.hse-pull-quote__attribution {
+  font-family: var(--hse-font-mono);
+  font-size: 0.65rem;
+  letter-spacing: 0.14em;
+  color: var(--hse-warm-3);
+  font-style: normal;
+}

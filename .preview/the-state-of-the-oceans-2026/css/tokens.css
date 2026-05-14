@@ -1,0 +1,67 @@
+/*
+ * Harpoon Story Engine — Design Tokens
+ * tokens.css
+ *
+ * These are the static base tokens. At render time, the renderer injects
+ * a <style> block into <head> that overrides --hse-accent and --hse-accent-2
+ * with values from meta.accent_color and meta.accent_color_2.
+ *
+ * All other values here are fixed across all projects.
+ */
+
+:root {
+
+  /* ── Brand (overridden per-project at render time) ───────────── */
+  --hse-accent:    #1A3F6F;  /* fallback — replaced by meta.accent_color   */
+  --hse-accent-2:  #C9A84C;  /* fallback — replaced by meta.accent_color_2 */
+
+  /* ── Derived accent values ───────────────────────────────────── */
+  --hse-accent-10:  color-mix(in srgb, var(--hse-accent) 10%, transparent);
+  --hse-accent-20:  color-mix(in srgb, var(--hse-accent) 20%, transparent);
+
+  /* ── Neutral palette ─────────────────────────────────────────── */
+  --hse-ink:       #0A0A0C;
+  --hse-ink-2:     #111116;
+  --hse-ink-3:     #1C1C24;
+  --hse-warm:      #F2EDE6;
+  --hse-warm-2:    #C8BFB0;
+  --hse-warm-3:    #7A7268;
+  --hse-rule:      rgba(242, 237, 230, 0.10);
+  --hse-rule-2:    rgba(242, 237, 230, 0.05);
+
+  /* ── Typography ──────────────────────────────────────────────── */
+  --hse-font-display: 'Apercu', 'Playfair Display', Georgia, serif;
+  --hse-font-body:    'Apercu', system-ui, sans-serif;
+  --hse-font-mono:    'DM Mono', 'Courier New', monospace;
+
+  /* ── Spacing scale ───────────────────────────────────────────── */
+  --hse-space-xs:   0.5rem;
+  --hse-space-sm:   1rem;
+  --hse-space-md:   2rem;
+  --hse-space-lg:   4rem;
+  --hse-space-xl:   6rem;
+  --hse-space-2xl:  10rem;
+
+  /* ── Page geometry ───────────────────────────────────────────── */
+  --hse-page-pad:  clamp(1.5rem, 5vw, 4rem);
+  --hse-max-w:     1160px;
+  --hse-text-w:    680px;
+
+  /* ── Motion ──────────────────────────────────────────────────── */
+  --hse-ease-out:      cubic-bezier(0.22, 1, 0.36, 1);
+  --hse-ease-in-out:   cubic-bezier(0.65, 0, 0.35, 1);
+  --hse-duration-fast: 0.25s;
+  --hse-duration-mid:  0.5s;
+  --hse-duration-slow: 0.85s;
+
+  /* ── Radius ──────────────────────────────────────────────────── */
+  --hse-radius-sm: 2px;
+  --hse-radius-md: 6px;
+  --hse-radius-lg: 12px;
+
+  /* ── Z-index ladder ──────────────────────────────────────────── */
+  --hse-z-base:    1;
+  --hse-z-raised:  10;
+  --hse-z-nav:     200;
+  --hse-z-overlay: 500;
+}
