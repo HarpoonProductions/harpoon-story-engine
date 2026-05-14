@@ -220,11 +220,11 @@
           <div class="form-group"><label class="form-label" for="cover-body">Intro</label><textarea class="form-textarea" id="cover-body" data-path="cover.body" placeholder="Opening paragraph…"></textarea></div>
 
           <p class="form-section-title">Hero</p>
-          <div class="form-group"><label class="form-label" for="cover-hero-url">Image URL</label><input class="form-input" id="cover-hero-url" data-path="cover.hero_image.url" placeholder="https://…"></div>
+          <div class="form-group"><label class="form-label" for="cover-hero-url">Image URL</label><input class="form-input" id="cover-hero-url" data-image-field="true" data-focal-path="cover.hero_image.focal" data-path="cover.hero_image.url" placeholder="https://…"></div>
           <div class="form-group"><label class="form-label" for="cover-hero-alt">Image alt text</label><input class="form-input" id="cover-hero-alt" data-path="cover.hero_image.alt" placeholder="Describe the image"></div>
 
           <p class="form-section-title">Video <span style="font-weight:300;text-transform:none;letter-spacing:0">(overrides image)</span></p>
-          <div class="form-group"><label class="form-label" for="cover-video-url">Video URL (MP4)</label><input class="form-input" id="cover-video-url" data-path="cover.hero_video.url" placeholder="https://…/video.mp4"></div>
+          <div class="form-group"><label class="form-label" for="cover-video-url">Video URL (MP4)</label><input class="form-input" id="cover-video-url" data-image-field="true" data-path="cover.hero_video.url" placeholder="https://…/video.mp4"></div>
           <div class="form-group"><label class="form-label" for="cover-video-poster">Poster image URL</label><input class="form-input" id="cover-video-poster" data-path="cover.hero_video.poster" placeholder="Shown before video loads"></div>
 
           <p class="form-section-title">CTAs</p>
@@ -262,7 +262,7 @@
               </select>
             </div>
             <div class="form-group"><label class="form-label" for="sec-intro">Intro</label><textarea class="form-textarea" id="sec-intro" placeholder="One or two sentence intro…"></textarea></div>
-            <div class="form-group"><label class="form-label" for="sec-hero-url">Hero image URL</label><input class="form-input" id="sec-hero-url" placeholder="https://…"></div>
+            <div class="form-group"><label class="form-label" for="sec-hero-url">Hero image URL</label><input class="form-input" id="sec-hero-url" data-image-field="true" data-focal-path="section.hero_image.focal" placeholder="https://…"></div>
             <div class="form-group"><label class="form-label" for="sec-hero-alt">Hero image alt text</label><input class="form-input" id="sec-hero-alt" placeholder="Describe the image"></div>
             <div class="form-group"><label class="form-label" for="sec-pq-text">Pull quote</label><textarea class="form-textarea" id="sec-pq-text" placeholder="Quote text…" style="min-height:48px"></textarea></div>
             <div class="form-group"><label class="form-label" for="sec-pq-attr">Pull quote attribution</label><input class="form-input" id="sec-pq-attr" placeholder="Name, Title"></div>
@@ -388,6 +388,14 @@ async function boot() {
   wireInputs();
   renderSectionList();
   loadPreviews();
+
+  // Initialise image upload + focal point on cover fields
+  // (section fields are wired when a section is opened)
+  setTimeout(() => {
+    if (window.initImageFields) {
+      initImageFields(projectId, onFocalUpdate);
+    }
+  }, 200);
 }
 
 // ── Frame scaling ──────────────────────────────────────────────────
@@ -497,16 +505,29 @@ function loadPreviews() {
 function reloadPreviews() {
   const mf = document.getElementById('mobileFrame');
   const df = document.getElementById('desktopFrame');
+
+  // Capture scroll positions before reload
   let mSY = 0, dSY = 0;
   try { mSY = mf.contentWindow.scrollY || 0; } catch {}
   try { dSY = df.contentWindow.scrollY || 0; } catch {}
 
-  showVeil(true);
+  // Fade out both frames smoothly rather than white-flashing
+  mf.style.transition = 'opacity 0.2s';
+  df.style.transition = 'opacity 0.2s';
+  mf.style.opacity = '0.4';
+  df.style.opacity = '0.4';
+
   const url = `/preview/${projectId}/?t=${Date.now()}`;
   let mc = false, dc = false;
 
-  mf.onload = () => { try { mf.contentWindow.scrollTo(0, mSY); } catch {} scaleFrames(); mc = true; if (mc && dc) showVeil(false); };
-  df.onload = () => { try { df.contentWindow.scrollTo(0, dSY); } catch {} scaleFrames(); dc = true; if (mc && dc) showVeil(false); };
+  function onLoaded(frame, scrollY) {
+    try { frame.contentWindow.scrollTo(0, scrollY); } catch {}
+    scaleFrames();
+    frame.style.opacity = '1';
+  }
+
+  mf.onload = () => { mc = true; onLoaded(mf, mSY); if (mc && dc) showVeil(false); };
+  df.onload = () => { dc = true; onLoaded(df, dSY); if (mc && dc) showVeil(false); };
   mf.src = url;
   df.src = url;
 }
@@ -680,6 +701,13 @@ function editSection(index) {
   document.getElementById('sectionDeleteBtn').onclick = () => deleteSection(index);
   // Move focus to first field in section editor
   document.getElementById('sec-id').focus();
+
+  // Wire image fields in the section editor
+  setTimeout(() => {
+    if (window.initImageFields) {
+      initImageFields(projectId, onFocalUpdate, document.getElementById('sectionEditor'));
+    }
+  }, 100);
 }
 
 function wireSectionEditor(index) {
@@ -729,7 +757,24 @@ function deleteSection(index) {
 
 window.addEventListener('beforeunload', e => { if (isDirty) { e.preventDefault(); e.returnValue = ''; } });
 
+// ── Image field focal point handler ───────────────────────────────
+
+function onFocalUpdate(fieldId, url, focal) {
+  if (!content) return;
+  const noFocal = focal === '50% 50%' ? undefined : focal;
+  if (fieldId === 'cover-hero-url' || fieldId === 'cover-video-url') {
+    if (!content.cover.hero_image) content.cover.hero_image = {};
+    content.cover.hero_image.focal = noFocal;
+  } else if (fieldId === 'sec-hero-url' && activeSectionIndex >= 0) {
+    if (!content.sections[activeSectionIndex].hero_image)
+      content.sections[activeSectionIndex].hero_image = {};
+    content.sections[activeSectionIndex].hero_image.focal = noFocal;
+  }
+  scheduleAutosave();
+}
+
 boot();
 </script>
+<script src="/editor/image-field.js"></script>
 </body>
 </html>

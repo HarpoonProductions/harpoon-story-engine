@@ -64,10 +64,13 @@ function renderVideoBg(video) {
 }
 
 function renderImageBg(image) {
+  const focalStyle = image.focal
+    ? ` style="object-position: ${escHtml(image.focal)}"`
+    : '';
   return `<img class="hse-cover__bg-img"
     src="${escHtml(image.url)}"
     alt="${escHtml(image.alt || '')}"
-    aria-hidden="true">`;
+    aria-hidden="true"${focalStyle}>`;
 }
 
 function renderHeadline(cover) {

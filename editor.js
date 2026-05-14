@@ -14,6 +14,16 @@ const path     = require('path');
 const chokidar = require('chokidar');
 
 const { validate } = require('./renderer/validate');
+
+// AWS S3 upload (optional — only active if AWS credentials are set in environment)
+let S3Client, Upload;
+try {
+  ({ S3Client } = require('@aws-sdk/client-s3'));
+  ({ Upload }   = require('@aws-sdk/lib-storage'));
+} catch {}
+
+const S3_BUCKET = process.env.S3_BUCKET || '';
+const AWS_REGION = process.env.AWS_REGION || process.env.AWS_DEFAULT_REGION || 'eu-west-2';
 const { render }   = require('./renderer/index');
 
 const app  = express();
@@ -261,6 +271,151 @@ app.get('/api/schema', (req, res) => {
 app.post('/api/project/:id/render', (req, res) => {
   const result = renderToPreview(req.params.id);
   res.json(result);
+});
+
+// ── File upload ──────────────────────────────────────────────────
+// Receives a multipart form upload, sends to S3, returns the public URL.
+// Requires S3_BUCKET env var and valid AWS credentials.
+// Uses busboy for reliable multipart parsing.
+
+const Busboy = require('busboy');
+const sharp  = require('sharp');
+
+app.post('/api/project/:id/upload', (req, res) => {
+  if (!S3Client || !S3_BUCKET) {
+    return res.status(503).json({
+      error: 'S3 not configured. Set S3_BUCKET, AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY in your environment.'
+    });
+  }
+
+  const projectId = req.params.id;
+  let settled = false;
+
+  try {
+    const bb = Busboy({ headers: req.headers });
+
+    bb.on('file', async (fieldname, fileStream, info) => {
+      const { filename, mimeType } = info;
+      const safeName = (filename || ('upload-' + Date.now())).replace(/[^a-zA-Z0-9._-]/g, '_');
+      const s3Key    = `${projectId}/images/${safeName}`;
+
+      // Collect chunks
+      const chunks = [];
+      fileStream.on('data', chunk => chunks.push(chunk));
+      fileStream.on('end', async () => {
+        if (settled) return;
+        try {
+          const fileBuffer  = Buffer.concat(chunks);
+          const isVideo     = (mimeType || '').startsWith('video/');
+          const isImage     = !isVideo && (
+            (mimeType || '').startsWith('image/') ||
+            /\.(jpe?g|png|webp|gif|tiff?)$/i.test(safeName)
+          );
+
+          const s3 = new S3Client({ region: AWS_REGION });
+
+          // ── Step 1: upload original untouched ────────────────────
+          const origKey = `${projectId}/originals/${safeName}`;
+          await new Upload({
+            client: s3,
+            params: {
+              Bucket:       S3_BUCKET,
+              Key:          origKey,
+              Body:         fileBuffer,
+              ContentType:  mimeType || 'application/octet-stream',
+              CacheControl: 'public, max-age=31536000',
+            },
+          }).done();
+          console.log(`✓  Original: ${origKey}`);
+
+          // ── Step 2: compress image and upload processed version ───
+          let processedBuffer = fileBuffer;
+          let processedMime   = mimeType || 'application/octet-stream';
+          let processedName   = safeName;
+
+          if (isImage) {
+            // Strip extension, add -hpn2560.jpg suffix
+            const baseName = safeName.replace(/\.[^.]+$/, '');
+            processedName  = baseName + '-hpn2560.jpg';
+            processedMime  = 'image/jpeg';
+
+            processedBuffer = await sharp(fileBuffer)
+              .rotate()                          // auto-rotate from EXIF
+              .resize(2560, 2560, {
+                fit:                'inside',    // preserve aspect ratio
+                withoutEnlargement: true,        // never upscale
+              })
+              .jpeg({
+                quality:           82,
+                mozjpeg:           true,         // better compression
+                chromaSubsampling: '4:4:4',      // preserve colour fidelity
+              })
+              .toBuffer();
+
+            const origSize  = Math.round(fileBuffer.length / 1024);
+            const procSize  = Math.round(processedBuffer.length / 1024);
+            console.log(`✓  Compressed: ${origSize}KB → ${procSize}KB`);
+          }
+
+          const s3Key = `${projectId}/images/${processedName}`;
+          await new Upload({
+            client: s3,
+            params: {
+              Bucket:       S3_BUCKET,
+              Key:          s3Key,
+              Body:         processedBuffer,
+              ContentType:  processedMime,
+              CacheControl: 'public, max-age=31536000',
+            },
+          }).done();
+          settled = true;
+
+          const deliveryDomain = process.env.DELIVERY_DOMAIN || '';
+          const publicUrl = deliveryDomain
+            ? `https://${deliveryDomain}/${s3Key}`
+            : `https://${S3_BUCKET}.s3.${AWS_REGION}.amazonaws.com/${s3Key}`;
+
+          console.log(`✓  Uploaded: ${s3Key} → ${publicUrl}`);
+          res.json({
+            ok:          true,
+            url:         publicUrl,
+            key:         s3Key,
+            originalKey: origKey,
+            compressed:  isImage,
+          });
+
+        } catch (err) {
+          if (!settled) {
+            settled = true;
+            console.error('Upload error:', err.message);
+            res.status(500).json({ error: err.message });
+          }
+        }
+      });
+
+      fileStream.on('error', err => {
+        if (!settled) {
+          settled = true;
+          res.status(500).json({ error: err.message });
+        }
+      });
+    });
+
+    bb.on('error', err => {
+      if (!settled) {
+        settled = true;
+        res.status(400).json({ error: 'Multipart parse error: ' + err.message });
+      }
+    });
+
+    req.pipe(bb);
+
+  } catch (err) {
+    if (!settled) {
+      settled = true;
+      res.status(500).json({ error: err.message });
+    }
+  }
 });
 
 // ── Home screen ───────────────────────────────────────────────────

@@ -16,8 +16,12 @@
   "author": "Harpoon Productions Ltd",
   "license": "UNLICENSED",
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.1046.0",
+    "@aws-sdk/lib-storage": "^3.1046.0",
     "ajv": "^8.17.1",
+    "busboy": "^1.6.0",
     "chokidar": "^5.0.0",
-    "express": "^5.2.1"
+    "express": "^5.2.1",
+    "sharp": "^0.34.5"
   }
 }
