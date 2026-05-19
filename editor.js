@@ -327,6 +327,10 @@ app.post('/api/project/:id/upload', (req, res) => {
               Body:         fileBuffer,
               ContentType:  mimeType || 'application/octet-stream',
               CacheControl: 'public, max-age=31536000',
+              // ACL: 'public-read' — remove this line if your bucket has
+              // Object Ownership set to "Bucket owner enforced" (ACLs disabled).
+              // In that case, public access is controlled by the bucket policy alone.
+              ACL:          'public-read',
             },
           }).done();
           console.log(`✓  Original: ${origKey}`);
@@ -369,6 +373,7 @@ app.post('/api/project/:id/upload', (req, res) => {
               Body:         processedBuffer,
               ContentType:  processedMime,
               CacheControl: 'public, max-age=31536000',
+              ACL:          'public-read',
             },
           }).done();
           settled = true;

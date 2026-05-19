@@ -223,7 +223,7 @@ a {
 .hse-cover__pause-btn {
   position: absolute;
   bottom: 1.5rem;
-  left: var(--hse-page-pad);
+  right: var(--hse-page-pad);
   z-index: 4;
   width: 36px;
   height: 36px;
