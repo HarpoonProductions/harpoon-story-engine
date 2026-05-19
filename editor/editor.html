@@ -148,6 +148,44 @@
     @media (prefers-reduced-motion: reduce) {
       * { transition-duration: 0.01ms !important; animation-duration: 0.01ms !important; }
     }
+
+    /* ── Deploy buttons ── */
+    .tbtn--stage {
+      background: transparent;
+      border: 1px solid var(--rule);
+      color: #2980B9;
+    }
+    .tbtn--stage:hover { border-color: #2980B9; background: rgba(41,128,185,0.06); }
+
+    .tbtn--publish {
+      background: var(--accent);
+      border: 1px solid var(--accent);
+      color: white;
+    }
+    .tbtn--publish:hover { background: #7a3225; border-color: #7a3225; }
+
+    .tbtn:disabled { opacity: 0.5; cursor: wait; }
+
+    .deploy-toast {
+      position: fixed;
+      bottom: 1.5rem;
+      right: 1.5rem;
+      background: var(--ink);
+      color: var(--bg);
+      font-family: var(--font-mono);
+      font-size: 0.62rem;
+      letter-spacing: 0.12em;
+      padding: 0.75rem 1.25rem;
+      border-radius: 2px;
+      box-shadow: 0 4px 16px rgba(26,25,22,0.2);
+      z-index: 9999;
+      display: none;
+      max-width: 360px;
+      line-height: 1.5;
+    }
+    .deploy-toast.is-visible { display: block; }
+    .deploy-toast a { color: var(--accent); text-decoration: underline; }
+    .deploy-toast--error { background: #C0392B; }
   </style>
 </head>
 <body>
@@ -162,7 +200,9 @@
       <div class="status-dot" id="statusDot" aria-hidden="true"></div>
       <span id="statusText">—</span>
     </div>
-    <button class="tbtn tbtn--ghost" onclick="openPreviewInBrowser()" aria-label="Open preview in a new browser tab">Open in browser ↗</button>
+    <button class="tbtn tbtn--ghost" onclick="openPreviewInBrowser()" aria-label="Open preview in a new browser tab">Preview ↗</button>
+    <button class="tbtn tbtn--stage" id="stageBtn" onclick="deploy('staging')" aria-label="Deploy to staging for client review">Stage</button>
+    <button class="tbtn tbtn--publish" id="publishBtn" onclick="deploy('production')" aria-label="Publish story to live site">Publish</button>
   </div>
 
   <!-- Body -->
@@ -756,6 +796,76 @@ function deleteSection(index) {
 }
 
 window.addEventListener('beforeunload', e => { if (isDirty) { e.preventDefault(); e.returnValue = ''; } });
+
+// ── Deploy ────────────────────────────────────────────────────────
+
+async function deploy(target) {
+  const isProduction = target === 'production';
+
+  if (isProduction) {
+    const confirmed = confirm(
+      `Publish "${content.meta.title}" to ${content.meta.client ? content.meta.client + ' / ' : ''}stories.har.pn?\n\nThis will make the story publicly visible.`
+    );
+    if (!confirmed) return;
+  }
+
+  const stageBtn   = document.getElementById('stageBtn');
+  const publishBtn = document.getElementById('publishBtn');
+  stageBtn.disabled   = true;
+  publishBtn.disabled = true;
+
+  const label = isProduction ? 'Publishing…' : 'Staging…';
+  showToast(label, false);
+
+  // Save first to make sure latest content is on disk
+  await doSave();
+
+  try {
+    const res  = await fetch(`/api/project/${projectId}/deploy`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ target }),
+    });
+    const data = await res.json();
+
+    if (data.ok) {
+      const verb = isProduction ? 'Published' : 'Staged';
+      const msg  = isProduction
+        ? `✓ ${verb} — will be live in ~2 minutes at <a href="${data.url}" target="_blank">${data.url}</a>`
+        : `✓ ${verb} — will be available in ~2 minutes at <a href="${data.url}" target="_blank">${data.url}</a>`;
+      showToast(msg, false, 8000);
+    } else {
+      showToast('✗ ' + (data.error || 'Deploy failed'), true, 6000);
+    }
+  } catch (err) {
+    showToast('✗ ' + err.message, true, 6000);
+  } finally {
+    stageBtn.disabled   = false;
+    publishBtn.disabled = false;
+  }
+}
+
+// ── Toast notification ────────────────────────────────────────────
+
+let toastTimer = null;
+
+function showToast(msg, isError, duration) {
+  let toast = document.getElementById('deployToast');
+  if (!toast) {
+    toast = document.createElement('div');
+    toast.id        = 'deployToast';
+    toast.className = 'deploy-toast';
+    toast.setAttribute('role', 'status');
+    toast.setAttribute('aria-live', 'polite');
+    document.body.appendChild(toast);
+  }
+  toast.innerHTML  = msg;
+  toast.className  = 'deploy-toast is-visible' + (isError ? ' deploy-toast--error' : '');
+  clearTimeout(toastTimer);
+  if (duration) {
+    toastTimer = setTimeout(() => toast.classList.remove('is-visible'), duration);
+  }
+}
 
 // ── Image field focal point handler ───────────────────────────────
 

@@ -9,12 +9,17 @@ on:
       - 'schema/**'
       - 'renderer/**'
       - 'css/**'
+      - 'js/**'
   workflow_dispatch:
     inputs:
       project:
         description: 'Project ID to render (e.g. opera-voices-2026). Leave blank to render all.'
         required: false
         default: ''
+      target:
+        description: 'Deployment target: production or staging'
+        required: false
+        default: 'production'
 
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
@@ -24,7 +29,7 @@ env:
 jobs:
   render-and-deploy:
     runs-on: ubuntu-latest
-    name: Render → Test → Deploy
+    name: Render → Test → Deploy (${{ github.event.inputs.target || 'production' }})
 
     steps:
 
@@ -47,6 +52,7 @@ jobs:
         run: |
           set -e
 
+          TARGET="${{ github.event.inputs.target || 'production' }}"
           INPUT_PROJECT="${{ github.event.inputs.project }}"
 
           if [ -n "$INPUT_PROJECT" ]; then
@@ -55,22 +61,21 @@ jobs:
               echo "✗ Project file not found: $PROJECT_FILE"
               exit 1
             fi
-            echo "Rendering single project: $INPUT_PROJECT"
+            echo "Rendering: $INPUT_PROJECT (target: $TARGET)"
             node render.js "$PROJECT_FILE" --out "dist/${INPUT_PROJECT}"
           else
             if [ ! -d "projects" ]; then
-              echo "No projects/ directory found — nothing to render."
+              echo "No projects/ directory — nothing to render."
               exit 0
             fi
 
             RENDERED=0
             for PROJECT_JSON in projects/*/content.json; do
               PROJECT_ID=$(basename $(dirname "$PROJECT_JSON"))
-              echo "Rendering: $PROJECT_ID"
+              echo "Rendering: $PROJECT_ID (target: $TARGET)"
               node render.js "$PROJECT_JSON" --out "dist/${PROJECT_ID}"
               RENDERED=$((RENDERED + 1))
             done
-
             echo "Rendered $RENDERED project(s)"
           fi
 
@@ -81,66 +86,71 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region:            ${{ secrets.AWS_REGION }}
 
-      - name: Sync HTML files to S3
+      - name: Sync to S3
         run: |
           set -e
+
+          TARGET="${{ github.event.inputs.target || 'production' }}"
           S3_BUCKET="${{ secrets.S3_BUCKET }}"
           INPUT_PROJECT="${{ github.event.inputs.project }}"
 
-          if [ -n "$INPUT_PROJECT" ]; then
-            DIRS="dist/${INPUT_PROJECT}"
+          # Staging uses a prefix; production uses root
+          if [ "$TARGET" = "staging" ]; then
+            S3_PREFIX="staging"
           else
-            DIRS=$(ls -d dist/*/)
+            S3_PREFIX=""
           fi
 
-          for DIR in $DIRS; do
+          for DIR in dist/*/; do
             PROJECT_ID=$(basename "$DIR")
 
-            # Sync HTML with correct content type
-            aws s3 sync "$DIR" "s3://${S3_BUCKET}/${PROJECT_ID}/" \
-              --delete \
-              --exclude "*" \
-              --include "*.html" \
-              --content-type "text/html; charset=utf-8" \
-              --cache-control "public, max-age=300"
+            if [ -n "$INPUT_PROJECT" ] && [ "$PROJECT_ID" != "$INPUT_PROJECT" ]; then
+              continue
+            fi
 
-            # Sync CSS with correct content type
-            aws s3 sync "$DIR" "s3://${S3_BUCKET}/${PROJECT_ID}/" \
-              --exclude "*" \
-              --include "*.css" \
-              --content-type "text/css" \
-              --cache-control "public, max-age=86400"
+            if [ -n "$S3_PREFIX" ]; then
+              S3_PATH="${S3_BUCKET}/${S3_PREFIX}/${PROJECT_ID}/"
+            else
+              S3_PATH="${S3_BUCKET}/${PROJECT_ID}/"
+            fi
 
-            # Sync JS with correct content type
-            aws s3 sync "$DIR" "s3://${S3_BUCKET}/${PROJECT_ID}/" \
-              --exclude "*" \
-              --include "*.js" \
-              --content-type "application/javascript" \
-              --cache-control "public, max-age=86400"
+            # HTML
+            aws s3 sync "$DIR" "s3://${S3_PATH}"               --delete               --exclude "*"               --include "*.html"               --content-type "text/html; charset=utf-8"               --cache-control "public, max-age=300"
 
-            # Sync everything else (images etc)
-            aws s3 sync "$DIR" "s3://${S3_BUCKET}/${PROJECT_ID}/" \
-              --exclude "*.html" \
-              --exclude "*.css" \
-              --exclude "*.js" \
-              --cache-control "public, max-age=86400"
+            # CSS
+            aws s3 sync "$DIR" "s3://${S3_PATH}"               --exclude "*"               --include "*.css"               --content-type "text/css"               --cache-control "public, max-age=86400"
 
-            echo "✓ Deployed: s3://${S3_BUCKET}/${PROJECT_ID}/"
+            # JS
+            aws s3 sync "$DIR" "s3://${S3_PATH}"               --exclude "*"               --include "*.js"               --content-type "application/javascript"               --cache-control "public, max-age=86400"
+
+            # Everything else
+            aws s3 sync "$DIR" "s3://${S3_PATH}"               --exclude "*.html"               --exclude "*.css"               --exclude "*.js"               --cache-control "public, max-age=86400"
+
+            echo "✓ Deployed: s3://${S3_PATH}"
           done
 
       - name: Invalidate CloudFront cache
         run: |
-          aws cloudfront create-invalidation \
-            --distribution-id ${{ secrets.CLOUDFRONT_DISTRIBUTION_ID }} \
-            --paths "/*"
+          aws cloudfront create-invalidation             --distribution-id ${{ secrets.CLOUDFRONT_DISTRIBUTION_ID }}             --paths "/*"
 
       - name: Deployment summary
         run: |
+          TARGET="${{ github.event.inputs.target || 'production' }}"
+          DELIVERY="${{ secrets.DELIVERY_DOMAIN }}"
+
           echo "## Harpoon Story Engine — Deploy complete" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Target:** ${TARGET}" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "| Project | URL |" >> $GITHUB_STEP_SUMMARY
           echo "|---------|-----|" >> $GITHUB_STEP_SUMMARY
+
           for OUTPUT_DIR in dist/*/; do
             PROJECT_ID=$(basename "$OUTPUT_DIR")
-            echo "| \`${PROJECT_ID}\` | https://${{ secrets.DELIVERY_DOMAIN }}/${PROJECT_ID}/ |" >> $GITHUB_STEP_SUMMARY
+            if [ "$TARGET" = "staging" ]; then
+              URL="https://${DELIVERY}/staging/${PROJECT_ID}/"
+            else
+              URL="https://${DELIVERY}/${PROJECT_ID}/"
+            fi
+            echo "| \`${PROJECT_ID}\` | ${URL} |" >> $GITHUB_STEP_SUMMARY
           done

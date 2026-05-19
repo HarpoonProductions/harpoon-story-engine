@@ -10,7 +10,7 @@
  * @param {string} basePath  - root-relative base path, e.g. '/opera-voices-2026'
  * @returns {string} HTML string
  */
-function renderHead(meta, config, title, basePath) {
+function renderHead(meta, config, title, basePath, staging) {
   const pageTitle = title
     ? `${title} — ${meta.title}`
     : meta.title;
@@ -27,6 +27,11 @@ function renderHead(meta, config, title, basePath) {
 
   const css = (file) => base ? `${base}/${file}` : file;
 
+  // Staging builds get noindex to prevent search engine indexing
+  const robotsMeta = staging
+    ? '<meta name="robots" content="noindex, nofollow">'
+    : '';
+
   const plausibleScript = config?.analytics?.plausible_domain
     ? `<script defer data-domain="${config.analytics.plausible_domain}" src="https://analytics.harpoonproductions.com/js/script.js"></script>`
     : '';
@@ -41,6 +46,7 @@ function renderHead(meta, config, title, basePath) {
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>${escHtml(pageTitle)}</title>
+  ${robotsMeta}
   ${plausibleScript}
   ${pwaThemeColor}
 
