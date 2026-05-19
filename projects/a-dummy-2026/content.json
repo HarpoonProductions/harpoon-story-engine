@@ -7,7 +7,7 @@
     "date": "2026-05-19",
     "accent_color": "#6ca0e5",
     "accent_color_2": "#4ab0c9",
-    "last_saved": "2026-05-19T16:06:57.826Z",
+    "last_saved": "2026-05-19T16:28:33.930Z",
     "version": 1
   },
   "config": {
@@ -27,7 +27,9 @@
       "label": "Read more",
       "href": "#section-1"
     },
-    "hero_image": {},
+    "hero_image": {
+      "url": "https://stories.har.pn/a-dummy-2026/images/34-3872x2592-hpn2560.jpg"
+    },
     "kicker": "Dummy Magazine",
     "headline_em": "yeah says who"
   },

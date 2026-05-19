@@ -380,6 +380,9 @@ app.post("/api/project/:id/upload", (req, res) => {
           }).done();
           settled = true;
 
+          // Use CloudFront URL — images are immediately available via CloudFront
+          // as soon as they land in S3, without needing a deployment step.
+          // This URL is also correct for production use.
           const deliveryDomain = process.env.DELIVERY_DOMAIN || "";
           const publicUrl = deliveryDomain
             ? `https://${deliveryDomain}/${s3Key}`
