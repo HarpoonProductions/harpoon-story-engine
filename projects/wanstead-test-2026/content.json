@@ -1,0 +1,43 @@
+{
+  "meta": {
+    "project_id": "wanstead-test-2026",
+    "title": "Wanstead test",
+    "language": "en",
+    "client": "Wansteadium",
+    "date": "2026-05-15",
+    "accent_color": "#f0b73d",
+    "accent_color_2": "#534ac9",
+    "last_saved": "2026-05-19T13:42:23.840Z",
+    "version": 1,
+    "event": "What is going on "
+  },
+  "config": {
+    "layout_mode": "multi-page",
+    "password_gate": {
+      "enabled": false
+    },
+    "pwa": {
+      "enabled": false
+    },
+    "analytics": {}
+  },
+  "cover": {
+    "headline": "Wanstead test",
+    "body": "",
+    "cta_primary": {
+      "label": "Read more",
+      "href": "#section-1"
+    },
+    "hero_image": {},
+    "headline_em": "Events happening"
+  },
+  "sections": [
+    {
+      "id": "section-1",
+      "num": 1,
+      "title": "Section 1",
+      "layout": "parallax",
+      "intro": ""
+    }
+  ]
+}

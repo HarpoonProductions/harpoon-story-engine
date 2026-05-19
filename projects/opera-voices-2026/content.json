@@ -9,7 +9,7 @@
     "logo_url": "https://assets.roh.org.uk/logo/roh-white.svg",
     "accent_color": "#8B0000",
     "accent_color_2": "#C9A84C",
-    "last_saved": "2026-05-12T14:00:00Z",
+    "last_saved": "2026-05-19T14:43:54.057Z",
     "version": 3
   },
   "config": {
@@ -50,7 +50,8 @@
       "autoplay": true,
       "loop": true,
       "muted": true
-    }
+    },
+    "hero_image": {}
   },
   "sections": [
     {

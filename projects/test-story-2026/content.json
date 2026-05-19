@@ -1,0 +1,34 @@
+{
+  "meta": {
+    "project_id": "test-story-2026",
+    "title": "test story",
+    "language": "en",
+    "client": "harpoon",
+    "date": "2026-05-19",
+    "accent_color": "#38d22d",
+    "accent_color_2": "#c94ab2",
+    "last_saved": "2026-05-19T14:44:56.098Z",
+    "version": 1
+  },
+  "config": {
+    "layout_mode": "multi-page",
+    "password_gate": {
+      "enabled": false
+    },
+    "pwa": {
+      "enabled": false
+    },
+    "analytics": {}
+  },
+  "cover": {
+    "headline": "test story",
+    "body": "but does it still flash?",
+    "cta_primary": {
+      "label": "Read more",
+      "href": "#section-1"
+    },
+    "hero_image": {},
+    "headline_em": "because we can"
+  },
+  "sections": []
+}
