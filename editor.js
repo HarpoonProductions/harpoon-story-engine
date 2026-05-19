@@ -1,5 +1,8 @@
 'use strict';
 
+// Load environment variables from .env file if present
+require('dotenv').config();
+
 /**
  * Harpoon Story Engine — Editor Server
  * editor.js
