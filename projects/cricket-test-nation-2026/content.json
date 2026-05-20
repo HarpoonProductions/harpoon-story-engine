@@ -9,7 +9,7 @@
     "logo_url": "https://assets.ecb.co.uk/logo/ecb-white.svg",
     "accent_color": "#003580",
     "accent_color_2": "#C8102E",
-    "last_saved": "2026-05-12T14:00:00Z",
+    "last_saved": "2026-05-20T09:27:36.214Z",
     "version": 3
   },
   "config": {
@@ -50,7 +50,8 @@
       "autoplay": true,
       "loop": true,
       "muted": true
-    }
+    },
+    "hero_image": {}
   },
   "sections": [
     {
