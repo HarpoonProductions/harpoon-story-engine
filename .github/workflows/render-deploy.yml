@@ -5,21 +5,21 @@ on:
     branches:
       - main
     paths:
-      - "projects/**"
-      - "schema/**"
-      - "renderer/**"
-      - "css/**"
-      - "js/**"
+      - 'projects/**'
+      - 'schema/**'
+      - 'renderer/**'
+      - 'css/**'
+      - 'js/**'
   workflow_dispatch:
     inputs:
       project:
-        description: "Project ID to render (e.g. opera-voices-2026). Leave blank to render all."
+        description: 'Project ID to render (e.g. opera-voices-2026). Leave blank to render all.'
         required: false
-        default: ""
+        default: ''
       target:
-        description: "Deployment target: production or staging"
+        description: 'Deployment target: production or staging'
         required: false
-        default: "production"
+        default: 'production'
 
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
@@ -32,14 +32,15 @@ jobs:
     name: Render → Test → Deploy (${{ github.event.inputs.target || 'production' }})
 
     steps:
+
       - name: Checkout repository
         uses: actions/checkout@v4
 
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: "20"
-          cache: "npm"
+          node-version: '20'
+          cache: 'npm'
 
       - name: Install dependencies
         run: npm ci
@@ -81,9 +82,9 @@ jobs:
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-access-key-id:     ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ${{ secrets.AWS_REGION }}
+          aws-region:            ${{ secrets.AWS_REGION }}
 
       - name: Sync to S3
         run: |
