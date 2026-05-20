@@ -7,7 +7,7 @@
     "date": "2026-05-20",
     "accent_color": "#1a3f6f",
     "accent_color_2": "#c9a84c",
-    "last_saved": "2026-05-20T15:04:12.516Z",
+    "last_saved": "2026-05-20T15:24:41.550Z",
     "version": 1
   },
   "config": {
@@ -28,7 +28,6 @@
       "href": "#section-1"
     },
     "hero_image": {
-      "focal": "95% 46%",
       "url": "https://stories.har.pn/cats-cats-cats-2026/images/17-2500x1667.jpg",
       "alt": "forest"
     },
@@ -42,7 +41,40 @@
       "layout": "parallax",
       "intro": "some text here",
       "hero_image": {
-        "focal": "11% 51%"
+        "focal": "11% 51%",
+        "url": "https://stories.har.pn/cats-cats-cats-2026/images/31-367x267.jpg",
+        "alt": "Feet"
+      },
+      "pull_quote": {
+        "text": "Ooh this flashing preview is a nightmare",
+        "attribution": "Bibulous of Binkyshire"
+      },
+      "color_bleed": true
+    },
+    {
+      "id": "section-2",
+      "num": 2,
+      "title": "Section 2",
+      "layout": "default",
+      "intro": "",
+      "hero_image": {
+        "focal": "46% 86%",
+        "url": "https://stories.har.pn/cats-cats-cats-2026/images/24-367x267.jpg",
+        "alt": "Book"
+      },
+      "pull_quote": {
+        "text": "yeah whatevs"
+      }
+    },
+    {
+      "id": "section-3",
+      "num": 3,
+      "title": "Section 3",
+      "layout": "sticky-steps",
+      "intro": "yep edit the json for now",
+      "hero_image": {
+        "focal": "59% 18%",
+        "url": "https://stories.har.pn/cats-cats-cats-2026/images/22-367x267.jpg"
       }
     }
   ]
