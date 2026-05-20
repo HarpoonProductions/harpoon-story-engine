@@ -718,76 +718,87 @@ document.getElementById('sectionList').addEventListener('keydown', e => {
 
 // ── Section editor ─────────────────────────────────────────────────
 
+// Track current section listener cleanup
+let sectionEditorListeners = [];
+
 function editSection(index) {
   activeSectionIndex = index;
   const s = content.sections[index];
+
   document.getElementById('sectionEditor').style.display = 'block';
   document.getElementById('sectionEditorTitle').textContent = s.title || s.id || `Section ${index+1}`;
+  document.getElementById('sectionDeleteBtn').onclick = () => deleteSection(index);
 
-  // Explicitly clear all fields first to prevent bleed from previous section
-  const fieldsToClear = ['sec-id','sec-title','sec-nav-label','sec-intro',
-    'sec-hero-url','sec-hero-alt','sec-pq-text','sec-pq-attr'];
-  fieldsToClear.forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
-  document.getElementById('sec-layout').value     = 'default';
-  document.getElementById('sec-nav-exclude').checked = false;
-  document.getElementById('sec-color-bleed').checked = false;
+  // Remove old event listeners cleanly
+  sectionEditorListeners.forEach(({ el, fn }) => el.removeEventListener('input', fn));
+  sectionEditorListeners = [];
 
-  // Now populate with actual values
-  document.getElementById('sec-id').value         = s.id || '';
-  document.getElementById('sec-title').value      = s.title || '';
-  document.getElementById('sec-nav-label').value  = s.nav_label || '';
-  document.getElementById('sec-layout').value     = s.layout || 'default';
-  document.getElementById('sec-intro').value      = s.intro || '';
-  document.getElementById('sec-hero-url').value   = (s.hero_image && s.hero_image.url) || '';
-  document.getElementById('sec-hero-alt').value   = (s.hero_image && s.hero_image.alt) || '';
+  // Field definitions: [id, getter from section]
+  const textFields = [
+    ['sec-id',        s.id || ''],
+    ['sec-title',     s.title || ''],
+    ['sec-nav-label', s.nav_label || ''],
+    ['sec-intro',     s.intro || ''],
+    ['sec-hero-url',  (s.hero_image && s.hero_image.url) || ''],
+    ['sec-hero-alt',  (s.hero_image && s.hero_image.alt) || ''],
+    ['sec-pq-text',   (s.pull_quote && s.pull_quote.text) || ''],
+    ['sec-pq-attr',   (s.pull_quote && s.pull_quote.attribution) || ''],
+  ];
+
+  // Set all text fields
+  textFields.forEach(([id, val]) => {
+    const el = document.getElementById(id);
+    if (el) el.value = val;
+  });
+
+  // Set select and checkboxes
+  document.getElementById('sec-layout').value        = s.layout || 'default';
   document.getElementById('sec-nav-exclude').checked = !!s.nav_exclude;
   document.getElementById('sec-color-bleed').checked = !!s.color_bleed;
-  document.getElementById('sec-pq-text').value    = (s.pull_quote && s.pull_quote.text) || '';
-  document.getElementById('sec-pq-attr').value    = (s.pull_quote && s.pull_quote.attribution) || '';
 
-  wireSectionEditor(index);
-  renderSectionList();
-  document.getElementById('sectionDeleteBtn').onclick = () => deleteSection(index);
-  // Move focus to first field in section editor
-  document.getElementById('sec-id').focus();
-
-  // Wire image fields AFTER population so URLs are already in the inputs
-  // Use a short delay to let the DOM settle
-  setTimeout(() => {
-    if (window.initImageFields) {
-      // Pass existing focal to the image field so it initialises correctly
-      const heroInput = document.getElementById('sec-hero-url');
-      if (heroInput && s.hero_image && s.hero_image.focal) {
-        heroInput.dataset.existingFocal = s.hero_image.focal;
-      } else if (heroInput) {
-        heroInput.dataset.existingFocal = '';
-      }
-      initImageFields(projectId, onFocalUpdate, document.getElementById('sectionEditor'));
-    }
-  }, 150);
-}
-
-function wireSectionEditor(index) {
-  const map = {
-    'sec-id':          v => { content.sections[index].id = v; },
-    'sec-title':       v => { content.sections[index].title = v; renderSectionList(); document.getElementById('sectionEditorTitle').textContent = v || 'Section'; },
-    'sec-nav-label':   v => { content.sections[index].nav_label = v; },
-    'sec-layout':      v => { content.sections[index].layout = v; renderSectionList(); },
-    'sec-intro':       v => { content.sections[index].intro = v; },
-    'sec-hero-url':    v => { if (!content.sections[index].hero_image) content.sections[index].hero_image = {}; content.sections[index].hero_image.url = v; },
-    'sec-hero-alt':    v => { if (!content.sections[index].hero_image) content.sections[index].hero_image = {}; content.sections[index].hero_image.alt = v; },
-    'sec-nav-exclude': v => { content.sections[index].nav_exclude = v; },
-    'sec-color-bleed': v => { content.sections[index].color_bleed = v; },
-    'sec-pq-text':     v => { if (!content.sections[index].pull_quote) content.sections[index].pull_quote = {}; content.sections[index].pull_quote.text = v; },
-    'sec-pq-attr':     v => { if (!content.sections[index].pull_quote) content.sections[index].pull_quote = {}; content.sections[index].pull_quote.attribution = v; },
-  };
-  Object.entries(map).forEach(([id, setter]) => {
+  // Wire listeners using a shared approach — no cloning needed
+  function wire(id, setter) {
     const el = document.getElementById(id);
     if (!el) return;
-    const fresh = el.cloneNode(true);
-    el.parentNode.replaceChild(fresh, el);
-    fresh.addEventListener('input', () => { setter(fresh.type === 'checkbox' ? fresh.checked : fresh.value); scheduleAutosave(); });
-  });
+    const fn = () => { setter(el.type === 'checkbox' ? el.checked : el.value); scheduleAutosave(); };
+    el.addEventListener('input', fn);
+    sectionEditorListeners.push({ el, fn });
+  }
+
+  wire('sec-id',          v => { content.sections[index].id = v; });
+  wire('sec-title',       v => { content.sections[index].title = v; renderSectionList(); document.getElementById('sectionEditorTitle').textContent = v || 'Section'; });
+  wire('sec-nav-label',   v => { content.sections[index].nav_label = v; });
+  wire('sec-layout',      v => { content.sections[index].layout = v; renderSectionList(); });
+  wire('sec-intro',       v => { content.sections[index].intro = v; });
+  wire('sec-hero-url',    v => { if (!content.sections[index].hero_image) content.sections[index].hero_image = {}; content.sections[index].hero_image.url = v; });
+  wire('sec-hero-alt',    v => { if (!content.sections[index].hero_image) content.sections[index].hero_image = {}; content.sections[index].hero_image.alt = v; });
+  wire('sec-nav-exclude', v => { content.sections[index].nav_exclude = v; });
+  wire('sec-color-bleed', v => { content.sections[index].color_bleed = v; });
+  wire('sec-pq-text',     v => { if (!content.sections[index].pull_quote) content.sections[index].pull_quote = {}; content.sections[index].pull_quote.text = v; });
+  wire('sec-pq-attr',     v => { if (!content.sections[index].pull_quote) content.sections[index].pull_quote = {}; content.sections[index].pull_quote.attribution = v; });
+
+  renderSectionList();
+  document.getElementById('sec-id').focus();
+
+  // Reset image field enhancement so it re-initialises with correct URL and focal
+  const heroInput = document.getElementById('sec-hero-url');
+  if (heroInput) {
+    heroInput.dataset.enhanced     = '';
+    heroInput.dataset.existingFocal = (s.hero_image && s.hero_image.focal) || '';
+    // Remove old focal wrap if present so it gets rebuilt fresh
+    const oldWrap = heroInput.closest('.img-field-wrap');
+    if (oldWrap) {
+      oldWrap.parentNode.insertBefore(heroInput, oldWrap);
+      oldWrap.remove();
+    }
+  }
+
+  // Re-initialise image fields after a tick so values are settled
+  setTimeout(() => {
+    if (window.initImageFields) {
+      initImageFields(projectId, onFocalUpdate, document.getElementById('sectionEditor'));
+    }
+  }, 50);
 }
 
 function addSection() {
