@@ -7,7 +7,7 @@
     "date": "2026-05-20",
     "accent_color": "#a0a0a0",
     "accent_color_2": "#f0b40f",
-    "last_saved": "2026-05-20T10:13:11.332Z",
+    "last_saved": "2026-05-20T14:36:08.149Z",
     "version": 1
   },
   "config": {
@@ -22,7 +22,7 @@
   },
   "cover": {
     "headline": "Dogs dogs dogs",
-    "body": "",
+    "body": "Yes you are a good boy, yes you are. ",
     "cta_primary": {
       "label": "Read more",
       "href": "#section-1"
@@ -30,7 +30,8 @@
     "hero_image": {
       "url": "https://stories.har.pn/dogs-dogs-dogs-2026/images/42-3456x2304.jpg",
       "alt": "Coffee cups in a cafe"
-    }
+    },
+    "headline_em": "woof woof good boy"
   },
   "sections": [
     {
