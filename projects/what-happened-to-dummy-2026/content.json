@@ -1,0 +1,54 @@
+{
+  "meta": {
+    "project_id": "what-happened-to-dummy-2026",
+    "title": "What happened to dummy",
+    "language": "en",
+    "client": "",
+    "date": "2026-05-19",
+    "accent_color": "#1a3f6f",
+    "accent_color_2": "#c9a84c",
+    "last_saved": "2026-05-19T17:13:52.354Z",
+    "version": 1
+  },
+  "config": {
+    "layout_mode": "multi-page",
+    "password_gate": {
+      "enabled": false
+    },
+    "pwa": {
+      "enabled": false
+    },
+    "analytics": {}
+  },
+  "cover": {
+    "headline": "What happened to dummy",
+    "body": "It's one of those mysteries that will perplex generations to come. ",
+    "cta_primary": {
+      "label": "Read more",
+      "href": "#section-1"
+    },
+    "hero_image": {
+      "url": "https://stories.har.pn/what-happened-to-dummy-2026/images/17-2500x1667-hpn2560.jpg",
+      "alt": "Path in the woods"
+    },
+    "headline_em": "Maybe we'll never know"
+  },
+  "sections": [
+    {
+      "id": "section-1",
+      "num": 1,
+      "title": "Section 1",
+      "layout": "fullbleed-quote",
+      "intro": "Yeah but no but yeah but no",
+      "hero_image": {
+        "focal": "57% 68%",
+        "alt": "River shore"
+      },
+      "nav_label": "Intro",
+      "pull_quote": {
+        "text": "yeah but no but yeah but no but yeah",
+        "attribution": "Boyan Cicic"
+      }
+    }
+  ]
+}
