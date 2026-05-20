@@ -7,7 +7,7 @@
     "date": "2026-05-20",
     "accent_color": "#a0a0a0",
     "accent_color_2": "#f0b40f",
-    "last_saved": "2026-05-20T10:10:20.728Z",
+    "last_saved": "2026-05-20T10:13:11.332Z",
     "version": 1
   },
   "config": {
@@ -29,8 +29,7 @@
     },
     "hero_image": {
       "url": "https://stories.har.pn/dogs-dogs-dogs-2026/images/42-3456x2304.jpg",
-      "alt": "Coffee cups in a cafe",
-      "focal": "64% 62%"
+      "alt": "Coffee cups in a cafe"
     }
   },
   "sections": [
