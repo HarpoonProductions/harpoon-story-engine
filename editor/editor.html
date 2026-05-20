@@ -814,11 +814,12 @@ async function deploy(target) {
   stageBtn.disabled   = true;
   publishBtn.disabled = true;
 
-  const label = isProduction ? 'Publishing…' : 'Staging…';
-  showToast(label, false);
+  showToast(isProduction ? 'Saving…' : 'Saving…', false);
 
   // Save first to make sure latest content is on disk
   await doSave();
+
+  showToast(isProduction ? 'Committing and deploying…' : 'Committing and staging…', false);
 
   try {
     const res  = await fetch(`/api/project/${projectId}/deploy`, {
@@ -830,10 +831,8 @@ async function deploy(target) {
 
     if (data.ok) {
       const verb = isProduction ? 'Published' : 'Staged';
-      const msg  = isProduction
-        ? `✓ ${verb} — will be live in ~2 minutes at <a href="${data.url}" target="_blank">${data.url}</a>`
-        : `✓ ${verb} — will be available in ~2 minutes at <a href="${data.url}" target="_blank">${data.url}</a>`;
-      showToast(msg, false, 8000);
+      const msg  = `✓ ${verb} — content saved to repo, deploying now. Ready in ~2 minutes at <a href="${data.url}" target="_blank">${data.url}</a>`;
+      showToast(msg, false, 10000);
     } else {
       showToast('✗ ' + (data.error || 'Deploy failed'), true, 6000);
     }

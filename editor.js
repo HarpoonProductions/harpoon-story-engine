@@ -282,7 +282,18 @@ app.post('/api/project/:id/render', (req, res) => {
 // Uses busboy for reliable multipart parsing.
 
 const Busboy = require('busboy');
-const sharp  = require('sharp');
+
+// sharp is optional — if it fails to load (e.g. wrong platform binary),
+// images will be uploaded uncompressed. Run:
+//   npm install --os=darwin --cpu=arm64 sharp
+// to install the correct binary for Apple Silicon Macs.
+let sharp = null;
+try {
+  sharp = require('sharp');
+} catch (err) {
+  console.warn('⚠  sharp not available — images will upload uncompressed.');
+  console.warn('   Fix: npm install --os=darwin --cpu=arm64 sharp');
+}
 
 app.post('/api/project/:id/upload', (req, res) => {
   if (!S3Client || !S3_BUCKET) {
@@ -336,7 +347,7 @@ app.post('/api/project/:id/upload', (req, res) => {
           let processedMime   = mimeType || 'application/octet-stream';
           let processedName   = safeName;
 
-          if (isImage) {
+          if (isImage && sharp) {
             // Strip extension, add -hpn2560.jpg suffix
             const baseName = safeName.replace(/\.[^.]+$/, '');
             processedName  = baseName + '-hpn2560.jpg';
@@ -441,6 +452,72 @@ app.post('/api/project/:id/deploy', async (req, res) => {
   }
 
   try {
+    // ── Step 1: commit content.json to the repo ───────────────────
+    // This ensures the Action always has the latest content,
+    // even if the producer hasn't pushed via git.
+
+    const contentPath = path.join(PROJECTS_DIR, projectId, 'content.json');
+    if (!fs.existsSync(contentPath)) {
+      return res.status(404).json({ error: `Project not found: ${projectId}` });
+    }
+
+    const contentJson   = fs.readFileSync(contentPath, 'utf8');
+    const contentBase64 = Buffer.from(contentJson).toString('base64');
+    const filePath      = `projects/${projectId}/content.json`;
+
+    // Get current SHA of the file (needed for updates — GitHub requires it)
+    let fileSha = null;
+    const getFile = await fetch(
+      `https://api.github.com/repos/${githubRepo}/contents/${filePath}`,
+      {
+        headers: {
+          'Authorization':        `Bearer ${githubToken}`,
+          'Accept':               'application/vnd.github+json',
+          'X-GitHub-Api-Version': '2022-11-28',
+        },
+      }
+    );
+
+    if (getFile.ok) {
+      const fileData = await getFile.json();
+      fileSha = fileData.sha;
+    }
+    // If 404, file doesn't exist yet — we'll create it (no SHA needed)
+
+    // Commit the file
+    const commitBody = {
+      message: `content: update ${projectId} [${target}]`,
+      content: contentBase64,
+      branch:  'main',
+    };
+    if (fileSha) commitBody.sha = fileSha;
+
+    const commitRes = await fetch(
+      `https://api.github.com/repos/${githubRepo}/contents/${filePath}`,
+      {
+        method: 'PUT',
+        headers: {
+          'Authorization':        `Bearer ${githubToken}`,
+          'Accept':               'application/vnd.github+json',
+          'Content-Type':         'application/json',
+          'X-GitHub-Api-Version': '2022-11-28',
+        },
+        body: JSON.stringify(commitBody),
+      }
+    );
+
+    if (!commitRes.ok) {
+      const errText = await commitRes.text();
+      console.error(`Commit error ${commitRes.status}:`, errText);
+      return res.status(commitRes.status).json({
+        error: `Failed to commit content.json: ${commitRes.status} ${errText}`
+      });
+    }
+
+    const commitData = await commitRes.json();
+    console.log(`✓  Committed: ${filePath} (${commitData.commit?.sha?.slice(0,7)})`);
+
+    // ── Step 2: trigger the workflow ──────────────────────────────
     const response = await fetch(
       `https://api.github.com/repos/${githubRepo}/actions/workflows/render-deploy.yml/dispatches`,
       {
@@ -469,7 +546,7 @@ app.post('/api/project/:id/deploy', async (req, res) => {
         : `https://${deliveryDomain}/${projectId}/`;
 
       console.log(`✓  Deploy triggered: ${projectId} → ${target} (${url})`);
-      res.json({ ok: true, target, url, projectId });
+      res.json({ ok: true, target, url, projectId, committed: true });
     } else {
       const text = await response.text();
       console.error(`Deploy error ${response.status}:`, text);
