@@ -724,6 +724,15 @@ function editSection(index) {
   document.getElementById('sectionEditor').style.display = 'block';
   document.getElementById('sectionEditorTitle').textContent = s.title || s.id || `Section ${index+1}`;
 
+  // Explicitly clear all fields first to prevent bleed from previous section
+  const fieldsToClear = ['sec-id','sec-title','sec-nav-label','sec-intro',
+    'sec-hero-url','sec-hero-alt','sec-pq-text','sec-pq-attr'];
+  fieldsToClear.forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
+  document.getElementById('sec-layout').value     = 'default';
+  document.getElementById('sec-nav-exclude').checked = false;
+  document.getElementById('sec-color-bleed').checked = false;
+
+  // Now populate with actual values
   document.getElementById('sec-id').value         = s.id || '';
   document.getElementById('sec-title').value      = s.title || '';
   document.getElementById('sec-nav-label').value  = s.nav_label || '';
@@ -742,12 +751,20 @@ function editSection(index) {
   // Move focus to first field in section editor
   document.getElementById('sec-id').focus();
 
-  // Wire image fields in the section editor
+  // Wire image fields AFTER population so URLs are already in the inputs
+  // Use a short delay to let the DOM settle
   setTimeout(() => {
     if (window.initImageFields) {
+      // Pass existing focal to the image field so it initialises correctly
+      const heroInput = document.getElementById('sec-hero-url');
+      if (heroInput && s.hero_image && s.hero_image.focal) {
+        heroInput.dataset.existingFocal = s.hero_image.focal;
+      } else if (heroInput) {
+        heroInput.dataset.existingFocal = '';
+      }
       initImageFields(projectId, onFocalUpdate, document.getElementById('sectionEditor'));
     }
-  }, 100);
+  }, 150);
 }
 
 function wireSectionEditor(index) {

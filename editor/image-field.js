@@ -184,7 +184,43 @@
   window.initImageFields = function (projectId, onUpdate, root) {
     root = root || document;
     const inputs = root.querySelectorAll('input.form-input[data-image-field]');
-    inputs.forEach(input => enhanceImageField(input, projectId, onUpdate));
+    inputs.forEach(input => {
+      if (input.dataset.enhanced) {
+        // Already enhanced — just refresh the thumbnail and focal dot
+        const fieldId = input.id;
+        const focalWrap = document.querySelector('.focal-wrap');
+        if (focalWrap && input.value) {
+          const img = document.getElementById('focal-img-' + fieldId);
+          if (img && img.src !== input.value) img.src = input.value;
+          focalWrap.classList.add('is-visible');
+        }
+        // Restore focal from data attribute
+        if (input.dataset.existingFocal) {
+          const match = input.dataset.existingFocal.match(/(\d+)%\s*(\d+)%/);
+          if (match) {
+            const canvas = document.getElementById('focal-canvas-' + fieldId);
+            if (canvas) canvas.dispatchEvent(new CustomEvent('set-focal', {
+              detail: { x: parseInt(match[1])/100, y: parseInt(match[2])/100 }
+            }));
+          }
+        }
+        return;
+      }
+      enhanceImageField(input, projectId, onUpdate);
+    });
+  };
+
+  // Update focal point on an already-enhanced field (e.g. when switching sections)
+  window.updateImageFieldFocal = function (fieldId, focal) {
+    if (!focal) return;
+    const match = focal.match(/(\d+)%\s*(\d+)%/);
+    if (!match) return;
+    const x = parseInt(match[1]) / 100;
+    const y = parseInt(match[2]) / 100;
+    // Find the canvas for this field and set focal
+    const canvas = document.getElementById('focal-canvas-' + fieldId);
+    if (!canvas) return;
+    canvas.dispatchEvent(new CustomEvent('set-focal', { detail: { x, y } }));
   };
 
   // ── Enhance a single image URL input ─────────────────────────────
@@ -379,8 +415,23 @@
 
     focalReset.addEventListener('click', () => setFocal(0.5, 0.5));
 
-    // Initialise dot at centre
-    setFocal(0.5, 0.5);
+    // Listen for external focal updates (e.g. when switching sections)
+    focalCanvas.addEventListener('set-focal', (e) => {
+      setFocal(e.detail.x, e.detail.y);
+    });
+
+    // Initialise dot from existing value on the input, or default to centre
+    const existingFocal = urlInput.dataset.existingFocal || '';
+    if (existingFocal) {
+      const match = existingFocal.match(/(\d+)%\s*(\d+)%/);
+      if (match) {
+        setFocal(parseInt(match[1]) / 100, parseInt(match[2]) / 100);
+      } else {
+        setFocal(0.5, 0.5);
+      }
+    } else {
+      setFocal(0.5, 0.5);
+    }
   }
 
 })();
