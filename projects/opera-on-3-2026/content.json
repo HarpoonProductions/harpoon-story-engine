@@ -1,0 +1,69 @@
+{
+  "meta": {
+    "project_id": "opera-on-3-2026",
+    "title": "Opera on 3",
+    "language": "en",
+    "client": "BBC",
+    "date": "2026-05-21",
+    "accent_color": "#bba0a5",
+    "accent_color_2": "#8c805f",
+    "last_saved": "2026-05-21T15:53:20.009Z",
+    "version": 1,
+    "token_set": "default"
+  },
+  "config": {
+    "layout_mode": "multi-page",
+    "password_gate": {
+      "enabled": false
+    },
+    "pwa": {
+      "enabled": false
+    },
+    "analytics": {}
+  },
+  "cover": {
+    "headline": "Opera on 3",
+    "body": "",
+    "cta_primary": {
+      "label": "Read more",
+      "href": "#section-1"
+    },
+    "hero_image": {
+      "focal": "52% 57%",
+      "url": "https://stories.har.pn/opera-on-3-2026/images/260501_058.jpg",
+      "alt": "Fenice sign"
+    },
+    "headline_em": "no one shall sleep"
+  },
+  "sections": [
+    {
+      "id": "section-1",
+      "num": 1,
+      "title": "Prima donna",
+      "layout": "default",
+      "intro": "dlsjfd lsdjf lksjd flksjd flksdj flskj flskdj fslkd jfsldkj fslkdj fslkdj fslkdj fslkdj fsldkj fsldkj fslkdj fslkdjf lskdj flkj dlkj dlkj ldkj lkdj lkj lkj lkj lkdj lkj dlkjslkdjfsldkjf sldkjf sldkjf sldkjf slkdj fslkdjf sldkjf slkdj fslkdjf lskdj fslkdj fslkdjf sl",
+      "hero_image": {
+        "url": "https://stories.har.pn/opera-on-3-2026/images/_DSC2607.jpg"
+      }
+    },
+    {
+      "id": "section-2",
+      "num": 2,
+      "title": "Bass baritone",
+      "layout": "default",
+      "intro": "",
+      "hero_image": {
+        "focal": "54% 7%",
+        "url": "https://stories.har.pn/opera-on-3-2026/images/_DSC3605.jpg"
+      }
+    },
+    {
+      "id": "section-3",
+      "num": 3,
+      "title": "Section 3",
+      "layout": "sticky-steps",
+      "intro": "",
+      "hero_image": {}
+    }
+  ]
+}
