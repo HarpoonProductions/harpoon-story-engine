@@ -1,0 +1,34 @@
+{
+  "meta": {
+    "project_id": "ugh-2026",
+    "title": "ugh",
+    "language": "en",
+    "client": "",
+    "date": "2026-05-22",
+    "accent_color": "#1a3f6f",
+    "accent_color_2": "#c9a84c",
+    "last_saved": "2026-05-22T16:23:33.444Z",
+    "version": 1
+  },
+  "config": {
+    "layout_mode": "multi-page",
+    "password_gate": {
+      "enabled": false
+    },
+    "pwa": {
+      "enabled": false
+    },
+    "analytics": {}
+  },
+  "cover": {
+    "headline": "ugh",
+    "body": "",
+    "cta_primary": {
+      "label": "Read more",
+      "href": "#section-1"
+    },
+    "hero_image": {},
+    "headline_em": "an extension without pretext"
+  },
+  "sections": []
+}
