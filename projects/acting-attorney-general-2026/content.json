@@ -1,0 +1,35 @@
+{
+  "meta": {
+    "project_id": "acting-attorney-general-2026",
+    "title": "Acting attorney general",
+    "language": "en",
+    "client": "tap dancing",
+    "date": "2026-05-22",
+    "accent_color": "#1a3f6f",
+    "accent_color_2": "#b44ac9",
+    "last_saved": "2026-05-22T16:01:45.263Z",
+    "version": 1
+  },
+  "config": {
+    "layout_mode": "multi-page",
+    "password_gate": {
+      "enabled": false
+    },
+    "pwa": {
+      "enabled": false
+    },
+    "analytics": {}
+  },
+  "cover": {
+    "headline": "Acting attorney general",
+    "body": "",
+    "cta_primary": {
+      "label": "Read more",
+      "href": "#section-1"
+    },
+    "hero_image": {
+      "url": "https://stories.har.pn/acting-attorney-general-2026/images/_MG_6973.jpg"
+    }
+  },
+  "sections": []
+}
