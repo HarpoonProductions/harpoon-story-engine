@@ -7,7 +7,7 @@
     "date": "2026-05-21",
     "accent_color": "#bba0a5",
     "accent_color_2": "#8c805f",
-    "last_saved": "2026-05-21T15:54:39.470Z",
+    "last_saved": "2026-05-22T15:12:17.727Z",
     "version": 1,
     "token_set": "default"
   },
@@ -22,18 +22,17 @@
     "analytics": {}
   },
   "cover": {
-    "headline": "Opera on 3",
-    "body": "",
+    "headline": "Opera on 4",
+    "body": "You might think you're clever but you're not\n\n",
     "cta_primary": {
       "label": "Read more",
       "href": "#section-1"
     },
     "hero_image": {
-      "focal": "52% 57%",
-      "url": "https://stories.har.pn/opera-on-3-2026/images/260501_058.jpg",
-      "alt": "Fenice sign"
+      "url": "https://stories.har.pn/opera-on-3-2026/images/_MG_6977.jpg",
+      "alt": "Fenice sign yes! "
     },
-    "headline_em": "no one shall sleep"
+    "headline_em": "no one shall sleep oh no!"
   },
   "sections": [
     {
