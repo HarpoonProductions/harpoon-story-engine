@@ -1,0 +1,36 @@
+{
+  "meta": {
+    "project_id": "in-place-of-khomenei-2026",
+    "title": "In place of khomenei",
+    "language": "en",
+    "client": "amhadinejad",
+    "date": "2026-05-22",
+    "accent_color": "#1a3f6f",
+    "accent_color_2": "#157f48",
+    "last_saved": "2026-05-22T16:13:11.466Z",
+    "version": 1,
+    "token_set": "imperial"
+  },
+  "config": {
+    "layout_mode": "multi-page",
+    "password_gate": {
+      "enabled": false
+    },
+    "pwa": {
+      "enabled": false
+    },
+    "analytics": {}
+  },
+  "cover": {
+    "headline": "In place of khomenei",
+    "body": "",
+    "cta_primary": {
+      "label": "Read more",
+      "href": "#section-1"
+    },
+    "hero_image": {
+      "url": "https://stories.har.pn/in-place-of-khomenei-2026/images/cyclades-copy-1770377109483.png"
+    }
+  },
+  "sections": []
+}
