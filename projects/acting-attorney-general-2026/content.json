@@ -7,7 +7,7 @@
     "date": "2026-05-22",
     "accent_color": "#1a3f6f",
     "accent_color_2": "#b44ac9",
-    "last_saved": "2026-05-22T16:01:45.263Z",
+    "last_saved": "2026-05-22T16:05:02.902Z",
     "version": 1
   },
   "config": {
@@ -28,8 +28,19 @@
       "href": "#section-1"
     },
     "hero_image": {
-      "url": "https://stories.har.pn/acting-attorney-general-2026/images/_MG_6973.jpg"
+      "url": "https://stories.har.pn/acting-attorney-general-2026/images/WhatsApp_Image_2026-05-05_at_8.37.24___PM.jpeg"
     }
   },
-  "sections": []
+  "sections": [
+    {
+      "id": "section-1",
+      "num": 1,
+      "title": "Section 1",
+      "layout": "default",
+      "intro": "",
+      "hero_image": {
+        "url": "https://stories.har.pn/acting-attorney-general-2026/images/quotes.jpg"
+      }
+    }
+  ]
 }
