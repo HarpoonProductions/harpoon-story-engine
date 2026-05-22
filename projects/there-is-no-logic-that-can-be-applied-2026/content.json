@@ -1,0 +1,48 @@
+{
+  "meta": {
+    "project_id": "there-is-no-logic-that-can-be-applied-2026",
+    "title": "there is no logic that can be applied",
+    "language": "en",
+    "client": "",
+    "date": "2026-05-22",
+    "accent_color": "#1a3f6f",
+    "accent_color_2": "#4ac953",
+    "last_saved": "2026-05-22T16:21:13.307Z",
+    "version": 1
+  },
+  "config": {
+    "layout_mode": "multi-page",
+    "password_gate": {
+      "enabled": false
+    },
+    "pwa": {
+      "enabled": false
+    },
+    "analytics": {}
+  },
+  "cover": {
+    "headline": "there is no logic that can be applied",
+    "body": "",
+    "cta_primary": {
+      "label": "Read more",
+      "href": "#section-1"
+    },
+    "hero_image": {
+      "url": "https://stories.har.pn/there-is-no-logic-that-can-be-applied-2026/images/supp_03.jpg"
+    }
+  },
+  "sections": [
+    {
+      "id": "section-1",
+      "num": 1,
+      "title": "Section 1",
+      "layout": "reveal-crossfade",
+      "intro": "",
+      "hero_image": {
+        "focal": "67% 59%",
+        "url": "https://stories.har.pn/there-is-no-logic-that-can-be-applied-2026/images/supp_02.jpg",
+        "alt": "canoeist"
+      }
+    }
+  ]
+}
