@@ -1,0 +1,60 @@
+/*
+ * Harpoon Platform Core — Token Set: Imperial College London
+ * tokens/imperial.css
+ *
+ * Brand tokens for Imperial College London.
+ * Derived from Imperial's design system, April 2026.
+ *
+ * Key brand values:
+ *   Navy:       #003e74  (primary brand colour — text, headings, CTAs)
+ *   Light blue: #6aaae4  (secondary accent)
+ *   Near-black: #161a1d  (body text)
+ *   Off-white:  #ebeeef  (surface/background tint)
+ *   Typeface:   ImperialText (custom), falling back to Times / Georgia
+ */
+
+/* ── Google Fonts ─────────────────────────────────────────────────
+   ImperialText is a proprietary typeface served from Imperial's CDN.
+   We load it via @import if available; fall back to Georgia/Times.
+   Arial is used for UI elements matching Imperial's convention.
+*/
+@font-face {
+  font-family: 'ImperialText';
+  src: local('ImperialText');
+  /* Imperial serves this from their CDN — local() picks it up if
+     the publication is hosted on Imperial infrastructure.
+     For external hosting, Georgia is the correct fallback. */
+}
+
+:root {
+  /* ── Accent colours (also set via meta.accent_color) ── */
+  --hse-accent:   #003e74;   /* Imperial navy */
+  --hse-accent-2: #6aaae4;   /* Imperial light blue */
+
+  /* ── Neutral palette — Imperial dark mode ── */
+  --hse-ink:    #161a1d;   /* Imperial near-black */
+  --hse-ink-2:  #2d333a;   /* Imperial dark grey */
+  --hse-ink-3:  #555555;   /* Imperial mid grey */
+  --hse-warm:   #ffffff;   /* White — Imperial uses clean white */
+  --hse-warm-2: #ebeeef;   /* Imperial off-white surface */
+  --hse-warm-3: #656565;   /* Imperial muted text */
+
+  /* ── Typography ── */
+  --hse-font-display: 'ImperialText', Georgia, 'Times New Roman', Times, serif;
+  --hse-font-body:    'ImperialText', Arial, Helvetica, sans-serif;
+  --hse-font-mono:    'Courier New', Courier, monospace;
+
+  /* ── Geometry — Imperial uses generous spacing ── */
+  --hse-max-w:   1200px;
+  --hse-text-w:  720px;
+
+  /* ── Motion — Imperial is restrained, minimal animation ── */
+  --hse-duration-fast: 0.15s;
+  --hse-duration-mid:  0.3s;
+  --hse-duration-slow: 0.5s;
+
+  /* ── Radius — Imperial uses sharp corners ── */
+  --hse-radius-sm: 0px;
+  --hse-radius-md: 2px;
+  --hse-radius-lg: 4px;
+}

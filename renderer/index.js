@@ -1,20 +1,20 @@
-'use strict';
+"use strict";
 
-const fs   = require('fs');
-const path = require('path');
+const fs = require("fs");
+const path = require("path");
 
-const { renderHead }  = require('./shell/head');
-const { renderNav }   = require('./shell/nav');
-const { renderCover } = require('./render-cover');
+const { renderHead } = require("./shell/head");
+const { renderNav } = require("./shell/nav");
+const { renderCover } = require("./render-cover");
 
 // Layout renderers — expand as each is built
-const { renderDefault }         = require('./layouts/default');
-const { renderStickySteps }     = require('./layouts/sticky-steps');
-const { renderFullbleedQuote }  = require('./layouts/fullbleed-quote');
-const { renderRevealCrossfade } = require('./layouts/reveal-crossfade');
-const { renderStackableCards }  = require('./layouts/stackable-cards');
-const { renderParallax }        = require('./layouts/parallax');
-const { renderCascadingSlides } = require('./layouts/cascading-slides');
+const { renderDefault } = require("./layouts/default");
+const { renderStickySteps } = require("./layouts/sticky-steps");
+const { renderFullbleedQuote } = require("./layouts/fullbleed-quote");
+const { renderRevealCrossfade } = require("./layouts/reveal-crossfade");
+const { renderStackableCards } = require("./layouts/stackable-cards");
+const { renderParallax } = require("./layouts/parallax");
+const { renderCascadingSlides } = require("./layouts/cascading-slides");
 
 /**
  * Top-level render function.
@@ -36,15 +36,15 @@ function render(content, outputDir, options) {
 
   // basePath: root-relative for S3/CloudFront deployment (default)
   // Pass options.basePath = '' for local preview (relative paths)
-  const basePath = opts.hasOwnProperty('basePath')
+  const basePath = opts.hasOwnProperty("basePath")
     ? opts.basePath
-    : (meta.project_id || '');
+    : meta.project_id || "";
 
   // Build the single-page HTML document
   const html = buildPage(meta, config, cover, sections, basePath);
 
-  const outPath = path.join(outputDir, 'index.html');
-  fs.writeFileSync(outPath, html, 'utf8');
+  const outPath = path.join(outputDir, "index.html");
+  fs.writeFileSync(outPath, html, "utf8");
 
   return [outPath];
 }
@@ -52,13 +52,17 @@ function render(content, outputDir, options) {
 // ── Page assembly ─────────────────────────────────────────────────
 
 function buildPage(meta, config, cover, sections, basePath) {
-  const base = basePath ? '/' + basePath.replace(/^\//, '').replace(/\/$/, '') : '';
+  const base = basePath
+    ? "/" + basePath.replace(/^\//, "").replace(/\/$/, "")
+    : "";
   const head = renderHead(meta, config, null, basePath);
-  const nav  = renderNav(meta, sections);
+  const nav = renderNav(meta, sections);
   const coverHtml = renderCover(cover);
 
   // Sections: render each, or stub if renderer not yet built
-  const sectionsHtml = sections.map(section => renderSection(section)).join('\n\n');
+  const sectionsHtml = sections
+    .map((section) => renderSection(section))
+    .join("\n\n");
 
   return `${head}
 <body>
@@ -108,7 +112,7 @@ ${sectionsHtml}
 }
 </style>
 
-<script src="${base ? base + '/js/runtime.js' : 'js/runtime.js'}"></script>
+<script src="${base ? base + "/js/runtime.js" : "js/runtime.js"}"></script>
 
 </body>
 </html>`;
@@ -119,21 +123,21 @@ ${sectionsHtml}
 // Add new cases here as layout renderers are built.
 
 function renderSection(section) {
-  const layout = section.layout || 'default';
+  const layout = section.layout || "default";
   switch (layout) {
-    case 'default':
+    case "default":
       return renderDefault(section);
-    case 'sticky-steps':
+    case "sticky-steps":
       return renderStickySteps(section);
-    case 'fullbleed-quote':
+    case "fullbleed-quote":
       return renderFullbleedQuote(section);
-    case 'reveal-crossfade':
+    case "reveal-crossfade":
       return renderRevealCrossfade(section);
-    case 'stackable-cards':
+    case "stackable-cards":
       return renderStackableCards(section);
-    case 'parallax':
+    case "parallax":
       return renderParallax(section);
-    case 'cascading-slides':
+    case "cascading-slides":
       return renderCascadingSlides(section);
     default:
       // Graceful stub for layouts not yet implemented
@@ -141,7 +145,7 @@ function renderSection(section) {
 <section class="hse-section hse-section--stub" id="${section.id}" data-layout="${layout}">
   <div class="hse-inner">
     <p class="hse-eyebrow">${esc(section.nav_label || section.title || section.id)}</p>
-    ${section.intro ? `<p class="hse-section-intro hse-reveal">${esc(section.intro)}</p>` : ''}
+    ${section.intro ? `<p class="hse-section-intro hse-reveal">${esc(section.intro)}</p>` : ""}
     <p class="hse-label" style="margin-top:1rem;opacity:0.4;">Layout renderer: ${layout} — coming soon</p>
   </div>
 </section>`;
@@ -152,9 +156,9 @@ function renderSection(section) {
 
 function buildBodyScript(meta, sections) {
   const navIds = sections
-    .filter(s => !s.nav_exclude)
-    .map(s => `'${s.id}'`)
-    .join(', ');
+    .filter((s) => !s.nav_exclude)
+    .map((s) => `'${s.id}'`)
+    .join(", ");
 
   return `
 // ── Harpoon Story Engine — Runtime ───────────────────────────────
@@ -281,19 +285,23 @@ gsap.utils.toArray('.hse-section--reveal-crossfade').forEach(section => {
 // ── CSS copy ──────────────────────────────────────────────────────
 
 function copyCss(outputDir) {
-  const cssSource = path.join(__dirname, '../css');
-  const cssDest   = path.join(outputDir, 'css');
+  const cssSource = path.join(__dirname, "../css");
+  const cssDest = path.join(outputDir, "css");
   copyDirRecursive(cssSource, cssDest);
 
-  const jsSource = path.join(__dirname, '../js');
-  const jsDest   = path.join(outputDir, 'js');
+  const jsSource = path.join(__dirname, "../js");
+  const jsDest = path.join(outputDir, "js");
   copyDirRecursive(jsSource, jsDest);
 }
 
 function copyDirRecursive(src, dest) {
   fs.mkdirSync(dest, { recursive: true });
   for (const entry of fs.readdirSync(src, { withFileTypes: true })) {
-    const srcPath  = path.join(src, entry.name);
+    // Skip macOS metadata files (Icon\r, .DS_Store, etc.)
+    if (entry.name === ".DS_Store" || entry.name.startsWith("Icon")) continue;
+    if (entry.name.startsWith(".")) continue;
+
+    const srcPath = path.join(src, entry.name);
     const destPath = path.join(dest, entry.name);
     if (entry.isDirectory()) {
       copyDirRecursive(srcPath, destPath);
@@ -306,12 +314,12 @@ function copyDirRecursive(src, dest) {
 // ── Utility ───────────────────────────────────────────────────────
 
 function esc(str) {
-  if (!str) return '';
+  if (!str) return "";
   return String(str)
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;');
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
 }
 
 module.exports = { render };

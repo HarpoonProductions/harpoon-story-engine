@@ -1,4 +1,6 @@
 'use strict';
+const fs   = require('fs');
+const path = require('path');
 
 /**
  * Renders the <head> block for a Story Engine page.
@@ -17,6 +19,17 @@ function renderHead(meta, config, title, basePath, staging) {
 
   const accentColor  = meta.accent_color  || '#1A3F6F';
   const accentColor2 = meta.accent_color_2 || '#C9A84C';
+
+  // Load Platform Core token set
+  const tokenSetId   = meta.token_set || 'default';
+  const tokenSetPath = path.join(__dirname, '../../tokens', tokenSetId + '.css');
+  const tokenSetCss  = fs.existsSync(tokenSetPath)
+    ? fs.readFileSync(tokenSetPath, 'utf8')
+    : '';
+
+  // Extract Google Fonts URL from token set if it specifies one
+  // Default token set uses the standard Google Fonts link
+  const useDefaultFonts = tokenSetId === 'default';
 
   // Normalise basePath: ensure leading slash, no trailing slash
   // Empty string = relative paths for local preview
@@ -40,6 +53,17 @@ function renderHead(meta, config, title, basePath, staging) {
     ? `<meta name="theme-color" content="${config.pwa.theme_color}">`
     : '';
 
+  // Pre-compute conditional HTML blocks (avoids nested template literals)
+  const fontsHtml = useDefaultFonts
+    ? '<link rel="preconnect" href="https://fonts.googleapis.com">\n' +
+      '  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>\n' +
+      '  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,700;1,400;1,500&family=DM+Sans:wght@300;400;500&family=DM+Mono:wght@400&display=swap" rel="stylesheet">'
+    : '';
+
+  const tokenSetHtml = tokenSetCss
+    ? '<style>\n' + tokenSetCss + '\n</style>'
+    : '';
+
   return `<!DOCTYPE html>
 <html lang="${meta.language || 'en'}">
 <head>
@@ -50,10 +74,8 @@ function renderHead(meta, config, title, basePath, staging) {
   ${plausibleScript}
   ${pwaThemeColor}
 
-  <!-- Fonts -->
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,700;1,400;1,500&family=DM+Sans:wght@300;400;500&family=DM+Mono:wght@400&display=swap" rel="stylesheet">
+  <!-- Fonts (default set uses Google Fonts; client token sets may specify their own) -->
+  ${fontsHtml}
 
   <!-- GSAP + ScrollTrigger -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
@@ -61,6 +83,9 @@ function renderHead(meta, config, title, basePath, staging) {
 
   <!-- Story Engine styles -->
   <link rel="stylesheet" href="${css('css/tokens.css')}">
+
+  <!-- Platform Core token set override -->
+  ${tokenSetHtml}
   <link rel="stylesheet" href="${css('css/base.css')}">
   <link rel="stylesheet" href="${css('css/nav.css')}">
   <link rel="stylesheet" href="${css('css/cover.css')}">

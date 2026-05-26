@@ -1,0 +1,26 @@
+/*
+ * Harpoon Platform Core — Token Set: Default
+ * tokens/default.css
+ *
+ * The baseline token set used when no client token set is specified.
+ * Values here match the Story Engine's base tokens exactly.
+ * Override only what differs in client token sets.
+ */
+
+:root {
+  /* Neutral palette */
+  --hse-ink:    #0A0A0C;
+  --hse-ink-2:  #111116;
+  --hse-ink-3:  #1C1C24;
+  --hse-warm:   #F2EDE6;
+  --hse-warm-2: #C8BFB0;
+  --hse-warm-3: #7A7268;
+
+  /* Typography */
+  --hse-font-display: 'Playfair Display', Georgia, serif;
+  --hse-font-body:    'DM Sans', system-ui, sans-serif;
+  --hse-font-mono:    'DM Mono', 'Courier New', monospace;
+
+  /* Google Fonts import for default set */
+  --hse-google-fonts: "https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,700;1,400;1,500&family=DM+Sans:wght@300;400;500&family=DM+Mono:wght@400&display=swap";
+}

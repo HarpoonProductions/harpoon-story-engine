@@ -2,11 +2,14 @@
   "name": "harpoon-story-engine",
   "version": "0.1.0",
   "description": "Renders Harpoon Story Engine JSON content files into HTML publications",
-  "main": "render.js",
+  "main": "main.js",
   "scripts": {
     "render": "node render.js",
     "test": "node test.js",
-    "editor": "node editor.js"
+    "editor": "node editor.js",
+    "electron": "electron .",
+    "electron:build": "electron-builder --config electron/builder.json",
+    "electron:build:mac": "electron-builder --mac --config electron/builder.json"
   },
   "keywords": [
     "harpoon",
@@ -18,11 +21,18 @@
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1046.0",
     "@aws-sdk/lib-storage": "^3.1046.0",
+    "@supabase/supabase-js": "^2.106.1",
     "ajv": "^8.17.1",
     "busboy": "^1.6.0",
     "chokidar": "^5.0.0",
     "dotenv": "^17.4.2",
     "express": "^5.2.1",
     "sharp": "^0.34.5"
-  }
+  },
+  "devDependencies": {
+    "dmg-license": "^1.0.11",
+    "electron": "^42.2.0",
+    "electron-builder": "^26.8.1"
+  },
+  "build": "electron/builder.json"
 }

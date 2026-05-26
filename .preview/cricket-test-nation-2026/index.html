@@ -4,10 +4,11 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Test Nation</title>
+  
   <script defer data-domain="cricket-test-nation-2026.harpoon.productions" src="https://analytics.harpoonproductions.com/js/script.js"></script>
   <meta name="theme-color" content="#001A3D">
 
-  <!-- Fonts -->
+  <!-- Fonts (default set uses Google Fonts; client token sets may specify their own) -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,700;1,400;1,500&family=DM+Sans:wght@300;400;500&family=DM+Mono:wght@400&display=swap" rel="stylesheet">
@@ -17,25 +18,56 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
 
   <!-- Story Engine styles -->
-  <link rel="stylesheet" href="/cricket-test-nation-2026/css/tokens.css">
-  <link rel="stylesheet" href="/cricket-test-nation-2026/css/base.css">
-  <link rel="stylesheet" href="/cricket-test-nation-2026/css/nav.css">
-  <link rel="stylesheet" href="/cricket-test-nation-2026/css/cover.css">
-  <link rel="stylesheet" href="/cricket-test-nation-2026/css/blocks/pull-quote.css">
-  <link rel="stylesheet" href="/cricket-test-nation-2026/css/blocks/stat-block.css">
-  <link rel="stylesheet" href="/cricket-test-nation-2026/css/blocks/photo-cluster.css">
-  <link rel="stylesheet" href="/cricket-test-nation-2026/css/blocks/toggle-panels.css">
-  <link rel="stylesheet" href="/cricket-test-nation-2026/css/blocks/accordion.css">
-  <link rel="stylesheet" href="/cricket-test-nation-2026/css/blocks/cards.css">
-  <link rel="stylesheet" href="/cricket-test-nation-2026/css/blocks/contributors.css">
-  <link rel="stylesheet" href="/cricket-test-nation-2026/css/blocks/briefing-engine.css">
-  <link rel="stylesheet" href="/cricket-test-nation-2026/css/layouts/default.css">
-  <link rel="stylesheet" href="/cricket-test-nation-2026/css/layouts/sticky-steps.css">
-  <link rel="stylesheet" href="/cricket-test-nation-2026/css/layouts/stackable-cards.css">
-  <link rel="stylesheet" href="/cricket-test-nation-2026/css/layouts/cascading-slides.css">
-  <link rel="stylesheet" href="/cricket-test-nation-2026/css/layouts/parallax.css">
-  <link rel="stylesheet" href="/cricket-test-nation-2026/css/layouts/fullbleed-quote.css">
-  <link rel="stylesheet" href="/cricket-test-nation-2026/css/layouts/reveal-crossfade.css">
+  <link rel="stylesheet" href="css/tokens.css">
+
+  <!-- Platform Core token set override -->
+  <style>
+/*
+ * Harpoon Platform Core — Token Set: Default
+ * tokens/default.css
+ *
+ * The baseline token set used when no client token set is specified.
+ * Values here match the Story Engine's base tokens exactly.
+ * Override only what differs in client token sets.
+ */
+
+:root {
+  /* Neutral palette */
+  --hse-ink:    #0A0A0C;
+  --hse-ink-2:  #111116;
+  --hse-ink-3:  #1C1C24;
+  --hse-warm:   #F2EDE6;
+  --hse-warm-2: #C8BFB0;
+  --hse-warm-3: #7A7268;
+
+  /* Typography */
+  --hse-font-display: 'Playfair Display', Georgia, serif;
+  --hse-font-body:    'DM Sans', system-ui, sans-serif;
+  --hse-font-mono:    'DM Mono', 'Courier New', monospace;
+
+  /* Google Fonts import for default set */
+  --hse-google-fonts: "https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,700;1,400;1,500&family=DM+Sans:wght@300;400;500&family=DM+Mono:wght@400&display=swap";
+}
+
+</style>
+  <link rel="stylesheet" href="css/base.css">
+  <link rel="stylesheet" href="css/nav.css">
+  <link rel="stylesheet" href="css/cover.css">
+  <link rel="stylesheet" href="css/blocks/pull-quote.css">
+  <link rel="stylesheet" href="css/blocks/stat-block.css">
+  <link rel="stylesheet" href="css/blocks/photo-cluster.css">
+  <link rel="stylesheet" href="css/blocks/toggle-panels.css">
+  <link rel="stylesheet" href="css/blocks/accordion.css">
+  <link rel="stylesheet" href="css/blocks/cards.css">
+  <link rel="stylesheet" href="css/blocks/contributors.css">
+  <link rel="stylesheet" href="css/blocks/briefing-engine.css">
+  <link rel="stylesheet" href="css/layouts/default.css">
+  <link rel="stylesheet" href="css/layouts/sticky-steps.css">
+  <link rel="stylesheet" href="css/layouts/stackable-cards.css">
+  <link rel="stylesheet" href="css/layouts/cascading-slides.css">
+  <link rel="stylesheet" href="css/layouts/parallax.css">
+  <link rel="stylesheet" href="css/layouts/fullbleed-quote.css">
+  <link rel="stylesheet" href="css/layouts/reveal-crossfade.css">
 
   <!-- Per-project brand tokens -->
   <style>
@@ -47,11 +79,13 @@
 </head>
 <body>
 
-<div id="hse-progress"></div>
+<a href="#hse-main" class="hse-skip-link">Skip to main content</a>
 
-<nav id="hse-nav">
-  <span class="hse-nav__brand">Test Nation</span>
-  <ul class="hse-nav__links">
+<div id="hse-progress" role="presentation" aria-hidden="true"></div>
+
+<nav id="hse-nav" aria-label="Publication sections">
+  <a class="hse-nav__brand" href="#hse-cover">Test Nation</a>
+  <ul class="hse-nav__links" role="list">
     <li><a href="#opening">Opening</a></li>
       <li><a href="#bazball">Bazball</a></li>
       <li><a href="#the-ashes">The Ashes</a></li>
@@ -85,6 +119,8 @@
     <div class="hse-cover__scroll-line"></div>
   </div>
 </section>
+
+<main id="hse-main">
 
 <section class="hse-section hse-section--default" id="opening" data-layout="default">
   <figure class="hse-image hse-section__hero hse-reveal">
@@ -757,7 +793,9 @@
   </div>
 </section>
 
-<footer class="hse-footer">
+</main>
+
+<footer class="hse-footer" role="contentinfo">
   <span class="hse-footer__brand">Test Nation</span>
   <span class="hse-footer__credit">Produced with the Harpoon Story Engine</span>
 </footer>
@@ -788,7 +826,7 @@
 }
 </style>
 
-<script src="/cricket-test-nation-2026/js/runtime.js"></script>
+<script src="js/runtime.js"></script>
 
 </body>
 </html>

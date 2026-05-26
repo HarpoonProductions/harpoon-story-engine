@@ -53,6 +53,11 @@
         },
         "version": {
           "type": "integer"
+        },
+        "token_set": {
+          "type": "string",
+          "description": "Token set ID from tokens/registry.json. Defaults to 'default'.",
+          "default": "default"
         }
       }
     },

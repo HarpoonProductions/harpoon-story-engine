@@ -1,0 +1,16 @@
+{
+  "token_sets": [
+    {
+      "id": "default",
+      "label": "Harpoon Default",
+      "description": "Harpoon's standard editorial aesthetic",
+      "fonts": "Playfair Display, DM Sans, DM Mono"
+    },
+    {
+      "id": "imperial",
+      "label": "Imperial College London",
+      "description": "Imperial brand — navy, ImperialText typeface",
+      "fonts": "ImperialText (Imperial CDN), Georgia fallback"
+    }
+  ]
+}
