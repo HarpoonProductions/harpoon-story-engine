@@ -1,0 +1,118 @@
+/*
+ * Harpoon Story Engine — Text Layout
+ * css/layouts/text.css
+ *
+ * Flexible text section with per-block tag, alignment and style variants.
+ */
+
+.hse-section--text {
+  padding: var(--hse-space-xl) 0;
+}
+
+.hse-inner--text {
+  max-width: var(--hse-text-w);
+  margin: 0 auto;
+  padding: 0 var(--hse-page-pad);
+}
+
+/* ── Text blocks ─────────────────────────────────────────────────── */
+
+.hse-text-blocks {
+  display: flex;
+  flex-direction: column;
+  gap: var(--hse-space-sm);
+}
+
+.hse-text-block {
+  margin: 0;
+  color: var(--hse-warm);
+  font-family: var(--hse-font-body);
+  line-height: 1.7;
+}
+
+/* ── Tag variants ────────────────────────────────────────────────── */
+
+.hse-text-block--p {
+  font-size: clamp(1rem, 1.5vw, 1.125rem);
+}
+
+.hse-text-block--h2 {
+  font-family: var(--hse-font-display);
+  font-size: clamp(1.75rem, 3vw, 2.5rem);
+  font-weight: 700;
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+  margin-top: var(--hse-space-md);
+  margin-bottom: var(--hse-space-xs);
+}
+
+.hse-text-block--h3 {
+  font-family: var(--hse-font-display);
+  font-size: clamp(1.25rem, 2vw, 1.75rem);
+  font-weight: 500;
+  line-height: 1.25;
+  margin-top: var(--hse-space-md);
+  margin-bottom: var(--hse-space-xs);
+}
+
+.hse-text-block--h4 {
+  font-family: var(--hse-font-body);
+  font-size: 1rem;
+  font-weight: 500;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  margin-top: var(--hse-space-md);
+  margin-bottom: var(--hse-space-xs);
+}
+
+.hse-text-block--blockquote {
+  font-family: var(--hse-font-display);
+  font-size: clamp(1.25rem, 2vw, 1.75rem);
+  font-style: italic;
+  font-weight: 400;
+  line-height: 1.4;
+  border-left: 3px solid var(--hse-accent);
+  padding-left: var(--hse-space-md);
+  color: var(--hse-warm-2);
+}
+
+/* ── Alignment ───────────────────────────────────────────────────── */
+
+.hse-text-block--center { text-align: center; }
+.hse-text-block--right  { text-align: right; }
+
+/* ── Style modifiers ─────────────────────────────────────────────── */
+
+.hse-text-block--lead {
+  font-size: clamp(1.125rem, 2vw, 1.35rem);
+  color: var(--hse-warm-2);
+  line-height: 1.6;
+}
+
+.hse-text-block--caption {
+  font-size: 0.8rem;
+  color: var(--hse-warm-3);
+  letter-spacing: 0.04em;
+  line-height: 1.5;
+}
+
+.hse-text-block--display {
+  font-family: var(--hse-font-display);
+  font-size: clamp(2.5rem, 5vw, 4.5rem);
+  font-weight: 700;
+  line-height: 1.05;
+  letter-spacing: -0.03em;
+}
+
+.hse-text-block--mono {
+  font-family: var(--hse-font-mono);
+  font-size: 0.9rem;
+  color: var(--hse-warm-2);
+  letter-spacing: 0.02em;
+}
+
+/* ── Wider text option for full-width sections ───────────────────── */
+
+.hse-section--text.hse-section--color-bleed .hse-inner--text {
+  max-width: var(--hse-max-w);
+}

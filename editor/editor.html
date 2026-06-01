@@ -1234,8 +1234,20 @@
                                         <option value="parallax">
                                             Parallax
                                         </option>
+                                        <option value="text">
+                                            Text
+                                        </option>
                                     </select>
                                 </div>
+                                <!-- Text blocks editor (shown only for text layout) -->
+                                <div id="blocksEditor" style="display:none">
+                                  <div class="form-group">
+                                    <label class="form-label">Text blocks</label>
+                                    <div id="blocksList"></div>
+                                    <button type="button" class="tbtn tbtn--ghost" id="addBlockBtn" style="margin-top:0.5rem;width:100%;justify-content:center">+ Add block</button>
+                                  </div>
+                                </div>
+
                                 <div class="form-group">
                                     <label class="form-label" for="sec-intro"
                                         >Intro</label
@@ -1973,6 +1985,7 @@
                 wire("sec-layout", (v) => {
                     content.sections[index].layout = v;
                     renderSectionList();
+                    initBlocksEditor(index);
                 });
                 wire("sec-intro", (v) => {
                     content.sections[index].intro = v;
@@ -2006,6 +2019,9 @@
 
                 renderSectionList();
                 document.getElementById("sec-id").focus();
+
+                // Initialise blocks editor (shown only for text layout)
+                initBlocksEditor(index);
 
                 // Reset image field enhancement so it re-initialises with correct URL and focal
                 const heroInput = document.getElementById("sec-hero-url");
@@ -2161,7 +2177,117 @@
                 }
             }
 
-            // ── Token sets ────────────────────────────────────────────────────
+            // ── Text blocks editor ───────────────────────────────────────────
+
+function initBlocksEditor(sectionIndex) {
+  const section   = content.sections[sectionIndex];
+  const editor    = document.getElementById('blocksEditor');
+  const list      = document.getElementById('blocksList');
+  const addBtn    = document.getElementById('addBlockBtn');
+  const isText    = section.layout === 'text';
+
+  editor.style.display = isText ? 'block' : 'none';
+  if (!isText) return;
+
+  if (!section.blocks) section.blocks = [];
+
+  function renderBlocks() {
+    list.innerHTML = '';
+    section.blocks.forEach((block, i) => {
+      const item = document.createElement('div');
+      item.className = 'block-item';
+      item.draggable = true;
+
+      const alignBtns = ['left','center','right'].map(a =>
+        `<button type="button" class="block-item__align-btn${block.align === a || (!block.align && a === 'left') ? ' is-active' : ''}"
+          data-align="${a}" title="${a}">${a === 'left' ? '⬛' : a === 'center' ? '▪' : '▪'}</button>`
+      ).join('');
+
+      item.innerHTML = `
+        <div class="block-item__header">
+          <span class="block-item__drag" title="Drag to reorder">⠿</span>
+          <select class="block-item__tag" data-i="${i}">
+            ${['p','h2','h3','h4','blockquote'].map(t =>
+              `<option value="${t}"${block.tag === t ? ' selected' : ''}>${t}</option>`
+            ).join('')}
+          </select>
+          <div class="block-item__align">${alignBtns}</div>
+          <select class="block-item__style" data-i="${i}">
+            ${[['','normal'],['lead','Lead'],['caption','Caption'],['display','Display'],['mono','Mono']].map(([v,l]) =>
+              `<option value="${v}"${(block.style||'') === v ? ' selected' : ''}>${l}</option>`
+            ).join('')}
+          </select>
+          <button type="button" class="block-item__delete" data-i="${i}" title="Delete block">✕</button>
+        </div>
+        <textarea class="block-item__text" data-i="${i}" placeholder="Enter text…" rows="3">${block.text || ''}</textarea>`;
+
+      // Tag change
+      item.querySelector('.block-item__tag').addEventListener('change', e => {
+        section.blocks[i].tag = e.target.value;
+        scheduleAutosave();
+      });
+
+      // Style change
+      item.querySelector('.block-item__style').addEventListener('change', e => {
+        section.blocks[i].style = e.target.value;
+        scheduleAutosave();
+      });
+
+      // Align buttons
+      item.querySelectorAll('.block-item__align-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          section.blocks[i].align = btn.dataset.align;
+          scheduleAutosave();
+          renderBlocks();
+        });
+      });
+
+      // Text change
+      item.querySelector('.block-item__text').addEventListener('input', e => {
+        section.blocks[i].text = e.target.value;
+        scheduleAutosave();
+      });
+
+      // Delete
+      item.querySelector('.block-item__delete').addEventListener('click', () => {
+        section.blocks.splice(i, 1);
+        scheduleAutosave();
+        renderBlocks();
+      });
+
+      // Drag to reorder
+      let dragIndex = null;
+      item.addEventListener('dragstart', () => { dragIndex = i; item.style.opacity = '0.4'; });
+      item.addEventListener('dragend',   () => { item.style.opacity = '1'; });
+      item.addEventListener('dragover',  e => e.preventDefault());
+      item.addEventListener('drop', () => {
+        if (dragIndex === null || dragIndex === i) return;
+        const moved = section.blocks.splice(dragIndex, 1)[0];
+        section.blocks.splice(i, 0, moved);
+        scheduleAutosave();
+        renderBlocks();
+      });
+
+      list.appendChild(item);
+    });
+  }
+
+  renderBlocks();
+
+  // Remove old add listener and add fresh one
+  const newAddBtn = addBtn.cloneNode(true);
+  addBtn.parentNode.replaceChild(newAddBtn, addBtn);
+  newAddBtn.addEventListener('click', () => {
+    section.blocks.push({ tag: 'p', text: '', align: 'left', style: '' });
+    scheduleAutosave();
+    renderBlocks();
+    // Focus new textarea
+    const textareas = list.querySelectorAll('.block-item__text');
+    if (textareas.length) textareas[textareas.length - 1].focus();
+  });
+}
+
+// ── Token sets ────────────────────────────────────────────────────
 
             async function loadTokenSets() {
                 try {

@@ -552,7 +552,8 @@
             "stackable-cards",
             "cascading-slides",
             "fullbleed-quote",
-            "reveal-crossfade"
+            "reveal-crossfade",
+            "text"
           ],
           "default": "default",
           "description": "Rendering template for this section. fullbleed-quote: full-viewport hero_image with pull_quote overlaid. reveal-crossfade: two images crossfade on scroll, driven by crossfade_images and crossfade_phases."
@@ -666,6 +667,55 @@
           "items": {
             "$ref": "#/definitions/button"
           }
+        },
+        "blocks": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/text_block"
+          },
+          "default": []
+        }
+      }
+    },
+    "text_block": {
+      "type": "object",
+      "required": [
+        "tag",
+        "text"
+      ],
+      "properties": {
+        "tag": {
+          "type": "string",
+          "enum": [
+            "p",
+            "h2",
+            "h3",
+            "h4",
+            "blockquote"
+          ]
+        },
+        "text": {
+          "type": "string"
+        },
+        "align": {
+          "type": "string",
+          "enum": [
+            "left",
+            "center",
+            "right"
+          ],
+          "default": "left"
+        },
+        "style": {
+          "type": "string",
+          "enum": [
+            "",
+            "lead",
+            "caption",
+            "display",
+            "mono"
+          ],
+          "default": ""
         }
       }
     }

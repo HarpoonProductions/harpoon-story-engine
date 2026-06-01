@@ -9,6 +9,7 @@ const { renderCover } = require("./render-cover");
 
 // Layout renderers — expand as each is built
 const { renderDefault } = require("./layouts/default");
+const { renderText }    = require("./layouts/text");
 const { renderStickySteps } = require("./layouts/sticky-steps");
 const { renderFullbleedQuote } = require("./layouts/fullbleed-quote");
 const { renderRevealCrossfade } = require("./layouts/reveal-crossfade");
@@ -125,6 +126,8 @@ ${sectionsHtml}
 function renderSection(section) {
   const layout = section.layout || "default";
   switch (layout) {
+    case "text":
+      return renderText(section);
     case "default":
       return renderDefault(section);
     case "sticky-steps":
