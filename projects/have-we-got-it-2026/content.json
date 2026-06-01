@@ -5,7 +5,7 @@
     "client": "",
     "version": 1,
     "language": "en",
-    "last_saved": "2026-05-26T13:18:53.097Z",
+    "last_saved": "2026-06-01T08:34:22.010Z",
     "project_id": "have-we-got-it-2026",
     "accent_color": "#1a3f6f",
     "accent_color_2": "#c9a84c"
@@ -14,7 +14,8 @@
     "body": "",
     "headline": "have we got it?",
     "hero_image": {
-      "url": "https://stories.har.pn/have-we-got-it-2026/images/_MG_7046.jpg"
+      "url": "https://stories.har.pn/have-we-got-it-2026/images/_MG_7046.jpg",
+      "focal": "68% 41%"
     },
     "cta_primary": {
       "href": "#section-1",
@@ -44,6 +45,24 @@
       "pull_quote": {
         "text": "A massive tower\n",
         "attribution": "Sir Bibulous"
+      }
+    },
+    {
+      "id": "section-2",
+      "num": 2,
+      "intro": "",
+      "title": "Section 2",
+      "layout": "default",
+      "hero_image": {}
+    },
+    {
+      "id": "section-3",
+      "num": 3,
+      "intro": "",
+      "title": "Section 3",
+      "layout": "reveal-crossfade",
+      "hero_image": {
+        "url": "https://stories.har.pn/have-we-got-it-2026/images/_MG_6977-hpn2560.jpg"
       }
     }
   ]
