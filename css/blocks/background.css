@@ -1,0 +1,75 @@
+/*
+ * Harpoon Story Engine — Section Background
+ * css/blocks/background.css
+ *
+ * Full-bleed background image with tint overlay.
+ * Applied to any section that has a background.url set.
+ */
+
+.hse-section--has-bg {
+  position: relative;
+  overflow: hidden;
+}
+
+/* Ensure content sits above background */
+.hse-section--has-bg > .hse-inner,
+.hse-section--has-bg > .hse-inner--text {
+  position: relative;
+  z-index: 2;
+}
+
+/* ── Background image layer ──────────────────────────────────────── */
+
+.hse-section-bg {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+}
+
+.hse-section-bg__img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+/* Parallax variant — image is oversized and moved by JS ScrollTrigger */
+.hse-section-bg.hse-bg--fixed {
+  overflow: hidden;
+}
+
+.hse-section-bg.hse-bg--fixed .hse-section-bg__img {
+  height: 130%;
+  top: -15%;
+  position: absolute;
+  will-change: transform;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hse-section-bg.hse-bg--fixed .hse-section-bg__img {
+    height: 100%;
+    top: 0;
+    transform: none !important;
+  }
+}
+
+/* ── Tint overlay ────────────────────────────────────────────────── */
+
+.hse-section-bg__tint {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+}
+
+/* ── Text colour override for sections with dark backgrounds ─────── */
+
+.hse-section--has-bg .hse-text-block,
+.hse-section--has-bg .hse-heading,
+.hse-section--has-bg .hse-section-intro,
+.hse-section--has-bg p {
+  color: var(--hse-warm);
+}
+
+.hse-section--has-bg .hse-text-block--caption {
+  color: var(--hse-warm-2);
+}

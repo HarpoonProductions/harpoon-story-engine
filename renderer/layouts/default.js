@@ -10,6 +10,7 @@ const { renderAccordion }     = require('../blocks/accordion');
 const { renderCards }         = require('../blocks/cards');
 const { renderContributors }  = require('../blocks/contributors');
 const { renderBriefingEngine } = require('../blocks/briefing-engine');
+const { renderBackground }    = require('../blocks/background');
 
 /**
  * Renders a section using the default layout.
@@ -19,6 +20,7 @@ const { renderBriefingEngine } = require('../blocks/briefing-engine');
  * @returns {string} HTML string
  */
 function renderDefault(section) {
+  const { wrapperAttrs, bgHtml } = renderBackground(section.background);
   const num = section.num
     ? `<span class="hse-section-header__num hse-eyebrow">${String(section.num).padStart(2, '0')}</span>`
     : '';
@@ -63,7 +65,8 @@ function renderDefault(section) {
     ? ' hse-section--color-bleed'
     : '';
 
-  return `<section class="hse-section hse-section--default${colorBleed}" id="${escHtml(section.id)}" data-layout="default">
+  return `<section class="hse-section hse-section--default${colorBleed}${wrapperAttrs}" id="${escHtml(section.id)}" data-layout="default">
+  ${bgHtml}
   ${hero}
   <div class="hse-inner">
     <header class="hse-section-header">

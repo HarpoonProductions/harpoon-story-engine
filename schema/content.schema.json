@@ -674,6 +674,34 @@
             "$ref": "#/definitions/text_block"
           },
           "default": []
+        },
+        "background": {
+          "type": "object",
+          "properties": {
+            "url": {
+              "type": "string",
+              "description": "Background image URL"
+            },
+            "focal": {
+              "type": "string",
+              "description": "Focal point e.g. '50% 30%'"
+            },
+            "tint": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1,
+              "default": 0.5
+            },
+            "tint_color": {
+              "type": "string",
+              "default": "#000000"
+            },
+            "fixed": {
+              "type": "boolean",
+              "default": false,
+              "description": "Fixed/parallax scroll"
+            }
+          }
         }
       }
     },

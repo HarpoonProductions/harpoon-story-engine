@@ -444,6 +444,27 @@
   }
 
 
+  // ── 12. Parallax backgrounds ─────────────────────────────────────
+  // Sections with hse-bg--fixed get a gentle parallax effect via
+  // ScrollTrigger moving the image vertically as the section scrolls.
+
+  if (!prefersReducedMotion) {
+    document.querySelectorAll('.hse-section-bg.hse-bg--fixed').forEach(function(bg) {
+      var img = bg.querySelector('.hse-section-bg__img');
+      if (!img) return;
+      gsap.to(img, {
+        yPercent: 20,
+        ease: 'none',
+        scrollTrigger: {
+          trigger: bg.closest('.hse-section'),
+          start: 'top bottom',
+          end: 'bottom top',
+          scrub: true,
+        }
+      });
+    });
+  }
+
   // ── 12. Odometer ───────────────────────────────────────────────────
   // WCAG 4.1.3: Final value announced to screen readers via aria-live.
   // Announcements suppressed during count-up to avoid flooding.

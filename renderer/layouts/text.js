@@ -1,6 +1,7 @@
 'use strict';
 
 const { escHtml } = require('../shell/head');
+const { renderBackground } = require('../blocks/background');
 
 /**
  * Renders a section using the text layout.
@@ -10,6 +11,7 @@ const { escHtml } = require('../shell/head');
  * @returns {string} HTML string
  */
 function renderText(section) {
+  const { wrapperAttrs, bgHtml } = renderBackground(section.background);
   const blocks = section.blocks || [];
 
   const colorBleed = section.color_bleed ? ' hse-section--color-bleed' : '';
@@ -41,7 +43,8 @@ function renderText(section) {
     ? `<p class="hse-section-intro hse-reveal">${escHtml(section.intro)}</p>`
     : '';
 
-  return `<section class="hse-section hse-section--text${colorBleed}" id="${escHtml(section.id)}" data-layout="text">
+  return `<section class="hse-section hse-section--text${colorBleed}${wrapperAttrs}" id="${escHtml(section.id)}" data-layout="text">
+  ${bgHtml}
   <div class="hse-inner hse-inner--text">
     ${title ? `<header class="hse-section-header">${title}</header>` : ''}
     ${intro}
