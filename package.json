@@ -30,9 +30,11 @@
     "sharp": "^0.34.5"
   },
   "devDependencies": {
-    "dmg-license": "^1.0.11",
     "electron": "^42.2.0",
     "electron-builder": "^26.8.1"
   },
-  "build": "electron/builder.json"
+  "build": "electron/builder.json",
+  "optionalDependencies": {
+    "dmg-license": "^1.0.11"
+  }
 }
