@@ -1187,30 +1187,6 @@
                                     </p>
                                 </div>
                                 <div class="form-group">
-                                    <label class="form-label" for="sec-title"
-                                        >Title</label
-                                    ><input
-                                        class="form-input"
-                                        id="sec-title"
-                                        placeholder="Section title"
-                                    />
-                                </div>
-                                <div class="form-group">
-                                    <label
-                                        class="form-label"
-                                        for="sec-nav-label"
-                                        >Nav label</label
-                                    ><input
-                                        class="form-input"
-                                        id="sec-nav-label"
-                                        placeholder="Short label"
-                                    />
-                                    <p class="form-hint">
-                                        Only needed if title is too long for the
-                                        nav
-                                    </p>
-                                </div>
-                                <div class="form-group">
                                     <label class="form-label" for="sec-layout"
                                         >Layout</label
                                     >
@@ -1239,7 +1215,1183 @@
                                         </option>
                                     </select>
                                 </div>
+                                <div class="form-group">
+                                    <label class="form-label" for="sec-title"
+                                        >Title</label
+                                    ><input
+                                        class="form-input"
+                                        id="sec-title"
+                                        placeholder="Section title"
+                                    />
+                                </div>
+                                <div class="form-group">
+                                    <label
+                                        class="form-label"
+                                        for="sec-nav-label"
+                                        >Nav label</label
+                                    ><input
+                                        class="form-input"
+                                        id="sec-nav-label"
+                                        placeholder="Short label"
+                                    />
+                                    <p class="form-hint">
+                                        Only needed if title is too long for the
+                                        nav
+                                    </p>
+                                </div>
                                 <!-- Text blocks editor (shown only for text layout) -->
+                                <div id="blocksEditor" style="display:none">
+                                  <div class="form-group">
+                                    <label class="form-label">Text blocks</label>
+                                    <div id="blocksList"></div>
+                                    <button type="button" class="tbtn tbtn--ghost" id="addBlockBtn" style="margin-top:0.5rem;width:100%;justify-content:center">+ Add block</button>
+                                  </div>
+                                </div>
+
+                                <div class="form-group">
+                                    <label class="form-label" for="sec-intro"
+                                        >Intro</label
+                                    ><textarea
+                                        class="form-textarea"
+                                        id="sec-intro"
+                                        placeholder="One or two sentence intro…"
+                                    ></textarea>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label" for="sec-hero-url"
+                                        >Hero image URL</label
+                                    ><input
+                                        class="form-input"
+                                        id="sec-hero-url"
+                                        data-image-field="true"
+                                        data-focal-path="section.hero_image.focal"
+                                        placeholder="https://…"
+                                    />
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Background image</label>
+                                    <input class="form-input" id="sec-bg-url" data-image-field="true" data-focal-path="section.background.focal" placeholder="https://…">
+                                    <p class="form-hint">Full-bleed behind the section content</p>
+                                </div>
+                                <div class="form-group" id="sec-bg-controls" style="display:none">
+                                    <label class="form-label" for="sec-bg-tint">Tint opacity</label>
+                                    <input type="range" id="sec-bg-tint" min="0" max="1" step="0.05" value="0.5" style="width:100%">
+                                    <div style="display:flex;gap:0.5rem;margin-top:0.5rem">
+                                      <label class="form-label" for="sec-bg-tint-color" style="margin:0;line-height:2">Tint colour</label>
+                                      <input type="color" id="sec-bg-tint-color" value="#000000" style="width:3rem;height:2rem;border:1px solid var(--rule);border-radius:2px;background:none;cursor:pointer">
+                                      <label class="form-label" style="margin:0;line-height:2;margin-left:auto">
+                                        <input type="checkbox" id="sec-bg-fixed"> Fixed scroll
+                                      </label>
+                                    </div>
+                                </div>
+
+                                <div class="form-group">
+                                    <label class="form-label" for="sec-hero-alt"
+                                        >Hero image alt text</label
+                                    ><input
+                                        class="form-input"
+                                        id="sec-hero-alt"
+                                        placeholder="Describe the image"
+                                    />
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label" for="sec-pq-text"
+                                        >Pull quote</label
+                                    ><textarea
+                                        class="form-textarea"
+                                        id="sec-pq-text"
+                                        placeholder="Quote text…"
+                                        style="min-height: 48px"
+                                    ></textarea>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label" for="sec-pq-attr"
+                                        >Pull quote attribution</label
+                                    ><input
+                                        class="form-input"
+                                        id="sec-pq-attr"
+                                        placeholder="Name, Title"
+                                    />
+                                </div>
+                                <div class="form-group">
+                                    <div class="form-toggle-row">
+                                        <label
+                                            class="form-label"
+                                            for="sec-nav-exclude"
+                                            style="margin: 0"
+                                            >Exclude from nav</label
+                                        >
+                                        <label class="toggle">
+                                            <input
+                                                type="checkbox"
+                                                id="sec-nav-exclude"
+                                            />
+                                            <div
+                                                class="toggle__track"
+                                                aria-hidden="true"
+                                            ></div>
+                                        </label>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <div class="form-toggle-row">
+                                        <label
+                                            class="form-label"
+                                            for="sec-color-bleed"
+                                            style="margin: 0"
+                                            >Colour bleed</label
+                                        >
+                                        <label class="toggle">
+                                            <input
+                                                type="checkbox"
+                                                id="sec-color-bleed"
+                                            />
+                                            <div
+                                                class="toggle__track"
+                                                aria-hidden="true"
+                                            ></div>
+                                        </label>
+                                    </div>
+                                </div>
+                                <p class="coming-note">
+                                    Cards, sticky steps, accordion items, photo
+                                    clusters — edit the JSON directly for now.
+                                    Full block editors coming next.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Drag divider -->
+                <div
+                    class="divider"
+                    id="divider"
+                    role="separator"
+                    aria-label="Resize sidebar"
+                    tabindex="0"
+                    title="Drag to resize"
+                ></div>
+
+                <!-- Preview -->
+                <div class="preview" id="previewPanel">
+                    <div
+                        class="preview__toolbar"
+                        role="toolbar"
+                        aria-label="Preview controls"
+                    >
+                        <span class="preview__label">📱 Mobile</span>
+                        <label class="sr-only" for="mobilePreset"
+                            >Mobile viewport</label
+                        >
+                        <select
+                            class="viewport-select"
+                            id="mobilePreset"
+                            onchange="applyPreset('mobile')"
+                            aria-label="Mobile viewport size"
+                        >
+                            <option value="390:844">iPhone 15 (390×844)</option>
+                            <option value="375:667">iPhone SE (375×667)</option>
+                            <option value="430:932">
+                                iPhone 15 Pro Max (430×932)
+                            </option>
+                            <option value="360:800">Android (360×800)</option>
+                            <option value="768:1024">
+                                iPad Mini (768×1024)
+                            </option>
+                        </select>
+                        <span style="flex: 1"></span>
+                        <span class="preview__label">🖥 Desktop</span>
+                        <label class="sr-only" for="desktopPreset"
+                            >Desktop viewport</label
+                        >
+                        <select
+                            class="viewport-select"
+                            id="desktopPreset"
+                            onchange="applyPreset('desktop')"
+                            aria-label="Desktop viewport size"
+                        >
+                            <option value="1280:800">
+                                Small laptop (1280×800)
+                            </option>
+                            <option value="1440:900">
+                                MacBook Air (1440×900)
+                            </option>
+                            <option value="1920:1080">
+                                Full HD (1920×1080)
+                            </option>
+                            <option value="2560:1440">Wide (2560×1440)</option>
+                            <option value="1024:768">
+                                iPad landscape (1024×768)
+                            </option>
+                        </select>
+                    </div>
+
+                    <div class="preview__viewports" id="viewports">
+                        <div class="viewport viewport--mobile">
+                            <div class="viewport__header">
+                                <div class="viewport__label">Mobile</div>
+                            </div>
+                            <div class="mobile-clip" id="mobileClip">
+                                <iframe
+                                    id="mobileFrame"
+                                    title="Mobile preview of the story"
+                                    src=""
+                                    scrolling="yes"
+                                ></iframe>
+                                <div
+                                    class="rendering-veil"
+                                    id="mobileVeil"
+                                    aria-hidden="true"
+                                >
+                                    <span>Rendering…</span>
+                                </div>
+                            </div>
+                            <div
+                                class="device-hint"
+                                id="mobileHint"
+                                aria-live="polite"
+                            >
+                                390 × 844
+                            </div>
+                        </div>
+
+                        <div class="viewport viewport--desktop">
+                            <div class="viewport__header">
+                                <div class="viewport__label">Desktop</div>
+                            </div>
+                            <div class="desktop-clip" id="desktopClip">
+                                <iframe
+                                    id="desktopFrame"
+                                    title="Desktop preview of the story"
+                                    src=""
+                                    scrolling="yes"
+                                ></iframe>
+                                <div
+                                    class="rendering-veil"
+                                    id="desktopVeil"
+                                    aria-hidden="true"
+                                >
+                                    <span>Rendering…</span>
+                                </div>
+                            </div>
+                            <div
+                                class="device-hint"
+                                id="desktopHint"
+                                aria-live="polite"
+                            >
+                                1280 × 800
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Visually hidden utility class -->
+        <style>
+            .sr-only {
+                position: absolute;
+                width: 1px;
+                height: 1px;
+                padding: 0;
+                margin: -1px;
+                overflow: hidden;
+                clip: rect(0, 0, 0, 0);
+                white-space: nowrap;
+                border: 0;
+            }
+        </style>
+
+        <script>
+            "use strict";
+
+            const projectId = location.pathname.split("/").pop();
+            let content = null;
+            let saveTimer = null;
+            let isDirty = false;
+            let activeSectionIndex = -1;
+
+            // ── Viewport preset state ─────────────────────────────────────────
+
+            const PRESETS = {
+                mobile: { w: 390, h: 844 },
+                desktop: { w: 1280, h: 800 },
+            };
+
+            function applyPreset(which) {
+                const select = document.getElementById(
+                    which === "mobile" ? "mobilePreset" : "desktopPreset",
+                );
+                const [w, h] = select.value.split(":").map(Number);
+                PRESETS[which] = { w, h };
+                scaleFrames();
+            }
+
+            // ── Boot ───────────────────────────────────────────────────────────
+
+            async function boot() {
+                setupDivider();
+                scaleFrames();
+                window.addEventListener("resize", scaleFrames);
+
+                const res = await fetch(`/api/project/${projectId}`);
+                if (!res.ok) {
+                    document.getElementById("toolbarProject").textContent =
+                        "Project not found";
+                    return;
+                }
+                content = await res.json();
+
+                document.title = content.meta.title + " — Story Engine";
+                document.getElementById("toolbarProject").textContent =
+                    (content.meta.client ? content.meta.client + " · " : "") +
+                    content.meta.title;
+
+                await loadTokenSets();
+                populateForm();
+                wireInputs();
+                renderSectionList();
+                loadPreviews();
+
+                // Initialise image upload + focal point on cover fields
+                // (section fields are wired when a section is opened)
+                setTimeout(() => {
+                    if (window.initImageFields) {
+                        initImageFields(projectId, onFocalUpdate);
+                    }
+                }, 200);
+            }
+
+            // ── Frame scaling ──────────────────────────────────────────────────
+
+            function scaleFrames() {
+                const viewports = document.getElementById("viewports");
+                const mClip = document.getElementById("mobileClip");
+                const dClip = document.getElementById("desktopClip");
+                const mFrame = document.getElementById("mobileFrame");
+                const dFrame = document.getElementById("desktopFrame");
+
+                const availH = viewports.clientHeight - 52;
+
+                const mp = PRESETS.mobile;
+                const mMaxW = Math.floor(viewports.clientWidth * 0.35);
+                const mScaleW = mMaxW / mp.w;
+                const mScaleH = availH / mp.h;
+                const mScale = Math.min(mScaleW, mScaleH);
+                const mClipW = Math.round(mp.w * mScale);
+                const mClipH = Math.round(mp.h * mScale);
+
+                mClip.style.width = mClipW + "px";
+                mClip.style.height = mClipH + "px";
+                mFrame.style.transform = `scale(${mScale})`;
+                mFrame.style.transformOrigin = "top left";
+                mFrame.style.width = mp.w + "px";
+                mFrame.style.height = mp.h + "px";
+
+                const mHint = document.getElementById("mobileHint");
+                if (mHint)
+                    mHint.textContent = `${mp.w} × ${mp.h} · ${Math.round(mScale * 100)}%`;
+
+                const dp = PRESETS.desktop;
+                const dAvailW = dClip.clientWidth;
+                const dScaleW = dAvailW / dp.w;
+                const dScaleH = availH / dp.h;
+                const dScale = Math.min(dScaleW, dScaleH);
+                const dClipW = Math.round(dp.w * dScale);
+                const dClipH = Math.round(dp.h * dScale);
+
+                dClip.style.width = dClipW + "px";
+                dClip.style.height = dClipH + "px";
+                dFrame.style.transform = `scale(${dScale})`;
+                dFrame.style.transformOrigin = "top left";
+                dFrame.style.width = dp.w + "px";
+                dFrame.style.height = dp.h + "px";
+
+                const dHint = document.getElementById("desktopHint");
+                if (dHint)
+                    dHint.textContent = `${dp.w} × ${dp.h} · ${Math.round(dScale * 100)}%`;
+            }
+
+            // ── Draggable divider ──────────────────────────────────────────────
+
+            function setupDivider() {
+                const divider = document.getElementById("divider");
+                const sidebar = document.getElementById("sidebar");
+                let dragging = false;
+                let startX = 0;
+                let startW = 0;
+
+                divider.addEventListener("mousedown", (e) => {
+                    dragging = true;
+                    startX = e.clientX;
+                    startW = sidebar.offsetWidth;
+                    divider.classList.add("is-dragging");
+                    document.body.style.cursor = "col-resize";
+                    document.body.style.userSelect = "none";
+                    e.preventDefault();
+                });
+
+                document.addEventListener("mousemove", (e) => {
+                    if (!dragging) return;
+                    const newW = Math.max(
+                        200,
+                        Math.min(520, startW + e.clientX - startX),
+                    );
+                    sidebar.style.width = newW + "px";
+                    scaleFrames();
+                });
+
+                document.addEventListener("mouseup", () => {
+                    if (!dragging) return;
+                    dragging = false;
+                    divider.classList.remove("is-dragging");
+                    document.body.style.cursor = "";
+                    document.body.style.userSelect = "";
+                    scaleFrames();
+                });
+
+                // Keyboard resize: arrow keys when divider is focused
+                divider.addEventListener("keydown", (e) => {
+                    const sidebar = document.getElementById("sidebar");
+                    let w = sidebar.offsetWidth;
+                    if (e.key === "ArrowRight") {
+                        w = Math.min(520, w + 20);
+                    } else if (e.key === "ArrowLeft") {
+                        w = Math.max(200, w - 20);
+                    } else return;
+                    e.preventDefault();
+                    sidebar.style.width = w + "px";
+                    scaleFrames();
+                });
+            }
+
+            // ── Preview ────────────────────────────────────────────────────────
+
+            function loadPreviews() {
+                const url = `/preview/${projectId}/`;
+                document.getElementById("mobileFrame").src = url;
+                document.getElementById("desktopFrame").src = url;
+                document.getElementById("mobileFrame").onload = scaleFrames;
+                document.getElementById("desktopFrame").onload = scaleFrames;
+            }
+
+            function reloadPreviews() {
+                const mf = document.getElementById("mobileFrame");
+                const df = document.getElementById("desktopFrame");
+
+                // Capture scroll positions before reload
+                let mSY = 0,
+                    dSY = 0;
+                try {
+                    mSY = mf.contentWindow.scrollY || 0;
+                } catch {}
+                try {
+                    dSY = df.contentWindow.scrollY || 0;
+                } catch {}
+
+                // Fade out both frames smoothly rather than white-flashing
+                mf.style.transition = "opacity 0.2s";
+                df.style.transition = "opacity 0.2s";
+                mf.style.opacity = "0.4";
+                df.style.opacity = "0.4";
+
+                const url = `/preview/${projectId}/?t=${Date.now()}`;
+                let mc = false,
+                    dc = false;
+
+                function onLoaded(frame, scrollY) {
+                    try {
+                        frame.contentWindow.scrollTo(0, scrollY);
+                    } catch {}
+                    scaleFrames();
+                    frame.style.opacity = "1";
+                }
+
+                mf.onload = () => {
+                    mc = true;
+                    onLoaded(mf, mSY);
+                    if (mc && dc) showVeil(false);
+                };
+                df.onload = () => {
+                    dc = true;
+                    onLoaded(df, dSY);
+                    if (mc && dc) showVeil(false);
+                };
+                mf.src = url;
+                df.src = url;
+            }
+
+            function showVeil(on) {
+                document
+                    .getElementById("mobileVeil")
+                    .classList.toggle("is-on", on);
+                document
+                    .getElementById("desktopVeil")
+                    .classList.toggle("is-on", on);
+            }
+
+            function openPreviewInBrowser() {
+                window.open(`/preview/${projectId}/`, "_blank");
+            }
+
+            // ── Autosave ───────────────────────────────────────────────────────
+
+            function scheduleAutosave() {
+                isDirty = true;
+                setStatus("saving", "Saving…");
+                clearTimeout(saveTimer);
+                saveTimer = setTimeout(doSave, 500);
+            }
+
+            async function doSave() {
+                try {
+                    const res = await fetch(`/api/project/${projectId}/save`, {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify(content),
+                    });
+                    const data = await res.json();
+                    if (data.ok) {
+                        isDirty = false;
+                        setStatus("saved", "Saved");
+                        reloadPreviews();
+                        setTimeout(() => {
+                            if (!isDirty) setStatus("", "—");
+                        }, 2500);
+                    } else {
+                        setStatus("error", data.error || "Save failed");
+                    }
+                } catch {
+                    setStatus("error", "Save failed");
+                }
+            }
+
+            function setStatus(type, text) {
+                document.getElementById("statusDot").className =
+                    "status-dot" + (type ? " " + type : "");
+                document.getElementById("statusText").textContent = text;
+            }
+
+            // ── Deep path get/set ──────────────────────────────────────────────
+
+            function getPath(obj, path) {
+                return path
+                    .split(".")
+                    .reduce(
+                        (o, k) => (o && o[k] !== undefined ? o[k] : ""),
+                        obj,
+                    );
+            }
+
+            function setPath(obj, path, value) {
+                const keys = path.split(".");
+                let cur = obj;
+                for (let i = 0; i < keys.length - 1; i++) {
+                    if (!cur[keys[i]] || typeof cur[keys[i]] !== "object")
+                        cur[keys[i]] = {};
+                    cur = cur[keys[i]];
+                }
+                cur[keys[keys.length - 1]] = value;
+            }
+
+            // ── Form population ────────────────────────────────────────────────
+
+            function populateForm() {
+                document.querySelectorAll("[data-path]").forEach((el) => {
+                    const val = getPath(content, el.dataset.path) || "";
+                    el.type === "checkbox"
+                        ? (el.checked = !!val)
+                        : (el.value = val);
+                });
+            }
+
+            function wireInputs() {
+                document.querySelectorAll("[data-path]").forEach((el) => {
+                    el.addEventListener("input", () => {
+                        const val =
+                            el.type === "checkbox" ? el.checked : el.value;
+                        setPath(content, el.dataset.path, val);
+                        // Sync colour pairs (swatch ↔ text input)
+                        document
+                            .querySelectorAll(
+                                `[data-path="${el.dataset.path}"]`,
+                            )
+                            .forEach((o) => {
+                                if (o !== el) o.value = val;
+                            });
+                        scheduleAutosave();
+                    });
+                });
+            }
+
+            // ── Tabs ───────────────────────────────────────────────────────────
+
+            function switchTab(name, btn) {
+                document.querySelectorAll(".sidebar__tab").forEach((t) => {
+                    t.classList.remove("is-active");
+                    t.setAttribute("aria-selected", "false");
+                });
+                document
+                    .querySelectorAll(".tab-panel")
+                    .forEach((p) => p.classList.remove("is-active"));
+                btn.classList.add("is-active");
+                btn.setAttribute("aria-selected", "true");
+                document
+                    .getElementById(`tab-${name}`)
+                    .classList.add("is-active");
+            }
+
+            // Arrow key navigation between tabs
+            document
+                .querySelector(".sidebar__tabs")
+                .addEventListener("keydown", (e) => {
+                    const tabs = Array.from(
+                        document.querySelectorAll(".sidebar__tab"),
+                    );
+                    const idx = tabs.indexOf(document.activeElement);
+                    if (idx === -1) return;
+                    let next = -1;
+                    if (e.key === "ArrowRight") next = (idx + 1) % tabs.length;
+                    if (e.key === "ArrowLeft")
+                        next = (idx - 1 + tabs.length) % tabs.length;
+                    if (next >= 0) {
+                        e.preventDefault();
+                        tabs[next].focus();
+                        tabs[next].click();
+                    }
+                });
+
+            // ── Section list ───────────────────────────────────────────────────
+
+            function renderSectionList() {
+                const list = document.getElementById("sectionList");
+                list.innerHTML = "";
+                (content.sections || []).forEach((s, i) => {
+                    const item = document.createElement("button");
+                    item.className =
+                        "section-item" +
+                        (i === activeSectionIndex ? " is-active" : "");
+                    item.setAttribute("role", "option");
+                    item.setAttribute(
+                        "aria-selected",
+                        i === activeSectionIndex ? "true" : "false",
+                    );
+                    item.setAttribute("id", `section-item-${i}`);
+                    item.setAttribute(
+                        "aria-label",
+                        `${s.title || s.id || "Untitled"}, ${s.layout || "default"} layout`,
+                    );
+                    item.innerHTML = `
+      <span class="section-item__num" aria-hidden="true">${String(s.num || i + 1).padStart(2, "0")}</span>
+      <span class="section-item__label" aria-hidden="true">${s.title || s.id || "Untitled"}</span>
+      <span class="section-item__layout" aria-hidden="true">${s.layout || "default"}</span>`;
+                    item.addEventListener("click", () => editSection(i));
+                    list.appendChild(item);
+                });
+
+                // Update aria-activedescendant
+                const list2 = document.getElementById("sectionList");
+                if (activeSectionIndex >= 0) {
+                    list2.setAttribute(
+                        "aria-activedescendant",
+                        `section-item-${activeSectionIndex}`,
+                    );
+                } else {
+                    list2.removeAttribute("aria-activedescendant");
+                }
+            }
+
+            // Arrow key navigation within section list
+            document
+                .getElementById("sectionList")
+                .addEventListener("keydown", (e) => {
+                    const items = Array.from(
+                        document.querySelectorAll(".section-item"),
+                    );
+                    if (!items.length) return;
+                    const idx = items.indexOf(document.activeElement);
+                    let next = -1;
+                    if (e.key === "ArrowDown")
+                        next = Math.min(idx + 1, items.length - 1);
+                    if (e.key === "ArrowUp") next = Math.max(idx - 1, 0);
+                    if (e.key === "Home") next = 0;
+                    if (e.key === "End") next = items.length - 1;
+                    if (next >= 0 && next !== idx) {
+                        e.preventDefault();
+                        items[next].focus();
+                        items[next].click();
+                    }
+                });
+
+            // ── Section editor ─────────────────────────────────────────────────
+
+            // Track current section listener cleanup
+            let sectionEditorListeners = [];
+
+            function editSection(index) {
+                activeSectionIndex = index;
+                const s = content.sections[index];
+
+                document.getElementById("sectionEditor").style.display =
+                    "block";
+                document.getElementById("sectionEditorTitle").textContent =
+                    s.title || s.id || `Section ${index + 1}`;
+                document.getElementById("sectionDeleteBtn").onclick = () =>
+                    deleteSection(index);
+
+                // Remove old event listeners cleanly
+                sectionEditorListeners.forEach(({ el, fn }) =>
+                    el.removeEventListener("input", fn),
+                );
+                sectionEditorListeners = [];
+
+                // Field definitions: [id, getter from section]
+                const textFields = [
+                    ["sec-id", s.id || ""],
+                    ["sec-title", s.title || ""],
+                    ["sec-nav-label", s.nav_label || ""],
+                    ["sec-intro", s.intro || ""],
+                    ["sec-hero-url", (s.hero_image && s.hero_image.url) || ""],
+                    ["sec-hero-alt", (s.hero_image && s.hero_image.alt) || ""],
+                    ["sec-bg-url",   (s.background && s.background.url) || ""],
+                    ["sec-pq-text", (s.pull_quote && s.pull_quote.text) || ""],
+                    [
+                        "sec-pq-attr",
+                        (s.pull_quote && s.pull_quote.attribution) || "",
+                    ],
+                ];
+
+                // Set all text fields
+                textFields.forEach(([id, val]) => {
+                    const el = document.getElementById(id);
+                    if (el) el.value = val;
+                });
+
+                // Set select and checkboxes
+                document.getElementById("sec-layout").value =
+                    s.layout || "default";
+                document.getElementById("sec-nav-exclude").checked =
+                    !!s.nav_exclude;
+                document.getElementById("sec-color-bleed").checked =
+                    !!s.color_bleed;
+
+                // Wire listeners using a shared approach — no cloning needed
+                function wire(id, setter) {
+                    const el = document.getElementById(id);
+                    if (!el) return;
+                    const fn = () => {
+                        setter(el.type === "checkbox" ? el.checked : el.value);
+                        scheduleAutosave();
+                    };
+                    el.addEventListener("input", fn);
+                    sectionEditorListeners.push({ el, fn });
+                }
+
+                wire("sec-id", (v) => {
+                    content.sections[index].id = v;
+                });
+                wire("sec-title", (v) => {
+                    content.sections[index].title = v;
+                    renderSectionList();
+                    document.getElementById("sectionEditorTitle").textContent =
+                        v || "Section";
+                });
+                wire("sec-nav-label", (v) => {
+                    content.sections[index].nav_label = v;
+                });
+                wire("sec-layout", (v) => {
+                    content.sections[index].layout = v;
+                    renderSectionList();
+                    initBlocksEditor(index);
+                });
+                wire("sec-intro", (v) => {
+                    content.sections[index].intro = v;
+                });
+                wire("sec-hero-url", (v) => {
+                    if (!content.sections[index].hero_image)
+                        content.sections[index].hero_image = {};
+                    content.sections[index].hero_image.url = v;
+                });
+                wire("sec-hero-alt", (v) => {
+                    if (!content.sections[index].hero_image)
+                        content.sections[index].hero_image = {};
+                    content.sections[index].hero_image.alt = v;
+                });
+
+                // Background image wiring
+                function ensureBg() {
+                    if (!content.sections[index].background) content.sections[index].background = {};
+                    return content.sections[index].background;
+                }
+                wire("sec-bg-tint",       (v) => { ensureBg().tint = parseFloat(v); });
+                wire("sec-bg-tint-color", (v) => { ensureBg().tint_color = v; });
+                wire("sec-bg-fixed",      (v) => { ensureBg().fixed = v; });
+
+                const bgUrlInput  = document.getElementById("sec-bg-url");
+                const bgControls  = document.getElementById("sec-bg-controls");
+                const bgTint      = document.getElementById("sec-bg-tint");
+                const bgTintColor = document.getElementById("sec-bg-tint-color");
+                const bgFixed     = document.getElementById("sec-bg-fixed");
+
+                function syncBgControls() {
+                    const hasBg = !!bgUrlInput.value;
+                    bgControls.style.display = hasBg ? "block" : "none";
+                    if (hasBg) {
+                        const bg = content.sections[index].background || {};
+                        bgTint.value      = bg.tint      ?? 0.5;
+                        bgTintColor.value = bg.tint_color || "#000000";
+                        bgFixed.checked   = !!bg.fixed;
+                    }
+                }
+                syncBgControls();
+                bgUrlInput.addEventListener("input", () => {
+                    ensureBg().url = bgUrlInput.value;
+                    syncBgControls();
+                    scheduleAutosave();
+                });
+
+                wire("sec-nav-exclude", (v) => {
+                    content.sections[index].nav_exclude = v;
+                });
+                wire("sec-color-bleed", (v) => {
+                    content.sections[index].color_bleed = v;
+                });
+                wire("sec-pq-text", (v) => {
+                    if (!content.sections[index].pull_quote)
+                        content.sections[index].pull_quote = {};
+                    content.sections[index].pull_quote.text = v;
+                });
+                wire("sec-pq-attr", (v) => {
+                    if (!content.sections[index].pull_quote)
+                        content.sections[index].pull_quote = {};
+                    content.sections[index].pull_quote.attribution = v;
+                });
+
+                renderSectionList();
+                document.getElementById("sec-id").focus();
+
+                // Initialise blocks editor (shown only for text layout)
+                initBlocksEditor(index);
+
+                // Reset image field enhancement so it re-initialises with correct URL and focal
+                const heroInput = document.getElementById("sec-hero-url");
+                if (heroInput) {
+                    heroInput.dataset.enhanced = "";
+                    heroInput.dataset.existingFocal =
+                        (s.hero_image && s.hero_image.focal) || "";
+                    // Remove old focal wrap if present so it gets rebuilt fresh
+                    const oldWrap = heroInput.closest(".img-field-wrap");
+                    if (oldWrap) {
+                        oldWrap.parentNode.insertBefore(heroInput, oldWrap);
+                        oldWrap.remove();
+                    }
+                }
+
+                // Re-initialise image fields after a tick so values are settled
+                setTimeout(() => {
+                    if (window.initImageFields) {
+                        initImageFields(
+                            projectId,
+                            onFocalUpdate,
+                            document.getElementById("sectionEditor"),
+                        );
+                    }
+                }, 50);
+            }
+
+            function addSection() {
+                if (!content.sections) content.sections = [];
+                const n = content.sections.length + 1;
+                content.sections.push({
+                    id: `section-${n}`,
+                    num: n,
+                    title: `Section ${n}`,
+                    layout: "default",
+                    intro: "",
+                });
+                renderSectionList();
+                editSection(content.sections.length - 1);
+                scheduleAutosave();
+                // Switch to sections tab if not already there
+                const sectionsTab = document.getElementById("tab-btn-sections");
+                if (!sectionsTab.classList.contains("is-active")) {
+                    sectionsTab.click();
+                }
+            }
+
+            function deleteSection(index) {
+                if (
+                    !confirm(
+                        `Delete "${content.sections[index].title || content.sections[index].id}"?`,
+                    )
+                )
+                    return;
+                content.sections.splice(index, 1);
+                activeSectionIndex = -1;
+                document.getElementById("sectionEditor").style.display = "none";
+                renderSectionList();
+                scheduleAutosave();
+                document.querySelector(".add-section-btn").focus();
+            }
+
+            window.addEventListener("beforeunload", (e) => {
+                if (isDirty) {
+                    e.preventDefault();
+                    e.returnValue = "";
+                }
+            });
+
+            // ── Deploy ────────────────────────────────────────────────────────
+
+            async function deploy(target) {
+                const isProduction = target === "production";
+
+                if (isProduction) {
+                    const confirmed = confirm(
+                        `Publish "${content.meta.title}" to ${content.meta.client ? content.meta.client + " / " : ""}stories.har.pn?\n\nThis will make the story publicly visible.`,
+                    );
+                    if (!confirmed) return;
+                }
+
+                const stageBtn = document.getElementById("stageBtn");
+                const publishBtn = document.getElementById("publishBtn");
+                stageBtn.disabled = true;
+                publishBtn.disabled = true;
+
+                showToast(isProduction ? "Saving…" : "Saving…", false);
+
+                // Save first to make sure latest content is on disk
+                await doSave();
+
+                showToast(
+                    isProduction
+                        ? "Committing and deploying…"
+                        : "Committing and staging…",
+                    false,
+                );
+
+                try {
+                    const res = await fetch(
+                        `/api/project/${projectId}/deploy`,
+                        {
+                            method: "POST",
+                            headers: { "Content-Type": "application/json" },
+                            body: JSON.stringify({ target }),
+                        },
+                    );
+                    const data = await res.json();
+
+                    if (data.ok) {
+                        const verb = isProduction ? "Published" : "Staged";
+                        const msg = `✓ ${verb} — content saved to repo, deploying now. Ready in ~2 minutes at <a href="${data.url}" target="_blank">${data.url}</a>`;
+                        showToast(msg, false, 10000);
+                    } else {
+                        showToast(
+                            "✗ " + (data.error || "Deploy failed"),
+                            true,
+                            6000,
+                        );
+                    }
+                } catch (err) {
+                    showToast("✗ " + err.message, true, 6000);
+                } finally {
+                    stageBtn.disabled = false;
+                    publishBtn.disabled = false;
+                }
+            }
+
+            // ── Toast notification ────────────────────────────────────────────
+
+            let toastTimer = null;
+
+            function showToast(msg, isError, duration) {
+                let toast = document.getElementById("deployToast");
+                if (!toast) {
+                    toast = document.createElement("div");
+                    toast.id = "deployToast";
+                    toast.className = "deploy-toast";
+                    toast.setAttribute("role", "status");
+                    toast.setAttribute("aria-live", "polite");
+                    document.body.appendChild(toast);
+                }
+                toast.innerHTML = msg;
+                toast.className =
+                    "deploy-toast is-visible" +
+                    (isError ? " deploy-toast--error" : "");
+                clearTimeout(toastTimer);
+                if (duration) {
+                    toastTimer = setTimeout(
+                        () => toast.classList.remove("is-visible"),
+                        duration,
+                    );
+                }
+            }
+
+            // ── Text blocks editor ───────────────────────────────────────────
+
+function initBlocksEditor(sectionIndex) {
+  const section   = content.sections[sectionIndex];
+  const editor    = document.getElementById('blocksEditor');
+  const list      = document.getElementById('blocksList');
+  const addBtn    = document.getElementById('addBlockBtn');
+  const isText    = section.layout === 'text';
+
+  editor.style.display = isText ? 'block' : 'none';
+  if (!isText) return;
+
+  if (!section.blocks) section.blocks = [];
+
+  function renderBlocks() {
+    list.innerHTML = '';
+    section.blocks.forEach((block, i) => {
+      const item = document.createElement('div');
+      item.className = 'block-item';
+      item.draggable = true;
+
+      const alignBtns = ['left','center','right'].map(a =>
+        `<button type="button" class="block-item__align-btn${block.align === a || (!block.align && a === 'left') ? ' is-active' : ''}"
+          data-align="${a}" title="${a}">${a === 'left' ? '⬛' : a === 'center' ? '▪' : '▪'}</button>`
+      ).join('');
+
+      item.innerHTML = `
+        <div class="block-item__header">
+          <span class="block-item__drag" title="Drag to reorder">⠿</span>
+          <select class="block-item__tag" data-i="${i}">
+            ${['p','h2','h3','h4','blockquote'].map(t =>
+              `<option value="${t}"${block.tag === t ? ' selected' : ''}>${t}</option>`
+            ).join('')}
+          </select>
+          <div class="block-item__align">${alignBtns}</div>
+          <select class="block-item__style" data-i="${i}">
+            ${[['','normal'],['lead','Lead'],['caption','Caption'],['display','Display'],['mono','Mono']].map(([v,l]) =>
+              `<option value="${v}"${(block.style||'') === v ? ' selected' : ''}>${l}</option>`
+            ).join('')}
+          </select>
+          <button type="button" class="block-item__delete" data-i="${i}" title="Delete block">✕</button>
+        </div>
+        <textarea class="block-item__text" data-i="${i}" placeholder="Enter text…" rows="3">${block.text || ''}</textarea>`;
+
+      // Tag change
+      item.querySelector('.block-item__tag').addEventListener('change', e => {
+        section.blocks[i].tag = e.target.value;
+        scheduleAutosave();
+      });
+
+      // Style change
+      item.querySelector('.block-item__style').addEventListener('change', e => {
+        section.blocks[i].style = e.target.value;
+        scheduleAutosave();
+      });
+
+      // Align buttons
+      item.querySelectorAll('.block-item__align-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          section.blocks[i].align = btn.dataset.align;
+          scheduleAutosave();
+          renderBlocks();
+        });
+      });
+
+      // Text change
+      item.querySelector('.block-item__text').addEventListener('input', e => {
+        section.blocks[i].text = e.target.value;
+        scheduleAutosave();
+      });
+
+      // Delete
+      item.querySelector('.block-item__delete').addEventListener('click', () => {
+        section.blocks.splice(i, 1);
+        scheduleAutosave();
+        renderBlocks();
+      });
+
+      // Drag to reorder
+      let dragIndex = null;
+      item.addEventListener('dragstart', () => { dragIndex = i; item.style.opacity = '0.4'; });
+      item.addEventListener('dragend',   () => { item.style.opacity = '1'; });
+      item.addEventListener('dragover',  e => e.preventDefault());
+      item.addEventListener('drop', () => {
+        if (dragIndex === null || dragIndex === i) return;
+        const moved = section.blocks.splice(dragIndex, 1)[0];
+        section.blocks.splice(i, 0, moved);
+        scheduleAutosave();
+        renderBlocks();
+      });
+
+      list.appendChild(item);
+    });
+  }
+
+  renderBlocks();
+
+  // Remove old add listener and add fresh one
+  const newAddBtn = addBtn.cloneNode(true);
+  addBtn.parentNode.replaceChild(newAddBtn, addBtn);
+  newAddBtn.addEventListener('click', () => {
+    section.blocks.push({ tag: 'p', text: '', align: 'left', style: '' });
+    scheduleAutosave();
+    renderBlocks();
+    // Focus new textarea
+    const textareas = list.querySelectorAll('.block-item__text');
+    if (textareas.length) textareas[textareas.length - 1].focus();
+  });
+}
+
+// ── Token sets ────────────────────────────────────────────────────
+
+            async function loadTokenSets() {
+                try {
+                    const res = await fetch("/api/tokens");
+                    const data = await res.json();
+                    const sel = document.getElementById("meta-token-set");
+                    if (!sel) return;
+                    sel.innerHTML = "";
+                    data.token_sets.forEach((ts) => {
+                        const opt = document.createElement("option");
+                        opt.value = ts.id;
+                        opt.textContent = ts.label;
+                        if (ts.description) opt.title = ts.description;
+                        sel.appendChild(opt);
+                    });
+                } catch {}
+            }
+
+            // ── Image field focal point handler ───────────────────────────────
+
+            function onFocalUpdate(fieldId, url, focal) {
+                if (!content) return;
+                const noFocal = focal === "50% 50%" ? undefined : focal;
+                if (
+                    fieldId === "cover-hero-url" ||
+                    fieldId === "cover-video-url"
+                ) {
+                    if (!content.cover.hero_image)
+                        content.cover.hero_image = {};
+                    content.cover.hero_image.focal = noFocal;
+                } else if (
+                    fieldId === "sec-hero-url" &&
+                    activeSectionIndex >= 0
+                ) {
+                    if (!content.sections[activeSectionIndex].hero_image)
+                        content.sections[activeSectionIndex].hero_image = {};
+                    content.sections[activeSectionIndex].hero_image.focal = noFocal;
+                } else if (
+                    fieldId === "sec-bg-url" &&
+                    activeSectionIndex >= 0
+                ) {
+                    if (!content.sections[activeSectionIndex].background)
+                        content.sections[activeSectionIndex].background = {};
+                    content.sections[activeSectionIndex].background.focal = noFocal;
+                }
+                scheduleAutosave();
+            }
+
+            boot();
+        </script>
+        <script src="/editor/image-field.js"></script>
+    </body>
+</html>                                <!-- Text blocks editor (shown only for text layout) -->
                                 <div id="blocksEditor" style="display:none">
                                   <div class="form-group">
                                     <label class="form-label">Text blocks</label>
