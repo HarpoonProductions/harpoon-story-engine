@@ -1213,6 +1213,9 @@
                                         <option value="text">
                                             Text
                                         </option>
+                                        <option value="custom-html">
+                                            Custom HTML
+                                        </option>
                                     </select>
                                 </div>
                                 <div class="form-group">
@@ -1239,6 +1242,42 @@
                                         nav
                                     </p>
                                 </div>
+                                <!-- Custom HTML editor (shown only for custom-html layout) -->
+                                <div id="customHtmlEditor" style="display:none">
+                                  <div class="form-group">
+                                    <label class="form-label" for="sec-custom-html">HTML / Embed code</label>
+                                    <textarea class="form-textarea" id="sec-custom-html" rows="10" placeholder="Paste embed code or custom HTML here…" style="font-family:var(--font-mono);font-size:0.75rem"></textarea>
+                                  </div>
+                                  <div class="form-group">
+                                    <label class="form-label" for="sec-custom-caption">Caption</label>
+                                    <input class="form-input" id="sec-custom-caption" placeholder="Optional caption below embed">
+                                  </div>
+                                  <div class="form-group" style="display:flex;flex-direction:column;gap:0.5rem">
+                                    <label class="form-label">
+                                      <input type="checkbox" id="sec-custom-shadow"> Shadow DOM encapsulation
+                                      <span class="form-hint" style="display:inline;margin-left:0.25rem">Isolates embed styles from story</span>
+                                    </label>
+                                    <label class="form-label">
+                                      <input type="checkbox" id="sec-custom-scroll-lock" checked> Scroll lock
+                                      <span class="form-hint" style="display:inline;margin-left:0.25rem">Prevents embed stealing page scroll</span>
+                                    </label>
+                                    <label class="form-label">
+                                      <input type="checkbox" id="sec-custom-full-width"> Full width
+                                      <span class="form-hint" style="display:inline;margin-left:0.25rem">Removes max-width constraint</span>
+                                    </label>
+                                  </div>
+                                </div>
+
+                                <!-- Crossfade editor (shown only for reveal-crossfade layout) -->
+                                <div id="crossfadeEditor" style="display:none">
+                                  <div class="form-group">
+                                    <label class="form-label">Images &amp; phases</label>
+                                    <p class="form-hint">Each image is shown when its phase text scrolls into view</p>
+                                    <div id="crossfadeList"></div>
+                                    <button type="button" class="tbtn tbtn--ghost" id="addCrossfadeBtn" style="margin-top:0.5rem;width:100%;justify-content:center">+ Add image &amp; phase</button>
+                                  </div>
+                                </div>
+
                                 <!-- Text blocks editor (shown only for text layout) -->
                                 <div id="blocksEditor" style="display:none">
                                   <div class="form-group">
@@ -2004,6 +2043,8 @@
                     content.sections[index].layout = v;
                     renderSectionList();
                     initBlocksEditor(index);
+                    initCrossfadeEditor(index);
+                    initCustomHtmlEditor(index);
                 });
                 wire("sec-intro", (v) => {
                     content.sections[index].intro = v;
@@ -2073,6 +2114,10 @@
 
                 // Initialise blocks editor (shown only for text layout)
                 initBlocksEditor(index);
+                // Initialise crossfade editor (shown only for reveal-crossfade layout)
+                initCrossfadeEditor(index);
+                // Initialise custom HTML editor (shown only for custom-html layout)
+                initCustomHtmlEditor(index);
 
                 // Reset image field enhancement so it re-initialises with correct URL and focal
                 const heroInput = document.getElementById("sec-hero-url");
@@ -2228,7 +2273,132 @@
                 }
             }
 
-            // ── Text blocks editor ───────────────────────────────────────────
+            // ── Custom HTML editor ───────────────────────────────────────────
+
+function initCustomHtmlEditor(sectionIndex) {
+  const section = content.sections[sectionIndex];
+  const editor  = document.getElementById('customHtmlEditor');
+  const isCH    = section.layout === 'custom-html';
+
+  editor.style.display = isCH ? 'block' : 'none';
+  if (!isCH) return;
+
+  if (!section.custom_html) section.custom_html = {};
+  const embed = section.custom_html;
+
+  // Populate fields
+  document.getElementById('sec-custom-html').value        = embed.html        || '';
+  document.getElementById('sec-custom-caption').value     = embed.caption     || '';
+  document.getElementById('sec-custom-shadow').checked    = !!embed.shadow_dom;
+  document.getElementById('sec-custom-scroll-lock').checked = embed.scroll_lock !== false;
+  document.getElementById('sec-custom-full-width').checked  = !!embed.full_width;
+
+  // Wire fields — remove old listeners by replacing elements
+  function rewire(id, setter) {
+    const el = document.getElementById(id);
+    const fresh = el.cloneNode(true);
+    el.parentNode.replaceChild(fresh, el);
+    fresh.addEventListener('input', () => { setter(fresh.type === 'checkbox' ? fresh.checked : fresh.value); scheduleAutosave(); });
+    fresh.addEventListener('change', () => { setter(fresh.type === 'checkbox' ? fresh.checked : fresh.value); scheduleAutosave(); });
+    return fresh;
+  }
+
+  rewire('sec-custom-html',        v => { embed.html = v; });
+  rewire('sec-custom-caption',     v => { embed.caption = v; });
+  rewire('sec-custom-shadow',      v => { embed.shadow_dom = v; });
+  rewire('sec-custom-scroll-lock', v => { embed.scroll_lock = v; });
+  rewire('sec-custom-full-width',  v => { embed.full_width = v; });
+}
+
+// ── Crossfade editor ─────────────────────────────────────────────
+
+function initCrossfadeEditor(sectionIndex) {
+  const section  = content.sections[sectionIndex];
+  const editor   = document.getElementById('crossfadeEditor');
+  const list     = document.getElementById('crossfadeList');
+  const isCF     = section.layout === 'reveal-crossfade';
+
+  editor.style.display = isCF ? 'block' : 'none';
+  if (!isCF) return;
+
+  if (!section.crossfade_images) section.crossfade_images = [];
+  if (!section.crossfade_phases) section.crossfade_phases = [];
+
+  // Ensure arrays are same length
+  const len = Math.max(section.crossfade_images.length, section.crossfade_phases.length, 1);
+  while (section.crossfade_images.length < len) section.crossfade_images.push({ url: '', alt: '' });
+  while (section.crossfade_phases.length < len) section.crossfade_phases.push({ text: '', attribution: '' });
+
+  function renderPairs() {
+    list.innerHTML = '';
+    section.crossfade_images.forEach((img, i) => {
+      const phase = section.crossfade_phases[i] || {};
+      const item  = document.createElement('div');
+      item.className = 'block-item';
+      item.innerHTML = `
+        <div class="block-item__header">
+          <span style="font-family:var(--font-mono);font-size:0.6rem;letter-spacing:0.1em;color:var(--ink-3)">SLIDE ${i + 1}</span>
+          ${i > 0 ? `<button type="button" class="block-item__delete" data-i="${i}" title="Remove slide">✕</button>` : ''}
+        </div>
+        <div style="padding:0.5rem;display:flex;flex-direction:column;gap:0.4rem">
+          <input class="form-input cf-img-url" data-i="${i}" placeholder="Image URL https://…" value="${img.url || ''}">
+          <input class="form-input cf-img-alt" data-i="${i}" placeholder="Image alt text" value="${img.alt || ''}">
+          <textarea class="form-textarea cf-phase-text" data-i="${i}" placeholder="Phase text (shown as this image appears)…" rows="3">${phase.text || ''}</textarea>
+          <input class="form-input cf-phase-attr" data-i="${i}" placeholder="Attribution (optional)" value="${phase.attribution || ''}">
+        </div>`;
+
+      // Image URL
+      item.querySelector('.cf-img-url').addEventListener('input', e => {
+        section.crossfade_images[i].url = e.target.value;
+        scheduleAutosave();
+      });
+      // Image alt
+      item.querySelector('.cf-img-alt').addEventListener('input', e => {
+        section.crossfade_images[i].alt = e.target.value;
+        scheduleAutosave();
+      });
+      // Phase text
+      item.querySelector('.cf-phase-text').addEventListener('input', e => {
+        section.crossfade_phases[i].text = e.target.value;
+        scheduleAutosave();
+      });
+      // Attribution
+      item.querySelector('.cf-phase-attr').addEventListener('input', e => {
+        section.crossfade_phases[i].attribution = e.target.value;
+        scheduleAutosave();
+      });
+      // Delete (only for slides after the first)
+      const delBtn = item.querySelector('.block-item__delete');
+      if (delBtn) {
+        delBtn.addEventListener('click', () => {
+          section.crossfade_images.splice(i, 1);
+          section.crossfade_phases.splice(i, 1);
+          scheduleAutosave();
+          renderPairs();
+        });
+      }
+
+      list.appendChild(item);
+    });
+  }
+
+  renderPairs();
+
+  // Add button
+  const newAddBtn = document.getElementById('addCrossfadeBtn').cloneNode(true);
+  document.getElementById('addCrossfadeBtn').parentNode.replaceChild(newAddBtn, document.getElementById('addCrossfadeBtn'));
+  newAddBtn.addEventListener('click', () => {
+    section.crossfade_images.push({ url: '', alt: '' });
+    section.crossfade_phases.push({ text: '', attribution: '' });
+    scheduleAutosave();
+    renderPairs();
+    // Focus new URL input
+    const inputs = list.querySelectorAll('.cf-img-url');
+    if (inputs.length) inputs[inputs.length - 1].focus();
+  });
+}
+
+// ── Text blocks editor ───────────────────────────────────────────
 
 function initBlocksEditor(sectionIndex) {
   const section   = content.sections[sectionIndex];
@@ -2391,7 +2561,43 @@ function initBlocksEditor(sectionIndex) {
         </script>
         <script src="/editor/image-field.js"></script>
     </body>
-</html>                                <!-- Text blocks editor (shown only for text layout) -->
+</html>                                <!-- Custom HTML editor (shown only for custom-html layout) -->
+                                <div id="customHtmlEditor" style="display:none">
+                                  <div class="form-group">
+                                    <label class="form-label" for="sec-custom-html">HTML / Embed code</label>
+                                    <textarea class="form-textarea" id="sec-custom-html" rows="10" placeholder="Paste embed code or custom HTML here…" style="font-family:var(--font-mono);font-size:0.75rem"></textarea>
+                                  </div>
+                                  <div class="form-group">
+                                    <label class="form-label" for="sec-custom-caption">Caption</label>
+                                    <input class="form-input" id="sec-custom-caption" placeholder="Optional caption below embed">
+                                  </div>
+                                  <div class="form-group" style="display:flex;flex-direction:column;gap:0.5rem">
+                                    <label class="form-label">
+                                      <input type="checkbox" id="sec-custom-shadow"> Shadow DOM encapsulation
+                                      <span class="form-hint" style="display:inline;margin-left:0.25rem">Isolates embed styles from story</span>
+                                    </label>
+                                    <label class="form-label">
+                                      <input type="checkbox" id="sec-custom-scroll-lock" checked> Scroll lock
+                                      <span class="form-hint" style="display:inline;margin-left:0.25rem">Prevents embed stealing page scroll</span>
+                                    </label>
+                                    <label class="form-label">
+                                      <input type="checkbox" id="sec-custom-full-width"> Full width
+                                      <span class="form-hint" style="display:inline;margin-left:0.25rem">Removes max-width constraint</span>
+                                    </label>
+                                  </div>
+                                </div>
+
+                                <!-- Crossfade editor (shown only for reveal-crossfade layout) -->
+                                <div id="crossfadeEditor" style="display:none">
+                                  <div class="form-group">
+                                    <label class="form-label">Images &amp; phases</label>
+                                    <p class="form-hint">Each image is shown when its phase text scrolls into view</p>
+                                    <div id="crossfadeList"></div>
+                                    <button type="button" class="tbtn tbtn--ghost" id="addCrossfadeBtn" style="margin-top:0.5rem;width:100%;justify-content:center">+ Add image &amp; phase</button>
+                                  </div>
+                                </div>
+
+                                <!-- Text blocks editor (shown only for text layout) -->
                                 <div id="blocksEditor" style="display:none">
                                   <div class="form-group">
                                     <label class="form-label">Text blocks</label>
@@ -3156,6 +3362,8 @@ function initBlocksEditor(sectionIndex) {
                     content.sections[index].layout = v;
                     renderSectionList();
                     initBlocksEditor(index);
+                    initCrossfadeEditor(index);
+                    initCustomHtmlEditor(index);
                 });
                 wire("sec-intro", (v) => {
                     content.sections[index].intro = v;
@@ -3225,6 +3433,10 @@ function initBlocksEditor(sectionIndex) {
 
                 // Initialise blocks editor (shown only for text layout)
                 initBlocksEditor(index);
+                // Initialise crossfade editor (shown only for reveal-crossfade layout)
+                initCrossfadeEditor(index);
+                // Initialise custom HTML editor (shown only for custom-html layout)
+                initCustomHtmlEditor(index);
 
                 // Reset image field enhancement so it re-initialises with correct URL and focal
                 const heroInput = document.getElementById("sec-hero-url");
@@ -3380,7 +3592,132 @@ function initBlocksEditor(sectionIndex) {
                 }
             }
 
-            // ── Text blocks editor ───────────────────────────────────────────
+            // ── Custom HTML editor ───────────────────────────────────────────
+
+function initCustomHtmlEditor(sectionIndex) {
+  const section = content.sections[sectionIndex];
+  const editor  = document.getElementById('customHtmlEditor');
+  const isCH    = section.layout === 'custom-html';
+
+  editor.style.display = isCH ? 'block' : 'none';
+  if (!isCH) return;
+
+  if (!section.custom_html) section.custom_html = {};
+  const embed = section.custom_html;
+
+  // Populate fields
+  document.getElementById('sec-custom-html').value        = embed.html        || '';
+  document.getElementById('sec-custom-caption').value     = embed.caption     || '';
+  document.getElementById('sec-custom-shadow').checked    = !!embed.shadow_dom;
+  document.getElementById('sec-custom-scroll-lock').checked = embed.scroll_lock !== false;
+  document.getElementById('sec-custom-full-width').checked  = !!embed.full_width;
+
+  // Wire fields — remove old listeners by replacing elements
+  function rewire(id, setter) {
+    const el = document.getElementById(id);
+    const fresh = el.cloneNode(true);
+    el.parentNode.replaceChild(fresh, el);
+    fresh.addEventListener('input', () => { setter(fresh.type === 'checkbox' ? fresh.checked : fresh.value); scheduleAutosave(); });
+    fresh.addEventListener('change', () => { setter(fresh.type === 'checkbox' ? fresh.checked : fresh.value); scheduleAutosave(); });
+    return fresh;
+  }
+
+  rewire('sec-custom-html',        v => { embed.html = v; });
+  rewire('sec-custom-caption',     v => { embed.caption = v; });
+  rewire('sec-custom-shadow',      v => { embed.shadow_dom = v; });
+  rewire('sec-custom-scroll-lock', v => { embed.scroll_lock = v; });
+  rewire('sec-custom-full-width',  v => { embed.full_width = v; });
+}
+
+// ── Crossfade editor ─────────────────────────────────────────────
+
+function initCrossfadeEditor(sectionIndex) {
+  const section  = content.sections[sectionIndex];
+  const editor   = document.getElementById('crossfadeEditor');
+  const list     = document.getElementById('crossfadeList');
+  const isCF     = section.layout === 'reveal-crossfade';
+
+  editor.style.display = isCF ? 'block' : 'none';
+  if (!isCF) return;
+
+  if (!section.crossfade_images) section.crossfade_images = [];
+  if (!section.crossfade_phases) section.crossfade_phases = [];
+
+  // Ensure arrays are same length
+  const len = Math.max(section.crossfade_images.length, section.crossfade_phases.length, 1);
+  while (section.crossfade_images.length < len) section.crossfade_images.push({ url: '', alt: '' });
+  while (section.crossfade_phases.length < len) section.crossfade_phases.push({ text: '', attribution: '' });
+
+  function renderPairs() {
+    list.innerHTML = '';
+    section.crossfade_images.forEach((img, i) => {
+      const phase = section.crossfade_phases[i] || {};
+      const item  = document.createElement('div');
+      item.className = 'block-item';
+      item.innerHTML = `
+        <div class="block-item__header">
+          <span style="font-family:var(--font-mono);font-size:0.6rem;letter-spacing:0.1em;color:var(--ink-3)">SLIDE ${i + 1}</span>
+          ${i > 0 ? `<button type="button" class="block-item__delete" data-i="${i}" title="Remove slide">✕</button>` : ''}
+        </div>
+        <div style="padding:0.5rem;display:flex;flex-direction:column;gap:0.4rem">
+          <input class="form-input cf-img-url" data-i="${i}" placeholder="Image URL https://…" value="${img.url || ''}">
+          <input class="form-input cf-img-alt" data-i="${i}" placeholder="Image alt text" value="${img.alt || ''}">
+          <textarea class="form-textarea cf-phase-text" data-i="${i}" placeholder="Phase text (shown as this image appears)…" rows="3">${phase.text || ''}</textarea>
+          <input class="form-input cf-phase-attr" data-i="${i}" placeholder="Attribution (optional)" value="${phase.attribution || ''}">
+        </div>`;
+
+      // Image URL
+      item.querySelector('.cf-img-url').addEventListener('input', e => {
+        section.crossfade_images[i].url = e.target.value;
+        scheduleAutosave();
+      });
+      // Image alt
+      item.querySelector('.cf-img-alt').addEventListener('input', e => {
+        section.crossfade_images[i].alt = e.target.value;
+        scheduleAutosave();
+      });
+      // Phase text
+      item.querySelector('.cf-phase-text').addEventListener('input', e => {
+        section.crossfade_phases[i].text = e.target.value;
+        scheduleAutosave();
+      });
+      // Attribution
+      item.querySelector('.cf-phase-attr').addEventListener('input', e => {
+        section.crossfade_phases[i].attribution = e.target.value;
+        scheduleAutosave();
+      });
+      // Delete (only for slides after the first)
+      const delBtn = item.querySelector('.block-item__delete');
+      if (delBtn) {
+        delBtn.addEventListener('click', () => {
+          section.crossfade_images.splice(i, 1);
+          section.crossfade_phases.splice(i, 1);
+          scheduleAutosave();
+          renderPairs();
+        });
+      }
+
+      list.appendChild(item);
+    });
+  }
+
+  renderPairs();
+
+  // Add button
+  const newAddBtn = document.getElementById('addCrossfadeBtn').cloneNode(true);
+  document.getElementById('addCrossfadeBtn').parentNode.replaceChild(newAddBtn, document.getElementById('addCrossfadeBtn'));
+  newAddBtn.addEventListener('click', () => {
+    section.crossfade_images.push({ url: '', alt: '' });
+    section.crossfade_phases.push({ text: '', attribution: '' });
+    scheduleAutosave();
+    renderPairs();
+    // Focus new URL input
+    const inputs = list.querySelectorAll('.cf-img-url');
+    if (inputs.length) inputs[inputs.length - 1].focus();
+  });
+}
+
+// ── Text blocks editor ───────────────────────────────────────────
 
 function initBlocksEditor(sectionIndex) {
   const section   = content.sections[sectionIndex];

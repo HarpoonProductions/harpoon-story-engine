@@ -63,6 +63,7 @@
   <link rel="stylesheet" href="css/blocks/briefing-engine.css">
   <link rel="stylesheet" href="css/layouts/default.css">
   <link rel="stylesheet" href="css/layouts/text.css">
+  <link rel="stylesheet" href="css/layouts/custom-html.css">
   <link rel="stylesheet" href="css/blocks/background.css">
   <link rel="stylesheet" href="css/layouts/sticky-steps.css">
   <link rel="stylesheet" href="css/layouts/stackable-cards.css">
@@ -379,26 +380,27 @@
 <section
   class="hse-section hse-section--reveal-crossfade"
   id="summer-crossfade"
-  data-layout="reveal-crossfade">
+  data-layout="reveal-crossfade"
+  data-image-count="2">
 
   <!-- Sticky image canvas -->
   <div class="hse-cf__sticky-wrap">
     <div class="hse-cf__canvas">
 
-      <!-- Image A (initial) -->
+      
       <div
-        class="hse-cf__image hse-cf__image--a"
+        class="hse-cf__image hse-cf__image--0 is-active"
         style="background-image: url('https://stories.har.pn/cricket-test-nation-2026/images/AdobeStock_247707715.jpeg-hpn2560.jpg')"
         role="img"
-        aria-label="Ground staff removing covers at dawn, heavy dew on the outfield">
+        aria-label="Ground staff removing covers at dawn, heavy dew on the outfield"
+        data-index="0">
       </div>
-
-      <!-- Image B (revealed) -->
       <div
-        class="hse-cf__image hse-cf__image--b"
+        class="hse-cf__image hse-cf__image--1"
         style="background-image: url('https://stories.har.pn/cricket-test-nation-2026/images/AdobeStock_247707715.jpeg-hpn2560.jpg')"
         role="img"
-        aria-label="Full ground at evening, long shadows across the outfield">
+        aria-label="Full ground at evening, long shadows across the outfield"
+        data-index="1">
       </div>
 
       <!-- Overlay gradient -->
@@ -409,12 +411,11 @@
 
   <!-- Scrolling text phases -->
   <div class="hse-cf__phases">
-    <div class="hse-cf__phase" data-phase="0">
+    <div class="hse-cf__phase" data-phase="0" data-image="0">
       <div class="hse-cf__phase-rule"></div>
       <p class="hse-cf__phase-text">A Test match begins before a ball is bowled — in the decisions about the pitch, the weather, the squad, the toss.</p>
       <cite class="hse-cf__phase-attribution">From the ECB's 2025 season review</cite>
-    </div>
-    <div class="hse-cf__phase" data-phase="1">
+    </div><div class="hse-cf__phase" data-phase="1" data-image="1">
       <div class="hse-cf__phase-rule"></div>
       <p class="hse-cf__phase-text">It ends, five days later, with something that could not have been predicted from the first morning's play. That is why we come back.</p>
       <cite class="hse-cf__phase-attribution">From the ECB's 2025 season review</cite>

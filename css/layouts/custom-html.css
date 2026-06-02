@@ -1,0 +1,99 @@
+/*
+ * Harpoon Story Engine — Custom HTML Embed Section
+ * css/layouts/custom-html.css
+ */
+
+.hse-section--custom-html {
+    padding: var(--hse-space-xl) 0;
+}
+
+.hse-inner--full {
+    max-width: 100%;
+    padding: 0;
+}
+
+/* ── Embed wrapper ────────────────────────────────────────────────── */
+
+.hse-embed {
+    position: relative;
+    max-width: var(--hse-text-w);
+    margin: 0 auto;
+}
+
+.hse-embed--full {
+    max-width: 100%;
+}
+
+/* ── Scroll lock ─────────────────────────────────────────────────── */
+/* Prevents embeds stealing scroll events until user clicks to activate */
+
+.hse-embed--scroll-locked .hse-embed__content {
+    pointer-events: none;
+    touch-action: pan-y;
+}
+
+.hse-embed--scroll-locked.is-active .hse-embed__content {
+    pointer-events: auto;
+    touch-action: auto;
+}
+
+/* Overlay hint shown when locked */
+.hse-embed__scroll-overlay {
+    position: absolute;
+    inset: 0;
+    z-index: 10;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: opacity 0.3s ease;
+}
+
+.hse-embed--scroll-locked.is-active .hse-embed__scroll-overlay {
+    opacity: 0;
+    pointer-events: none;
+}
+
+.hse-embed__scroll-hint {
+    font-family: var(--hse-font-mono);
+    font-size: 0.65rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--hse-warm);
+    background: rgba(10, 10, 12, 0.7);
+    padding: 0.5rem 1rem;
+    border-radius: 2px;
+    backdrop-filter: blur(4px);
+    border: 1px solid rgba(242, 237, 230, 0.15);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+/* Only show hint when hovering over a locked embed */
+.hse-embed--scroll-locked:not(.is-active):hover .hse-embed__scroll-hint {
+    opacity: 1;
+}
+
+/* ── Content area ─────────────────────────────────────────────────── */
+
+.hse-embed__content {
+    width: 100%;
+    min-height: 2rem;
+}
+
+/* Ensure iframes in embeds are responsive by default */
+.hse-embed__content iframe {
+    max-width: 100%;
+    border: none;
+}
+
+/* ── Caption ──────────────────────────────────────────────────────── */
+
+.hse-embed__caption {
+    font-family: var(--hse-font-mono);
+    font-size: 0.7rem;
+    letter-spacing: 0.08em;
+    color: var(--hse-warm-3);
+    margin-top: 0.75rem;
+    text-align: center;
+}

@@ -63,6 +63,7 @@
   <link rel="stylesheet" href="css/blocks/briefing-engine.css">
   <link rel="stylesheet" href="css/layouts/default.css">
   <link rel="stylesheet" href="css/layouts/text.css">
+  <link rel="stylesheet" href="css/layouts/custom-html.css">
   <link rel="stylesheet" href="css/blocks/background.css">
   <link rel="stylesheet" href="css/layouts/sticky-steps.css">
   <link rel="stylesheet" href="css/layouts/stackable-cards.css">
@@ -378,26 +379,27 @@
 <section
   class="hse-section hse-section--reveal-crossfade"
   id="voices-crossfade"
-  data-layout="reveal-crossfade">
+  data-layout="reveal-crossfade"
+  data-image-count="2">
 
   <!-- Sticky image canvas -->
   <div class="hse-cf__sticky-wrap">
     <div class="hse-cf__canvas">
 
-      <!-- Image A (initial) -->
+      
       <div
-        class="hse-cf__image hse-cf__image--a"
+        class="hse-cf__image hse-cf__image--0 is-active"
         style="background-image: url('https://stories.har.pn/opera-voices-2026/images/opera-AdobeStock_156137275.jpeg-hpn2560.jpg')"
         role="img"
-        aria-label="Empty rehearsal room with grand piano, morning light">
+        aria-label="Empty rehearsal room with grand piano, morning light"
+        data-index="0">
       </div>
-
-      <!-- Image B (revealed) -->
       <div
-        class="hse-cf__image hse-cf__image--b"
+        class="hse-cf__image hse-cf__image--1"
         style="background-image: url('https://stories.har.pn/opera-voices-2026/images/opera-AdobeStock_220275532.jpeg-hpn2560.jpg')"
         role="img"
-        aria-label="Full company on stage, opening night, auditorium packed">
+        aria-label="Full company on stage, opening night, auditorium packed"
+        data-index="1">
       </div>
 
       <!-- Overlay gradient -->
@@ -408,12 +410,11 @@
 
   <!-- Scrolling text phases -->
   <div class="hse-cf__phases">
-    <div class="hse-cf__phase" data-phase="0">
+    <div class="hse-cf__phase" data-phase="0" data-image="0">
       <div class="hse-cf__phase-rule"></div>
       <p class="hse-cf__phase-text">Every opera begins in a room with a piano and a handful of people who believe in something that does not yet exist.</p>
       <cite class="hse-cf__phase-attribution">From the rehearsal diary of Director Deborah Warner</cite>
-    </div>
-    <div class="hse-cf__phase" data-phase="1">
+    </div><div class="hse-cf__phase" data-phase="1" data-image="1">
       <div class="hse-cf__phase-rule"></div>
       <p class="hse-cf__phase-text">On opening night, that belief becomes audible to two thousand people simultaneously. Nothing else does that.</p>
       <cite class="hse-cf__phase-attribution">From the rehearsal diary of Director Deborah Warner</cite>

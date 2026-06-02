@@ -16,6 +16,7 @@ const { renderRevealCrossfade } = require("./layouts/reveal-crossfade");
 const { renderStackableCards } = require("./layouts/stackable-cards");
 const { renderParallax } = require("./layouts/parallax");
 const { renderCascadingSlides } = require("./layouts/cascading-slides");
+const { renderCustomHtml }     = require("./layouts/custom-html");
 
 /**
  * Top-level render function.
@@ -126,6 +127,8 @@ ${sectionsHtml}
 function renderSection(section) {
   const layout = section.layout || "default";
   switch (layout) {
+    case "custom-html":
+      return renderCustomHtml(section);
     case "text":
       return renderText(section);
     case "default":

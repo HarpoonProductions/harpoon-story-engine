@@ -553,7 +553,8 @@
             "cascading-slides",
             "fullbleed-quote",
             "reveal-crossfade",
-            "text"
+            "text",
+            "custom-html"
           ],
           "default": "default",
           "description": "Rendering template for this section. fullbleed-quote: full-viewport hero_image with pull_quote overlaid. reveal-crossfade: two images crossfade on scroll, driven by crossfade_images and crossfade_phases."
@@ -629,8 +630,6 @@
         },
         "crossfade_images": {
           "type": "array",
-          "minItems": 2,
-          "maxItems": 2,
           "items": {
             "$ref": "#/definitions/image"
           },
@@ -638,8 +637,6 @@
         },
         "crossfade_phases": {
           "type": "array",
-          "minItems": 2,
-          "maxItems": 2,
           "items": {
             "$ref": "#/definitions/crossfade_phase"
           },
@@ -659,8 +656,27 @@
           "$ref": "#/definitions/briefing_engine"
         },
         "custom_html": {
-          "type": "string",
-          "description": "Escape hatch for one-off components (e.g. 3D globe, bespoke maps). Raw HTML injected directly. Use sparingly."
+          "type": "object",
+          "properties": {
+            "html": {
+              "type": "string"
+            },
+            "shadow_dom": {
+              "type": "boolean",
+              "default": false
+            },
+            "scroll_lock": {
+              "type": "boolean",
+              "default": true
+            },
+            "full_width": {
+              "type": "boolean",
+              "default": false
+            },
+            "caption": {
+              "type": "string"
+            }
+          }
         },
         "onward_links": {
           "type": "array",
