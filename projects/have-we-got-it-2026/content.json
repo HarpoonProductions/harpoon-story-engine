@@ -5,7 +5,7 @@
     "client": "",
     "version": 1,
     "language": "en",
-    "last_saved": "2026-06-01T08:34:22.010Z",
+    "last_saved": "2026-06-02T15:02:08.092Z",
     "project_id": "have-we-got-it-2026",
     "accent_color": "#1a3f6f",
     "accent_color_2": "#c9a84c"
@@ -14,8 +14,7 @@
     "body": "",
     "headline": "have we got it?",
     "hero_image": {
-      "url": "https://stories.har.pn/have-we-got-it-2026/images/_MG_7046.jpg",
-      "focal": "68% 41%"
+      "url": "https://stories.har.pn/have-we-got-it-2026/images/_MG_7046.jpg"
     },
     "cta_primary": {
       "href": "#section-1",
@@ -64,6 +63,89 @@
       "hero_image": {
         "url": "https://stories.har.pn/have-we-got-it-2026/images/_MG_6977-hpn2560.jpg"
       }
+    },
+    {
+      "id": "section-4",
+      "num": 4,
+      "intro": "this is the text section. ",
+      "title": "Section 4",
+      "blocks": [
+        {
+          "tag": "p",
+          "text": "The yacht, designed by Oceanco’s in-house team (which also designed Y709, now Draak) is handsome and well-built, as an extensive walkthrough in the late stages of construction revealed, but one of Leviathan’s more intriguing aspects is that it upends yacht design conventions, particularly in the allocation of guest and crew spaces, and it also serves the dual purposes of high-end hospitality and research laboratory.\n\n“The technical origins of Leviathan sit within development of Lateral’s DE-Series hull family, conceived to take full advantage of dieselelectric pod propulsion,” explains Lee Archer, principal project manager at Lateral Naval Architects.\n\n“At that time, it represented a very forward-looking engineering platform – propulsion integration, structural stiffness, roll period, electrical architecture. Comfort and efficiency were designed from first principle, not mitigated later. What’s interesting is how that platform then evolved. The naval architecture and propulsion concept created a flexible technical foundation, which allowed the owner and project team to rethink how the yacht itself could be arranged and used.”",
+          "align": "left",
+          "style": ""
+        },
+        {
+          "tag": "p",
+          "text": "The yacht, designed by Oceanco’s in-house team (which also designed Y709, now Draak) is handsome and well-built, as an extensive walkthrough in the late stages of construction revealed, but one of Leviathan’s more intriguing aspects is that it upends yacht design conventions, particularly in the allocation of guest and crew spaces, and it also serves the dual purposes of high-end hospitality and research laboratory.\n\n“The technical origins of Leviathan sit within development of Lateral’s DE-Series hull family, conceived to take full advantage of dieselelectric pod propulsion,” explains Lee Archer, principal project manager at Lateral Naval Architects.\n\n“At that time, it represented a very forward-looking engineering platform – propulsion integration, structural stiffness, roll period, electrical architecture. Comfort and efficiency were designed from first principle, not mitigated later. What’s interesting is how that platform then evolved. The naval architecture and propulsion concept created a flexible technical foundation, which allowed the owner and project team to rethink how the yacht itself could be arranged and used.”",
+          "align": "right",
+          "style": "lead"
+        },
+        {
+          "tag": "p",
+          "text": "sdkfjsldk jflskd jflskdj flskdj lf",
+          "align": "center",
+          "style": "display"
+        }
+      ],
+      "layout": "reveal-crossfade",
+      "background": {
+        "url": "https://stories.har.pn/have-we-got-it-2026/images/unsplash-parent-hpn2560.jpg",
+        "tint": 0.65,
+        "fixed": true,
+        "focal": "45% 52%"
+      },
+      "hero_image": {},
+      "color_bleed": false
+    },
+    {
+      "id": "section-5",
+      "num": 5,
+      "intro": "",
+      "title": "Section 5",
+      "layout": "reveal-crossfade",
+      "background": {
+        "url": "",
+        "focal": "50% 19%"
+      },
+      "hero_image": {},
+      "crossfade_images": [
+        {
+          "alt": "yeah",
+          "url": "https://harpoon-stories.s3-eu-west-2.amazonaws.com/dogs-dogs-dogs-2026/images/42-3456x2304.jpg"
+        },
+        {
+          "alt": "Drum",
+          "url": "https://harpoon-stories.s3-eu-west-2.amazonaws.com/a-dummy-2026/images/34-3872x2592-hpn2560.jpg"
+        },
+        {
+          "alt": "Feet",
+          "url": "https://harpoon-stories.s3-eu-west-2.amazonaws.com/cricket-test-nation-2026/images/AdobeStock_247707715.jpeg-hpn2560.jpg"
+        },
+        {
+          "alt": "",
+          "url": ""
+        }
+      ],
+      "crossfade_phases": [
+        {
+          "text": "hwatever",
+          "attribution": ""
+        },
+        {
+          "text": "Phase text shows as this appears",
+          "attribution": "GETTY"
+        },
+        {
+          "text": "Phase text two as this also shows",
+          "attribution": "Reuters"
+        },
+        {
+          "text": "",
+          "attribution": ""
+        }
+      ]
     }
   ]
 }
