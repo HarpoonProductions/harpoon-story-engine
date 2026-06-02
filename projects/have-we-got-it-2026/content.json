@@ -5,7 +5,7 @@
     "client": "",
     "version": 1,
     "language": "en",
-    "last_saved": "2026-06-02T15:02:08.092Z",
+    "last_saved": "2026-06-02T15:03:22.424Z",
     "project_id": "have-we-got-it-2026",
     "accent_color": "#1a3f6f",
     "accent_color_2": "#c9a84c"
@@ -106,46 +106,9 @@
       "title": "Section 5",
       "layout": "reveal-crossfade",
       "background": {
-        "url": "",
-        "focal": "50% 19%"
+        "url": "https://stories.har.pn/have-we-got-it-2026/images/boys-soccer-hpn2560.jpg"
       },
-      "hero_image": {},
-      "crossfade_images": [
-        {
-          "alt": "yeah",
-          "url": "https://harpoon-stories.s3-eu-west-2.amazonaws.com/dogs-dogs-dogs-2026/images/42-3456x2304.jpg"
-        },
-        {
-          "alt": "Drum",
-          "url": "https://harpoon-stories.s3-eu-west-2.amazonaws.com/a-dummy-2026/images/34-3872x2592-hpn2560.jpg"
-        },
-        {
-          "alt": "Feet",
-          "url": "https://harpoon-stories.s3-eu-west-2.amazonaws.com/cricket-test-nation-2026/images/AdobeStock_247707715.jpeg-hpn2560.jpg"
-        },
-        {
-          "alt": "",
-          "url": ""
-        }
-      ],
-      "crossfade_phases": [
-        {
-          "text": "hwatever",
-          "attribution": ""
-        },
-        {
-          "text": "Phase text shows as this appears",
-          "attribution": "GETTY"
-        },
-        {
-          "text": "Phase text two as this also shows",
-          "attribution": "Reuters"
-        },
-        {
-          "text": "",
-          "attribution": ""
-        }
-      ]
+      "hero_image": {}
     }
   ]
 }
