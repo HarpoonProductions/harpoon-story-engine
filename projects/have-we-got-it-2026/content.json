@@ -5,7 +5,7 @@
     "client": "",
     "version": 1,
     "language": "en",
-    "last_saved": "2026-06-02T15:03:22.424Z",
+    "last_saved": "2026-06-02T21:00:41.085Z",
     "project_id": "have-we-got-it-2026",
     "accent_color": "#1a3f6f",
     "accent_color_2": "#c9a84c"
@@ -108,7 +108,50 @@
       "background": {
         "url": "https://stories.har.pn/have-we-got-it-2026/images/boys-soccer-hpn2560.jpg"
       },
-      "hero_image": {}
+      "hero_image": {},
+      "crossfade_images": [
+        {
+          "alt": "",
+          "url": "https://harpoon-stories.s3-eu-west-2.amazonaws.com/dogs-dogs-dogs-2026/images/42-3456x2304.jpg"
+        },
+        {
+          "alt": "",
+          "url": "https://harpoon-stories.s3-eu-west-2.amazonaws.com/dogs-dogs-dogs-2026/images/34-3872x2592.jpg"
+        },
+        {
+          "alt": "",
+          "url": "https://harpoon-stories.s3-eu-west-2.amazonaws.com/dogs-dogs-dogs-2026/images/40-4106x2806.jpg"
+        }
+      ],
+      "crossfade_phases": [
+        {
+          "text": "coffee",
+          "attribution": ""
+        },
+        {
+          "text": "not coffee",
+          "attribution": ""
+        },
+        {
+          "text": "definitely not coffee",
+          "attribution": ""
+        }
+      ]
+    },
+    {
+      "id": "section-6",
+      "num": 6,
+      "intro": "",
+      "title": "Section 6",
+      "layout": "custom-html",
+      "hero_image": {},
+      "custom_html": {
+        "html": "<div style=\"position: relative; width: 100%; height: 0px; padding: 53.29% 0px 0px; overflow: hidden; will-change: transform;\"><iframe loading=\"lazy\" src=\"https://e.infogram.com/_/lFT6f8jBzi3eqpwvaq1e?src=embed&amp;embed_type=responsive_iframe\" title=\"redbridge 2026\" allowfullscreen=\"\" allow=\"fullscreen\" style=\"position: absolute; width: 100%; height: 100%; top: 0px; left: 0px; border-width: medium; border-style: none; border-color: currentcolor; border-image: initial; padding: 0px; margin: 0px;\"></iframe></div>",
+        "caption": "Genius of claude",
+        "full_width": false,
+        "shadow_dom": true,
+        "scroll_lock": false
+      }
     }
   ]
 }
