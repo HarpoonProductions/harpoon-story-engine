@@ -1,32 +1,43 @@
 // fetch-content.js
-// Called by the GitHub Action to pull content from Supabase before rendering.
-// Usage: node fetch-content.js <project_id>
-// Writes to projects/<project_id>/content.json
+// Fetches a project from Supabase REST API and writes to projects/<id>/content.json
+// Uses raw fetch — no Supabase JS client, no WebSocket dependency.
 
-const { createClient } = require('@supabase/supabase-js');
 const fs   = require('fs');
 const path = require('path');
 
-const projectId = process.argv[2];
-if (!projectId) { console.error('Usage: node fetch-content.js <project_id>'); process.exit(1); }
+const projectId     = process.argv[2];
+const SUPABASE_URL  = process.env.SUPABASE_URL;
+const SUPABASE_KEY  = process.env.SUPABASE_ANON_KEY;
 
-const supabase = createClient(
-  process.env.SUPABASE_URL,
-  process.env.SUPABASE_ANON_KEY
-);
+if (!projectId)    { console.error('Usage: node fetch-content.js <project_id>'); process.exit(1); }
+if (!SUPABASE_URL) { console.error('SUPABASE_URL not set'); process.exit(1); }
+if (!SUPABASE_KEY) { console.error('SUPABASE_ANON_KEY not set'); process.exit(1); }
 
 async function main() {
-  const { data, error } = await supabase
-    .from('story_engine_projects')
-    .select('content')
-    .eq('project_id', projectId)
-    .single();
+  const url = `${SUPABASE_URL}/rest/v1/story_engine_projects?project_id=eq.${encodeURIComponent(projectId)}&select=content&limit=1`;
 
-  if (error) { console.error('Supabase error:', error.message); process.exit(1); }
+  const res = await fetch(url, {
+    headers: {
+      'apikey':        SUPABASE_KEY,
+      'Authorization': `Bearer ${SUPABASE_KEY}`,
+      'Accept':        'application/json',
+    }
+  });
+
+  if (!res.ok) {
+    console.error(`Supabase API error ${res.status}: ${await res.text()}`);
+    process.exit(1);
+  }
+
+  const rows = await res.json();
+  if (!rows.length) {
+    console.error(`Project not found in Supabase: ${projectId}`);
+    process.exit(1);
+  }
 
   const dir = path.join('projects', projectId);
   fs.mkdirSync(dir, { recursive: true });
-  fs.writeFileSync(path.join(dir, 'content.json'), JSON.stringify(data.content, null, 2));
+  fs.writeFileSync(path.join(dir, 'content.json'), JSON.stringify(rows[0].content, null, 2));
   console.log(`✓ Fetched ${projectId} from Supabase`);
 }
 
