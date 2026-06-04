@@ -49,6 +49,9 @@ jobs:
         run: node test.js
 
       - name: Render projects
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
         run: |
           set -e
 
@@ -56,24 +59,29 @@ jobs:
           INPUT_PROJECT="${{ github.event.inputs.project }}"
 
           if [ -n "$INPUT_PROJECT" ]; then
-            PROJECT_FILE="projects/${INPUT_PROJECT}/content.json"
-            if [ ! -f "$PROJECT_FILE" ]; then
-              echo "✗ Project file not found: $PROJECT_FILE"
-              exit 1
-            fi
+            echo "Fetching from Supabase: $INPUT_PROJECT"
+            node fetch-content.js "$INPUT_PROJECT"
             echo "Rendering: $INPUT_PROJECT (target: $TARGET)"
-            node render.js "$PROJECT_FILE" --out "dist/${INPUT_PROJECT}"
+            node render.js "projects/${INPUT_PROJECT}/content.json" --out "dist/${INPUT_PROJECT}"
           else
-            if [ ! -d "projects" ]; then
-              echo "No projects/ directory — nothing to render."
-              exit 0
-            fi
-
+            echo "No project specified — fetching all from Supabase"
+            node -e "
+              const {createClient} = require('@supabase/supabase-js');
+              const fs = require('fs');
+              const path = require('path');
+              const sb = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_ANON_KEY);
+              sb.from('story_engine_projects').select('project_id').then(({data,error}) => {
+                if (error) { console.error(error.message); process.exit(1); }
+                fs.writeFileSync('/tmp/project-ids.json', JSON.stringify(data.map(r=>r.project_id)));
+                console.log('Projects:', data.map(r=>r.project_id).join(', '));
+              });
+            "
             RENDERED=0
-            for PROJECT_JSON in projects/*/content.json; do
-              PROJECT_ID=$(basename $(dirname "$PROJECT_JSON"))
-              echo "Rendering: $PROJECT_ID (target: $TARGET)"
-              node render.js "$PROJECT_JSON" --out "dist/${PROJECT_ID}"
+            for PROJECT_ID in $(node -e "console.log(require('/tmp/project-ids.json').join(' '))"); do
+              echo "Fetching: $PROJECT_ID"
+              node fetch-content.js "$PROJECT_ID"
+              echo "Rendering: $PROJECT_ID"
+              node render.js "projects/${PROJECT_ID}/content.json" --out "dist/${PROJECT_ID}"
               RENDERED=$((RENDERED + 1))
             done
             echo "Rendered $RENDERED project(s)"

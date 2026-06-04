@@ -523,78 +523,9 @@ app.post("/api/project/:id/deploy", async (req, res) => {
   }
 
   try {
-    // ── Step 1: commit content.json to the repo ───────────────────
-    // Read from Supabase if configured, otherwise filesystem
-
-    let contentJson;
-    if (db.isConfigured()) {
-      const contentObj = await db.getProject(projectId);
-      contentJson = JSON.stringify(contentObj, null, 2);
-    } else {
-      const contentPath = path.join(PROJECTS_DIR, projectId, "content.json");
-      if (!fs.existsSync(contentPath)) {
-        return res.status(404).json({ error: `Project not found: ${projectId}` });
-      }
-      contentJson = fs.readFileSync(contentPath, "utf8");
-    }
-    const contentBase64 = Buffer.from(contentJson).toString("base64");
-    const filePath = `projects/${projectId}/content.json`;
-
-    // Get current SHA of the file (needed for updates — GitHub requires it)
-    let fileSha = null;
-    const getFile = await fetch(
-      `https://api.github.com/repos/${githubRepo}/contents/${filePath}`,
-      {
-        headers: {
-          Authorization: `Bearer ${githubToken}`,
-          Accept: "application/vnd.github+json",
-          "X-GitHub-Api-Version": "2022-11-28",
-        },
-      },
-    );
-
-    if (getFile.ok) {
-      const fileData = await getFile.json();
-      fileSha = fileData.sha;
-    }
-    // If 404, file doesn't exist yet — we'll create it (no SHA needed)
-
-    // Commit the file
-    const commitBody = {
-      message: `content: update ${projectId} [${target}] [skip ci]`,
-      content: contentBase64,
-      branch: "main",
-    };
-    if (fileSha) commitBody.sha = fileSha;
-
-    const commitRes = await fetch(
-      `https://api.github.com/repos/${githubRepo}/contents/${filePath}`,
-      {
-        method: "PUT",
-        headers: {
-          Authorization: `Bearer ${githubToken}`,
-          Accept: "application/vnd.github+json",
-          "Content-Type": "application/json",
-          "X-GitHub-Api-Version": "2022-11-28",
-        },
-        body: JSON.stringify(commitBody),
-      },
-    );
-
-    if (!commitRes.ok) {
-      const errText = await commitRes.text();
-      console.error(`Commit error ${commitRes.status}:`, errText);
-      return res.status(commitRes.status).json({
-        error: `Failed to commit content.json: ${commitRes.status} ${errText}`,
-      });
-    }
-
-    const commitData = await commitRes.json();
-    console.log(
-      `✓  Committed: ${filePath} (${commitData.commit?.sha?.slice(0, 7)})`,
-    );
-
-    // ── Step 2: trigger the workflow ──────────────────────────────
+    // ── Trigger the workflow ─────────────────────────────────────
+    // Content is read directly from Supabase by the Action —
+    // no git commit needed.
     const response = await fetch(
       `https://api.github.com/repos/${githubRepo}/actions/workflows/render-deploy.yml/dispatches`,
       {
@@ -624,7 +555,7 @@ app.post("/api/project/:id/deploy", async (req, res) => {
           : `https://${deliveryDomain}/${projectId}/`;
 
       console.log(`✓  Deploy triggered: ${projectId} → ${target} (${url})`);
-      res.json({ ok: true, target, url, projectId, committed: true });
+      res.json({ ok: true, target, url, projectId });
     } else {
       const text = await response.text();
       console.error(`Deploy error ${response.status}:`, text);
