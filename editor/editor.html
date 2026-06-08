@@ -1226,6 +1226,9 @@
                                         <option value="custom-html">
                                             Custom HTML
                                         </option>
+                                        <option value="scroll-carousel">
+                                            Scroll Carousel
+                                        </option>
                                     </select>
                                 </div>
                                 <div class="form-group">
@@ -1287,6 +1290,19 @@
                                     <button type="button" class="tbtn tbtn--ghost" id="addCrossfadeBtn" style="margin-top:0.5rem;width:100%;justify-content:center">+ Add image &amp; phase</button>
                                   </div>
                                 </div>
+
+                                <!-- Carousel editor (shown only for scroll-carousel layout) -->
+                                <div id="carouselEditor" style="display:none">
+                                  <div class="form-group">
+                                    <label class="form-label">Carousel cards</label>
+                                    <p class="form-hint">Each card has an image, number label and text</p>
+                                    <div id="carouselList"></div>
+                                    <button type="button" class="tbtn tbtn--ghost" id="addCarouselBtn" style="margin-top:0.5rem;width:100%;justify-content:center">+ Add card</button>
+                                  </div>
+                                </div>
+
+                                <!-- Carousel editor (shown only for scroll-carousel layout) -->
+                                
 
                                 <!-- Text blocks editor (shown only for text layout) -->
                                 <div id="blocksEditor" style="display:none">
@@ -2067,6 +2083,7 @@
                     initBlocksEditor(index);
                     initCrossfadeEditor(index);
                     initCustomHtmlEditor(index);
+                    initCarouselEditor(index);
                 });
                 wire("sec-intro", (v) => {
                     content.sections[index].intro = v;
@@ -2140,6 +2157,8 @@
                 initCrossfadeEditor(index);
                 // Initialise custom HTML editor (shown only for custom-html layout)
                 initCustomHtmlEditor(index);
+                // Initialise carousel editor (shown only for scroll-carousel layout)
+                initCarouselEditor(index);
 
                 // Reset image field enhancement so it re-initialises with correct URL and focal
                 const heroInput = document.getElementById("sec-hero-url");
@@ -2295,7 +2314,83 @@
                 }
             }
 
-            // ── Custom HTML editor ───────────────────────────────────────────
+            // ── Carousel editor ──────────────────────────────────────────────
+
+function initCarouselEditor(sectionIndex) {
+  const section = content.sections[sectionIndex];
+  const editor  = document.getElementById('carouselEditor');
+  const list    = document.getElementById('carouselList');
+  const isSC    = section.layout === 'scroll-carousel';
+
+  editor.style.display = isSC ? 'block' : 'none';
+  if (!isSC) return;
+
+  if (!section.carousel_cards) section.carousel_cards = [];
+
+  function renderCards() {
+    list.innerHTML = '';
+    section.carousel_cards.forEach((card, i) => {
+      const item = document.createElement('div');
+      item.className = 'block-item';
+      item.innerHTML = `
+        <div class="block-item__header">
+          <span style="font-family:var(--font-mono);font-size:0.6rem;letter-spacing:0.1em;color:var(--ink-3)">CARD ${i + 1}</span>
+          ${i > 0 ? '<button type="button" class="block-item__delete" title="Remove">✕</button>' : ''}
+        </div>
+        <div style="padding:0.5rem;display:flex;flex-direction:column;gap:0.4rem">
+          <input class="form-input sc-img-url" placeholder="Image URL https://…" value="${(card.image && card.image.url) || ''}">
+          <input class="form-input sc-img-alt" placeholder="Image alt text" value="${(card.image && card.image.alt) || ''}">
+          <input class="form-input sc-number" placeholder="Number label e.g. 01" value="${card.number || ''}">
+          <textarea class="form-textarea sc-text" placeholder="Card text…" rows="4">${card.text || ''}</textarea>
+        </div>`;
+
+      item.querySelector('.sc-img-url').addEventListener('input', e => {
+        if (!section.carousel_cards[i].image) section.carousel_cards[i].image = {};
+        section.carousel_cards[i].image.url = e.target.value;
+        scheduleAutosave();
+      });
+      item.querySelector('.sc-img-alt').addEventListener('input', e => {
+        if (!section.carousel_cards[i].image) section.carousel_cards[i].image = {};
+        section.carousel_cards[i].image.alt = e.target.value;
+        scheduleAutosave();
+      });
+      item.querySelector('.sc-number').addEventListener('input', e => {
+        section.carousel_cards[i].number = e.target.value;
+        scheduleAutosave();
+      });
+      item.querySelector('.sc-text').addEventListener('input', e => {
+        section.carousel_cards[i].text = e.target.value;
+        scheduleAutosave();
+      });
+
+      const delBtn = item.querySelector('.block-item__delete');
+      if (delBtn) {
+        delBtn.addEventListener('click', () => {
+          section.carousel_cards.splice(i, 1);
+          scheduleAutosave();
+          renderCards();
+        });
+      }
+
+      list.appendChild(item);
+    });
+  }
+
+  renderCards();
+
+  const addBtn = document.getElementById('addCarouselBtn');
+  const newBtn = addBtn.cloneNode(true);
+  addBtn.parentNode.replaceChild(newBtn, addBtn);
+  newBtn.addEventListener('click', () => {
+    section.carousel_cards.push({ image: { url: '', alt: '' }, number: String(section.carousel_cards.length + 1).padStart(2, '0'), text: '' });
+    scheduleAutosave();
+    renderCards();
+    const inputs = list.querySelectorAll('.sc-img-url');
+    if (inputs.length) inputs[inputs.length - 1].focus();
+  });
+}
+
+// ── Custom HTML editor ───────────────────────────────────────────
 
 function initCustomHtmlEditor(sectionIndex) {
   const section = content.sections[sectionIndex];

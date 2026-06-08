@@ -1,0 +1,275 @@
+/*
+ * Harpoon Story Engine — Scroll Carousel Layout
+ * css/layouts/scroll-carousel.css
+ */
+
+.hse-section--scroll-carousel {
+  position: relative;
+  height: 420vh;
+}
+
+/* ── Sticky container ────────────────────────────────────────────── */
+
+.hse-sc__sticky {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  overflow: hidden;
+  background: var(--hse-ink-2);
+  padding-top: var(--hse-nav-h, 56px);
+  box-sizing: border-box;
+}
+
+/* ── Optional header ─────────────────────────────────────────────── */
+
+.hse-sc__header {
+  width: 80%;
+  margin: 0 auto 1rem;
+}
+
+.hse-sc__title {
+  font-family: var(--hse-font-display);
+  font-size: clamp(1.5rem, 3vw, 2.5rem);
+  color: var(--hse-warm);
+  margin-bottom: 0.5rem;
+}
+
+.hse-sc__intro {
+  color: var(--hse-warm-2);
+  font-size: 1rem;
+}
+
+/* ── Progress bar ────────────────────────────────────────────────── */
+
+.hse-sc__progress-wrap {
+  width: 80%;
+  margin: 0 auto 1.25rem;
+}
+
+.hse-sc__progress {
+  width: 100%;
+  height: 4px;
+  border-radius: 999px;
+  background: rgba(242, 237, 230, 0.12);
+  overflow: hidden;
+}
+
+.hse-sc__progress span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--hse-accent);
+  width: 0%;
+  transition: width 0.15s linear;
+}
+
+/* ── Viewport and track ──────────────────────────────────────────── */
+
+.hse-sc__viewport {
+  width: 100%;
+  overflow: hidden;
+}
+
+.hse-sc__track {
+  display: flex;
+  gap: clamp(1rem, 2vw, 1.5rem);
+  width: 80%;
+  margin: 0 auto;
+  will-change: transform;
+}
+
+/* ── Cards ───────────────────────────────────────────────────────── */
+
+.hse-sc__card {
+  flex: 0 0 min(78vw, 460px);
+  min-height: 420px;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  border-radius: 20px;
+  background: var(--hse-ink-3);
+  box-shadow: 0 18px 50px rgba(0, 0, 0, 0.25);
+  opacity: 0.45;
+  transform: scale(0.94);
+  transition: opacity 0.25s ease, transform 0.25s ease;
+}
+
+.hse-sc__card.is-active {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.hse-sc__media {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+}
+
+.hse-sc__media::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    180deg,
+    rgba(0, 0, 0, 0.04) 0%,
+    rgba(0, 0, 0, 0.2) 45%,
+    rgba(0, 0, 0, 0.65) 100%
+  );
+}
+
+.hse-sc__media img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.hse-sc__number {
+  position: relative;
+  z-index: 2;
+  align-self: flex-start;
+  margin: 1.25rem;
+  padding: 0.4rem 0.75rem;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.9);
+  color: var(--hse-ink);
+  font-family: var(--hse-font-mono);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+}
+
+/* Hidden content — cloned into text panel by JS */
+.hse-sc__content {
+  display: none;
+}
+
+/* ── Text panel ──────────────────────────────────────────────────── */
+
+.hse-sc__text {
+  width: 50%;
+  margin: 1.5rem 0 0 10%;
+  min-height: 120px;
+}
+
+.hse-sc__text-item {
+  opacity: 0;
+  transform: translateY(12px);
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+.hse-sc__text-item.is-active {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.hse-sc__text-item p {
+  color: var(--hse-warm);
+  font-size: clamp(0.95rem, 1.5vw, 1.15rem);
+  line-height: 1.6;
+  margin: 0 0 0.75rem;
+}
+
+.hse-sc__text-item p:last-child {
+  margin-bottom: 0;
+}
+
+/* ── Controls ────────────────────────────────────────────────────── */
+
+.hse-sc__controls {
+  width: 80%;
+  margin: 1rem auto 0;
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+}
+
+.hse-sc__prev,
+.hse-sc__next {
+  width: 44px;
+  height: 44px;
+  border: none;
+  border-radius: 50%;
+  background: var(--hse-accent);
+  color: white;
+  font-size: 1.2rem;
+  cursor: pointer;
+  transition: transform 0.2s ease, opacity 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.hse-sc__prev:hover,
+.hse-sc__next:hover {
+  transform: translateY(-2px);
+}
+
+.hse-sc__prev:disabled,
+.hse-sc__next:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* ── Reduced motion — vertical stack ─────────────────────────────── */
+
+@media (prefers-reduced-motion: reduce) {
+  .hse-section--scroll-carousel {
+    height: auto;
+  }
+  .hse-sc__sticky {
+    position: relative;
+    height: auto;
+    padding: var(--hse-space-xl) 0;
+  }
+  .hse-sc__track {
+    flex-direction: column;
+    width: 80%;
+  }
+  .hse-sc__card {
+    opacity: 1;
+    transform: none;
+    flex: none;
+    width: 100%;
+    min-height: 300px;
+  }
+  .hse-sc__content {
+    display: block;
+    position: relative;
+    z-index: 2;
+    padding: 1rem 1.25rem;
+    background: rgba(0,0,0,0.5);
+  }
+  .hse-sc__content p {
+    color: var(--hse-warm);
+    margin: 0 0 0.5rem;
+  }
+  .hse-sc__text,
+  .hse-sc__controls,
+  .hse-sc__progress-wrap { display: none; }
+}
+
+/* ── Mobile ──────────────────────────────────────────────────────── */
+
+@media (max-width: 700px) {
+  .hse-section--scroll-carousel {
+    height: 440vh;
+  }
+  .hse-sc__card {
+    flex: 0 0 86vw;
+    min-height: 480px;
+  }
+  .hse-sc__text {
+    width: calc(100% - 2rem);
+    margin-left: 1rem;
+  }
+  .hse-sc__controls {
+    justify-content: center;
+  }
+}

@@ -554,7 +554,8 @@
             "fullbleed-quote",
             "reveal-crossfade",
             "text",
-            "custom-html"
+            "custom-html",
+            "scroll-carousel"
           ],
           "default": "default",
           "description": "Rendering template for this section. fullbleed-quote: full-viewport hero_image with pull_quote overlaid. reveal-crossfade: two images crossfade on scroll, driven by crossfade_images and crossfade_phases."
@@ -718,6 +719,13 @@
               "description": "Fixed/parallax scroll"
             }
           }
+        },
+        "carousel_cards": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/carousel_card"
+          },
+          "default": []
         }
       }
     },
@@ -760,6 +768,23 @@
             "mono"
           ],
           "default": ""
+        }
+      }
+    },
+    "carousel_card": {
+      "type": "object",
+      "required": [
+        "text"
+      ],
+      "properties": {
+        "image": {
+          "$ref": "#/definitions/image"
+        },
+        "number": {
+          "type": "string"
+        },
+        "text": {
+          "type": "string"
         }
       }
     }

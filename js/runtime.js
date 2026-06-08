@@ -718,4 +718,111 @@
   }
 
   setupEmbedScrollLock();
+
+  // ── Scroll carousel ───────────────────────────────────────────────
+  // Scroll-driven horizontal card carousel with text panel.
+  // Cards slide left as the user scrolls; text updates per active card.
+
+  function setupScrollCarousel() {
+    document
+      .querySelectorAll(".hse-section--scroll-carousel")
+      .forEach(function (section) {
+        var track = section.querySelector(".hse-sc__track");
+        var cards = Array.from(section.querySelectorAll(".hse-sc__card"));
+        var prev = section.querySelector(".hse-sc__prev");
+        var next = section.querySelector(".hse-sc__next");
+        var progress = section.querySelector(".hse-sc__progress span");
+        var textItem = section.querySelector(".hse-sc__text-item");
+
+        if (!track || !cards.length || !progress || !textItem) return;
+
+        var currentIndex = -1;
+        var ticking = false;
+
+        function clamp(val, min, max) {
+          return Math.min(Math.max(val, min), max);
+        }
+
+        function getGap() {
+          var style = window.getComputedStyle(track);
+          return parseFloat(style.columnGap || style.gap || 0) || 0;
+        }
+
+        function getMaxOffset() {
+          var cardWidth = cards[0].getBoundingClientRect().width;
+          return (cards.length - 1) * (cardWidth + getGap());
+        }
+
+        function updateText(index) {
+          var content = cards[index].querySelector(".hse-sc__content");
+          if (!content) return;
+          textItem.classList.remove("is-active");
+          textItem.innerHTML = content.innerHTML;
+          requestAnimationFrame(function () {
+            textItem.classList.add("is-active");
+          });
+        }
+
+        function setActiveCard(index) {
+          var next2 = clamp(index, 0, cards.length - 1);
+          if (next2 === currentIndex) return;
+          currentIndex = next2;
+          cards.forEach(function (card, i) {
+            card.classList.toggle("is-active", i === currentIndex);
+          });
+          updateText(currentIndex);
+          if (prev) prev.disabled = currentIndex === 0;
+          if (next) next.disabled = currentIndex === cards.length - 1;
+        }
+
+        function updateFromScroll() {
+          var rect = section.getBoundingClientRect();
+          var scrollable = section.offsetHeight - window.innerHeight;
+          var scrollProgress = clamp(-rect.top / scrollable, 0, 1);
+          var offset = scrollProgress * getMaxOffset();
+          track.style.transform = "translateX(-" + offset + "px)";
+          progress.style.width = scrollProgress * 100 + "%";
+          setActiveCard(Math.round(scrollProgress * (cards.length - 1)));
+          ticking = false;
+        }
+
+        function requestUpdate() {
+          if (!ticking) {
+            requestAnimationFrame(updateFromScroll);
+            ticking = true;
+          }
+        }
+
+        function jumpToCard(index) {
+          var target = clamp(index, 0, cards.length - 1);
+          var scrollable = section.offsetHeight - window.innerHeight;
+          var targetProgress = target / (cards.length - 1);
+          var targetY =
+            window.scrollY +
+            section.getBoundingClientRect().top +
+            scrollable * targetProgress;
+          window.scrollTo({ top: targetY, behavior: "smooth" });
+        }
+
+        if (prev)
+          prev.addEventListener("click", function () {
+            jumpToCard(currentIndex - 1);
+          });
+        if (next)
+          next.addEventListener("click", function () {
+            jumpToCard(currentIndex + 1);
+          });
+
+        window.addEventListener("scroll", requestUpdate, { passive: true });
+        window.addEventListener("resize", requestUpdate);
+
+        updateText(0);
+        setActiveCard(0);
+        updateFromScroll();
+      });
+  }
+
+  if (!prefersReducedMotion) {
+    setupScrollCarousel();
+  }
 })();
