@@ -65,19 +65,13 @@ jobs:
             node render.js "projects/${INPUT_PROJECT}/content.json" --out "dist/${INPUT_PROJECT}"
           else
             echo "No project specified — fetching all from Supabase"
-            node -e "
-              const {createClient} = require('@supabase/supabase-js');
-              const fs = require('fs');
-              const path = require('path');
-              const sb = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_ANON_KEY);
-              sb.from('story_engine_projects').select('project_id').then(({data,error}) => {
-                if (error) { console.error(error.message); process.exit(1); }
-                fs.writeFileSync('/tmp/project-ids.json', JSON.stringify(data.map(r=>r.project_id)));
-                console.log('Projects:', data.map(r=>r.project_id).join(', '));
-              });
-            "
+            PROJECT_IDS=$(curl -s "${SUPABASE_URL}/rest/v1/story_engine_projects?select=project_id" \
+              -H "apikey: ${SUPABASE_ANON_KEY}" \
+              -H "Authorization: Bearer ${SUPABASE_ANON_KEY}" \
+              | node -e "const c=[]; process.stdin.on('data',d=>c.push(d)); process.stdin.on('end',()=>{ const rows=JSON.parse(Buffer.concat(c).toString()); console.log(rows.map(r=>r.project_id).join(' ')); });")
+            echo "Projects: $PROJECT_IDS"
             RENDERED=0
-            for PROJECT_ID in $(node -e "console.log(require('/tmp/project-ids.json').join(' '))"); do
+            for PROJECT_ID in $PROJECT_IDS; do
               echo "Fetching: $PROJECT_ID"
               node fetch-content.js "$PROJECT_ID"
               echo "Rendering: $PROJECT_ID"
