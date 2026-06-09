@@ -116,6 +116,19 @@
               "description": "Domain registered in Plausible CE"
             }
           }
+        },
+        "heading_animation": {
+          "type": "string",
+          "enum": [
+            "none",
+            "fade-up",
+            "fade-down",
+            "fade-left",
+            "fade-right",
+            "fade-in"
+          ],
+          "default": "none",
+          "description": "Global heading entrance animation applied throughout the story"
         }
       }
     },

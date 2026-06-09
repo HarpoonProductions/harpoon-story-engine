@@ -68,7 +68,7 @@ function buildPage(meta, config, cover, sections, basePath) {
     .join("\n\n");
 
   return `${head}
-<body>
+<body data-heading-animation="${(config && config.heading_animation || 'none').replace(/[^a-z-]/g, '')}">
 
 <a href="#hse-main" class="hse-skip-link">Skip to main content</a>
 

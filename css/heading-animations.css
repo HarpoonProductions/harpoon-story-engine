@@ -1,0 +1,84 @@
+/*
+ * Harpoon Story Engine — Global Heading Animations
+ * css/heading-animations.css
+ *
+ * Story-level heading entrance animations.
+ * Applied via data-heading-animation on the <body> element.
+ * All animations respect prefers-reduced-motion.
+ *
+ * Available treatments:
+ *   none        — no animation (default)
+ *   fade-up     — fade in rising from below
+ *   fade-down   — fade in dropping from above
+ *   fade-left   — fade in sliding from left
+ *   fade-right  — fade in sliding from right
+ *   fade-in     — simple opacity fade, no movement
+ */
+
+/* ── Base state — headings start hidden when animation is set ─────── */
+
+[data-heading-animation]:not([data-heading-animation="none"]) .hse-heading,
+[data-heading-animation]:not([data-heading-animation="none"])
+    h2:not(.hse-cover__headline):not(.hse-sc__title),
+[data-heading-animation]:not([data-heading-animation="none"]) h3 {
+    opacity: 0;
+    transition:
+        opacity 0.7s var(--hse-ease-out, cubic-bezier(0.22, 1, 0.36, 1)),
+        transform 0.7s var(--hse-ease-out, cubic-bezier(0.22, 1, 0.36, 1));
+}
+
+/* ── Per-treatment start transforms ─────────────────────────────────── */
+
+[data-heading-animation="fade-up"] .hse-heading,
+[data-heading-animation="fade-up"]
+    h2:not(.hse-cover__headline):not(.hse-sc__title),
+[data-heading-animation="fade-up"] h3 {
+    transform: translateY(28px);
+}
+
+[data-heading-animation="fade-down"] .hse-heading,
+[data-heading-animation="fade-down"]
+    h2:not(.hse-cover__headline):not(.hse-sc__title),
+[data-heading-animation="fade-down"] h3 {
+    transform: translateY(-28px);
+}
+
+[data-heading-animation="fade-left"] .hse-heading,
+[data-heading-animation="fade-left"]
+    h2:not(.hse-cover__headline):not(.hse-sc__title),
+[data-heading-animation="fade-left"] h3 {
+    transform: translateX(-36px);
+}
+
+[data-heading-animation="fade-right"] .hse-heading,
+[data-heading-animation="fade-right"]
+    h2:not(.hse-cover__headline):not(.hse-sc__title),
+[data-heading-animation="fade-right"] h3 {
+    transform: translateX(36px);
+}
+
+[data-heading-animation="fade-in"] .hse-heading,
+[data-heading-animation="fade-in"]
+    h2:not(.hse-cover__headline):not(.hse-sc__title),
+[data-heading-animation="fade-in"] h3 {
+    transform: none;
+}
+
+/* ── Visible state — JS adds .hse-heading-visible ───────────────────── */
+
+.hse-heading-visible {
+    opacity: 1 !important;
+    transform: none !important;
+}
+
+/* ── Reduced motion — show immediately ──────────────────────────────── */
+
+@media (prefers-reduced-motion: reduce) {
+    [data-heading-animation] .hse-heading,
+    [data-heading-animation] h2,
+    [data-heading-animation] h3 {
+        opacity: 1 !important;
+        transform: none !important;
+        transition: none !important;
+    }
+}

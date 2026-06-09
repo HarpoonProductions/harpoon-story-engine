@@ -102,6 +102,7 @@ function renderHead(meta, config, title, basePath, staging) {
   <link rel="stylesheet" href="${css('css/layouts/custom-html.css')}">
   <link rel="stylesheet" href="${css('css/layouts/scroll-carousel.css')}">
   <link rel="stylesheet" href="${css('css/blocks/background.css')}">
+  <link rel="stylesheet" href="${css('css/heading-animations.css')}">
   <link rel="stylesheet" href="${css('css/layouts/sticky-steps.css')}">
   <link rel="stylesheet" href="${css('css/layouts/stackable-cards.css')}">
   <link rel="stylesheet" href="${css('css/layouts/cascading-slides.css')}">
