@@ -203,7 +203,7 @@ jobs:
           cache: 'npm'
 
       - name: Install dependencies
-        run: npm ci --omit=optional
+        run: npm ci --include=optional
 
       - name: Build and publish Electron app
         env:
