@@ -825,4 +825,44 @@
   if (!prefersReducedMotion) {
     setupScrollCarousel();
   }
+  // ── Global heading animations ─────────────────────────────────────
+  // Reads data-heading-animation from <body> and triggers entrance
+  // animations on all h2/h3 elements as they scroll into view.
+  // Cover headline is excluded (has its own entrance animation).
+
+  function setupHeadingAnimations() {
+    var treatment = document.body.dataset.headingAnimation;
+    if (!treatment || treatment === "none") return;
+
+    var selectors = [
+      ".hse-heading",
+      "h2:not(.hse-cover__headline):not(.hse-sc__title):not(.hse-fbq__quote)",
+      "h3",
+    ].join(", ");
+
+    var headings = Array.from(document.querySelectorAll(selectors));
+
+    headings.forEach(function (heading) {
+      // Skip headings inside the cover
+      if (heading.closest("#hse-cover")) return;
+
+      ScrollTrigger.create({
+        trigger: heading,
+        start: "top 88%",
+        once: true,
+        onEnter: function () {
+          heading.classList.add("hse-heading-visible");
+        },
+      });
+    });
+  }
+
+  if (!prefersReducedMotion) {
+    setupHeadingAnimations();
+  } else {
+    // Ensure all headings are visible for reduced motion users
+    document.querySelectorAll(".hse-heading, h2, h3").forEach(function (el) {
+      el.classList.add("hse-heading-visible");
+    });
+  }
 })();

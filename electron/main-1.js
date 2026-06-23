@@ -9,7 +9,6 @@
  */
 
 const { app, BrowserWindow, shell, Menu, dialog } = require('electron');
-const { autoUpdater } = require('electron-updater');
 const path   = require('path');
 const http   = require('http');
 
@@ -205,32 +204,6 @@ function buildMenu() {
 
 app.whenReady().then(async () => {
   buildMenu();
-
-  // ── Auto-updater ─────────────────────────────────────────────────
-  // Downloads updates silently in the background.
-  // When ready, prompts Rachel to restart.
-  autoUpdater.autoDownload = true;
-  autoUpdater.autoInstallOnAppQuit = true;
-
-  autoUpdater.on('update-downloaded', () => {
-    dialog.showMessageBox({
-      type: 'info',
-      title: 'Update ready',
-      message: 'A new version of Story Engine has been downloaded.',
-      detail: 'Restart the app to apply the update.',
-      buttons: ['Restart now', 'Later'],
-      defaultId: 0,
-    }).then(({ response }) => {
-      if (response === 0) autoUpdater.quitAndInstall();
-    });
-  });
-
-  autoUpdater.on('error', (err) => {
-    console.error('Auto-updater error:', err.message);
-  });
-
-  autoUpdater.checkForUpdatesAndNotify();
-  // ─────────────────────────────────────────────────────────────────
 
   const splash = createSplash();
 
