@@ -11,6 +11,13 @@
       "label": "Imperial College London",
       "description": "Imperial brand — navy, ImperialText typeface",
       "fonts": "ImperialText (Imperial CDN), Georgia fallback"
+    },
+    {
+      "id": "uksi",
+      "label": "UK Sport",
+      "description": "UK Sport brand token set",
+      "fonts": "Montserrat",
+      "google_fonts_url": "https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;900&display=swap"
     }
   ]
 }
