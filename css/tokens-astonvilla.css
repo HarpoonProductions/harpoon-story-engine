@@ -1,0 +1,49 @@
+/*
+ * ════════════════════════════════════════════════════════════════════
+ *  Harpoon Platform — Client Token Set: Aston Villa
+ *  css/tokens-astonvilla.css
+ *
+ *  This is the canonical brand identity file for Aston Villa
+ *  across all Harpoon products — Story Engine stories, Edition OS
+ *  magazines, Briefing Engine sessions, analytics reports, and any
+ *  future Harpoon product built for this client. It is the single
+ *  source of truth for this client's visual identity within the
+ *  Harpoon platform.
+ *
+ *  Generated from brand guidelines PDF, June 2026.
+ *  This file contains overrides only. Base tokens not listed here
+ *  remain at their platform defaults defined in css/tokens.css.
+ * ════════════════════════════════════════════════════════════════════
+ */
+
+:root {
+  /* ── Accent colours ── */
+  --hse-accent:   #480024;
+  --hse-accent-2: #94BEE5;
+
+  /* ── Neutral palette ── */
+  --hse-ink:    #2a0016;
+  --hse-ink-2:  #480024;
+  --hse-ink-3:  #3a001e;
+  --hse-warm:   #FFFFFF;
+  --hse-warm-2: #D1DDE6;
+  --hse-warm-3: #7DA3C9;
+
+  /* ── RGB channels ── */
+  --hse-ink-rgb:  42, 0, 22;
+  --hse-warm-rgb: 255, 255, 255;
+
+  /* ── Typography ── */
+  --hse-font-display: 'Medula One', sans-serif;
+  --hse-font-body:    'Roboto', Arial, sans-serif;
+  --hse-font-mono:    'Roboto', 'Courier New', monospace;
+
+  /* ── Geometry ── */
+  --hse-max-w:  1280px;
+  --hse-text-w: 720px;
+
+  /* ── Radius — sharp ── */
+  --hse-radius-sm: 0px;
+  --hse-radius-md: 2px;
+  --hse-radius-lg: 4px;
+}
