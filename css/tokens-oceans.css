@@ -1,0 +1,49 @@
+/*
+ * ════════════════════════════════════════════════════════════════════
+ *  Harpoon Platform — Client Token Set: DCC
+ *  css/tokens-oceans.css
+ *
+ *  This is the canonical brand identity file for DCC
+ *  across all Harpoon products — Story Engine stories, Edition OS
+ *  magazines, Briefing Engine sessions, analytics reports, and any
+ *  future Harpoon product built for this client. It is the single
+ *  source of truth for this client's visual identity within the
+ *  Harpoon platform.
+ *
+ *  Generated from brand guidelines PDF, June 2026.
+ *  This file contains overrides only. Base tokens not listed here
+ *  remain at their platform defaults defined in css/tokens.css.
+ * ════════════════════════════════════════════════════════════════════
+ */
+
+:root {
+  /* ── Accent colours ── */
+  --hse-accent:   #027DBC;
+  --hse-accent-2: #0CACED9;
+
+  /* ── Neutral palette ── */
+  --hse-ink:    #0a1a2e;
+  --hse-ink-2:  #102540;
+  --hse-ink-3:  #1a3a55;
+  --hse-warm:   #F5F9FC;
+  --hse-warm-2: #BED4E3;
+  --hse-warm-3: #7FA8C2;
+
+  /* ── RGB channels ── */
+  --hse-ink-rgb:  10, 26, 46;
+  --hse-warm-rgb: 245, 249, 252;
+
+  /* ── Typography ── */
+  --hse-font-display: 'Outfit', sans-serif;
+  --hse-font-body:    'Outfit', sans-serif;
+  --hse-font-mono:    'Outfit', monospace;
+
+  /* ── Geometry ── */
+  --hse-max-w:  1200px;
+  --hse-text-w: 720px;
+
+  /* ── Motion — restrained ── */
+  --hse-duration-fast: 0.15s;
+  --hse-duration-mid:  0.3s;
+  --hse-duration-slow: 0.5s;
+}
