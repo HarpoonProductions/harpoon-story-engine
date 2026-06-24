@@ -1,0 +1,49 @@
+/*
+ * ════════════════════════════════════════════════════════════════════
+ *  Harpoon Platform — Client Token Set: UK Sport
+ *  css/tokens-uksi.css
+ *
+ *  This is the canonical brand identity file for UK Sport
+ *  across all Harpoon products — Story Engine stories, Edition OS
+ *  magazines, Briefing Engine sessions, analytics reports, and any
+ *  future Harpoon product built for this client. It is the single
+ *  source of truth for this client's visual identity within the
+ *  Harpoon platform.
+ *
+ *  Generated from brand guidelines PDF, June 2026.
+ *  This file contains overrides only. Base tokens not listed here
+ *  remain at their platform defaults defined in css/tokens.css.
+ * ════════════════════════════════════════════════════════════════════
+ */
+
+:root {
+  /* ── Accent colours ── */
+  --hse-accent:   #e6213e;
+  --hse-accent-2: #103f6b;
+
+  /* ── Neutral palette ── */
+  --hse-ink:    #00243f;
+  --hse-ink-2:  #103f6b;
+  --hse-ink-3:  #145c8f;
+  --hse-warm:   #f8f9fc;
+  --hse-warm-2: #e8eaf0;
+  --hse-warm-3: #c5cad6;
+
+  /* ── RGB channels ── */
+  --hse-ink-rgb:  0, 36, 63;
+  --hse-warm-rgb: 248, 249, 252;
+
+  /* ── Typography ── */
+  --hse-font-display: 'Montserrat', Arial, sans-serif;
+  --hse-font-body:    'Montserrat', Arial, sans-serif;
+  --hse-font-mono:    'Montserrat', Arial, monospace;
+
+  /* ── Geometry ── */
+  --hse-max-w:  1200px;
+  --hse-text-w: 720px;
+
+  /* ── Motion — restrained ── */
+  --hse-duration-fast: 0.15s;
+  --hse-duration-mid:  0.3s;
+  --hse-duration-slow: 0.5s;
+}
