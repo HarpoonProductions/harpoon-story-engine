@@ -25,6 +25,13 @@
       "description": "Aston Villa brand token set",
       "fonts": "Medula One, Roboto",
       "google_fonts_url": "https://fonts.googleapis.com/css2?family=Medula+One&family=Roboto:wght@300;400;700&display=swap"
+    },
+    {
+      "id": "oceans",
+      "label": "DCC",
+      "description": "Ocean Prediction",
+      "fonts": "Outfit",
+      "google_fonts_url": "https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&display=swap"
     }
   ]
 }
