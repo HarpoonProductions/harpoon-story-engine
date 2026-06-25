@@ -198,12 +198,68 @@ gsap.to('#hse-progress', {
   }
 });
 
-// Nav scroll state
+// Nav: solid background over text sections
 ScrollTrigger.create({
   start: '80px top',
   onEnter:     () => document.getElementById('hse-nav').classList.add('hse-nav--solid'),
   onLeaveBack: () => document.getElementById('hse-nav').classList.remove('hse-nav--solid'),
 });
+
+// Nav: reveal section links when cursor approaches top (desktop only)
+(function () {
+  var nav = document.getElementById('hse-nav');
+  var hideTimer;
+  var REVEAL_ZONE = 70; // px from top
+
+  function reveal() {
+    clearTimeout(hideTimer);
+    nav.classList.add('hse-nav--revealed');
+  }
+  function scheduleHide() {
+    clearTimeout(hideTimer);
+    hideTimer = setTimeout(function () {
+      nav.classList.remove('hse-nav--revealed');
+    }, 800);
+  }
+
+  document.addEventListener('mousemove', function (e) {
+    if (e.clientY < REVEAL_ZONE) {
+      reveal();
+    } else if (!nav.matches(':hover')) {
+      scheduleHide();
+    }
+  });
+
+  nav.addEventListener('mouseenter', reveal);
+  nav.addEventListener('mouseleave', scheduleHide);
+})();
+
+// Nav: hamburger — mobile menu
+(function () {
+  var hamburger = document.getElementById('hse-nav-hamburger');
+  var menu      = document.getElementById('hse-nav-mobile-menu');
+  var close     = document.getElementById('hse-nav-mobile-close');
+  if (!hamburger || !menu) return;
+
+  function openMenu() {
+    menu.classList.add('is-open');
+    menu.setAttribute('aria-hidden', 'false');
+    hamburger.setAttribute('aria-expanded', 'true');
+    document.body.style.overflow = 'hidden';
+  }
+  function closeMenu() {
+    menu.classList.remove('is-open');
+    menu.setAttribute('aria-hidden', 'true');
+    hamburger.setAttribute('aria-expanded', 'false');
+    document.body.style.overflow = '';
+  }
+
+  hamburger.addEventListener('click', openMenu);
+  if (close) close.addEventListener('click', closeMenu);
+  menu.querySelectorAll('a').forEach(function (a) {
+    a.addEventListener('click', closeMenu);
+  });
+})();
 
 // Cover entrance
 const coverTl = gsap.timeline({ delay: 0.3 });

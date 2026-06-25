@@ -3,6 +3,8 @@
  * nav.css
  */
 
+/* ── Fixed bar ───────────────────────────────────────────────────── */
+
 #hse-nav {
   position: fixed;
   top: 0; left: 0; right: 0;
@@ -11,11 +13,13 @@
   align-items: center;
   justify-content: space-between;
   padding: 1.5rem var(--hse-page-pad);
+  /* No background by default — transparent over all sections */
   transition:
     background var(--hse-duration-mid),
     backdrop-filter var(--hse-duration-mid);
 }
 
+/* Solid bg: over text-heavy sections (added by JS ScrollTrigger) */
 #hse-nav.hse-nav--solid {
   background: rgba(var(--hse-ink-rgb), 0.92);
   backdrop-filter: blur(16px);
@@ -23,12 +27,16 @@
   border-bottom: 1px solid var(--hse-rule);
 }
 
+/* ── Brand / logo ────────────────────────────────────────────────── */
+
 .hse-nav__brand {
   font-family: var(--hse-font-mono);
   font-size: var(--hse-font-size-eyebrow);
   letter-spacing: 0.22em;
   text-transform: uppercase;
   color: var(--hse-warm-2);
+  flex-shrink: 0;
+  z-index: 1;
 }
 
 .hse-nav__logo {
@@ -43,10 +51,30 @@
   height: 28px;
 }
 
+/* ── Desktop section links ───────────────────────────────────────── */
+
 .hse-nav__links {
   display: flex;
   gap: 2.5rem;
   list-style: none;
+  overflow-x: auto;
+  scrollbar-width: none;        /* Firefox */
+  -webkit-overflow-scrolling: touch;
+  /* Hidden until cursor approaches top */
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+  /* Fade in when nav is revealed */
+  mask-image: linear-gradient(to right, transparent 0, black 2rem, black calc(100% - 2rem), transparent 100%);
+  -webkit-mask-image: linear-gradient(to right, transparent 0, black 2rem, black calc(100% - 2rem), transparent 100%);
+}
+
+.hse-nav__links::-webkit-scrollbar { display: none; }
+
+#hse-nav.hse-nav--revealed .hse-nav__links,
+#hse-nav.hse-nav--solid .hse-nav__links {
+  opacity: 1;
+  pointer-events: auto;
 }
 
 .hse-nav__links a {
@@ -55,6 +83,7 @@
   letter-spacing: var(--hse-tracking-md);
   text-transform: uppercase;
   color: var(--hse-warm-3);
+  white-space: nowrap;
   transition: color var(--hse-duration-fast);
 }
 
@@ -63,8 +92,92 @@
   color: var(--hse-accent);
 }
 
+/* ── Hamburger (mobile only) ─────────────────────────────────────── */
+
+.hse-nav__hamburger {
+  display: none;
+  flex-direction: column;
+  gap: 5px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 6px;
+  z-index: 1;
+}
+
+.hse-nav__hamburger span {
+  display: block;
+  width: 24px;
+  height: 2px;
+  background: var(--hse-warm);
+  border-radius: 2px;
+  transition: transform 0.3s ease, opacity 0.3s ease;
+}
+
+/* ── Mobile menu overlay ─────────────────────────────────────────── */
+
+.hse-nav__mobile-menu {
+  position: fixed;
+  inset: 0;
+  z-index: calc(var(--hse-z-nav) + 1);
+  background: rgba(var(--hse-ink-rgb), 0.97);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2rem;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.35s ease;
+}
+
+.hse-nav__mobile-menu.is-open {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.hse-nav__mobile-menu ul {
+  list-style: none;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.hse-nav__mobile-menu a {
+  font-family: var(--hse-font-display);
+  font-size: clamp(1.4rem, 5vw, 2rem);
+  color: var(--hse-warm);
+  letter-spacing: 0.05em;
+  transition: color var(--hse-duration-fast);
+}
+
+.hse-nav__mobile-menu a:hover {
+  color: var(--hse-accent);
+}
+
+.hse-nav__mobile-close {
+  position: absolute;
+  top: 1.5rem;
+  right: var(--hse-page-pad);
+  background: none;
+  border: none;
+  color: var(--hse-warm-3);
+  font-size: 1.5rem;
+  cursor: pointer;
+  padding: 0.5rem;
+  line-height: 1;
+}
+
+/* ── Mobile breakpoint ───────────────────────────────────────────── */
+
 @media (max-width: 640px) {
   .hse-nav__links {
     display: none;
+  }
+  .hse-nav__hamburger {
+    display: flex;
   }
 }

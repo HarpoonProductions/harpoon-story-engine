@@ -29,7 +29,16 @@ function renderNav(meta, sections, registryLogoUrl) {
   <ul class="hse-nav__links" role="list">
     ${links}
   </ul>
-</nav>`.trim();
+  <button class="hse-nav__hamburger" id="hse-nav-hamburger" aria-label="Open menu" aria-expanded="false">
+    <span></span><span></span><span></span>
+  </button>
+</nav>
+<div class="hse-nav__mobile-menu" id="hse-nav-mobile-menu" aria-hidden="true">
+  <button class="hse-nav__mobile-close" id="hse-nav-mobile-close" aria-label="Close menu">✕</button>
+  <ul role="list">
+    ${links}
+  </ul>
+</div>`.trim();
 }
 
 module.exports = { renderNav };
