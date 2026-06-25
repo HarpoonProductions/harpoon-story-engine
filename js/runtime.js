@@ -370,10 +370,15 @@
           ScrollTrigger.create({
             trigger: phase,
             start: "top 65%",
-            once: true,
             onEnter: function () {
               phase.classList.add("is-visible");
               showImage(imageIndex);
+            },
+            onLeaveBack: function () {
+              // Revert to the previous image (or image 0 if this is the first phase)
+              var prevIndex = i > 0 ? parseInt(phases[i - 1].dataset.image || (i - 1), 10) : 0;
+              showImage(prevIndex);
+              if (i === 0) phase.classList.remove("is-visible");
             },
           });
         });

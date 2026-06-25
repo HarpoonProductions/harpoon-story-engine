@@ -20,7 +20,7 @@ function renderRevealCrossfade(section) {
       (img, i) => `
       <div
         class="hse-cf__image hse-cf__image--${i}${i === 0 ? " is-active" : ""}"
-        style="background-image: url('${escHtml(img.url || "")}')"
+        style="background-image: url('${escHtml(img.url || "")}');${img.focal ? `background-position:${escHtml(img.focal)}` : ''}"
         role="img"
         aria-label="${escHtml(img.alt || "")}"
         data-index="${i}">

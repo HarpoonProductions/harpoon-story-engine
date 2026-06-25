@@ -1320,6 +1320,26 @@
                                   </div>
                                 </div>
 
+                                <!-- Stackable cards editor (shown only for stackable-cards layout) -->
+                                <div id="stackableCardsEditor" style="display:none">
+                                  <div class="form-group">
+                                    <label class="form-label">Cards</label>
+                                    <p class="form-hint">Each card has an optional image, tag, title, body and link</p>
+                                    <div id="stackableCardsList"></div>
+                                    <button type="button" class="tbtn tbtn--ghost" id="addStackableCardBtn" style="margin-top:0.5rem;width:100%;justify-content:center">+ Add card</button>
+                                  </div>
+                                </div>
+
+                                <!-- Sticky steps editor (shown only for sticky-steps layout) -->
+                                <div id="stickyStepsEditor" style="display:none">
+                                  <div class="form-group">
+                                    <label class="form-label">Steps</label>
+                                    <p class="form-hint">Each step pins an image on the left while its text scrolls into view</p>
+                                    <div id="stickyStepsList"></div>
+                                    <button type="button" class="tbtn tbtn--ghost" id="addStickyStepBtn" style="margin-top:0.5rem;width:100%;justify-content:center">+ Add step</button>
+                                  </div>
+                                </div>
+
                                 <!-- Crossfade editor (shown only for reveal-crossfade layout) -->
                                 <div id="crossfadeEditor" style="display:none">
                                   <div class="form-group">
@@ -2120,6 +2140,8 @@
                     content.sections[index].layout = v;
                     renderSectionList();
                     initBlocksEditor(index);
+                    initStackableCardsEditor(index);
+                    initStickyStepsEditor(index);
                     initCrossfadeEditor(index);
                     initCustomHtmlEditor(index);
                     initCarouselEditor(index);
@@ -2194,6 +2216,10 @@
 
                 // Initialise blocks editor (shown only for text layout)
                 initBlocksEditor(index);
+                // Initialise stackable cards editor (shown only for stackable-cards layout)
+                initStackableCardsEditor(index);
+                // Initialise sticky steps editor (shown only for sticky-steps layout)
+                initStickyStepsEditor(index);
                 // Initialise crossfade editor (shown only for reveal-crossfade layout)
                 initCrossfadeEditor(index);
                 // Initialise custom HTML editor (shown only for custom-html layout)
@@ -2468,6 +2494,201 @@ function initCustomHtmlEditor(sectionIndex) {
   rewire('sec-custom-full-width',  v => { embed.full_width = v; });
 }
 
+// ── Stackable cards editor ───────────────────────────────────────
+
+function initStackableCardsEditor(sectionIndex) {
+  const section = content.sections[sectionIndex];
+  const editor  = document.getElementById('stackableCardsEditor');
+  const list    = document.getElementById('stackableCardsList');
+  const isSC    = section.layout === 'stackable-cards';
+
+  editor.style.display = isSC ? 'block' : 'none';
+  if (!isSC) return;
+
+  if (!section.cards) section.cards = [];
+  if (section.cards.length === 0) {
+    section.cards.push({ id: 'card-1', title: '', body: '', tag: '', image: { url: '', alt: '' }, link: { href: '', label: '' } });
+  }
+
+  function renderCards() {
+    list.innerHTML = '';
+    section.cards.forEach((card, i) => {
+      const img  = card.image  || {};
+      const link = card.link   || {};
+      const item = document.createElement('div');
+      item.className = 'block-item';
+      item.innerHTML = `
+        <div class="block-item__header">
+          <span style="font-family:var(--font-mono);font-size:0.6rem;letter-spacing:0.1em;color:var(--ink-3)">CARD ${i + 1}</span>
+          ${i > 0 ? `<button type="button" class="block-item__delete" data-i="${i}" title="Remove card">✕</button>` : ''}
+        </div>
+        <div style="padding:0.5rem;display:flex;flex-direction:column;gap:0.4rem">
+          <input class="form-input stk-tag"      data-i="${i}" placeholder="Tag (optional)" value="${card.tag || ''}">
+          <input class="form-input stk-title"    data-i="${i}" placeholder="Card title" value="${card.title || ''}">
+          <textarea class="form-textarea stk-body" data-i="${i}" placeholder="Card body text…" rows="3">${card.body || ''}</textarea>
+          <input class="form-input stk-img-url"  id="stk-img-url-${sectionIndex}-${i}" data-image-field data-i="${i}" ${img.focal ? `data-existing-focal="${img.focal}"` : ''} placeholder="Image URL https://…" value="${img.url || ''}">
+          <input class="form-input stk-img-alt"  data-i="${i}" placeholder="Image alt text" value="${img.alt || ''}">
+          <input class="form-input stk-link-href" data-i="${i}" placeholder="Link URL (optional)" value="${link.href || ''}">
+          <input class="form-input stk-link-label" data-i="${i}" placeholder="Link label e.g. Read more" value="${link.label || ''}">
+        </div>`;
+
+      item.querySelector('.stk-tag').addEventListener('input', e => { section.cards[i].tag = e.target.value; scheduleAutosave(); });
+      item.querySelector('.stk-title').addEventListener('input', e => { section.cards[i].title = e.target.value; scheduleAutosave(); });
+      item.querySelector('.stk-body').addEventListener('input', e => { section.cards[i].body = e.target.value; scheduleAutosave(); });
+      item.querySelector('.stk-img-url').addEventListener('input', e => {
+        if (!section.cards[i].image) section.cards[i].image = {};
+        section.cards[i].image.url = e.target.value; scheduleAutosave();
+      });
+      item.querySelector('.stk-img-alt').addEventListener('input', e => {
+        if (!section.cards[i].image) section.cards[i].image = {};
+        section.cards[i].image.alt = e.target.value; scheduleAutosave();
+      });
+      item.querySelector('.stk-link-href').addEventListener('input', e => {
+        if (!section.cards[i].link) section.cards[i].link = {};
+        section.cards[i].link.href = e.target.value; scheduleAutosave();
+      });
+      item.querySelector('.stk-link-label').addEventListener('input', e => {
+        if (!section.cards[i].link) section.cards[i].link = {};
+        section.cards[i].link.label = e.target.value; scheduleAutosave();
+      });
+
+      const delBtn = item.querySelector('.block-item__delete');
+      if (delBtn) {
+        delBtn.addEventListener('click', () => {
+          section.cards.splice(i, 1);
+          scheduleAutosave();
+          renderCardsAndInit();
+        });
+      }
+
+      list.appendChild(item);
+    });
+  }
+
+  function renderCardsAndInit() {
+    renderCards();
+    if (window.initImageFields) {
+      initImageFields(projectId, (fieldId, url, focal) => {
+        const match = fieldId.match(/^stk-img-url-\d+-(\d+)$/);
+        if (!match) return;
+        const idx = parseInt(match[1]);
+        if (!section.cards[idx]) return;
+        if (!section.cards[idx].image) section.cards[idx].image = {};
+        section.cards[idx].image.focal = focal === '50% 50%' ? undefined : focal;
+        scheduleAutosave();
+      }, list);
+    }
+  }
+
+  renderCardsAndInit();
+
+  const addBtn = document.getElementById('addStackableCardBtn');
+  const newBtn = addBtn.cloneNode(true);
+  addBtn.parentNode.replaceChild(newBtn, addBtn);
+  newBtn.addEventListener('click', () => {
+    const n = section.cards.length + 1;
+    section.cards.push({ id: `card-${n}`, title: '', body: '', tag: '', image: { url: '', alt: '' }, link: { href: '', label: '' } });
+    scheduleAutosave();
+    renderCardsAndInit();
+    const inputs = list.querySelectorAll('.stk-title');
+    if (inputs.length) inputs[inputs.length - 1].focus();
+  });
+}
+
+// ── Sticky steps editor ──────────────────────────────────────────
+
+function initStickyStepsEditor(sectionIndex) {
+  const section = content.sections[sectionIndex];
+  const editor  = document.getElementById('stickyStepsEditor');
+  const list    = document.getElementById('stickyStepsList');
+  const isSS    = section.layout === 'sticky-steps';
+
+  editor.style.display = isSS ? 'block' : 'none';
+  if (!isSS) return;
+
+  if (!section.sticky_steps) section.sticky_steps = [];
+  if (section.sticky_steps.length === 0) {
+    section.sticky_steps.push({ title: '', body: '', image: { url: '', alt: '' } });
+  }
+
+  function renderSteps() {
+    list.innerHTML = '';
+    section.sticky_steps.forEach((step, i) => {
+      const img  = step.image || {};
+      const item = document.createElement('div');
+      item.className = 'block-item';
+      item.innerHTML = `
+        <div class="block-item__header">
+          <span style="font-family:var(--font-mono);font-size:0.6rem;letter-spacing:0.1em;color:var(--ink-3)">STEP ${i + 1}</span>
+          ${i > 0 ? `<button type="button" class="block-item__delete" data-i="${i}" title="Remove step">✕</button>` : ''}
+        </div>
+        <div style="padding:0.5rem;display:flex;flex-direction:column;gap:0.4rem">
+          <input class="form-input ss-title" data-i="${i}" placeholder="Step title" value="${step.title || ''}">
+          <textarea class="form-textarea ss-body" data-i="${i}" placeholder="Step body text…" rows="3">${step.body || ''}</textarea>
+          <input class="form-input ss-img-url" id="ss-img-url-${sectionIndex}-${i}" data-image-field data-i="${i}" ${img.focal ? `data-existing-focal="${img.focal}"` : ''} placeholder="Image URL https://…" value="${img.url || ''}">
+          <input class="form-input ss-img-alt" data-i="${i}" placeholder="Image alt text" value="${img.alt || ''}">
+        </div>`;
+
+      item.querySelector('.ss-title').addEventListener('input', e => {
+        section.sticky_steps[i].title = e.target.value;
+        scheduleAutosave();
+      });
+      item.querySelector('.ss-body').addEventListener('input', e => {
+        section.sticky_steps[i].body = e.target.value;
+        scheduleAutosave();
+      });
+      item.querySelector('.ss-img-url').addEventListener('input', e => {
+        if (!section.sticky_steps[i].image) section.sticky_steps[i].image = {};
+        section.sticky_steps[i].image.url = e.target.value;
+        scheduleAutosave();
+      });
+      item.querySelector('.ss-img-alt').addEventListener('input', e => {
+        if (!section.sticky_steps[i].image) section.sticky_steps[i].image = {};
+        section.sticky_steps[i].image.alt = e.target.value;
+        scheduleAutosave();
+      });
+
+      const delBtn = item.querySelector('.block-item__delete');
+      if (delBtn) {
+        delBtn.addEventListener('click', () => {
+          section.sticky_steps.splice(i, 1);
+          scheduleAutosave();
+          renderStepsAndInit();
+        });
+      }
+
+      list.appendChild(item);
+    });
+  }
+
+  function renderStepsAndInit() {
+    renderSteps();
+    if (window.initImageFields) {
+      initImageFields(projectId, (fieldId, url, focal) => {
+        const match = fieldId.match(/^ss-img-url-\d+-(\d+)$/);
+        if (!match) return;
+        const idx = parseInt(match[1]);
+        if (!section.sticky_steps[idx]) return;
+        if (!section.sticky_steps[idx].image) section.sticky_steps[idx].image = {};
+        section.sticky_steps[idx].image.focal = focal === '50% 50%' ? undefined : focal;
+        scheduleAutosave();
+      }, list);
+    }
+  }
+
+  renderStepsAndInit();
+
+  const newAddBtn = document.getElementById('addStickyStepBtn').cloneNode(true);
+  document.getElementById('addStickyStepBtn').parentNode.replaceChild(newAddBtn, document.getElementById('addStickyStepBtn'));
+  newAddBtn.addEventListener('click', () => {
+    section.sticky_steps.push({ title: '', body: '', image: { url: '', alt: '' } });
+    scheduleAutosave();
+    renderStepsAndInit();
+    const inputs = list.querySelectorAll('.ss-title');
+    if (inputs.length) inputs[inputs.length - 1].focus();
+  });
+}
+
 // ── Crossfade editor ─────────────────────────────────────────────
 
 function initCrossfadeEditor(sectionIndex) {
@@ -2499,7 +2720,7 @@ function initCrossfadeEditor(sectionIndex) {
           ${i > 0 ? `<button type="button" class="block-item__delete" data-i="${i}" title="Remove slide">✕</button>` : ''}
         </div>
         <div style="padding:0.5rem;display:flex;flex-direction:column;gap:0.4rem">
-          <input class="form-input cf-img-url" data-i="${i}" placeholder="Image URL https://…" value="${img.url || ''}">
+          <input class="form-input cf-img-url" id="cf-img-url-${sectionIndex}-${i}" data-image-field data-i="${i}" ${img.focal ? `data-existing-focal="${img.focal}"` : ''} placeholder="Image URL https://…" value="${img.url || ''}">
           <input class="form-input cf-img-alt" data-i="${i}" placeholder="Image alt text" value="${img.alt || ''}">
           <textarea class="form-textarea cf-phase-text" data-i="${i}" placeholder="Phase text (shown as this image appears)…" rows="3">${phase.text || ''}</textarea>
           <input class="form-input cf-phase-attr" data-i="${i}" placeholder="Attribution (optional)" value="${phase.attribution || ''}">
@@ -2532,7 +2753,7 @@ function initCrossfadeEditor(sectionIndex) {
           section.crossfade_images.splice(i, 1);
           section.crossfade_phases.splice(i, 1);
           scheduleAutosave();
-          renderPairs();
+          renderPairsAndInit();
         });
       }
 
@@ -2540,7 +2761,21 @@ function initCrossfadeEditor(sectionIndex) {
     });
   }
 
-  renderPairs();
+  function renderPairsAndInit() {
+    renderPairs();
+    if (window.initImageFields) {
+      initImageFields(projectId, (fieldId, url, focal) => {
+        const match = fieldId.match(/^cf-img-url-\d+-(\d+)$/);
+        if (!match) return;
+        const idx = parseInt(match[1]);
+        if (!section.crossfade_images[idx]) return;
+        section.crossfade_images[idx].focal = focal === '50% 50%' ? undefined : focal;
+        scheduleAutosave();
+      }, list);
+    }
+  }
+
+  renderPairsAndInit();
 
   // Add button
   const newAddBtn = document.getElementById('addCrossfadeBtn').cloneNode(true);
@@ -2549,7 +2784,7 @@ function initCrossfadeEditor(sectionIndex) {
     section.crossfade_images.push({ url: '', alt: '' });
     section.crossfade_phases.push({ text: '', attribution: '' });
     scheduleAutosave();
-    renderPairs();
+    renderPairsAndInit();
     // Focus new URL input
     const inputs = list.querySelectorAll('.cf-img-url');
     if (inputs.length) inputs[inputs.length - 1].focus();
