@@ -13,7 +13,7 @@
   align-items: center;
   justify-content: space-between;
   padding: 1.5rem var(--hse-page-pad);
-  /* No background by default — transparent over all sections */
+  background: transparent;
   transition:
     background var(--hse-duration-mid),
     backdrop-filter var(--hse-duration-mid);
