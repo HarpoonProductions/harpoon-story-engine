@@ -15,7 +15,16 @@
   overflow: hidden;
 }
 
-/* ── Horizontal track ────────────────────────────────────────────── */
+/* ── Single-image mode: background pans via backgroundPositionX ──── */
+
+.hse-pan__sticky--single {
+  background-size: auto 100%;  /* natural width at viewport height — image must be wider than viewport */
+  background-repeat: no-repeat;
+  background-position: left center;  /* GSAP animates this to right center */
+  will-change: background-position;
+}
+
+/* ── Multi-image mode: horizontal track translated by GSAP ────────── */
 
 .hse-pan__track {
   display: flex;
@@ -72,24 +81,31 @@
   line-height: 1.15;
 }
 
-/* ── Text overlays (bottom of viewport, outside track) ──────────── */
+/* ── Text overlays ───────────────────────────────────────────────── */
 
 .hse-pan__texts {
   position: absolute;
-  bottom: 5.5rem;
-  left: var(--hse-page-pad);
-  right: var(--hse-page-pad);
-  max-width: 640px;
+  inset: 0;
   z-index: 2;
+  pointer-events: none;
 }
 
 .hse-pan__text-item {
   position: absolute;
-  inset: 0;
+  /* Default: bottom-left. Overridden per-item via --tx / --ty */
+  left: var(--tx, var(--hse-page-pad));
+  top: var(--ty, auto);
+  bottom: var(--ty, 5.5rem);
+  max-width: min(600px, 80vw);
   opacity: 0;
-  transform: translateY(14px);
-  transition: opacity 0.55s var(--hse-ease-out, ease), transform 0.55s var(--hse-ease-out, ease);
+  transform: translateY(10px);
+  transition: opacity 0.5s var(--hse-ease-out, ease), transform 0.5s var(--hse-ease-out, ease);
   pointer-events: none;
+}
+
+/* When --ty is set, use it for top and clear bottom */
+.hse-pan__text-item[style*="--ty"] {
+  bottom: auto;
 }
 
 .hse-pan__text-item.is-active {
@@ -140,11 +156,16 @@
 /* ── Mobile ──────────────────────────────────────────────────────── */
 
 @media (max-width: 768px) {
-  .hse-pan__texts {
-    bottom: 4rem;
-  }
   .hse-pan__text {
     font-size: clamp(1rem, 4vw, 1.2rem);
+  }
+  /* Single-image: show static on mobile, no pan */
+  .hse-pan__sticky--single {
+    background-position: center center !important;
+    background-size: cover;
+  }
+  .hse-section--panoramic-scroll[data-pan-mode="single"] {
+    height: 100vh;
   }
 }
 
@@ -157,6 +178,11 @@
   .hse-pan__sticky {
     position: relative;
     height: auto;
+    min-height: 70vh;
+  }
+  .hse-pan__sticky--single {
+    background-size: cover;
+    background-position: center !important;
   }
   .hse-pan__track {
     flex-direction: column;
@@ -170,21 +196,16 @@
     position: absolute;
     inset: 0;
   }
-  .hse-pan__texts {
-    position: relative;
-    bottom: auto;
-    padding: var(--hse-space-md) var(--hse-page-pad);
-    max-width: none;
-  }
   .hse-pan__text-item {
     position: relative;
+    left: auto; top: auto; bottom: auto;
     opacity: 1;
     transform: none;
     pointer-events: auto;
+    padding: var(--hse-space-md) var(--hse-page-pad);
+    max-width: none;
   }
-  .hse-pan__text-item:not(.is-active) {
-    display: none;
-  }
+  .hse-pan__text-item:not(.is-active) { display: none; }
   .hse-pan__gradient,
   .hse-pan__progress { display: none; }
 }

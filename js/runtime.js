@@ -837,12 +837,10 @@
 
   function setupPanoramicScroll() {
     document.querySelectorAll(".hse-section--panoramic-scroll").forEach(function (section) {
-      var track     = section.querySelector(".hse-pan__track");
-      var panels    = Array.from(section.querySelectorAll(".hse-pan__panel"));
       var textItems = Array.from(section.querySelectorAll(".hse-pan__text-item"));
       var dots      = Array.from(section.querySelectorAll(".hse-pan__dot"));
-
-      if (!track || panels.length < 2) return;
+      var mode      = section.dataset.panMode; // "single" or "multi"
+      var count     = textItems.length || 1;
 
       var currentIndex = 0;
 
@@ -857,22 +855,41 @@
         });
       }
 
-      // GSAP scrub: translate the track as the section scrolls
-      gsap.to(track, {
-        x: function () { return -(panels.length - 1) * window.innerWidth; },
-        ease: "none",
-        scrollTrigger: {
-          trigger: section,
-          start: "top top",
-          end: "bottom bottom",
-          scrub: 1.2,
-          invalidateOnRefresh: true,
-          onUpdate: function (self) {
-            var index = Math.round(self.progress * (panels.length - 1));
-            setActivePanel(index);
-          },
+      var scrollTriggerConfig = {
+        trigger: section,
+        start: "top top",
+        end: "bottom bottom",
+        scrub: 1.2,
+        invalidateOnRefresh: true,
+        onUpdate: function (self) {
+          var index = Math.round(self.progress * (count - 1));
+          setActivePanel(index);
         },
-      });
+      };
+
+      if (mode === "single") {
+        // ── Single-image: animate backgroundPositionX on sticky ──────
+        var sticky = section.querySelector(".hse-pan__sticky--single");
+        if (!sticky) return;
+        gsap.fromTo(sticky,
+          { backgroundPosition: "0% 50%" },
+          {
+            backgroundPosition: "100% 50%",
+            ease: "none",
+            scrollTrigger: scrollTriggerConfig,
+          }
+        );
+      } else {
+        // ── Multi-image: translate the track ─────────────────────────
+        var track  = section.querySelector(".hse-pan__track");
+        var panels = Array.from(section.querySelectorAll(".hse-pan__panel"));
+        if (!track || panels.length < 2) return;
+        gsap.to(track, {
+          x: function () { return -(panels.length - 1) * window.innerWidth; },
+          ease: "none",
+          scrollTrigger: scrollTriggerConfig,
+        });
+      }
     });
   }
 

@@ -643,17 +643,28 @@
           },
           "description": "One or more composed photo groups within this section. Rendered in order between body content."
         },
+        "panoramic_image": {
+          "$ref": "#/definitions/image",
+          "description": "Used by panoramic-scroll single-image mode. One wide image whose backgroundPositionX is animated for a seamless pan."
+        },
         "panoramic_panels": {
           "type": "array",
           "items": {
             "type": "object",
             "properties": {
-              "image":       { "$ref": "#/definitions/image" },
-              "text":        { "type": "string" },
-              "attribution": { "type": "string" }
+              "image":         { "$ref": "#/definitions/image" },
+              "text":          { "type": "string" },
+              "attribution":   { "type": "string" },
+              "text_position": {
+                "type": "object",
+                "properties": {
+                  "x": { "type": "number", "minimum": 0, "maximum": 100 },
+                  "y": { "type": "number", "minimum": 0, "maximum": 100 }
+                }
+              }
             }
           },
-          "description": "Used by panoramic-scroll layout. Each panel is a full-viewport image that pans into view horizontally."
+          "description": "Used by panoramic-scroll layout. In single-image mode, panels supply text overlays only. In multi-image mode, each panel also carries its own image."
         },
         "crossfade_images": {
           "type": "array",

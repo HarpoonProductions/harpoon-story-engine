@@ -1368,8 +1368,14 @@
                                 <!-- Panoramic scroll editor (shown only for panoramic-scroll layout) -->
                                 <div id="panoramicScrollEditor" style="display:none">
                                   <div class="form-group">
+                                    <label class="form-label">Panoramic image</label>
+                                    <p class="form-hint">Upload one wide image (2:1 or wider) for perfectly seamless panning. Leave blank to use per-panel images instead.</p>
+                                    <input class="form-input" id="pan-single-img-url" data-image-field placeholder="Image URL https://…">
+                                    <input class="form-input" id="pan-single-img-alt" placeholder="Image alt text" style="margin-top:0.35rem">
+                                  </div>
+                                  <div class="form-group">
                                     <label class="form-label">Panels</label>
-                                    <p class="form-hint">Each panel is a full-viewport image that pans into view. Add optional overlay text per panel.</p>
+                                    <p class="form-hint">Each panel = one "screen" of scroll. Add overlay text and set its position on the image. In single-image mode, panels don't need images.</p>
                                     <div id="panoramicPanelsList"></div>
                                     <button type="button" class="tbtn tbtn--ghost" id="addPanoramicPanelBtn" style="margin-top:0.5rem;width:100%;justify-content:center">+ Add panel</button>
                                   </div>
@@ -2634,13 +2640,104 @@ function initPanoramicScrollEditor(sectionIndex) {
 
   if (!section.panoramic_panels) section.panoramic_panels = [];
   if (section.panoramic_panels.length === 0) {
-    section.panoramic_panels.push({ image: { url: '', alt: '' }, text: '', attribution: '' });
+    section.panoramic_panels.push({ text: '', attribution: '' });
+  }
+  if (!section.panoramic_image) section.panoramic_image = { url: '', alt: '' };
+
+  // ── Wire single panoramic image ───────────────────────────────────
+  const singleUrlInput = document.getElementById('pan-single-img-url');
+  const singleAltInput = document.getElementById('pan-single-img-alt');
+
+  // Reset enhancement so image-field re-initialises correctly
+  singleUrlInput.dataset.enhanced = '';
+  singleUrlInput.id = `pan-single-img-url-${sectionIndex}`;
+  singleUrlInput.setAttribute('data-image-field', '');
+  singleUrlInput.value = section.panoramic_image.url || '';
+  if (section.panoramic_image.focal) singleUrlInput.dataset.existingFocal = section.panoramic_image.focal;
+  singleAltInput.value = section.panoramic_image.alt || '';
+
+  singleUrlInput.addEventListener('input', e => {
+    section.panoramic_image.url = e.target.value; scheduleAutosave();
+  });
+  singleAltInput.addEventListener('input', e => {
+    section.panoramic_image.alt = e.target.value; scheduleAutosave();
+  });
+
+  if (window.initImageFields) {
+    initImageFields(projectId, (fieldId, url, focal) => {
+      if (fieldId !== `pan-single-img-url-${sectionIndex}`) return;
+      section.panoramic_image.focal = focal === '50% 50%' ? undefined : focal;
+      scheduleAutosave();
+    }, editor);
+  }
+
+  // ── Panels ────────────────────────────────────────────────────────
+
+  function addTextPositionPicker(container, panel, i) {
+    const imageUrl = (section.panoramic_image && section.panoramic_image.url) ||
+                     (panel.image && panel.image.url) || '';
+    const tx = panel.text_position ? panel.text_position.x : 8;
+    const ty = panel.text_position ? panel.text_position.y : 78;
+
+    const wrap = document.createElement('div');
+    wrap.innerHTML = `
+      <div class="focal-label" style="margin-top:0.5rem">
+        <span class="focal-label-text" style="--icon:'◧'">Text position</span>
+        <div style="display:flex;align-items:center;gap:0.5rem">
+          <span class="focal-coords" id="txpos-coords-${i}">${tx}% ${ty}%</span>
+          <button type="button" class="focal-reset" id="txpos-reset-${i}">Reset</button>
+        </div>
+      </div>
+      <div class="focal-canvas" id="txpos-canvas-${i}" style="cursor:crosshair">
+        <img id="txpos-img-${i}" src="${imageUrl}" alt="" style="opacity:${imageUrl ? 1 : 0.15}">
+        <div class="focal-dot" id="txpos-dot-${i}"
+             style="left:${tx}%;top:${ty}%;background:var(--accent);font-size:8px;color:#fff;display:flex;align-items:center;justify-content:center">T</div>
+      </div>`;
+    container.appendChild(wrap);
+
+    const canvas = wrap.querySelector('.focal-canvas');
+    const dot    = wrap.querySelector('.focal-dot');
+    const coords = wrap.querySelector('.focal-coords');
+    const img    = wrap.querySelector('img');
+    let dragging = false;
+
+    // Keep image in sync with panoramic_image upload
+    const singleInput = document.getElementById(`pan-single-img-url-${sectionIndex}`);
+    if (singleInput) {
+      singleInput.addEventListener('input', () => {
+        img.src = singleInput.value || (panel.image && panel.image.url) || '';
+        img.style.opacity = img.src ? 1 : 0.15;
+      });
+    }
+
+    function setPos(x, y) {
+      const px = Math.round(Math.max(0, Math.min(100, x * 100)));
+      const py = Math.round(Math.max(0, Math.min(100, y * 100)));
+      dot.style.left = px + '%';
+      dot.style.top  = py + '%';
+      coords.textContent = px + '% ' + py + '%';
+      if (!section.panoramic_panels[i].text_position) section.panoramic_panels[i].text_position = {};
+      section.panoramic_panels[i].text_position.x = px;
+      section.panoramic_panels[i].text_position.y = py;
+      scheduleAutosave();
+    }
+
+    function fromEvent(e) {
+      const r = canvas.getBoundingClientRect();
+      setPos((e.clientX - r.left) / r.width, (e.clientY - r.top) / r.height);
+    }
+
+    canvas.addEventListener('mousedown', e => { dragging = true; fromEvent(e); e.preventDefault(); });
+    document.addEventListener('mousemove', e => { if (dragging) fromEvent(e); });
+    document.addEventListener('mouseup',   () => { dragging = false; });
+    wrap.querySelector('.focal-reset').addEventListener('click', () => setPos(0.08, 0.78));
   }
 
   function renderPanels() {
     list.innerHTML = '';
     section.panoramic_panels.forEach((panel, i) => {
       const img  = panel.image || {};
+      const hasSingleImg = !!(section.panoramic_image && section.panoramic_image.url);
       const item = document.createElement('div');
       item.className = 'block-item';
       item.innerHTML = `
@@ -2648,21 +2745,25 @@ function initPanoramicScrollEditor(sectionIndex) {
           <span style="font-family:var(--font-mono);font-size:0.6rem;letter-spacing:0.1em;color:var(--ink-3)">PANEL ${i + 1}</span>
           ${i > 0 ? `<button type="button" class="block-item__delete" data-i="${i}" title="Remove panel">✕</button>` : ''}
         </div>
-        <div style="padding:0.5rem;display:flex;flex-direction:column;gap:0.4rem">
+        <div class="pan-panel-body" style="padding:0.5rem;display:flex;flex-direction:column;gap:0.4rem">
+          ${!hasSingleImg ? `
           <input class="form-input pan-img-url" id="pan-img-url-${sectionIndex}-${i}" data-image-field data-i="${i}" ${img.focal ? `data-existing-focal="${img.focal}"` : ''} placeholder="Image URL https://…" value="${img.url || ''}">
           <input class="form-input pan-img-alt" data-i="${i}" placeholder="Image alt text" value="${img.alt || ''}">
+          ` : ''}
           <textarea class="form-textarea pan-text" data-i="${i}" placeholder="Overlay text (optional)…" rows="2">${panel.text || ''}</textarea>
           <input class="form-input pan-attribution" data-i="${i}" placeholder="Attribution (optional)" value="${panel.attribution || ''}">
         </div>`;
 
-      item.querySelector('.pan-img-url').addEventListener('input', e => {
-        if (!section.panoramic_panels[i].image) section.panoramic_panels[i].image = {};
-        section.panoramic_panels[i].image.url = e.target.value; scheduleAutosave();
-      });
-      item.querySelector('.pan-img-alt').addEventListener('input', e => {
-        if (!section.panoramic_panels[i].image) section.panoramic_panels[i].image = {};
-        section.panoramic_panels[i].image.alt = e.target.value; scheduleAutosave();
-      });
+      if (!hasSingleImg) {
+        item.querySelector('.pan-img-url').addEventListener('input', e => {
+          if (!section.panoramic_panels[i].image) section.panoramic_panels[i].image = {};
+          section.panoramic_panels[i].image.url = e.target.value; scheduleAutosave();
+        });
+        item.querySelector('.pan-img-alt').addEventListener('input', e => {
+          if (!section.panoramic_panels[i].image) section.panoramic_panels[i].image = {};
+          section.panoramic_panels[i].image.alt = e.target.value; scheduleAutosave();
+        });
+      }
       item.querySelector('.pan-text').addEventListener('input', e => {
         section.panoramic_panels[i].text = e.target.value; scheduleAutosave();
       });
@@ -2676,6 +2777,18 @@ function initPanoramicScrollEditor(sectionIndex) {
           section.panoramic_panels.splice(i, 1);
           scheduleAutosave();
           renderPanelsAndInit();
+        });
+      }
+
+      // Text position picker (only shown when panel has text)
+      if (panel.text) {
+        addTextPositionPicker(item.querySelector('.pan-panel-body'), panel, i);
+      } else {
+        // Show picker after text is entered
+        item.querySelector('.pan-text').addEventListener('input', function onFirstText() {
+          if (this.value && !item.querySelector('.focal-canvas')) {
+            addTextPositionPicker(item.querySelector('.pan-panel-body'), panel, i);
+          }
         });
       }
 
@@ -2704,11 +2817,11 @@ function initPanoramicScrollEditor(sectionIndex) {
   const newBtn = addBtn.cloneNode(true);
   addBtn.parentNode.replaceChild(newBtn, addBtn);
   newBtn.addEventListener('click', () => {
-    section.panoramic_panels.push({ image: { url: '', alt: '' }, text: '', attribution: '' });
+    section.panoramic_panels.push({ text: '', attribution: '' });
     scheduleAutosave();
     renderPanelsAndInit();
-    const inputs = list.querySelectorAll('.pan-img-url');
-    if (inputs.length) inputs[inputs.length - 1].focus();
+    const textareas = list.querySelectorAll('.pan-text');
+    if (textareas.length) textareas[textareas.length - 1].focus();
   });
 }
 
