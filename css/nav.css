@@ -32,10 +32,15 @@
 }
 
 .hse-nav__logo {
-  height: 28px;
+  height: 44px;
   width: auto;
   display: block;
   object-fit: contain;
+  transition: height 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+#hse-nav.hse-nav--solid .hse-nav__logo {
+  height: 28px;
 }
 
 .hse-nav__links {
