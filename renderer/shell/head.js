@@ -118,6 +118,7 @@ function renderHead(meta, config, title, basePath, staging) {
   <link rel="stylesheet" href="${css('css/layouts/parallax.css')}">
   <link rel="stylesheet" href="${css('css/layouts/fullbleed-quote.css')}">
   <link rel="stylesheet" href="${css('css/layouts/reveal-crossfade.css')}">
+  <link rel="stylesheet" href="${css('css/layouts/panoramic-scroll.css')}">
 
   <!-- Per-project brand tokens -->
   <style>
