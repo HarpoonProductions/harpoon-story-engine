@@ -841,6 +841,7 @@
       var dots      = Array.from(section.querySelectorAll(".hse-pan__dot"));
       var mode      = section.dataset.panMode; // "single" or "multi"
       var count     = textItems.length || 1;
+      var isMobile  = window.matchMedia("(max-width: 768px)").matches;
 
       var currentIndex = 0;
 
@@ -855,26 +856,38 @@
         });
       }
 
-      var scrollTriggerConfig = {
+      // Mobile: snap softly to each panel stop after the user lifts their finger
+      var snapConfig = (isMobile && count > 1) ? {
+        snap: {
+          snapTo: 1 / (count - 1),
+          duration: { min: 0.2, max: 0.5 },
+          ease: "power2.inOut",
+        }
+      } : {};
+
+      var scrollTriggerConfig = Object.assign({
         trigger: section,
         start: "top top",
         end: "bottom bottom",
-        scrub: 1.2,
+        scrub: isMobile ? 0.8 : 1.2,
         invalidateOnRefresh: true,
         onUpdate: function (self) {
           var index = Math.round(self.progress * (count - 1));
           setActivePanel(index);
         },
-      };
+      }, snapConfig);
 
       if (mode === "single") {
         // ── Single-image: animate backgroundPositionX on sticky ──────
         var sticky = section.querySelector(".hse-pan__sticky--single");
         if (!sticky) return;
+        // Mobile: subtle pan within portrait crop (40% travel), desktop: full sweep
+        var fromPos = isMobile ? "30% 50%" : "0% 50%";
+        var toPos   = isMobile ? "70% 50%" : "100% 50%";
         gsap.fromTo(sticky,
-          { backgroundPosition: "0% 50%" },
+          { backgroundPosition: fromPos },
           {
-            backgroundPosition: "100% 50%",
+            backgroundPosition: toPos,
             ease: "none",
             scrollTrigger: scrollTriggerConfig,
           }

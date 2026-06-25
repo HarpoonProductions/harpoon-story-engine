@@ -159,13 +159,16 @@
   .hse-pan__text {
     font-size: clamp(1rem, 4vw, 1.2rem);
   }
-  /* Single-image: show static on mobile, no pan */
+  /* Single-image: cover the portrait viewport, GSAP does a subtle pan */
   .hse-pan__sticky--single {
-    background-position: center center !important;
     background-size: cover;
+    /* GSAP overrides background-position at runtime — don't lock it here */
   }
-  .hse-section--panoramic-scroll[data-pan-mode="single"] {
-    height: 100vh;
+  /* Text overlays: always anchor to bottom on mobile regardless of desktop position */
+  .hse-pan__text-item {
+    left: var(--hse-page-pad) !important;
+    top: auto !important;
+    bottom: 5.5rem !important;
   }
 }
 
