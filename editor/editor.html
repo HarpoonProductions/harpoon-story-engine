@@ -1431,14 +1431,20 @@
                                 <!-- Carousel editor (shown only for scroll-carousel layout) -->
                                 <div id="carouselEditor" style="display:none">
                                   <div class="form-group">
-                                    <label class="form-label">Carousel cards</label>
-                                    <p class="form-hint">Each card has an image, number label and text</p>
+                                    <label class="form-label">Section title</label>
+                                    <input class="form-input" id="sc-section-title" placeholder="Optional heading above the cards">
+                                  </div>
+                                  <div class="form-group">
+                                    <label class="form-label">Intro text</label>
+                                    <textarea class="form-textarea" id="sc-section-intro" rows="2" placeholder="Optional intro paragraph"></textarea>
+                                  </div>
+                                  <div class="form-group">
+                                    <label class="form-label">Cards</label>
+                                    <p class="form-hint">Each card scrolls into view horizontally. Add an image, number badge, and body text per card.</p>
                                     <div id="carouselList"></div>
                                     <button type="button" class="tbtn tbtn--ghost" id="addCarouselBtn" style="margin-top:0.5rem;width:100%;justify-content:center">+ Add card</button>
                                   </div>
                                 </div>
-
-                                <!-- Carousel editor (shown only for scroll-carousel layout) -->
                                 
 
                                 <!-- Text blocks editor (shown only for text layout) -->
@@ -2533,22 +2539,38 @@ function initCarouselEditor(sectionIndex) {
   if (!isSC) return;
 
   if (!section.carousel_cards) section.carousel_cards = [];
+  if (section.carousel_cards.length === 0) {
+    section.carousel_cards.push({ image: { url: '', alt: '' }, number: '01', text: '' });
+  }
 
+  // ── Section-level fields ──────────────────────────────────────────
+  const titleInput = document.getElementById('sc-section-title');
+  const introInput = document.getElementById('sc-section-intro');
+  titleInput.value = section.title || '';
+  introInput.value = section.intro || '';
+
+  titleInput.oninput = e => { section.title = e.target.value; scheduleAutosave(); };
+  introInput.oninput = e => { section.intro = e.target.value; scheduleAutosave(); };
+
+  // ── Cards ─────────────────────────────────────────────────────────
   function renderCards() {
     list.innerHTML = '';
     section.carousel_cards.forEach((card, i) => {
+      const img  = card.image || {};
       const item = document.createElement('div');
       item.className = 'block-item';
       item.innerHTML = `
         <div class="block-item__header">
           <span style="font-family:var(--font-mono);font-size:0.6rem;letter-spacing:0.1em;color:var(--ink-3)">CARD ${i + 1}</span>
-          ${i > 0 ? '<button type="button" class="block-item__delete" title="Remove">✕</button>' : ''}
+          ${i > 0 ? `<button type="button" class="block-item__delete" title="Remove card">✕</button>` : ''}
         </div>
         <div style="padding:0.5rem;display:flex;flex-direction:column;gap:0.4rem">
-          <input class="form-input sc-img-url" placeholder="Image URL https://…" value="${(card.image && card.image.url) || ''}">
-          <input class="form-input sc-img-alt" placeholder="Image alt text" value="${(card.image && card.image.alt) || ''}">
-          <input class="form-input sc-number" placeholder="Number label e.g. 01" value="${card.number || ''}">
-          <textarea class="form-textarea sc-text" placeholder="Card text…" rows="4">${card.text || ''}</textarea>
+          <input class="form-input sc-img-url" id="sc-img-url-${sectionIndex}-${i}" data-image-field
+                 ${img.focal ? `data-existing-focal="${img.focal}"` : ''}
+                 placeholder="Image URL https://…" value="${img.url || ''}">
+          <input class="form-input sc-img-alt" placeholder="Image alt text" value="${img.alt || ''}">
+          <input class="form-input sc-number" placeholder="Number badge e.g. 01" value="${card.number || ''}">
+          <textarea class="form-textarea sc-text" placeholder="Card body text (shown below the cards as you scroll)…" rows="4">${card.text || ''}</textarea>
         </div>`;
 
       item.querySelector('.sc-img-url').addEventListener('input', e => {
@@ -2575,7 +2597,7 @@ function initCarouselEditor(sectionIndex) {
         delBtn.addEventListener('click', () => {
           section.carousel_cards.splice(i, 1);
           scheduleAutosave();
-          renderCards();
+          renderCardsAndInit();
         });
       }
 
@@ -2583,17 +2605,33 @@ function initCarouselEditor(sectionIndex) {
     });
   }
 
-  renderCards();
+  function renderCardsAndInit() {
+    renderCards();
+    if (window.initImageFields) {
+      initImageFields(projectId, (fieldId, url, focal) => {
+        const match = fieldId.match(/^sc-img-url-\d+-(\d+)$/);
+        if (!match) return;
+        const idx = parseInt(match[1]);
+        if (!section.carousel_cards[idx]) return;
+        if (!section.carousel_cards[idx].image) section.carousel_cards[idx].image = {};
+        section.carousel_cards[idx].image.focal = focal === '50% 50%' ? undefined : focal;
+        scheduleAutosave();
+      }, list);
+    }
+  }
+
+  renderCardsAndInit();
 
   const addBtn = document.getElementById('addCarouselBtn');
   const newBtn = addBtn.cloneNode(true);
   addBtn.parentNode.replaceChild(newBtn, addBtn);
   newBtn.addEventListener('click', () => {
-    section.carousel_cards.push({ image: { url: '', alt: '' }, number: String(section.carousel_cards.length + 1).padStart(2, '0'), text: '' });
+    const n = section.carousel_cards.length + 1;
+    section.carousel_cards.push({ image: { url: '', alt: '' }, number: String(n).padStart(2, '0'), text: '' });
     scheduleAutosave();
-    renderCards();
-    const inputs = list.querySelectorAll('.sc-img-url');
-    if (inputs.length) inputs[inputs.length - 1].focus();
+    renderCardsAndInit();
+    const textareas = list.querySelectorAll('.sc-text');
+    if (textareas.length) textareas[textareas.length - 1].focus();
   });
 }
 
