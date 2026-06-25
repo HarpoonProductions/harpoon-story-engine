@@ -10,7 +10,7 @@ const { escHtml } = require('./head');
  * @param {Array}  sections - content.sections
  * @returns {string} HTML string
  */
-function renderNav(meta, sections) {
+function renderNav(meta, sections, registryLogoUrl) {
   const navSections = sections.filter(s => !s.nav_exclude);
 
   const links = navSections.map(s => {
@@ -18,8 +18,9 @@ function renderNav(meta, sections) {
     return `<li><a href="#${s.id}">${label}</a></li>`;
   }).join('\n      ');
 
-  const brand = meta.logo_url
-    ? `<a class="hse-nav__brand" href="#hse-cover"><img class="hse-nav__logo" src="${escHtml(meta.logo_url)}" alt="${escHtml(meta.title)}"></a>`
+  const logoUrl = meta.logo_url || registryLogoUrl || null;
+  const brand = logoUrl
+    ? `<a class="hse-nav__brand" href="#hse-cover"><img class="hse-nav__logo" src="${escHtml(logoUrl)}" alt="${escHtml(meta.title)}"></a>`
     : `<a class="hse-nav__brand" href="#hse-cover">${escHtml(meta.title)}</a>`;
 
   return `

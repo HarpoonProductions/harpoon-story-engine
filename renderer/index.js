@@ -43,8 +43,17 @@ function render(content, outputDir, options) {
     ? opts.basePath
     : meta.project_id || "";
 
+  // Resolve logo URL from registry (meta.logo_url takes precedence per story)
+  const registryPath = path.join(__dirname, '../tokens/registry.json');
+  const registry = fs.existsSync(registryPath)
+    ? JSON.parse(fs.readFileSync(registryPath, 'utf8'))
+    : { token_sets: [] };
+  const tokenSetId = meta.token_set || 'default';
+  const registryEntry = registry.token_sets.find(ts => ts.id === tokenSetId);
+  const registryLogoUrl = registryEntry?.logo_url || null;
+
   // Build the single-page HTML document
-  const html = buildPage(meta, config, cover, sections, basePath);
+  const html = buildPage(meta, config, cover, sections, basePath, registryLogoUrl);
 
   const outPath = path.join(outputDir, "index.html");
   fs.writeFileSync(outPath, html, "utf8");
@@ -54,12 +63,12 @@ function render(content, outputDir, options) {
 
 // ── Page assembly ─────────────────────────────────────────────────
 
-function buildPage(meta, config, cover, sections, basePath) {
+function buildPage(meta, config, cover, sections, basePath, registryLogoUrl) {
   const base = basePath
     ? "/" + basePath.replace(/^\//, "").replace(/\/$/, "")
     : "";
   const head = renderHead(meta, config, null, basePath);
-  const nav = renderNav(meta, sections);
+  const nav = renderNav(meta, sections, registryLogoUrl);
   const coverHtml = renderCover(cover);
 
   // Sections: render each, or stub if renderer not yet built
