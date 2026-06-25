@@ -568,7 +568,8 @@
             "reveal-crossfade",
             "text",
             "custom-html",
-            "scroll-carousel"
+            "scroll-carousel",
+            "panoramic-scroll"
           ],
           "default": "default",
           "description": "Rendering template for this section. fullbleed-quote: full-viewport hero_image with pull_quote overlaid. reveal-crossfade: two images crossfade on scroll, driven by crossfade_images and crossfade_phases."
@@ -641,6 +642,18 @@
             "$ref": "#/definitions/photo_cluster"
           },
           "description": "One or more composed photo groups within this section. Rendered in order between body content."
+        },
+        "panoramic_panels": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "image":       { "$ref": "#/definitions/image" },
+              "text":        { "type": "string" },
+              "attribution": { "type": "string" }
+            }
+          },
+          "description": "Used by panoramic-scroll layout. Each panel is a full-viewport image that pans into view horizontally."
         },
         "crossfade_images": {
           "type": "array",
