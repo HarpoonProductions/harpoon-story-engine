@@ -402,6 +402,48 @@
                 text-transform: uppercase;
                 white-space: nowrap;
             }
+            .section-item__drag {
+                cursor: grab;
+                color: var(--ink-3);
+                font-size: 0.75rem;
+                line-height: 1;
+                padding: 0 2px;
+                opacity: 0;
+                flex-shrink: 0;
+                transition: opacity 0.1s;
+                user-select: none;
+            }
+            .section-item:hover .section-item__drag,
+            .section-item.is-active .section-item__drag {
+                opacity: 0.5;
+            }
+            .section-item__drag:hover { opacity: 1 !important; }
+            .section-item__move {
+                display: flex;
+                flex-direction: column;
+                gap: 1px;
+                opacity: 0;
+                flex-shrink: 0;
+                transition: opacity 0.1s;
+            }
+            .section-item:hover .section-item__move,
+            .section-item.is-active .section-item__move {
+                opacity: 1;
+            }
+            .section-item__move button {
+                background: none;
+                border: none;
+                color: var(--ink-3);
+                cursor: pointer;
+                padding: 1px 3px;
+                font-size: 0.55rem;
+                line-height: 1;
+                border-radius: 1px;
+            }
+            .section-item__move button:hover { color: var(--accent); background: var(--bg-3); }
+            .section-item__move button:disabled { opacity: 0.2; cursor: default; }
+            .section-item.is-dragging { opacity: 0.4; }
+            .section-item.drag-over { border-color: var(--accent) !important; background: var(--bg-2); }
             .add-section-btn {
                 margin-top: 0.5rem;
                 width: 100%;
@@ -2041,11 +2083,52 @@
                         "aria-label",
                         `${s.title || s.id || "Untitled"}, ${s.layout || "default"} layout`,
                     );
+                    const total = (content.sections || []).length;
+                    item.setAttribute("draggable", "true");
                     item.innerHTML = `
+      <span class="section-item__drag" aria-hidden="true" title="Drag to reorder">⠿</span>
       <span class="section-item__num" aria-hidden="true">${String(s.num || i + 1).padStart(2, "0")}</span>
       <span class="section-item__label" aria-hidden="true">${s.title || s.id || "Untitled"}</span>
-      <span class="section-item__layout" aria-hidden="true">${s.layout || "default"}</span>`;
-                    item.addEventListener("click", () => editSection(i));
+      <span class="section-item__layout" aria-hidden="true">${s.layout || "default"}</span>
+      <span class="section-item__move" aria-hidden="true">
+        <button tabindex="-1" data-dir="up" title="Move up" ${i === 0 ? "disabled" : ""}>▲</button>
+        <button tabindex="-1" data-dir="down" title="Move down" ${i === total - 1 ? "disabled" : ""}>▼</button>
+      </span>`;
+                    item.addEventListener("click", (e) => {
+                        if (e.target.closest(".section-item__move")) return;
+                        editSection(i);
+                    });
+                    item.querySelector("[data-dir='up']").addEventListener("click", (e) => {
+                        e.stopPropagation();
+                        if (i > 0) moveSection(i, i - 1);
+                    });
+                    item.querySelector("[data-dir='down']").addEventListener("click", (e) => {
+                        e.stopPropagation();
+                        if (i < total - 1) moveSection(i, i + 1);
+                    });
+                    // Drag-and-drop
+                    item.addEventListener("dragstart", (e) => {
+                        e.dataTransfer.effectAllowed = "move";
+                        e.dataTransfer.setData("text/plain", String(i));
+                        item.classList.add("is-dragging");
+                    });
+                    item.addEventListener("dragend", () => {
+                        document.querySelectorAll(".section-item").forEach(el => {
+                            el.classList.remove("is-dragging", "drag-over");
+                        });
+                    });
+                    item.addEventListener("dragover", (e) => {
+                        e.preventDefault();
+                        e.dataTransfer.dropEffect = "move";
+                        document.querySelectorAll(".section-item").forEach(el => el.classList.remove("drag-over"));
+                        item.classList.add("drag-over");
+                    });
+                    item.addEventListener("dragleave", () => item.classList.remove("drag-over"));
+                    item.addEventListener("drop", (e) => {
+                        e.preventDefault();
+                        const from = parseInt(e.dataTransfer.getData("text/plain"), 10);
+                        if (!isNaN(from) && from !== i) moveSection(from, i);
+                    });
                     list.appendChild(item);
                 });
 
@@ -2315,6 +2398,21 @@
                 renderSectionList();
                 scheduleAutosave();
                 document.querySelector(".add-section-btn").focus();
+            }
+
+            function moveSection(from, to) {
+                const moved = content.sections.splice(from, 1)[0];
+                content.sections.splice(to, 0, moved);
+                // Keep the active section tracking the moved item
+                if (activeSectionIndex === from) {
+                    activeSectionIndex = to;
+                } else if (from < activeSectionIndex && to >= activeSectionIndex) {
+                    activeSectionIndex--;
+                } else if (from > activeSectionIndex && to <= activeSectionIndex) {
+                    activeSectionIndex++;
+                }
+                renderSectionList();
+                scheduleAutosave();
             }
 
             window.addEventListener("beforeunload", (e) => {
