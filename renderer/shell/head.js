@@ -44,6 +44,7 @@ function renderHead(meta, config, title, basePath, staging) {
     : '';
 
   const css = (file) => base ? `${base}/${file}` : file;
+  const js  = (file) => base ? `${base}/${file}` : file;
 
   // Staging builds get noindex to prevent search engine indexing
   const robotsMeta = staging
@@ -87,8 +88,8 @@ function renderHead(meta, config, title, basePath, staging) {
   ${fontsHtml}
 
   <!-- GSAP + ScrollTrigger -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+  <script src="${js('js/vendor/gsap.min.js')}"></script>
+  <script src="${js('js/vendor/ScrollTrigger.min.js')}"></script>
 
   <!-- Story Engine styles -->
   <link rel="stylesheet" href="${css('css/tokens.css')}">
