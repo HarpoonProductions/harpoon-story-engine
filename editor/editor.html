@@ -2164,11 +2164,13 @@
                     }
                 }
                 syncBgControls();
-                bgUrlInput.addEventListener("input", () => {
+                const bgUrlFn = () => {
                     ensureBg().url = bgUrlInput.value;
                     syncBgControls();
                     scheduleAutosave();
-                });
+                };
+                bgUrlInput.addEventListener("input", bgUrlFn);
+                sectionEditorListeners.push({ el: bgUrlInput, fn: bgUrlFn });
 
                 wire("sec-nav-exclude", (v) => {
                     content.sections[index].nav_exclude = v;
