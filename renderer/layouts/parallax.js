@@ -34,7 +34,7 @@ function renderParallax(section) {
     : '';
 
   const intro = section.intro
-    ? `<p class="hse-section-intro hse-reveal">${escHtml(section.intro)}</p>`
+    ? section.intro.split(/\n\n+/).map(p => `<p class="hse-section-intro hse-reveal">${escHtml(p.trim())}</p>`).join("\n    ")
     : '';
 
   const pullQuote    = renderPullQuote(section.pull_quote);

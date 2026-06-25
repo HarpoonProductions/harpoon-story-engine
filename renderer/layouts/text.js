@@ -40,7 +40,7 @@ function renderText(section) {
     : '';
 
   const intro = section.intro
-    ? `<p class="hse-section-intro hse-reveal">${escHtml(section.intro)}</p>`
+    ? section.intro.split(/\n\n+/).map(p => `<p class="hse-section-intro hse-reveal">${escHtml(p.trim())}</p>`).join('\n    ')
     : '';
 
   return `<section class="hse-section hse-section--text${colorBleed}${wrapperAttrs}" id="${escHtml(section.id)}" data-layout="text">

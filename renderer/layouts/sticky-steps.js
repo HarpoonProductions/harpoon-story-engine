@@ -19,7 +19,7 @@ function renderStickySteps(section) {
     : '';
 
   const intro = section.intro
-    ? `<p class="hse-section-intro">${escHtml(section.intro)}</p>`
+    ? section.intro.split(/\n\n+/).map(p => `<p class="hse-section-intro">${escHtml(p.trim())}</p>`).join("\n    ")
     : '';
 
   // Visual panel — starts with the first step's image
