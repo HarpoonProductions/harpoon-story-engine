@@ -18,9 +18,13 @@ function renderNav(meta, sections) {
     return `<li><a href="#${s.id}">${label}</a></li>`;
   }).join('\n      ');
 
+  const brand = meta.logo_url
+    ? `<a class="hse-nav__brand" href="#hse-cover"><img class="hse-nav__logo" src="${escHtml(meta.logo_url)}" alt="${escHtml(meta.title)}"></a>`
+    : `<a class="hse-nav__brand" href="#hse-cover">${escHtml(meta.title)}</a>`;
+
   return `
 <nav id="hse-nav" aria-label="Publication sections">
-  <a class="hse-nav__brand" href="#hse-cover">${escHtml(meta.title)}</a>
+  ${brand}
   <ul class="hse-nav__links" role="list">
     ${links}
   </ul>

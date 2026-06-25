@@ -64,6 +64,7 @@ function renderVideoBg(video) {
 }
 
 function renderImageBg(image) {
+  if (!image.url) return '';
   const focalStyle = image.focal
     ? ` style="object-position: ${escHtml(image.focal)}"`
     : '';

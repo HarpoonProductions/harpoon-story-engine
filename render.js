@@ -31,6 +31,8 @@ const outFlagIndex = args.indexOf('--out');
 const outputDir = path.resolve(
   outFlagIndex !== -1 ? args[outFlagIndex + 1] : './output'
 );
+const baseFlagIndex = args.indexOf('--base');
+const basePath = baseFlagIndex !== -1 ? args[baseFlagIndex + 1] : undefined;
 
 // ── Load and validate ─────────────────────────────────────────────────────────
 
@@ -62,7 +64,7 @@ console.log(`\n✓ Schema valid — ${content.meta.project_id}`);
 fs.mkdirSync(outputDir, { recursive: true });
 
 try {
-  const files = render(content, outputDir);
+  const files = render(content, outputDir, basePath !== undefined ? { basePath } : undefined);
   console.log(`✓ Rendered ${files.length} file(s) to ${outputDir}`);
   files.forEach(f => console.log(`  → ${path.relative(outputDir, f)}`));
   console.log('');

@@ -60,11 +60,13 @@ jobs:
           TARGET="${{ github.event.inputs.target || 'production' }}"
           INPUT_PROJECT="${{ github.event.inputs.project }}"
 
+          BASE_PREFIX=$([ "$TARGET" = "staging" ] && echo "staging/" || echo "")
+
           if [ -n "$INPUT_PROJECT" ]; then
             echo "Fetching from Supabase: $INPUT_PROJECT"
             node fetch-content.js "$INPUT_PROJECT"
             echo "Rendering: $INPUT_PROJECT (target: $TARGET)"
-            node render.js "projects/${INPUT_PROJECT}/content.json" --out "dist/${INPUT_PROJECT}"
+            node render.js "projects/${INPUT_PROJECT}/content.json" --out "dist/${INPUT_PROJECT}" --base "${BASE_PREFIX}${INPUT_PROJECT}"
           else
             echo "No project specified — fetching all from Supabase"
             PROJECT_IDS=$(curl -s "${SUPABASE_URL}/rest/v1/story_engine_projects?select=project_id" \
@@ -77,7 +79,7 @@ jobs:
               echo "Fetching: $PROJECT_ID"
               node fetch-content.js "$PROJECT_ID"
               echo "Rendering: $PROJECT_ID"
-              node render.js "projects/${PROJECT_ID}/content.json" --out "dist/${PROJECT_ID}"
+              node render.js "projects/${PROJECT_ID}/content.json" --out "dist/${PROJECT_ID}" --base "${BASE_PREFIX}${PROJECT_ID}"
               RENDERED=$((RENDERED + 1))
             done
             echo "Rendered $RENDERED project(s)"
