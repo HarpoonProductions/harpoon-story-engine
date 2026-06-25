@@ -153,6 +153,67 @@
   transform: scale(1.5);
 }
 
+/* ── Framed multi-image mode ─────────────────────────────────────── */
+
+[data-pan-framed] .hse-pan__sticky {
+  background: var(--hse-ink);
+  display: flex;
+  align-items: center;
+}
+
+[data-pan-framed] .hse-pan__track {
+  align-items: center;
+}
+
+[data-pan-framed] .hse-pan__panel {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 1.5rem;
+}
+
+[data-pan-framed] .hse-pan__frame {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--hse-rule);
+  background: var(--hse-surface, var(--hse-ink));
+  overflow: hidden;
+  max-width: min(900px, calc(100vw - 3rem));
+  width: 100%;
+}
+
+[data-pan-framed] .hse-pan__img {
+  position: relative;
+  height: clamp(200px, 60vh, 580px);
+  background-size: cover;
+  background-position: center;
+}
+
+[data-pan-framed] .hse-pan__caption {
+  padding: 1rem 1.25rem 1.1rem;
+  border-top: 1px solid var(--hse-rule);
+  min-height: 3.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+[data-pan-framed] .hse-pan__text {
+  font-size: clamp(0.9rem, 1.6vw, 1.1rem);
+  color: var(--hse-warm);
+  margin: 0;
+}
+
+[data-pan-framed] .hse-pan__attribution {
+  font-size: var(--hse-font-size-micro);
+  color: var(--hse-warm-3);
+}
+
+/* Progress dots: position relative to bottom of frame, not viewport */
+[data-pan-framed] .hse-pan__progress {
+  bottom: 1.25rem;
+}
+
 /* ── Mobile ──────────────────────────────────────────────────────── */
 
 @media (max-width: 768px) {

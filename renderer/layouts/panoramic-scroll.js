@@ -80,9 +80,28 @@ function renderPanoramicScroll(section) {
   }
 
   // ── Multi-image mode ─────────────────────────────────────────────
+  const isFramed = !!section.framed;
+
   const panelsHtml = panels.map((panel, i) => {
     const img = panel.image || {};
     const focalStyle = img.focal ? `background-position:${escHtml(img.focal)}` : '';
+
+    if (isFramed) {
+      return `<div class="hse-pan__panel" data-index="${i}">
+        <div class="hse-pan__frame">
+          <div class="hse-pan__img"
+               style="background-image:url('${escHtml(img.url || '')}');${focalStyle}"
+               role="img"
+               aria-label="${escHtml(img.alt || '')}">
+          </div>
+          <div class="hse-pan__caption">
+            ${panel.text        ? `<p class="hse-pan__text">${escHtml(panel.text)}</p>` : ''}
+            ${panel.attribution ? `<span class="hse-pan__attribution hse-label">${escHtml(panel.attribution)}</span>` : ''}
+          </div>
+        </div>
+      </div>`;
+    }
+
     return `<div class="hse-pan__panel" data-index="${i}">
       <div class="hse-pan__img"
            style="background-image:url('${escHtml(img.url || '')}');${focalStyle}"
@@ -96,7 +115,7 @@ function renderPanoramicScroll(section) {
   class="hse-section hse-section--panoramic-scroll"
   id="${escHtml(section.id)}"
   data-layout="panoramic-scroll"
-  data-pan-mode="multi"
+  data-pan-mode="multi"${isFramed ? '\n  data-pan-framed="true"' : ''}
   style="--pan-count:${panels.length}">
 
   <div class="hse-pan__sticky">
@@ -105,13 +124,13 @@ function renderPanoramicScroll(section) {
       ${panelsHtml}
     </div>
 
-    <div class="hse-pan__gradient" aria-hidden="true"></div>
+    ${isFramed ? '' : `<div class="hse-pan__gradient" aria-hidden="true"></div>
 
     ${titleHtml}
 
     <div class="hse-pan__texts" aria-live="polite">
       ${textsHtml}
-    </div>
+    </div>`}
 
     <div class="hse-pan__progress" aria-hidden="true">
       ${dotsHtml}

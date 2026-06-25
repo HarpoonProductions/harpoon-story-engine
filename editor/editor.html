@@ -1374,6 +1374,13 @@
                                     <input class="form-input" id="pan-single-img-alt" placeholder="Image alt text" style="margin-top:0.35rem">
                                   </div>
                                   <div class="form-group">
+                                    <label class="form-label" style="display:flex;align-items:center;gap:0.6rem">
+                                      <input type="checkbox" id="pan-framed-toggle" style="width:14px;height:14px;accent-color:var(--accent)">
+                                      Frame panels (slideshow mode)
+                                    </label>
+                                    <p class="form-hint">Adds a visible border and moves caption text below each image. Good for sequences of distinct photos.</p>
+                                  </div>
+                                  <div class="form-group">
                                     <label class="form-label">Panels</label>
                                     <p class="form-hint">Each panel = one "screen" of scroll. Add overlay text and set its position on the image. In single-image mode, panels don't need images.</p>
                                     <div id="panoramicPanelsList"></div>
@@ -2643,6 +2650,17 @@ function initPanoramicScrollEditor(sectionIndex) {
     section.panoramic_panels.push({ text: '', attribution: '' });
   }
   if (!section.panoramic_image) section.panoramic_image = { url: '', alt: '' };
+
+  // ── Framed toggle ─────────────────────────────────────────────────
+  const framedToggle = document.getElementById('pan-framed-toggle');
+  framedToggle.checked = !!section.framed;
+  const newFramedToggle = framedToggle.cloneNode(true);
+  framedToggle.parentNode.replaceChild(newFramedToggle, framedToggle);
+  newFramedToggle.checked = !!section.framed;
+  newFramedToggle.addEventListener('change', e => {
+    section.framed = e.target.checked || undefined;
+    scheduleAutosave();
+  });
 
   // ── Wire single panoramic image ───────────────────────────────────
   const singleUrlInput = document.getElementById('pan-single-img-url');

@@ -643,6 +643,10 @@
           },
           "description": "One or more composed photo groups within this section. Rendered in order between body content."
         },
+        "framed": {
+          "type": "boolean",
+          "description": "panoramic-scroll multi-image: adds a visible border and moves caption below each image (slideshow mode)."
+        },
         "panoramic_image": {
           "$ref": "#/definitions/image",
           "description": "Used by panoramic-scroll single-image mode. One wide image whose backgroundPositionX is animated for a seamless pan."
