@@ -31,7 +31,8 @@
       "label": "DCC",
       "description": "Ocean Prediction",
       "fonts": "Outfit",
-      "google_fonts_url": "https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&display=swap"
+      "google_fonts_url": "https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&display=swap",
+      "logo_url": "https://raw.githubusercontent.com/HarpoonProductions/harpoon-story-engine/main/assets/logos/oceans-logo.png"
     }
   ]
 }
