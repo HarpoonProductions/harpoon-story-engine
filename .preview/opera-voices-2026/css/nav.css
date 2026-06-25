@@ -17,7 +17,7 @@
 }
 
 #hse-nav.hse-nav--solid {
-  background: rgba(10, 10, 12, 0.92);
+  background: rgba(var(--hse-ink-rgb), 0.92);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
   border-bottom: 1px solid var(--hse-rule);
@@ -25,7 +25,7 @@
 
 .hse-nav__brand {
   font-family: var(--hse-font-mono);
-  font-size: 0.68rem;
+  font-size: var(--hse-font-size-eyebrow);
   letter-spacing: 0.22em;
   text-transform: uppercase;
   color: var(--hse-warm-2);
@@ -39,8 +39,8 @@
 
 .hse-nav__links a {
   font-family: var(--hse-font-mono);
-  font-size: 0.62rem;
-  letter-spacing: 0.18em;
+  font-size: var(--hse-font-size-micro);
+  letter-spacing: var(--hse-tracking-md);
   text-transform: uppercase;
   color: var(--hse-warm-3);
   transition: color var(--hse-duration-fast);

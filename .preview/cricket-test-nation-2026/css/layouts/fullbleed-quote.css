@@ -34,9 +34,9 @@
   inset: 0;
   background: linear-gradient(
     135deg,
-    rgba(10, 10, 12, 0.82) 0%,
-    rgba(10, 10, 12, 0.45) 60%,
-    rgba(10, 10, 12, 0.70) 100%
+    rgba(var(--hse-ink-rgb), 0.82) 0%,
+    rgba(var(--hse-ink-rgb), 0.45) 60%,
+    rgba(var(--hse-ink-rgb), 0.70) 100%
   );
 }
 
@@ -79,8 +79,8 @@
 
 .hse-fbq__attribution {
   font-family: var(--hse-font-mono);
-  font-size: 0.65rem;
-  letter-spacing: 0.18em;
+  font-size: var(--hse-font-size-label);
+  letter-spacing: var(--hse-tracking-md);
   color: var(--hse-warm-3);
   font-style: normal;
 }

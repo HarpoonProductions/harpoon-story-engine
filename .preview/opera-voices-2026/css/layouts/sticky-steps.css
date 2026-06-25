@@ -115,14 +115,14 @@
 .hse-ss__step-title {
   font-family: var(--hse-font-display);
   font-size: clamp(1.4rem, 2.5vw, 2rem);
-  font-weight: 400;
+  font-weight: var(--hse-font-weight-normal);
   color: var(--hse-warm);
   line-height: 1.2;
 }
 
 .hse-ss__step-body {
-  font-size: 1rem;
-  line-height: 1.8;
+  font-size: var(--hse-font-size-base);
+  line-height: var(--hse-leading-loose);
   color: var(--hse-warm-2);
   max-width: 480px;
 }

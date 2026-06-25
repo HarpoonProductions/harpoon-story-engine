@@ -18,15 +18,15 @@
   font-family: var(--hse-font-display);
   font-style: italic;
   font-size: clamp(1.25rem, 2.5vw, 1.75rem);
-  line-height: 1.4;
+  line-height: var(--hse-leading-snug);
   color: var(--hse-warm);
   margin-bottom: 1rem;
 }
 
 .hse-pull-quote__attribution {
   font-family: var(--hse-font-mono);
-  font-size: 0.65rem;
-  letter-spacing: 0.14em;
+  font-size: var(--hse-font-size-label);
+  letter-spacing: var(--hse-tracking-sm);
   color: var(--hse-warm-3);
   font-style: normal;
 }

@@ -28,10 +28,10 @@
   inset: 0;
   background: linear-gradient(
     to bottom,
-    rgba(10,10,12,0.1) 0%,
-    rgba(10,10,12,0.0) 40%,
-    rgba(10,10,12,0.7) 85%,
-    rgba(10,10,12,1.0) 100%
+    rgba(var(--hse-ink-rgb), 0.1) 0%,
+    rgba(var(--hse-ink-rgb), 0.0) 40%,
+    rgba(var(--hse-ink-rgb), 0.7) 85%,
+    var(--hse-ink) 100%
   );
 }
 

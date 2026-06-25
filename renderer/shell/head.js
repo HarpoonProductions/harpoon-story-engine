@@ -22,14 +22,19 @@ function renderHead(meta, config, title, basePath, staging) {
 
   // Load Platform Core token set
   const tokenSetId   = meta.token_set || 'default';
-  const tokenSetPath = path.join(__dirname, '../../tokens', tokenSetId + '.css');
+  const tokenSetPath = path.join(__dirname, '../../css', 'tokens-' + tokenSetId + '.css');
   const tokenSetCss  = fs.existsSync(tokenSetPath)
     ? fs.readFileSync(tokenSetPath, 'utf8')
     : '';
 
-  // Extract Google Fonts URL from token set if it specifies one
-  // Default token set uses the standard Google Fonts link
-  const useDefaultFonts = tokenSetId === 'default';
+  // Resolve Google Fonts URL — registry entry takes precedence over hardcoded default
+  const registryPath  = path.join(__dirname, '../../tokens/registry.json');
+  const registry      = fs.existsSync(registryPath)
+    ? JSON.parse(fs.readFileSync(registryPath, 'utf8'))
+    : { token_sets: [] };
+  const registryEntry = registry.token_sets.find(ts => ts.id === tokenSetId);
+  const googleFontsUrl = registryEntry?.google_fonts_url || null;
+  const useDefaultFonts = tokenSetId === 'default' && !googleFontsUrl;
 
   // Normalise basePath: ensure leading slash, no trailing slash
   // Empty string = relative paths for local preview
@@ -54,11 +59,15 @@ function renderHead(meta, config, title, basePath, staging) {
     : '';
 
   // Pre-compute conditional HTML blocks (avoids nested template literals)
-  const fontsHtml = useDefaultFonts
+  const defaultFontsLink = '<link rel="preconnect" href="https://fonts.googleapis.com">\n' +
+    '  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>\n' +
+    '  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,700;1,400;1,500&family=DM+Sans:wght@300;400;500&family=DM+Mono:wght@400&display=swap" rel="stylesheet">';
+
+  const fontsHtml = googleFontsUrl
     ? '<link rel="preconnect" href="https://fonts.googleapis.com">\n' +
       '  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>\n' +
-      '  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,700;1,400;1,500&family=DM+Sans:wght@300;400;500&family=DM+Mono:wght@400&display=swap" rel="stylesheet">'
-    : '';
+      `  <link href="${googleFontsUrl}" rel="stylesheet">`
+    : useDefaultFonts ? defaultFontsLink : '';
 
   const tokenSetHtml = tokenSetCss
     ? '<style>\n' + tokenSetCss + '\n</style>'

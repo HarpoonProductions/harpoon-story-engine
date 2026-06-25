@@ -68,14 +68,14 @@
 .hse-cs__slide-title {
   font-family: var(--hse-font-display);
   font-size: clamp(1.3rem, 2.5vw, 2rem);
-  font-weight: 400;
+  font-weight: var(--hse-font-weight-normal);
   line-height: 1.25;
   color: var(--hse-warm);
 }
 
 .hse-cs__slide-text {
   font-size: 0.95rem;
-  line-height: 1.8;
+  line-height: var(--hse-leading-loose);
   color: var(--hse-warm-3);
   max-width: 480px;
 }

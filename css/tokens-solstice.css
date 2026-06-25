@@ -1,0 +1,55 @@
+/*
+ * ════════════════════════════════════════════════════════════════════
+ *  Harpoon Platform — Demo Token Set: Solstice Arts Foundation
+ *  css/tokens-solstice.css
+ *
+ *  DEMO FILE — for internal testing and team onboarding only.
+ *  Represents a fictional cultural / arts organisation.
+ *  Aesthetic: warm, editorial, unhurried. Terracotta and ochre on a
+ *  parchment ground. Lora serif display, Source Sans body.
+ *
+ *  This file contains overrides only. Base tokens that are not listed
+ *  here remain at their platform defaults defined in css/tokens.css.
+ * ════════════════════════════════════════════════════════════════════
+ */
+
+:root {
+  /* ── Accent colours ── */
+  --hse-accent:   #c2410c;   /* Terracotta */
+  --hse-accent-2: #b45309;   /* Ochre */
+
+  /* ── Neutral palette — warm light mode inverted for dark stories ── */
+  --hse-ink:    #1c1008;   /* Warm near-black */
+  --hse-ink-2:  #2d1f0e;   /* Dark parchment shadow */
+  --hse-ink-3:  #4a3520;   /* Mid brown */
+  --hse-warm:   #fdf6ed;   /* Parchment */
+  --hse-warm-2: #e8d5bb;   /* Aged paper */
+  --hse-warm-3: #a08060;   /* Warm muted */
+  --hse-rule:   rgba(253, 246, 237, 0.10);
+  --hse-rule-2: rgba(253, 246, 237, 0.05);
+
+  /* ── RGB channels ── */
+  --hse-ink-rgb:  28, 16, 8;
+  --hse-warm-rgb: 253, 246, 237;
+
+  /* ── Typography — Lora + Source Sans (Google Fonts) ── */
+  --hse-font-display: 'Lora', Georgia, serif;
+  --hse-font-body:    'Source Sans 3', system-ui, sans-serif;
+  --hse-font-mono:    'DM Mono', 'Courier New', monospace;
+
+  /* ── Geometry — generous, unhurried ── */
+  --hse-max-w:       1100px;
+  --hse-text-w:      660px;
+  --hse-space-lg:    5rem;
+  --hse-space-xl:    8rem;
+
+  /* ── Motion — slow and graceful ── */
+  --hse-duration-fast: 0.35s;
+  --hse-duration-mid:  0.65s;
+  --hse-duration-slow: 1.1s;
+
+  /* ── Radius — soft, organic ── */
+  --hse-radius-sm: 3px;
+  --hse-radius-md: 8px;
+  --hse-radius-lg: 16px;
+}

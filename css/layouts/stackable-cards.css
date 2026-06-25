@@ -62,13 +62,13 @@
 .hse-sc__card-title {
   font-family: var(--hse-font-display);
   font-size: clamp(1rem, 1.5vw, 1.25rem);
-  font-weight: 400;
+  font-weight: var(--hse-font-weight-normal);
   line-height: 1.3;
   color: var(--hse-warm);
 }
 
 .hse-sc__card-text {
-  font-size: 0.9rem;
+  font-size: var(--hse-font-size-sm);
   line-height: 1.75;
   color: var(--hse-warm-3);
   flex: 1;

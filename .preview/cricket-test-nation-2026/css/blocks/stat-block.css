@@ -20,7 +20,7 @@
 .hse-stat__value {
   font-family: var(--hse-font-display);
   font-size: clamp(2.5rem, 5vw, 4rem);
-  font-weight: 400;
+  font-weight: var(--hse-font-weight-normal);
   line-height: 1;
   color: var(--hse-accent);
   letter-spacing: -0.02em;
@@ -28,8 +28,8 @@
 
 .hse-stat__label {
   font-family: var(--hse-font-mono);
-  font-size: 0.65rem;
-  letter-spacing: 0.1em;
+  font-size: var(--hse-font-size-label);
+  letter-spacing: var(--hse-tracking-xs);
   color: var(--hse-warm-3);
   line-height: 1.5;
 }

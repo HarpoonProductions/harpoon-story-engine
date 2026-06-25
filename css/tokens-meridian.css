@@ -1,0 +1,53 @@
+/*
+ * ════════════════════════════════════════════════════════════════════
+ *  Harpoon Platform — Demo Token Set: Meridian Global
+ *  css/tokens-meridian.css
+ *
+ *  DEMO FILE — for internal testing and team onboarding only.
+ *  Represents a fictional professional services / consulting firm.
+ *  Aesthetic: authoritative, precise, international. Dark slate with
+ *  electric blue accent. Inter typeface (Google Fonts).
+ *
+ *  This file contains overrides only. Base tokens that are not listed
+ *  here remain at their platform defaults defined in css/tokens.css.
+ * ════════════════════════════════════════════════════════════════════
+ */
+
+:root {
+  /* ── Accent colours ── */
+  --hse-accent:   #2563eb;   /* Electric blue */
+  --hse-accent-2: #64748b;   /* Slate grey */
+
+  /* ── Neutral palette — cool dark mode ── */
+  --hse-ink:    #0f172a;   /* Deep slate */
+  --hse-ink-2:  #1e293b;   /* Slate 800 */
+  --hse-ink-3:  #334155;   /* Slate 700 */
+  --hse-warm:   #f8fafc;   /* Near-white */
+  --hse-warm-2: #cbd5e1;   /* Slate 300 */
+  --hse-warm-3: #94a3b8;   /* Slate 400 */
+  --hse-rule:   rgba(248, 250, 252, 0.08);
+  --hse-rule-2: rgba(248, 250, 252, 0.04);
+
+  /* ── RGB channels ── */
+  --hse-ink-rgb:  15, 23, 42;
+  --hse-warm-rgb: 248, 250, 252;
+
+  /* ── Typography — Inter (Google Fonts) ── */
+  --hse-font-display: 'Inter', system-ui, sans-serif;
+  --hse-font-body:    'Inter', system-ui, sans-serif;
+  --hse-font-mono:    'JetBrains Mono', 'Courier New', monospace;
+
+  /* ── Geometry — tight, data-dense ── */
+  --hse-max-w:  1280px;
+  --hse-text-w: 700px;
+
+  /* ── Motion — crisp, functional ── */
+  --hse-duration-fast: 0.15s;
+  --hse-duration-mid:  0.25s;
+  --hse-duration-slow: 0.45s;
+
+  /* ── Radius — sharp except for pills ── */
+  --hse-radius-sm: 0px;
+  --hse-radius-md: 3px;
+  --hse-radius-lg: 6px;
+}

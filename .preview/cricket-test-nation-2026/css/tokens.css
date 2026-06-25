@@ -1,12 +1,14 @@
 /*
- * Harpoon Story Engine — Design Tokens
- * tokens.css
+ * Harpoon Platform — Design Tokens
+ * css/tokens.css
  *
- * These are the static base tokens. At render time, the renderer injects
- * a <style> block into <head> that overrides --hse-accent and --hse-accent-2
- * with values from meta.accent_color and meta.accent_color_2.
+ * Level 1: Harpoon base tokens. Platform defaults that define the Story
+ * Engine's own visual language. All Harpoon products share this namespace.
  *
- * All other values here are fixed across all projects.
+ * At render time the renderer injects a <style> block that overrides
+ * --hse-accent and --hse-accent-2 with values from meta.accent_color
+ * and meta.accent_color_2. All other values here are fixed platform
+ * defaults, overridden by client token files (css/tokens-{slug}.css).
  */
 
 :root {
@@ -29,10 +31,43 @@
   --hse-rule:      rgba(242, 237, 230, 0.10);
   --hse-rule-2:    rgba(242, 237, 230, 0.05);
 
-  /* ── Typography ──────────────────────────────────────────────── */
+  /* ── RGB channels — for rgba() overlays and gradients ───────── */
+  --hse-ink-rgb:   10, 10, 12;
+  --hse-warm-rgb:  242, 237, 230;
+
+  /* ── Font families ───────────────────────────────────────────── */
   --hse-font-display: 'Apercu', 'Playfair Display', Georgia, serif;
   --hse-font-body:    'Apercu', system-ui, sans-serif;
   --hse-font-mono:    'DM Mono', 'Courier New', monospace;
+
+  /* ── Font sizes ──────────────────────────────────────────────── */
+  --hse-font-size-base:     1rem;
+  --hse-font-size-sm:       0.90rem;
+  --hse-font-size-eyebrow:  0.68rem;
+  --hse-font-size-label:    0.65rem;
+  --hse-font-size-micro:    0.62rem;
+  --hse-font-size-colophon: 0.60rem;
+
+  /* ── Font weights ────────────────────────────────────────────── */
+  --hse-font-weight-light:  300;
+  --hse-font-weight-normal: 400;
+  --hse-font-weight-medium: 500;
+  --hse-font-weight-bold:   700;
+
+  /* ── Letter spacing ──────────────────────────────────────────── */
+  --hse-tracking-xl:  0.32em;
+  --hse-tracking-lg:  0.28em;
+  --hse-tracking-md:  0.18em;
+  --hse-tracking-sm:  0.14em;
+  --hse-tracking-xs:  0.10em;
+
+  /* ── Line heights ────────────────────────────────────────────── */
+  --hse-leading-tight:   1.10;
+  --hse-leading-heading: 1.15;
+  --hse-leading-snug:    1.40;
+  --hse-leading-body:    1.65;
+  --hse-leading-relaxed: 1.70;
+  --hse-leading-loose:   1.80;
 
   /* ── Spacing scale ───────────────────────────────────────────── */
   --hse-space-xs:   0.5rem;

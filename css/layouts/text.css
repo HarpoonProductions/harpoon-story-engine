@@ -27,7 +27,7 @@
   margin: 0;
   color: var(--hse-warm);
   font-family: var(--hse-font-body);
-  line-height: 1.7;
+  line-height: var(--hse-leading-relaxed);
 }
 
 /* ── Tag variants ────────────────────────────────────────────────── */
@@ -39,8 +39,8 @@
 .hse-text-block--h2 {
   font-family: var(--hse-font-display);
   font-size: clamp(1.75rem, 3vw, 2.5rem);
-  font-weight: 700;
-  line-height: 1.15;
+  font-weight: var(--hse-font-weight-bold);
+  line-height: var(--hse-leading-heading);
   letter-spacing: -0.02em;
   margin-top: var(--hse-space-md);
   margin-bottom: var(--hse-space-xs);
@@ -49,7 +49,7 @@
 .hse-text-block--h3 {
   font-family: var(--hse-font-display);
   font-size: clamp(1.25rem, 2vw, 1.75rem);
-  font-weight: 500;
+  font-weight: var(--hse-font-weight-medium);
   line-height: 1.25;
   margin-top: var(--hse-space-md);
   margin-bottom: var(--hse-space-xs);
@@ -57,8 +57,8 @@
 
 .hse-text-block--h4 {
   font-family: var(--hse-font-body);
-  font-size: 1rem;
-  font-weight: 500;
+  font-size: var(--hse-font-size-base);
+  font-weight: var(--hse-font-weight-medium);
   letter-spacing: 0.05em;
   text-transform: uppercase;
   margin-top: var(--hse-space-md);
@@ -69,8 +69,8 @@
   font-family: var(--hse-font-display);
   font-size: clamp(1.25rem, 2vw, 1.75rem);
   font-style: italic;
-  font-weight: 400;
-  line-height: 1.4;
+  font-weight: var(--hse-font-weight-normal);
+  line-height: var(--hse-leading-snug);
   border-left: 3px solid var(--hse-accent);
   padding-left: var(--hse-space-md);
   color: var(--hse-warm-2);
@@ -99,14 +99,14 @@
 .hse-text-block--display {
   font-family: var(--hse-font-display);
   font-size: clamp(2.5rem, 5vw, 4.5rem);
-  font-weight: 700;
+  font-weight: var(--hse-font-weight-bold);
   line-height: 1.05;
   letter-spacing: -0.03em;
 }
 
 .hse-text-block--mono {
   font-family: var(--hse-font-mono);
-  font-size: 0.9rem;
+  font-size: var(--hse-font-size-sm);
   color: var(--hse-warm-2);
   letter-spacing: 0.02em;
 }

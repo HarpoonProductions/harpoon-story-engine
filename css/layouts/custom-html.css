@@ -56,15 +56,15 @@
 
 .hse-embed__scroll-hint {
     font-family: var(--hse-font-mono);
-    font-size: 0.65rem;
+    font-size: var(--hse-font-size-label);
     letter-spacing: 0.15em;
     text-transform: uppercase;
     color: var(--hse-warm);
-    background: rgba(10, 10, 12, 0.7);
+    background: rgba(var(--hse-ink-rgb), 0.7);
     padding: 0.5rem 1rem;
     border-radius: 2px;
     backdrop-filter: blur(4px);
-    border: 1px solid rgba(242, 237, 230, 0.15);
+    border: 1px solid rgba(var(--hse-warm-rgb), 0.15);
     opacity: 0;
     transition: opacity 0.3s ease;
 }

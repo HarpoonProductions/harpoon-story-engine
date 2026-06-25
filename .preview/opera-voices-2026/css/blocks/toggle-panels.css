@@ -17,7 +17,7 @@
   border: 1px solid var(--hse-rule);
   color: var(--hse-warm-3);
   font-family: var(--hse-font-mono);
-  font-size: 0.62rem;
+  font-size: var(--hse-font-size-micro);
   letter-spacing: 0.16em;
   text-transform: uppercase;
   cursor: pointer;
@@ -52,8 +52,8 @@
 }
 
 .hse-toggle__panel-body {
-  font-size: 1rem;
-  line-height: 1.8;
+  font-size: var(--hse-font-size-base);
+  line-height: var(--hse-leading-loose);
   color: var(--hse-warm-2);
 }
 

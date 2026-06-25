@@ -9,9 +9,7 @@
   <meta name="theme-color" content="#0D0005">
 
   <!-- Fonts (default set uses Google Fonts; client token sets may specify their own) -->
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,700;1,400;1,500&family=DM+Sans:wght@300;400;500&family=DM+Mono:wght@400&display=swap" rel="stylesheet">
+  
 
   <!-- GSAP + ScrollTrigger -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
@@ -23,30 +21,75 @@
   <!-- Platform Core token set override -->
   <style>
 /*
- * Harpoon Platform Core — Token Set: Default
- * tokens/default.css
+ * ════════════════════════════════════════════════════════════════════
+ *  Harpoon Platform — Client Token Set: Imperial College London
+ *  css/tokens-imperial.css
  *
- * The baseline token set used when no client token set is specified.
- * Values here match the Story Engine's base tokens exactly.
- * Override only what differs in client token sets.
+ *  This is the canonical brand identity file for Imperial College London
+ *  across all Harpoon products — Story Engine stories, Edition OS
+ *  magazines, Briefing Engine sessions, analytics reports, and any
+ *  future Harpoon product built for this client. It is the single
+ *  source of truth for Imperial's visual identity within the Harpoon
+ *  platform. When building for Imperial, load this file after the base
+ *  tokens (css/tokens.css) and it will propagate throughout.
+ *
+ *  Derived from Imperial's design system, April 2026.
+ *  Key brand values:
+ *    Navy:       #003e74  (primary — text, headings, CTAs)
+ *    Light blue: #6aaae4  (secondary accent)
+ *    Near-black: #161a1d  (body text)
+ *    Off-white:  #ebeeef  (surface / background tint)
+ *    Typeface:   ImperialText (proprietary), falling back to Georgia
+ *
+ *  This file contains overrides only. Base tokens that are not listed
+ *  here remain at their platform defaults defined in css/tokens.css.
+ * ════════════════════════════════════════════════════════════════════
  */
 
+/* ── ImperialText — proprietary typeface served from Imperial's CDN ─
+   local() picks it up when the publication is hosted on Imperial
+   infrastructure. For external hosting, Georgia is the correct fallback.
+*/
+@font-face {
+  font-family: 'ImperialText';
+  src: local('ImperialText');
+}
+
 :root {
-  /* Neutral palette */
-  --hse-ink:    #0A0A0C;
-  --hse-ink-2:  #111116;
-  --hse-ink-3:  #1C1C24;
-  --hse-warm:   #F2EDE6;
-  --hse-warm-2: #C8BFB0;
-  --hse-warm-3: #7A7268;
+  /* ── Accent colours ── */
+  --hse-accent:   #003e74;   /* Imperial navy */
+  --hse-accent-2: #6aaae4;   /* Imperial light blue */
 
-  /* Typography */
-  --hse-font-display: 'Playfair Display', Georgia, serif;
-  --hse-font-body:    'DM Sans', system-ui, sans-serif;
-  --hse-font-mono:    'DM Mono', 'Courier New', monospace;
+  /* ── Neutral palette ── */
+  --hse-ink:    #161a1d;   /* Imperial near-black */
+  --hse-ink-2:  #2d333a;   /* Imperial dark grey */
+  --hse-ink-3:  #555555;   /* Imperial mid grey */
+  --hse-warm:   #ffffff;   /* White — Imperial uses clean white surfaces */
+  --hse-warm-2: #ebeeef;   /* Imperial off-white */
+  --hse-warm-3: #656565;   /* Imperial muted text */
 
-  /* Google Fonts import for default set */
-  --hse-google-fonts: "https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,700;1,400;1,500&family=DM+Sans:wght@300;400;500&family=DM+Mono:wght@400&display=swap";
+  /* ── RGB channels — updated to match overridden ink/warm values ── */
+  --hse-ink-rgb:  22, 26, 29;
+  --hse-warm-rgb: 255, 255, 255;
+
+  /* ── Typography ── */
+  --hse-font-display: 'ImperialText', Georgia, 'Times New Roman', Times, serif;
+  --hse-font-body:    'ImperialText', Arial, Helvetica, sans-serif;
+  --hse-font-mono:    'Courier New', Courier, monospace;
+
+  /* ── Geometry — Imperial uses generous spacing ── */
+  --hse-max-w:   1200px;
+  --hse-text-w:  720px;
+
+  /* ── Motion — Imperial is restrained; minimal animation ── */
+  --hse-duration-fast: 0.15s;
+  --hse-duration-mid:  0.3s;
+  --hse-duration-slow: 0.5s;
+
+  /* ── Radius — Imperial uses sharp corners ── */
+  --hse-radius-sm: 0px;
+  --hse-radius-md: 2px;
+  --hse-radius-lg: 4px;
 }
 
 </style>
@@ -97,6 +140,7 @@
       <li><a href="#audiences">Audiences</a></li>
       <li><a href="#contributors">The Company</a></li>
       <li><a href="#briefing">Briefing</a></li>
+      <li><a href="#section-9">Section 9</a></li>
   </ul>
 </nav>
 
@@ -689,6 +733,27 @@
     
     
   </div>
+</section>
+
+<section
+  class="hse-section hse-section--stackable-cards"
+  id="section-9"
+  data-layout="stackable-cards">
+
+  <div class="hse-inner">
+    <header class="hse-section-header">
+      <span class="hse-eyebrow" style="color:var(--hse-accent)">09</span>
+      <h2 class="hse-heading hse-reveal">Section 9</h2>
+    </header>
+    
+  </div>
+
+  <div class="hse-sc__grid-wrap">
+    <div class="hse-sc__grid hse-inner" data-count="0">
+      
+    </div>
+  </div>
+
 </section>
 
 </main>

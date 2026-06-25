@@ -24,8 +24,8 @@ body {
   background: var(--hse-ink);
   color: var(--hse-warm);
   font-family: var(--hse-font-body);
-  font-weight: 300;
-  line-height: 1.65;
+  font-weight: var(--hse-font-weight-light);
+  line-height: var(--hse-leading-body);
   overflow-x: hidden;
 }
 
@@ -56,16 +56,16 @@ a {
 
 .hse-eyebrow {
   font-family: var(--hse-font-mono);
-  font-size: 0.68rem;
-  letter-spacing: 0.28em;
+  font-size: var(--hse-font-size-eyebrow);
+  letter-spacing: var(--hse-tracking-lg);
   text-transform: uppercase;
   color: var(--hse-accent);
 }
 
 .hse-display {
   font-family: var(--hse-font-display);
-  font-weight: 400;
-  line-height: 1.1;
+  font-weight: var(--hse-font-weight-normal);
+  line-height: var(--hse-leading-tight);
   letter-spacing: -0.02em;
   color: var(--hse-warm);
 }
@@ -78,8 +78,8 @@ a {
 .hse-heading {
   font-family: var(--hse-font-display);
   font-size: clamp(2rem, 4vw, 3.2rem);
-  font-weight: 400;
-  line-height: 1.15;
+  font-weight: var(--hse-font-weight-normal);
+  line-height: var(--hse-leading-heading);
   color: var(--hse-warm);
 }
 
@@ -89,15 +89,15 @@ a {
 }
 
 .hse-body {
-  font-size: 1rem;
-  line-height: 1.8;
+  font-size: var(--hse-font-size-base);
+  line-height: var(--hse-leading-loose);
   color: var(--hse-warm-2);
 }
 
 .hse-label {
   font-family: var(--hse-font-mono);
-  font-size: 0.65rem;
-  letter-spacing: 0.18em;
+  font-size: var(--hse-font-size-label);
+  letter-spacing: var(--hse-tracking-md);
   text-transform: uppercase;
   color: var(--hse-warm-3);
 }
@@ -120,7 +120,7 @@ a {
 .hse-section-intro {
   max-width: var(--hse-text-w);
   font-size: 1.05rem;
-  line-height: 1.8;
+  line-height: var(--hse-leading-loose);
   color: var(--hse-warm-2);
   margin-bottom: var(--hse-space-lg);
 }
@@ -160,8 +160,8 @@ a {
   padding: 0.65rem 1.25rem;
   border: 1px solid var(--hse-rule);
   font-family: var(--hse-font-mono);
-  font-size: 0.65rem;
-  letter-spacing: 0.14em;
+  font-size: var(--hse-font-size-label);
+  letter-spacing: var(--hse-tracking-sm);
   text-transform: uppercase;
   color: var(--hse-warm-2);
   transition: border-color var(--hse-duration-fast), color var(--hse-duration-fast);
@@ -227,8 +227,8 @@ a {
   z-index: 4;
   width: 36px;
   height: 36px;
-  background: rgba(10,10,12,0.6);
-  border: 1px solid rgba(242,237,230,0.2);
+  background: rgba(var(--hse-ink-rgb), 0.6);
+  border: 1px solid rgba(var(--hse-warm-rgb), 0.2);
   color: var(--hse-warm);
   cursor: pointer;
   display: flex;
@@ -241,7 +241,7 @@ a {
 }
 
 .hse-cover__pause-btn:hover {
-  background: rgba(10,10,12,0.85);
+  background: rgba(var(--hse-ink-rgb), 0.85);
 }
 
 .hse-cover__pause-btn:focus-visible {

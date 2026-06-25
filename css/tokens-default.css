@@ -1,0 +1,20 @@
+/*
+ * ════════════════════════════════════════════════════════════════════
+ *  Harpoon Platform — Client Token Set: Default
+ *  css/tokens-default.css
+ *
+ *  This is the baseline token set used when no client token file is
+ *  specified. It establishes Harpoon's standard editorial aesthetic
+ *  using open-source typefaces served via Google Fonts.
+ *
+ *  This file contains overrides only. Base tokens that are not listed
+ *  here remain at their platform defaults defined in css/tokens.css.
+ * ════════════════════════════════════════════════════════════════════
+ */
+
+:root {
+  /* ── Font families — Google Fonts delivery ── */
+  --hse-font-display: 'Playfair Display', Georgia, serif;
+  --hse-font-body:    'DM Sans', system-ui, sans-serif;
+  --hse-font-mono:    'DM Mono', 'Courier New', monospace;
+}

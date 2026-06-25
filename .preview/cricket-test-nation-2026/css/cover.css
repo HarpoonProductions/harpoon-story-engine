@@ -46,10 +46,10 @@
   inset: 0;
   background: linear-gradient(
     170deg,
-    rgba(10, 10, 12, 0.08) 0%,
-    rgba(10, 10, 12, 0.15) 30%,
-    rgba(10, 10, 12, 0.70) 65%,
-    rgba(10, 10, 12, 0.97) 100%
+    rgba(var(--hse-ink-rgb), 0.08) 0%,
+    rgba(var(--hse-ink-rgb), 0.15) 30%,
+    rgba(var(--hse-ink-rgb), 0.70) 65%,
+    rgba(var(--hse-ink-rgb), 0.97) 100%
   );
   z-index: 2;
 }
@@ -65,8 +65,8 @@
 
 .hse-cover__kicker {
   font-family: var(--hse-font-mono);
-  font-size: 0.68rem;
-  letter-spacing: 0.32em;
+  font-size: var(--hse-font-size-eyebrow);
+  letter-spacing: var(--hse-tracking-xl);
   text-transform: uppercase;
   color: var(--hse-accent);
   margin-bottom: 1.25rem;
@@ -77,7 +77,7 @@
 .hse-cover__headline {
   font-family: var(--hse-font-display);
   font-size: clamp(3rem, 7.5vw, 7rem);
-  font-weight: 400;
+  font-weight: var(--hse-font-weight-normal);
   line-height: 1.0;
   letter-spacing: -0.02em;
   color: var(--hse-warm);
@@ -96,7 +96,7 @@
   font-style: italic;
   font-size: clamp(1.1rem, 2.5vw, 1.65rem);
   color: var(--hse-warm-2);
-  max-width: 680px;
+  max-width: var(--hse-text-w);
   margin-bottom: 2.5rem;
   opacity: 0;
   transform: translateY(16px);
@@ -117,7 +117,7 @@
   align-items: center;
   padding: 0.75rem 1.5rem;
   font-family: var(--hse-font-mono);
-  font-size: 0.65rem;
+  font-size: var(--hse-font-size-label);
   letter-spacing: 0.16em;
   text-transform: uppercase;
   border-radius: var(--hse-radius-sm);
@@ -151,8 +151,8 @@
 
 .hse-cover__colophon {
   font-family: var(--hse-font-mono);
-  font-size: 0.6rem;
-  letter-spacing: 0.14em;
+  font-size: var(--hse-font-size-colophon);
+  letter-spacing: var(--hse-tracking-sm);
   color: var(--hse-warm-3);
   opacity: 0;
 }
@@ -174,7 +174,7 @@
 .hse-cover__scroll-cue span {
   font-family: var(--hse-font-mono);
   font-size: 0.58rem;
-  letter-spacing: 0.28em;
+  letter-spacing: var(--hse-tracking-lg);
   text-transform: uppercase;
   color: var(--hse-warm-3);
   writing-mode: vertical-rl;
