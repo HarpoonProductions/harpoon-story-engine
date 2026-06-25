@@ -1256,6 +1256,9 @@
                                         <option value="reveal-crossfade">
                                             Reveal Crossfade
                                         </option>
+                                        <option value="panoramic-scroll">
+                                            Panoramic Scroll
+                                        </option>
                                         <option value="parallax">
                                             Parallax
                                         </option>
@@ -1317,6 +1320,26 @@
                                       <input type="checkbox" id="sec-custom-full-width"> Full width
                                       <span class="form-hint" style="display:inline;margin-left:0.25rem">Removes max-width constraint</span>
                                     </label>
+                                  </div>
+                                </div>
+
+                                <!-- Panoramic scroll editor (shown only for panoramic-scroll layout) -->
+                                <div id="panoramicScrollEditor" style="display:none">
+                                  <div class="form-group">
+                                    <label class="form-label">Panels</label>
+                                    <p class="form-hint">Each panel is a full-viewport image that pans into view. Add optional overlay text per panel.</p>
+                                    <div id="panoramicPanelsList"></div>
+                                    <button type="button" class="tbtn tbtn--ghost" id="addPanoramicPanelBtn" style="margin-top:0.5rem;width:100%;justify-content:center">+ Add panel</button>
+                                  </div>
+                                </div>
+
+                                <!-- Cascading slides editor (shown only for cascading-slides layout) -->
+                                <div id="cascadingSlidesEditor" style="display:none">
+                                  <div class="form-group">
+                                    <label class="form-label">Slides</label>
+                                    <p class="form-hint">Each slide alternates image left/right with tag, title, body and optional link</p>
+                                    <div id="cascadingSlidesList"></div>
+                                    <button type="button" class="tbtn tbtn--ghost" id="addCascadingSlideBtn" style="margin-top:0.5rem;width:100%;justify-content:center">+ Add slide</button>
                                   </div>
                                 </div>
 
@@ -2140,6 +2163,8 @@
                     content.sections[index].layout = v;
                     renderSectionList();
                     initBlocksEditor(index);
+                    initPanoramicScrollEditor(index);
+                    initCascadingSlidesEditor(index);
                     initStackableCardsEditor(index);
                     initStickyStepsEditor(index);
                     initCrossfadeEditor(index);
@@ -2216,6 +2241,10 @@
 
                 // Initialise blocks editor (shown only for text layout)
                 initBlocksEditor(index);
+                // Initialise panoramic scroll editor (shown only for panoramic-scroll layout)
+                initPanoramicScrollEditor(index);
+                // Initialise cascading slides editor (shown only for cascading-slides layout)
+                initCascadingSlidesEditor(index);
                 // Initialise stackable cards editor (shown only for stackable-cards layout)
                 initStackableCardsEditor(index);
                 // Initialise sticky steps editor (shown only for sticky-steps layout)
@@ -2492,6 +2521,199 @@ function initCustomHtmlEditor(sectionIndex) {
   rewire('sec-custom-shadow',      v => { embed.shadow_dom = v; });
   rewire('sec-custom-scroll-lock', v => { embed.scroll_lock = v; });
   rewire('sec-custom-full-width',  v => { embed.full_width = v; });
+}
+
+// ── Panoramic scroll editor ──────────────────────────────────────
+
+function initPanoramicScrollEditor(sectionIndex) {
+  const section = content.sections[sectionIndex];
+  const editor  = document.getElementById('panoramicScrollEditor');
+  const list    = document.getElementById('panoramicPanelsList');
+  const isPS    = section.layout === 'panoramic-scroll';
+
+  editor.style.display = isPS ? 'block' : 'none';
+  if (!isPS) return;
+
+  if (!section.panoramic_panels) section.panoramic_panels = [];
+  if (section.panoramic_panels.length === 0) {
+    section.panoramic_panels.push({ image: { url: '', alt: '' }, text: '', attribution: '' });
+  }
+
+  function renderPanels() {
+    list.innerHTML = '';
+    section.panoramic_panels.forEach((panel, i) => {
+      const img  = panel.image || {};
+      const item = document.createElement('div');
+      item.className = 'block-item';
+      item.innerHTML = `
+        <div class="block-item__header">
+          <span style="font-family:var(--font-mono);font-size:0.6rem;letter-spacing:0.1em;color:var(--ink-3)">PANEL ${i + 1}</span>
+          ${i > 0 ? `<button type="button" class="block-item__delete" data-i="${i}" title="Remove panel">✕</button>` : ''}
+        </div>
+        <div style="padding:0.5rem;display:flex;flex-direction:column;gap:0.4rem">
+          <input class="form-input pan-img-url" id="pan-img-url-${sectionIndex}-${i}" data-image-field data-i="${i}" ${img.focal ? `data-existing-focal="${img.focal}"` : ''} placeholder="Image URL https://…" value="${img.url || ''}">
+          <input class="form-input pan-img-alt" data-i="${i}" placeholder="Image alt text" value="${img.alt || ''}">
+          <textarea class="form-textarea pan-text" data-i="${i}" placeholder="Overlay text (optional)…" rows="2">${panel.text || ''}</textarea>
+          <input class="form-input pan-attribution" data-i="${i}" placeholder="Attribution (optional)" value="${panel.attribution || ''}">
+        </div>`;
+
+      item.querySelector('.pan-img-url').addEventListener('input', e => {
+        if (!section.panoramic_panels[i].image) section.panoramic_panels[i].image = {};
+        section.panoramic_panels[i].image.url = e.target.value; scheduleAutosave();
+      });
+      item.querySelector('.pan-img-alt').addEventListener('input', e => {
+        if (!section.panoramic_panels[i].image) section.panoramic_panels[i].image = {};
+        section.panoramic_panels[i].image.alt = e.target.value; scheduleAutosave();
+      });
+      item.querySelector('.pan-text').addEventListener('input', e => {
+        section.panoramic_panels[i].text = e.target.value; scheduleAutosave();
+      });
+      item.querySelector('.pan-attribution').addEventListener('input', e => {
+        section.panoramic_panels[i].attribution = e.target.value; scheduleAutosave();
+      });
+
+      const delBtn = item.querySelector('.block-item__delete');
+      if (delBtn) {
+        delBtn.addEventListener('click', () => {
+          section.panoramic_panels.splice(i, 1);
+          scheduleAutosave();
+          renderPanelsAndInit();
+        });
+      }
+
+      list.appendChild(item);
+    });
+  }
+
+  function renderPanelsAndInit() {
+    renderPanels();
+    if (window.initImageFields) {
+      initImageFields(projectId, (fieldId, url, focal) => {
+        const match = fieldId.match(/^pan-img-url-\d+-(\d+)$/);
+        if (!match) return;
+        const idx = parseInt(match[1]);
+        if (!section.panoramic_panels[idx]) return;
+        if (!section.panoramic_panels[idx].image) section.panoramic_panels[idx].image = {};
+        section.panoramic_panels[idx].image.focal = focal === '50% 50%' ? undefined : focal;
+        scheduleAutosave();
+      }, list);
+    }
+  }
+
+  renderPanelsAndInit();
+
+  const addBtn = document.getElementById('addPanoramicPanelBtn');
+  const newBtn = addBtn.cloneNode(true);
+  addBtn.parentNode.replaceChild(newBtn, addBtn);
+  newBtn.addEventListener('click', () => {
+    section.panoramic_panels.push({ image: { url: '', alt: '' }, text: '', attribution: '' });
+    scheduleAutosave();
+    renderPanelsAndInit();
+    const inputs = list.querySelectorAll('.pan-img-url');
+    if (inputs.length) inputs[inputs.length - 1].focus();
+  });
+}
+
+// ── Cascading slides editor ──────────────────────────────────────
+
+function initCascadingSlidesEditor(sectionIndex) {
+  const section = content.sections[sectionIndex];
+  const editor  = document.getElementById('cascadingSlidesEditor');
+  const list    = document.getElementById('cascadingSlidesList');
+  const isCS    = section.layout === 'cascading-slides';
+
+  editor.style.display = isCS ? 'block' : 'none';
+  if (!isCS) return;
+
+  if (!section.cards) section.cards = [];
+  if (section.cards.length === 0) {
+    section.cards.push({ id: 'slide-1', title: '', body: '', tag: '', image: { url: '', alt: '' }, link: { href: '', label: '' } });
+  }
+
+  function renderSlides() {
+    list.innerHTML = '';
+    section.cards.forEach((card, i) => {
+      const img  = card.image || {};
+      const link = card.link  || {};
+      const side = i % 2 === 0 ? 'left' : 'right';
+      const item = document.createElement('div');
+      item.className = 'block-item';
+      item.innerHTML = `
+        <div class="block-item__header">
+          <span style="font-family:var(--font-mono);font-size:0.6rem;letter-spacing:0.1em;color:var(--ink-3)">SLIDE ${i + 1} — image ${side}</span>
+          ${i > 0 ? `<button type="button" class="block-item__delete" data-i="${i}" title="Remove slide">✕</button>` : ''}
+        </div>
+        <div style="padding:0.5rem;display:flex;flex-direction:column;gap:0.4rem">
+          <input class="form-input cs-tag"        data-i="${i}" placeholder="Tag (optional)" value="${card.tag || ''}">
+          <input class="form-input cs-title"      data-i="${i}" placeholder="Slide title" value="${card.title || ''}">
+          <textarea class="form-textarea cs-body" data-i="${i}" placeholder="Slide body text…" rows="3">${card.body || ''}</textarea>
+          <input class="form-input cs-img-url"    id="cs-img-url-${sectionIndex}-${i}" data-image-field data-i="${i}" ${img.focal ? `data-existing-focal="${img.focal}"` : ''} placeholder="Image URL https://…" value="${img.url || ''}">
+          <input class="form-input cs-img-alt"    data-i="${i}" placeholder="Image alt text" value="${img.alt || ''}">
+          <input class="form-input cs-link-href"  data-i="${i}" placeholder="Link URL (optional)" value="${link.href || ''}">
+          <input class="form-input cs-link-label" data-i="${i}" placeholder="Link label e.g. Read more" value="${link.label || ''}">
+        </div>`;
+
+      item.querySelector('.cs-tag').addEventListener('input', e => { section.cards[i].tag = e.target.value; scheduleAutosave(); });
+      item.querySelector('.cs-title').addEventListener('input', e => { section.cards[i].title = e.target.value; scheduleAutosave(); });
+      item.querySelector('.cs-body').addEventListener('input', e => { section.cards[i].body = e.target.value; scheduleAutosave(); });
+      item.querySelector('.cs-img-url').addEventListener('input', e => {
+        if (!section.cards[i].image) section.cards[i].image = {};
+        section.cards[i].image.url = e.target.value; scheduleAutosave();
+      });
+      item.querySelector('.cs-img-alt').addEventListener('input', e => {
+        if (!section.cards[i].image) section.cards[i].image = {};
+        section.cards[i].image.alt = e.target.value; scheduleAutosave();
+      });
+      item.querySelector('.cs-link-href').addEventListener('input', e => {
+        if (!section.cards[i].link) section.cards[i].link = {};
+        section.cards[i].link.href = e.target.value; scheduleAutosave();
+      });
+      item.querySelector('.cs-link-label').addEventListener('input', e => {
+        if (!section.cards[i].link) section.cards[i].link = {};
+        section.cards[i].link.label = e.target.value; scheduleAutosave();
+      });
+
+      const delBtn = item.querySelector('.block-item__delete');
+      if (delBtn) {
+        delBtn.addEventListener('click', () => {
+          section.cards.splice(i, 1);
+          scheduleAutosave();
+          renderSlidesAndInit();
+        });
+      }
+
+      list.appendChild(item);
+    });
+  }
+
+  function renderSlidesAndInit() {
+    renderSlides();
+    if (window.initImageFields) {
+      initImageFields(projectId, (fieldId, url, focal) => {
+        const match = fieldId.match(/^cs-img-url-\d+-(\d+)$/);
+        if (!match) return;
+        const idx = parseInt(match[1]);
+        if (!section.cards[idx]) return;
+        if (!section.cards[idx].image) section.cards[idx].image = {};
+        section.cards[idx].image.focal = focal === '50% 50%' ? undefined : focal;
+        scheduleAutosave();
+      }, list);
+    }
+  }
+
+  renderSlidesAndInit();
+
+  const addBtn = document.getElementById('addCascadingSlideBtn');
+  const newBtn = addBtn.cloneNode(true);
+  addBtn.parentNode.replaceChild(newBtn, addBtn);
+  newBtn.addEventListener('click', () => {
+    const n = section.cards.length + 1;
+    section.cards.push({ id: `slide-${n}`, title: '', body: '', tag: '', image: { url: '', alt: '' }, link: { href: '', label: '' } });
+    scheduleAutosave();
+    renderSlidesAndInit();
+    const inputs = list.querySelectorAll('.cs-title');
+    if (inputs.length) inputs[inputs.length - 1].focus();
+  });
 }
 
 // ── Stackable cards editor ───────────────────────────────────────

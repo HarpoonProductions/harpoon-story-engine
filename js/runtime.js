@@ -829,7 +829,53 @@
 
   if (!prefersReducedMotion) {
     setupScrollCarousel();
+    setupPanoramicScroll();
   }
+  // ── Panoramic scroll ──────────────────────────────────────────────
+  // Full-viewport image track pans horizontally as the user scrolls.
+  // GSAP scrub drives the translation; text overlays crossfade per panel.
+
+  function setupPanoramicScroll() {
+    document.querySelectorAll(".hse-section--panoramic-scroll").forEach(function (section) {
+      var track     = section.querySelector(".hse-pan__track");
+      var panels    = Array.from(section.querySelectorAll(".hse-pan__panel"));
+      var textItems = Array.from(section.querySelectorAll(".hse-pan__text-item"));
+      var dots      = Array.from(section.querySelectorAll(".hse-pan__dot"));
+
+      if (!track || panels.length < 2) return;
+
+      var currentIndex = 0;
+
+      function setActivePanel(index) {
+        if (index === currentIndex) return;
+        currentIndex = index;
+        textItems.forEach(function (item, i) {
+          item.classList.toggle("is-active", i === index);
+        });
+        dots.forEach(function (dot, i) {
+          dot.classList.toggle("is-active", i === index);
+        });
+      }
+
+      // GSAP scrub: translate the track as the section scrolls
+      gsap.to(track, {
+        x: function () { return -(panels.length - 1) * window.innerWidth; },
+        ease: "none",
+        scrollTrigger: {
+          trigger: section,
+          start: "top top",
+          end: "bottom bottom",
+          scrub: 1.2,
+          invalidateOnRefresh: true,
+          onUpdate: function (self) {
+            var index = Math.round(self.progress * (panels.length - 1));
+            setActivePanel(index);
+          },
+        },
+      });
+    });
+  }
+
   // ── Global heading animations ─────────────────────────────────────
   // Reads data-heading-animation from <body> and triggers entrance
   // animations on all h2/h3 elements as they scroll into view.

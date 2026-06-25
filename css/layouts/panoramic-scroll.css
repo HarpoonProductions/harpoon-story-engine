@@ -1,0 +1,190 @@
+/* Harpoon Story Engine — Panoramic Scroll Layout */
+
+/* Section height: N panels × 100vh — gives (N-1) panels of scroll travel */
+.hse-section--panoramic-scroll {
+  height: calc(var(--pan-count, 1) * 100vh);
+  position: relative;
+}
+
+/* ── Sticky viewport ─────────────────────────────────────────────── */
+
+.hse-pan__sticky {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow: hidden;
+}
+
+/* ── Horizontal track ────────────────────────────────────────────── */
+
+.hse-pan__track {
+  display: flex;
+  height: 100%;
+  will-change: transform;
+}
+
+.hse-pan__panel {
+  flex: 0 0 100vw;
+  height: 100%;
+  position: relative;
+}
+
+.hse-pan__img {
+  position: absolute;
+  inset: 0;
+  background-size: cover;
+  background-position: center;
+}
+
+/* ── Gradient vignette — softens joins and ensures text legibility ── */
+
+.hse-pan__gradient {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1;
+  background:
+    linear-gradient(to right,  rgba(var(--hse-ink-rgb, 10,20,40), 0.35) 0%, transparent 18%),
+    linear-gradient(to left,   rgba(var(--hse-ink-rgb, 10,20,40), 0.35) 0%, transparent 18%),
+    linear-gradient(to top,    rgba(var(--hse-ink-rgb, 10,20,40), 0.75) 0%, transparent 45%);
+}
+
+/* ── Section title (top of viewport) ────────────────────────────── */
+
+.hse-pan__header {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 2;
+  padding: calc(var(--hse-nav-h, 60px) + var(--hse-space-md)) var(--hse-page-pad) 0;
+  pointer-events: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.hse-pan__title {
+  font-family: var(--hse-font-display);
+  font-size: clamp(1.6rem, 4vw, 3rem);
+  font-weight: var(--hse-font-weight-normal);
+  color: var(--hse-warm);
+  line-height: 1.15;
+}
+
+/* ── Text overlays (bottom of viewport, outside track) ──────────── */
+
+.hse-pan__texts {
+  position: absolute;
+  bottom: 5.5rem;
+  left: var(--hse-page-pad);
+  right: var(--hse-page-pad);
+  max-width: 640px;
+  z-index: 2;
+}
+
+.hse-pan__text-item {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  transform: translateY(14px);
+  transition: opacity 0.55s var(--hse-ease-out, ease), transform 0.55s var(--hse-ease-out, ease);
+  pointer-events: none;
+}
+
+.hse-pan__text-item.is-active {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+
+.hse-pan__text {
+  font-family: var(--hse-font-display);
+  font-size: clamp(1.05rem, 2.2vw, 1.55rem);
+  font-weight: var(--hse-font-weight-normal);
+  color: var(--hse-warm);
+  line-height: 1.45;
+  margin: 0 0 0.5rem;
+}
+
+.hse-pan__attribution {
+  color: var(--hse-warm-3);
+  display: block;
+}
+
+/* ── Progress dots ───────────────────────────────────────────────── */
+
+.hse-pan__progress {
+  position: absolute;
+  bottom: 2rem;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 8px;
+  z-index: 2;
+}
+
+.hse-pan__dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.3);
+  transition: background var(--hse-duration-mid, 0.25s), transform var(--hse-duration-mid, 0.25s);
+}
+
+.hse-pan__dot.is-active {
+  background: var(--hse-accent);
+  transform: scale(1.5);
+}
+
+/* ── Mobile ──────────────────────────────────────────────────────── */
+
+@media (max-width: 768px) {
+  .hse-pan__texts {
+    bottom: 4rem;
+  }
+  .hse-pan__text {
+    font-size: clamp(1rem, 4vw, 1.2rem);
+  }
+}
+
+/* ── Reduced motion: vertical stack ─────────────────────────────── */
+
+@media (prefers-reduced-motion: reduce) {
+  .hse-section--panoramic-scroll {
+    height: auto;
+  }
+  .hse-pan__sticky {
+    position: relative;
+    height: auto;
+  }
+  .hse-pan__track {
+    flex-direction: column;
+  }
+  .hse-pan__panel {
+    flex: none;
+    height: 70vh;
+    min-height: 320px;
+  }
+  .hse-pan__img {
+    position: absolute;
+    inset: 0;
+  }
+  .hse-pan__texts {
+    position: relative;
+    bottom: auto;
+    padding: var(--hse-space-md) var(--hse-page-pad);
+    max-width: none;
+  }
+  .hse-pan__text-item {
+    position: relative;
+    opacity: 1;
+    transform: none;
+    pointer-events: auto;
+  }
+  .hse-pan__text-item:not(.is-active) {
+    display: none;
+  }
+  .hse-pan__gradient,
+  .hse-pan__progress { display: none; }
+}

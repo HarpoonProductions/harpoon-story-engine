@@ -17,7 +17,8 @@ const { renderStackableCards } = require("./layouts/stackable-cards");
 const { renderParallax } = require("./layouts/parallax");
 const { renderCascadingSlides } = require("./layouts/cascading-slides");
 const { renderCustomHtml }     = require("./layouts/custom-html");
-const { renderScrollCarousel } = require("./layouts/scroll-carousel");
+const { renderScrollCarousel }  = require("./layouts/scroll-carousel");
+const { renderPanoramicScroll } = require("./layouts/panoramic-scroll");
 
 /**
  * Top-level render function.
@@ -139,6 +140,8 @@ function renderSection(section) {
   switch (layout) {
     case "scroll-carousel":
       return renderScrollCarousel(section);
+    case "panoramic-scroll":
+      return renderPanoramicScroll(section);
     case "custom-html":
       return renderCustomHtml(section);
     case "text":
