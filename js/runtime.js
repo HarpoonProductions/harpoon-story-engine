@@ -993,4 +993,44 @@
       el.classList.add("hse-heading-visible");
     });
   }
+
+  // ── Cinema reveal ─────────────────────────────────────────────────
+  // Video card starts contained (65vw, rounded corners) and expands to
+  // fill the viewport as the user scrolls. MP4 videos autoplay when fully
+  // expanded; YouTube/Vimeo iframes remain click-to-play.
+
+  function setupCinemaReveal() {
+    document.querySelectorAll('.hse-section--cinema-reveal').forEach(function (section) {
+      var sticky = section.querySelector('.hse-cr__sticky');
+      var card   = section.querySelector('.hse-cr__card');
+      var header = section.querySelector('.hse-cr__header');
+
+      if (!card) return;
+
+      var tl = gsap.timeline()
+        .to(card,   { width: '100vw', borderRadius: 0, ease: 'none' }, 0)
+        .to(header, { opacity: 0, y: -24, ease: 'power2.in', duration: 0.35 }, 0);
+
+      ScrollTrigger.create({
+        trigger: section,
+        start: 'top top',
+        end: '+=150%',
+        pin: sticky,
+        scrub: 1.5,
+        animation: tl,
+        onLeave: function () {
+          var video = section.querySelector('.hse-cr__video');
+          if (video) { video.muted = true; video.play().catch(function () {}); }
+          var iframe = section.querySelector('.hse-cr__iframe');
+          if (iframe && iframe.src.indexOf('autoplay') === -1) {
+            iframe.src += (iframe.src.indexOf('?') !== -1 ? '&' : '?') + 'autoplay=1&mute=1';
+          }
+        },
+      });
+    });
+  }
+
+  if (!prefersReducedMotion) {
+    setupCinemaReveal();
+  }
 })();

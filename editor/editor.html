@@ -1313,6 +1313,9 @@
                                         <option value="scroll-carousel">
                                             Scroll Carousel
                                         </option>
+                                        <option value="cinema-reveal">
+                                            Cinema Reveal
+                                        </option>
                                     </select>
                                 </div>
                                 <div class="form-group">
@@ -1446,6 +1449,28 @@
                                   </div>
                                 </div>
                                 
+
+                                <!-- Cinema reveal editor (shown only for cinema-reveal layout) -->
+                                <div id="cinemaRevealEditor" style="display:none">
+                                  <div class="form-group">
+                                    <label class="form-label" for="cr-url">Video URL</label>
+                                    <input class="form-input" id="cr-url" type="url" placeholder="YouTube, Vimeo, or direct .mp4 URL">
+                                    <p class="form-hint">YouTube and Vimeo links are auto-detected. MP4s play automatically when fully expanded.</p>
+                                  </div>
+                                  <div class="form-group">
+                                    <label class="form-label" for="cr-aspect">Aspect ratio</label>
+                                    <select class="form-select" id="cr-aspect">
+                                      <option value="16/9">16:9 — Widescreen (default)</option>
+                                      <option value="4/3">4:3 — Classic</option>
+                                      <option value="21/9">21:9 — Ultrawide</option>
+                                      <option value="9/16">9:16 — Portrait / vertical</option>
+                                    </select>
+                                  </div>
+                                  <div class="form-group">
+                                    <label class="form-label" for="cr-caption">Caption <span class="form-hint">optional</span></label>
+                                    <input class="form-input" id="cr-caption" placeholder="Brief description shown below the video">
+                                  </div>
+                                </div>
 
                                 <!-- Text blocks editor (shown only for text layout) -->
                                 <div id="blocksEditor" style="display:none">
@@ -2272,6 +2297,7 @@
                     initCrossfadeEditor(index);
                     initCustomHtmlEditor(index);
                     initCarouselEditor(index);
+                    initCinemaRevealEditor(index);
                 });
                 wire("sec-intro", (v) => {
                     content.sections[index].intro = v;
@@ -2357,6 +2383,8 @@
                 initCustomHtmlEditor(index);
                 // Initialise carousel editor (shown only for scroll-carousel layout)
                 initCarouselEditor(index);
+                // Initialise cinema reveal editor (shown only for cinema-reveal layout)
+                initCinemaRevealEditor(index);
 
                 // Reset image field enhancement so it re-initialises with correct URL and focal
                 const heroInput = document.getElementById("sec-hero-url");
@@ -3503,6 +3531,32 @@ function initBlocksEditor(sectionIndex) {
 
             boot();
         </script>
+
+        <script>
+        function initCinemaRevealEditor(sectionIndex) {
+          const section = content.sections[sectionIndex];
+          const editor  = document.getElementById('cinemaRevealEditor');
+          const isCR    = section.layout === 'cinema-reveal';
+
+          editor.style.display = isCR ? 'block' : 'none';
+          if (!isCR) return;
+
+          if (!section.cinema) section.cinema = {};
+
+          const urlInput    = document.getElementById('cr-url');
+          const aspectSel   = document.getElementById('cr-aspect');
+          const captionInput = document.getElementById('cr-caption');
+
+          urlInput.value     = section.cinema.url     || '';
+          aspectSel.value    = section.cinema.aspect  || '16/9';
+          captionInput.value = section.cinema.caption || '';
+
+          urlInput.oninput    = e => { section.cinema.url     = e.target.value; scheduleAutosave(); };
+          aspectSel.oninput   = e => { section.cinema.aspect  = e.target.value; scheduleAutosave(); };
+          captionInput.oninput = e => { section.cinema.caption = e.target.value; scheduleAutosave(); };
+        }
+        </script>
+
         <script src="/editor/image-field.js"></script>
     </body>
 </html>

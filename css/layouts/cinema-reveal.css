@@ -1,0 +1,103 @@
+/*
+ * Harpoon Story Engine — Cinema Reveal
+ * css/layouts/cinema-reveal.css
+ *
+ * Video card starts contained (65vw, rounded) and expands to fill the
+ * viewport as the user scrolls. GSAP ScrollTrigger drives the animation.
+ */
+
+.hse-section--cinema-reveal {
+  position: relative;
+  background: var(--hse-ink);
+}
+
+/* ── Sticky canvas ───────────────────────────────────────────────── */
+
+.hse-cr__sticky {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--hse-space-md);
+  overflow: hidden;
+  padding: 0 var(--hse-page-pad);
+}
+
+/* ── Header (title + intro — fades as card expands) ─────────────── */
+
+.hse-cr__header {
+  text-align: center;
+  width: 100%;
+  will-change: opacity, transform;
+}
+
+.hse-cr__header .hse-section-title {
+  color: var(--hse-warm);
+  margin-bottom: 0.75rem;
+}
+
+.hse-cr__header .hse-section-intro {
+  color: var(--hse-warm-2);
+}
+
+/* ── Video card ──────────────────────────────────────────────────── */
+
+.hse-cr__card {
+  width: 65vw;
+  border-radius: 1.5rem;
+  overflow: hidden;
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.55);
+  flex-shrink: 0;
+  will-change: width, border-radius;
+}
+
+.hse-cr__frame {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+}
+
+.hse-cr__card[data-aspect="4-3"]  .hse-cr__frame { aspect-ratio: 4 / 3; }
+.hse-cr__card[data-aspect="21-9"] .hse-cr__frame { aspect-ratio: 21 / 9; }
+.hse-cr__card[data-aspect="9-16"] .hse-cr__frame { aspect-ratio: 9 / 16; }
+
+.hse-cr__iframe,
+.hse-cr__video {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border: 0;
+  display: block;
+}
+
+/* ── Caption ─────────────────────────────────────────────────────── */
+
+.hse-cr__caption {
+  font-family: var(--hse-font-mono);
+  font-size: var(--hse-font-size-micro);
+  letter-spacing: var(--hse-tracking-md);
+  color: var(--hse-warm-3);
+  text-align: center;
+  max-width: 60ch;
+}
+
+/* ── Mobile ──────────────────────────────────────────────────────── */
+
+@media (max-width: 768px) {
+  .hse-cr__card {
+    width: 92vw;
+  }
+}
+
+/* ── Reduced motion: skip animation, show card at full width ─────── */
+
+@media (prefers-reduced-motion: reduce) {
+  .hse-cr__card {
+    width: 92vw;
+    border-radius: 0.75rem;
+  }
+}

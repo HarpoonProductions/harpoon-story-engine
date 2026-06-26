@@ -19,6 +19,7 @@ const { renderCascadingSlides } = require("./layouts/cascading-slides");
 const { renderCustomHtml }     = require("./layouts/custom-html");
 const { renderScrollCarousel }  = require("./layouts/scroll-carousel");
 const { renderPanoramicScroll } = require("./layouts/panoramic-scroll");
+const { renderCinemaReveal }    = require("./layouts/cinema-reveal");
 
 /**
  * Top-level render function.
@@ -142,6 +143,8 @@ function renderSection(section) {
       return renderScrollCarousel(section);
     case "panoramic-scroll":
       return renderPanoramicScroll(section);
+    case "cinema-reveal":
+      return renderCinemaReveal(section);
     case "custom-html":
       return renderCustomHtml(section);
     case "text":
