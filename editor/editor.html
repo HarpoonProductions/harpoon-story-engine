@@ -3818,22 +3818,45 @@ function initBlocksEditor(sectionIndex) {
             progressLabel.textContent    = '';
 
             const jobId = crypto.randomUUID();
+            let finished = false;
 
-            // Open SSE stream first
+            // Open SSE stream first — POST is sent only once onopen fires
             const es = new EventSource(`/api/project/${projectId}/extract-frames/events?jobId=${jobId}`);
+
+            function doPost() {
+              const fd = new FormData();
+              fd.append('video',   file);
+              fd.append('frames',  extractFrames.value  || '120');
+              fd.append('quality', extractQuality.value || '3');
+              fd.append('prefix',  document.getElementById('fs-prefix').value  || 'frame-');
+              fd.append('digits',  document.getElementById('fs-digits').value  || '3');
+
+              fetch(`/api/project/${projectId}/extract-frames?jobId=${jobId}`, {
+                method: 'POST',
+                body:   fd,
+              }).catch(err => {
+                if (!finished) {
+                  stageLabel.textContent = '✗ Upload failed: ' + err.message;
+                }
+              });
+            }
+
+            // Wait for the SSE connection to be open before sending the video
+            es.onopen = () => { doPost(); };
 
             es.onmessage = e => {
               const d = JSON.parse(e.data);
 
               if (d.type === 'stage') {
-                stageLabel.textContent = d.message;
-                progressFill.style.width = '0%';
+                stageLabel.textContent    = d.message;
+                progressFill.style.width  = '0%';
                 progressLabel.textContent = '';
               } else if (d.type === 'progress') {
                 const pct = Math.round((d.done / d.total) * 100);
-                progressFill.style.width = pct + '%';
+                progressFill.style.width  = pct + '%';
                 progressLabel.textContent = `${d.done} / ${d.total}`;
               } else if (d.type === 'done') {
+                finished = true;
                 es.close();
                 // Auto-populate all fields
                 document.getElementById('fs-base-url').value    = d.base_url;
@@ -3857,37 +3880,31 @@ function initBlocksEditor(sectionIndex) {
                   dropProcessing.style.display = 'none';
                 }, 3000);
               } else if (d.type === 'error') {
+                finished = true;
                 es.close();
-                stageLabel.textContent    = '✗ ' + d.message;
-                progressLabel.textContent = 'Check console for details.';
+                stageLabel.textContent        = '✗ ' + d.message;
+                progressLabel.textContent     = 'Check the Electron console for details.';
                 progressFill.style.background = 'var(--error, #e53)';
                 setTimeout(() => {
-                  dropIdle.style.display       = 'block';
-                  dropProcessing.style.display = 'none';
+                  dropIdle.style.display        = 'block';
+                  dropProcessing.style.display  = 'none';
                   progressFill.style.background = '';
                 }, 4000);
               }
             };
 
+            // Only report connection errors if we haven't successfully finished
             es.onerror = () => {
-              stageLabel.textContent = '✗ Connection lost';
-              es.close();
+              if (!finished) {
+                stageLabel.textContent    = '✗ Connection lost — try again';
+                progressLabel.textContent = '';
+                es.close();
+                setTimeout(() => {
+                  dropIdle.style.display       = 'block';
+                  dropProcessing.style.display = 'none';
+                }, 3000);
+              }
             };
-
-            // POST the video
-            const fd = new FormData();
-            fd.append('video', file);
-            fd.append('frames',  extractFrames.value  || '120');
-            fd.append('quality', extractQuality.value || '3');
-            fd.append('prefix',  document.getElementById('fs-prefix').value  || 'frame-');
-            fd.append('digits',  document.getElementById('fs-digits').value  || '3');
-
-            fetch(`/api/project/${projectId}/extract-frames?jobId=${jobId}`, {
-              method: 'POST',
-              body:   fd,
-            }).catch(err => {
-              stageLabel.textContent = '✗ Upload failed: ' + err.message;
-            });
           }
 
           // Click to browse

@@ -523,9 +523,11 @@ app.get("/api/project/:id/extract-frames/events", (req, res) => {
     "X-Accel-Buffering": "no",
   });
   res.flushHeaders();
+  // Send an immediate comment so the client knows the connection is live
+  res.write(": connected\n\n");
 
-  // Heartbeat so the connection stays alive
-  const hb = setInterval(() => res.write(": heartbeat\n\n"), 15000);
+  // Heartbeat every 5s keeps the connection alive during long extractions
+  const hb = setInterval(() => res.write(": heartbeat\n\n"), 5000);
 
   activeExtractionStreams.set(jobId, res);
   req.on("close", () => {
