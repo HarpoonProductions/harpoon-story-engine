@@ -505,6 +505,177 @@ app.post("/api/project/:id/upload", (req, res) => {
   }
 });
 
+// ── Frame extraction ──────────────────────────────────────────────
+// Accepts a video file upload, extracts JPEG frames via ffmpeg-static,
+// uploads them to S3, and streams progress back via SSE.
+
+const activeExtractionStreams = new Map();
+
+// SSE endpoint — client opens this before POSTing the video
+app.get("/api/project/:id/extract-frames/events", (req, res) => {
+  const jobId = req.query.jobId;
+  if (!jobId) return res.status(400).json({ error: "jobId required" });
+
+  res.set({
+    "Content-Type":  "text/event-stream",
+    "Cache-Control": "no-cache",
+    "Connection":    "keep-alive",
+    "X-Accel-Buffering": "no",
+  });
+  res.flushHeaders();
+
+  // Heartbeat so the connection stays alive
+  const hb = setInterval(() => res.write(": heartbeat\n\n"), 15000);
+
+  activeExtractionStreams.set(jobId, res);
+  req.on("close", () => {
+    clearInterval(hb);
+    activeExtractionStreams.delete(jobId);
+  });
+});
+
+function sendExtractionEvent(jobId, data) {
+  const res = activeExtractionStreams.get(jobId);
+  if (res) res.write(`data: ${JSON.stringify(data)}\n\n`);
+}
+
+// POST endpoint — receives the video file and options
+app.post("/api/project/:id/extract-frames", (req, res) => {
+  if (!S3Client || !S3_BUCKET) {
+    return res.status(503).json({ error: "S3 not configured." });
+  }
+
+  const projectId = req.params.id;
+  const jobId     = req.query.jobId || "";
+
+  let settled = false;
+  const send  = (data) => sendExtractionEvent(jobId, data);
+  const fail  = (msg)  => {
+    if (!settled) { settled = true; send({ type: "error", message: msg }); res.json({ ok: false, error: msg }); }
+  };
+
+  let tmpVideoPath = null;
+  let tmpDir       = null;
+
+  try {
+    const bb = Busboy({ headers: req.headers });
+    let opts = { frames: 120, prefix: "frame-", digits: 3, quality: 3 };
+
+    bb.on("field", (name, val) => {
+      if (name === "frames")  opts.frames  = parseInt(val) || 120;
+      if (name === "prefix")  opts.prefix  = val || "frame-";
+      if (name === "digits")  opts.digits  = parseInt(val) || 3;
+      if (name === "quality") opts.quality = parseInt(val) || 3;
+    });
+
+    bb.on("file", (fieldname, fileStream, info) => {
+      const ext  = path.extname(info.filename || "video.mp4").toLowerCase() || ".mp4";
+      tmpDir       = fs.mkdtempSync(path.join(require("os").tmpdir(), "hse-frames-"));
+      tmpVideoPath = path.join(tmpDir, `input${ext}`);
+      const outDir = path.join(tmpDir, "frames");
+      fs.mkdirSync(outDir);
+
+      const writeStream = fs.createWriteStream(tmpVideoPath);
+      fileStream.pipe(writeStream);
+
+      writeStream.on("finish", async () => {
+        try {
+          const ffmpegStatic = require("ffmpeg-static");
+          const ffmpeg       = require("fluent-ffmpeg");
+          ffmpeg.setFfmpegPath(ffmpegStatic);
+
+          // ── 1. Probe duration ─────────────────────────────────────
+          send({ type: "stage", stage: "probing", message: "Reading video…" });
+
+          const duration = await new Promise((resolve, reject) => {
+            ffmpeg.ffprobe(tmpVideoPath, (err, meta) => {
+              if (err) return reject(err);
+              resolve(meta.format.duration);
+            });
+          });
+
+          // ── 2. Extract frames ─────────────────────────────────────
+          send({ type: "stage", stage: "extracting", message: `Extracting ${opts.frames} frames…`, total: opts.frames });
+
+          const fps    = opts.frames / duration;
+          const outPat = path.join(outDir, `${opts.prefix}%0${opts.digits}d.jpg`);
+
+          await new Promise((resolve, reject) => {
+            ffmpeg(tmpVideoPath)
+              .videoFilter(`fps=${fps}`)
+              .frames(opts.frames)
+              .outputOptions([`-q:v ${opts.quality}`])
+              .output(outPat)
+              .on("progress", (info) => {
+                send({ type: "progress", stage: "extracting", done: info.frames || 0, total: opts.frames });
+              })
+              .on("end",   resolve)
+              .on("error", reject)
+              .run();
+          });
+
+          // ── 3. Upload frames ──────────────────────────────────────
+          const s3Folder = `${projectId}/frames`;
+          const files    = fs.readdirSync(outDir).filter(f => f.endsWith(".jpg")).sort();
+          send({ type: "stage", stage: "uploading", message: `Uploading ${files.length} frames to S3…`, total: files.length });
+
+          const s3 = new S3Client({ region: AWS_REGION });
+          let uploaded = 0;
+
+          for (const file of files) {
+            const s3Key = `${s3Folder}/${file}`;
+            await new Upload({
+              client: s3,
+              params: {
+                Bucket:       S3_BUCKET,
+                Key:          s3Key,
+                Body:         fs.readFileSync(path.join(outDir, file)),
+                ContentType:  "image/jpeg",
+                CacheControl: "public, max-age=31536000, immutable",
+              },
+            }).done();
+            uploaded++;
+            send({ type: "progress", stage: "uploading", done: uploaded, total: files.length });
+          }
+
+          // ── 4. Build result ───────────────────────────────────────
+          const deliveryDomain = process.env.DELIVERY_DOMAIN || "";
+          const baseUrl = deliveryDomain
+            ? `https://${deliveryDomain}/${s3Folder}/`
+            : `https://${S3_BUCKET}.s3.${AWS_REGION}.amazonaws.com/${s3Folder}/`;
+
+          const firstFrame = `${baseUrl}${opts.prefix}${String(1).padStart(opts.digits, "0")}.jpg`;
+
+          send({
+            type:        "done",
+            base_url:    baseUrl,
+            poster:      firstFrame,
+            frame_count: opts.frames,
+            prefix:      opts.prefix,
+            digits:      opts.digits,
+          });
+
+          if (!settled) { settled = true; res.json({ ok: true }); }
+
+        } catch (err) {
+          fail(err.message);
+        } finally {
+          // Clean up temp files
+          try { fs.rmSync(tmpDir, { recursive: true, force: true }); } catch (_) {}
+        }
+      });
+
+      writeStream.on("error", (err) => fail(err.message));
+    });
+
+    bb.on("error", (err) => fail(err.message));
+    req.pipe(bb);
+
+  } catch (err) {
+    fail(err.message);
+  }
+});
+
 // ── Deploy via GitHub Actions API ────────────────────────────────
 // Triggers the render-deploy workflow with a project ID and target.
 // Requires GITHUB_TOKEN and GITHUB_REPO in environment.

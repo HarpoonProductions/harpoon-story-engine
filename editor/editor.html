@@ -1480,6 +1480,43 @@
 
                                 <!-- Frame scrubber editor -->
                                 <div id="frameScrubberEditor" style="display:none">
+
+                                  <!-- Video processor -->
+                                  <div class="form-group" id="fs-video-processor">
+                                    <label class="form-label">Process a video file</label>
+                                    <p class="form-hint">Drop a short video clip here — the engine will extract frames and upload them to S3 automatically.</p>
+                                    <div id="fs-drop-zone" style="border:2px dashed var(--rule);border-radius:8px;padding:1.5rem;text-align:center;cursor:pointer;transition:border-color 0.2s,background 0.2s">
+                                      <div id="fs-drop-idle">
+                                        <p style="color:var(--ink-3);font-size:0.85rem;margin:0 0 0.5rem">Drop video here or click to browse</p>
+                                        <p style="color:var(--ink-4);font-size:0.7rem;margin:0">MP4, MOV, WebM — ideally under 2 minutes</p>
+                                      </div>
+                                      <div id="fs-drop-processing" style="display:none">
+                                        <p id="fs-stage-label" style="color:var(--ink-2);font-size:0.85rem;margin:0 0 0.75rem">Processing…</p>
+                                        <div style="height:6px;background:var(--rule);border-radius:999px;overflow:hidden">
+                                          <div id="fs-progress-fill" style="height:100%;width:0%;background:var(--accent);border-radius:inherit;transition:width 0.1s linear"></div>
+                                        </div>
+                                        <p id="fs-progress-label" style="color:var(--ink-4);font-size:0.7rem;margin:0.4rem 0 0">—</p>
+                                      </div>
+                                      <input type="file" id="fs-video-input" accept="video/*" style="display:none">
+                                    </div>
+                                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.5rem;margin-top:0.5rem">
+                                      <div>
+                                        <label class="form-label" style="font-size:0.65rem">Extract frames</label>
+                                        <input class="form-input" id="fs-extract-frames" type="number" min="30" max="600" value="120" placeholder="120">
+                                      </div>
+                                      <div>
+                                        <label class="form-label" style="font-size:0.65rem">JPEG quality <span class="form-hint">1=best 31=worst</span></label>
+                                        <input class="form-input" id="fs-extract-quality" type="number" min="1" max="31" value="3" placeholder="3">
+                                      </div>
+                                    </div>
+                                  </div>
+
+                                  <div style="display:flex;align-items:center;gap:0.75rem;margin-bottom:0.75rem">
+                                    <div style="flex:1;height:1px;background:var(--rule)"></div>
+                                    <span style="color:var(--ink-4);font-size:0.65rem;letter-spacing:0.1em">OR ENTER MANUALLY</span>
+                                    <div style="flex:1;height:1px;background:var(--rule)"></div>
+                                  </div>
+
                                   <div class="form-group">
                                     <label class="form-label">Frames base URL</label>
                                     <input class="form-input" id="fs-base-url" placeholder="https://cdn.example.com/frames/">
@@ -3761,6 +3798,121 @@ function initBlocksEditor(sectionIndex) {
 
           if (!section.scrubber) section.scrubber = {};
           if (!section.scrubber_panels) section.scrubber_panels = [];
+
+          // ── Video processor ───────────────────────────────────────────
+          const dropZone      = document.getElementById('fs-drop-zone');
+          const dropIdle      = document.getElementById('fs-drop-idle');
+          const dropProcessing= document.getElementById('fs-drop-processing');
+          const stageLabel    = document.getElementById('fs-stage-label');
+          const progressFill  = document.getElementById('fs-progress-fill');
+          const progressLabel = document.getElementById('fs-progress-label');
+          const videoInput    = document.getElementById('fs-video-input');
+          const extractFrames = document.getElementById('fs-extract-frames');
+          const extractQuality= document.getElementById('fs-extract-quality');
+
+          function startProcessing(file) {
+            dropIdle.style.display       = 'none';
+            dropProcessing.style.display = 'block';
+            progressFill.style.width     = '0%';
+            stageLabel.textContent       = 'Preparing…';
+            progressLabel.textContent    = '';
+
+            const jobId = crypto.randomUUID();
+
+            // Open SSE stream first
+            const es = new EventSource(`/api/project/${projectId}/extract-frames/events?jobId=${jobId}`);
+
+            es.onmessage = e => {
+              const d = JSON.parse(e.data);
+
+              if (d.type === 'stage') {
+                stageLabel.textContent = d.message;
+                progressFill.style.width = '0%';
+                progressLabel.textContent = '';
+              } else if (d.type === 'progress') {
+                const pct = Math.round((d.done / d.total) * 100);
+                progressFill.style.width = pct + '%';
+                progressLabel.textContent = `${d.done} / ${d.total}`;
+              } else if (d.type === 'done') {
+                es.close();
+                // Auto-populate all fields
+                document.getElementById('fs-base-url').value    = d.base_url;
+                document.getElementById('fs-frame-count').value = d.frame_count;
+                document.getElementById('fs-prefix').value      = d.prefix;
+                document.getElementById('fs-digits').value      = d.digits;
+                document.getElementById('fs-poster').value      = d.poster;
+                // Write back to section data
+                section.scrubber.base_url     = d.base_url;
+                section.scrubber.frame_count  = d.frame_count;
+                section.scrubber.frame_prefix = d.prefix;
+                section.scrubber.frame_digits = d.digits;
+                section.scrubber.poster       = d.poster;
+                scheduleAutosave();
+                // Reset drop zone
+                progressFill.style.width     = '100%';
+                stageLabel.textContent       = '✓ Done — fields updated';
+                progressLabel.textContent    = `${d.frame_count} frames at ${d.base_url}`;
+                setTimeout(() => {
+                  dropIdle.style.display       = 'block';
+                  dropProcessing.style.display = 'none';
+                }, 3000);
+              } else if (d.type === 'error') {
+                es.close();
+                stageLabel.textContent    = '✗ ' + d.message;
+                progressLabel.textContent = 'Check console for details.';
+                progressFill.style.background = 'var(--error, #e53)';
+                setTimeout(() => {
+                  dropIdle.style.display       = 'block';
+                  dropProcessing.style.display = 'none';
+                  progressFill.style.background = '';
+                }, 4000);
+              }
+            };
+
+            es.onerror = () => {
+              stageLabel.textContent = '✗ Connection lost';
+              es.close();
+            };
+
+            // POST the video
+            const fd = new FormData();
+            fd.append('video', file);
+            fd.append('frames',  extractFrames.value  || '120');
+            fd.append('quality', extractQuality.value || '3');
+            fd.append('prefix',  document.getElementById('fs-prefix').value  || 'frame-');
+            fd.append('digits',  document.getElementById('fs-digits').value  || '3');
+
+            fetch(`/api/project/${projectId}/extract-frames?jobId=${jobId}`, {
+              method: 'POST',
+              body:   fd,
+            }).catch(err => {
+              stageLabel.textContent = '✗ Upload failed: ' + err.message;
+            });
+          }
+
+          // Click to browse
+          dropZone.addEventListener('click', () => videoInput.click());
+          videoInput.addEventListener('change', e => {
+            if (e.target.files[0]) startProcessing(e.target.files[0]);
+          });
+
+          // Drag and drop
+          dropZone.addEventListener('dragover', e => {
+            e.preventDefault();
+            dropZone.style.borderColor = 'var(--accent)';
+            dropZone.style.background  = 'rgba(var(--accent-rgb,80,120,255),0.06)';
+          });
+          dropZone.addEventListener('dragleave', () => {
+            dropZone.style.borderColor = '';
+            dropZone.style.background  = '';
+          });
+          dropZone.addEventListener('drop', e => {
+            e.preventDefault();
+            dropZone.style.borderColor = '';
+            dropZone.style.background  = '';
+            const file = e.dataTransfer.files[0];
+            if (file && file.type.startsWith('video/')) startProcessing(file);
+          });
 
           // ── Scrubber settings ─────────────────────────────────────────
           const baseUrlInput    = document.getElementById('fs-base-url');
