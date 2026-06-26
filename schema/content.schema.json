@@ -647,6 +647,16 @@
           "type": "boolean",
           "description": "panoramic-scroll multi-image: adds a visible border and moves caption below each image (slideshow mode)."
         },
+        "cinema": {
+          "type": "object",
+          "description": "Used by cinema-reveal layout.",
+          "properties": {
+            "url":     { "type": "string", "description": "YouTube, Vimeo, or direct .mp4/.webm URL" },
+            "aspect":  { "type": "string", "description": "Aspect ratio: 16/9, 4/3, 21/9, 9/16" },
+            "caption": { "type": "string" },
+            "poster":  { "type": "string", "description": "Poster image URL for mp4 sources" }
+          }
+        },
         "panoramic_image": {
           "$ref": "#/definitions/image",
           "description": "Used by panoramic-scroll single-image mode. One wide image whose backgroundPositionX is animated for a seamless pan."
