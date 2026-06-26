@@ -582,9 +582,11 @@ app.post("/api/project/:id/extract-frames", (req, res) => {
 
       writeStream.on("finish", async () => {
         try {
-          const ffmpegStatic = require("ffmpeg-static");
-          const ffmpeg       = require("fluent-ffmpeg");
+          const ffmpegStatic  = require("ffmpeg-static");
+          const ffprobePath   = require("ffprobe-static").path;
+          const ffmpeg        = require("fluent-ffmpeg");
           ffmpeg.setFfmpegPath(ffmpegStatic);
+          ffmpeg.setFfprobePath(ffprobePath);
 
           // ── 1. Probe duration ─────────────────────────────────────
           send({ type: "stage", stage: "probing", message: "Reading video…" });

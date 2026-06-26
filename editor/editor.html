@@ -3907,29 +3907,38 @@ function initBlocksEditor(sectionIndex) {
             };
           }
 
-          // Click to browse
-          dropZone.addEventListener('click', () => videoInput.click());
-          videoInput.addEventListener('change', e => {
-            if (e.target.files[0]) startProcessing(e.target.files[0]);
-          });
+          // ── Drop zone events — attached once via data flag ────────────
+          if (!dropZone.dataset.wired) {
+            dropZone.dataset.wired = '1';
 
-          // Drag and drop
-          dropZone.addEventListener('dragover', e => {
-            e.preventDefault();
-            dropZone.style.borderColor = 'var(--accent)';
-            dropZone.style.background  = 'rgba(var(--accent-rgb,80,120,255),0.06)';
-          });
-          dropZone.addEventListener('dragleave', () => {
-            dropZone.style.borderColor = '';
-            dropZone.style.background  = '';
-          });
-          dropZone.addEventListener('drop', e => {
-            e.preventDefault();
-            dropZone.style.borderColor = '';
-            dropZone.style.background  = '';
-            const file = e.dataTransfer.files[0];
-            if (file && file.type.startsWith('video/')) startProcessing(file);
-          });
+            dropZone.addEventListener('click', () => {
+              if (dropProcessing.style.display === 'block') return; // ignore clicks while processing
+              videoInput.click();
+            });
+            videoInput.addEventListener('change', e => {
+              const file = e.target.files[0];
+              videoInput.value = ''; // reset so same file can be picked again
+              if (file) startProcessing(file);
+            });
+            dropZone.addEventListener('dragover', e => {
+              if (dropProcessing.style.display === 'block') return;
+              e.preventDefault();
+              dropZone.style.borderColor = 'var(--accent)';
+              dropZone.style.background  = 'rgba(var(--accent-rgb,80,120,255),0.06)';
+            });
+            dropZone.addEventListener('dragleave', () => {
+              dropZone.style.borderColor = '';
+              dropZone.style.background  = '';
+            });
+            dropZone.addEventListener('drop', e => {
+              if (dropProcessing.style.display === 'block') return;
+              e.preventDefault();
+              dropZone.style.borderColor = '';
+              dropZone.style.background  = '';
+              const file = e.dataTransfer.files[0];
+              if (file && file.type.startsWith('video/')) startProcessing(file);
+            });
+          }
 
           // ── Scrubber settings ─────────────────────────────────────────
           const baseUrlInput    = document.getElementById('fs-base-url');
