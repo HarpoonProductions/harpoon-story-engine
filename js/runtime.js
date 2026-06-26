@@ -1034,6 +1034,116 @@
     setupCinemaReveal();
   }
 
+  // ── Frame Scrubber ────────────────────────────────────────────────
+  // Pre-loads a JPEG sequence and draws frames to a canvas as the user
+  // scrolls. Text overlays activate when scroll enters their frame range.
+
+  function setupFrameScrubber() {
+    document.querySelectorAll(".hse-section--frame-scrubber").forEach(function (section) {
+      var canvas    = section.querySelector(".hse-fs__canvas");
+      var textItems = Array.from(section.querySelectorAll(".hse-fs__text-item"));
+      var bar       = section.querySelector(".hse-fs__progress-bar span");
+      if (!canvas) return;
+
+      var ctx        = canvas.getContext("2d");
+      var baseUrl    = section.dataset.baseUrl    || "";
+      var frameCount = parseInt(section.dataset.frameCount)  || 1;
+      var prefix     = section.dataset.framePrefix || "frame-";
+      var digits     = parseInt(section.dataset.frameDigits) || 3;
+      var frames     = new Array(frameCount);
+      var loaded     = 0;
+      var currentIdx = -1;
+
+      // Size canvas to device pixels for sharpness
+      function resize() {
+        var dpr = window.devicePixelRatio || 1;
+        canvas.width  = window.innerWidth  * dpr;
+        canvas.height = window.innerHeight * dpr;
+        canvas.style.width  = window.innerWidth  + "px";
+        canvas.style.height = window.innerHeight + "px";
+        ctx.scale(dpr, dpr);
+        if (currentIdx >= 0) drawFrame(currentIdx);
+      }
+      window.addEventListener("resize", function () { resize(); });
+      resize();
+
+      // Cover-fit draw
+      function drawFrame(idx) {
+        var img = frames[idx];
+        if (!img || !img.complete || !img.naturalWidth) return;
+        var vw = window.innerWidth, vh = window.innerHeight;
+        var iw = img.naturalWidth,  ih = img.naturalHeight;
+        var scale = Math.max(vw / iw, vh / ih);
+        var w = iw * scale, h = ih * scale;
+        ctx.clearRect(0, 0, vw, vh);
+        ctx.drawImage(img, (vw - w) / 2, (vh - h) / 2, w, h);
+        currentIdx = idx;
+      }
+
+      // Loading indicator
+      function drawLoading(n) {
+        var vw = window.innerWidth, vh = window.innerHeight;
+        ctx.fillStyle = "#0a1428";
+        ctx.fillRect(0, 0, vw, vh);
+        ctx.fillStyle = "rgba(255,255,255,0.4)";
+        ctx.font = "13px monospace";
+        ctx.textAlign = "center";
+        ctx.fillText("Loading " + Math.round(n / frameCount * 100) + "%", vw / 2, vh / 2);
+      }
+
+      // Text overlay activation by frame range
+      function updateText(idx) {
+        textItems.forEach(function (item) {
+          var start = parseInt(item.dataset.frameStart) || 0;
+          var end   = parseInt(item.dataset.frameEnd)   || frameCount;
+          item.classList.toggle("is-active", idx >= start && idx <= end);
+        });
+      }
+
+      // Zero-pad frame index (1-based)
+      function pad(i) {
+        return String(i + 1).padStart(digits, "0");
+      }
+
+      // Pre-load all frames
+      drawLoading(0);
+      for (var i = 0; i < frameCount; i++) {
+        (function (idx) {
+          var img = new Image();
+          frames[idx] = img;
+          img.onload = function () {
+            loaded++;
+            if (loaded < frameCount) {
+              drawLoading(loaded);
+            } else {
+              drawFrame(0);
+              updateText(0);
+            }
+          };
+          img.onerror = function () { loaded++; };
+          img.src = baseUrl + prefix + pad(idx) + ".jpg";
+        })(i);
+      }
+
+      // ScrollTrigger scrub
+      ScrollTrigger.create({
+        trigger: section,
+        start: "top top",
+        end: "bottom bottom",
+        scrub: true,
+        onUpdate: function (self) {
+          var idx = Math.min(Math.round(self.progress * (frameCount - 1)), frameCount - 1);
+          if (bar) bar.style.width = (self.progress * 100) + "%";
+          if (idx === currentIdx) return;
+          drawFrame(idx);
+          updateText(idx);
+        },
+      });
+    });
+  }
+
+  setupFrameScrubber();
+
   // ── Split Reveal ──────────────────────────────────────────────────
   // Full-bleed image shrinks left (100vw → 50vw) over the first 28% of
   // scroll; text panel fades in from the right (18–36%); inner copy

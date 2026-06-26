@@ -1,0 +1,151 @@
+/* Harpoon Story Engine — Frame Scrubber Layout */
+
+.hse-section--frame-scrubber {
+  height: calc(var(--scroll-length, 5) * 100vh);
+  position: relative;
+  background: var(--hse-ink);
+}
+
+/* ── Sticky viewport ─────────────────────────────────────────────── */
+
+.hse-fs__sticky {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow: hidden;
+}
+
+/* ── Canvas: fills viewport, JS draws cover-fit ──────────────────── */
+
+.hse-fs__canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+/* ── Gradient vignette ───────────────────────────────────────────── */
+
+.hse-fs__gradient {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1;
+  background:
+    linear-gradient(to top, rgba(var(--hse-ink-rgb, 10,20,40), 0.7) 0%, transparent 40%),
+    linear-gradient(to bottom, rgba(var(--hse-ink-rgb, 10,20,40), 0.4) 0%, transparent 25%);
+}
+
+/* ── Optional section title (top) ────────────────────────────────── */
+
+.hse-fs__header {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 2;
+  padding: calc(var(--hse-nav-h, 60px) + var(--hse-space-md)) var(--hse-page-pad) 0;
+  pointer-events: none;
+}
+
+.hse-fs__title {
+  font-family: var(--hse-font-display);
+  font-size: clamp(1.6rem, 4vw, 3rem);
+  font-weight: var(--hse-font-weight-normal);
+  color: var(--hse-warm);
+  line-height: 1.15;
+}
+
+/* ── Text overlays ───────────────────────────────────────────────── */
+
+.hse-fs__texts {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+}
+
+.hse-fs__text-item {
+  position: absolute;
+  left: var(--tx, var(--hse-page-pad));
+  top: var(--ty, auto);
+  bottom: var(--ty, 5.5rem);
+  max-width: min(580px, 80vw);
+  opacity: 0;
+  transform: translateY(10px);
+  transition: opacity 0.45s var(--hse-ease-out, ease), transform 0.45s var(--hse-ease-out, ease);
+  pointer-events: none;
+}
+
+.hse-fs__text-item[style*="--ty"] {
+  bottom: auto;
+}
+
+.hse-fs__text-item.is-active {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+
+.hse-fs__text {
+  font-family: var(--hse-font-display);
+  font-size: clamp(1.05rem, 2.2vw, 1.55rem);
+  font-weight: var(--hse-font-weight-normal);
+  color: var(--hse-warm);
+  line-height: 1.45;
+  margin: 0 0 0.5rem;
+}
+
+.hse-fs__attribution {
+  color: var(--hse-warm-3);
+  display: block;
+}
+
+/* ── Scrub progress bar (thin line at bottom) ────────────────────── */
+
+.hse-fs__progress-bar {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: rgba(255,255,255,0.1);
+  z-index: 3;
+}
+
+.hse-fs__progress-bar span {
+  display: block;
+  height: 100%;
+  background: var(--hse-accent);
+  width: 0%;
+  transition: width 0.05s linear;
+}
+
+/* ── Mobile ──────────────────────────────────────────────────────── */
+
+@media (max-width: 768px) {
+  .hse-fs__text {
+    font-size: clamp(1rem, 4vw, 1.2rem);
+  }
+  .hse-fs__text-item {
+    left: var(--hse-page-pad) !important;
+    top: auto !important;
+    bottom: 5.5rem !important;
+  }
+}
+
+/* ── Reduced motion: static first frame, all text visible ────────── */
+
+@media (prefers-reduced-motion: reduce) {
+  .hse-section--frame-scrubber {
+    height: 100vh;
+  }
+  .hse-fs__text-item {
+    opacity: 1;
+    transform: none;
+    pointer-events: auto;
+    position: relative;
+    left: auto; top: auto; bottom: auto;
+    padding: var(--hse-space-md) var(--hse-page-pad);
+  }
+  .hse-fs__progress-bar { display: none; }
+}

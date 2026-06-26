@@ -20,6 +20,7 @@ const { renderCustomHtml }     = require("./layouts/custom-html");
 const { renderScrollCarousel }  = require("./layouts/scroll-carousel");
 const { renderPanoramicScroll } = require("./layouts/panoramic-scroll");
 const { renderCinemaReveal }    = require("./layouts/cinema-reveal");
+const { renderFrameScrubber }   = require("./layouts/frame-scrubber");
 const { renderSplitReveal }     = require("./layouts/split-reveal");
 
 /**
@@ -146,6 +147,8 @@ function renderSection(section) {
       return renderPanoramicScroll(section);
     case "cinema-reveal":
       return renderCinemaReveal(section);
+    case "frame-scrubber":
+      return renderFrameScrubber(section);
     case "split-reveal":
       return renderSplitReveal(section);
     case "custom-html":

@@ -570,7 +570,8 @@
             "custom-html",
             "scroll-carousel",
             "panoramic-scroll",
-            "cinema-reveal"
+            "cinema-reveal",
+            "frame-scrubber"
           ],
           "default": "default",
           "description": "Rendering template for this section. fullbleed-quote: full-viewport hero_image with pull_quote overlaid. reveal-crossfade: two images crossfade on scroll, driven by crossfade_images and crossfade_phases."
@@ -647,6 +648,37 @@
         "framed": {
           "type": "boolean",
           "description": "panoramic-scroll multi-image: adds a visible border and moves caption below each image (slideshow mode)."
+        },
+        "scrubber": {
+          "type": "object",
+          "description": "frame-scrubber layout settings",
+          "properties": {
+            "base_url":     { "type": "string" },
+            "frame_count":  { "type": "number" },
+            "frame_prefix": { "type": "string" },
+            "frame_digits": { "type": "number" },
+            "scroll_length":{ "type": "number" },
+            "poster":       { "type": "string" }
+          }
+        },
+        "scrubber_panels": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "frame_start":   { "type": "number" },
+              "frame_end":     { "type": "number" },
+              "text":          { "type": "string" },
+              "attribution":   { "type": "string" },
+              "text_position": {
+                "type": "object",
+                "properties": {
+                  "x": { "type": "number" },
+                  "y": { "type": "number" }
+                }
+              }
+            }
+          }
         },
         "cinema": {
           "type": "object",

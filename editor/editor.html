@@ -1316,6 +1316,9 @@
                                         <option value="cinema-reveal">
                                             Cinema Reveal
                                         </option>
+                                        <option value="frame-scrubber">
+                                            Frame Scrubber
+                                        </option>
                                         <option value="split-reveal">
                                             Split Reveal
                                         </option>
@@ -1472,6 +1475,45 @@
                                   <div class="form-group">
                                     <label class="form-label" for="cr-caption">Caption <span class="form-hint">optional</span></label>
                                     <input class="form-input" id="cr-caption" placeholder="Brief description shown below the video">
+                                  </div>
+                                </div>
+
+                                <!-- Frame scrubber editor -->
+                                <div id="frameScrubberEditor" style="display:none">
+                                  <div class="form-group">
+                                    <label class="form-label">Frames base URL</label>
+                                    <input class="form-input" id="fs-base-url" placeholder="https://cdn.example.com/frames/">
+                                    <p class="form-hint">S3 folder URL ending in /. Frames must be named e.g. frame-001.jpg, frame-002.jpg…</p>
+                                  </div>
+                                  <div class="form-group" style="display:grid;grid-template-columns:1fr 1fr;gap:0.5rem">
+                                    <div>
+                                      <label class="form-label" for="fs-frame-count">Frame count</label>
+                                      <input class="form-input" id="fs-frame-count" type="number" min="1" placeholder="120">
+                                    </div>
+                                    <div>
+                                      <label class="form-label" for="fs-scroll-length">Scroll length <span class="form-hint">× 100vh</span></label>
+                                      <input class="form-input" id="fs-scroll-length" type="number" min="2" max="20" placeholder="5">
+                                    </div>
+                                  </div>
+                                  <div class="form-group" style="display:grid;grid-template-columns:1fr 1fr;gap:0.5rem">
+                                    <div>
+                                      <label class="form-label" for="fs-prefix">Filename prefix</label>
+                                      <input class="form-input" id="fs-prefix" placeholder="frame-">
+                                    </div>
+                                    <div>
+                                      <label class="form-label" for="fs-digits">Digit padding</label>
+                                      <input class="form-input" id="fs-digits" type="number" min="1" max="6" placeholder="3">
+                                    </div>
+                                  </div>
+                                  <div class="form-group">
+                                    <label class="form-label">Poster / first frame URL <span class="form-hint">optional — used as position picker background</span></label>
+                                    <input class="form-input" id="fs-poster" placeholder="https://…">
+                                  </div>
+                                  <div class="form-group">
+                                    <label class="form-label">Text panels</label>
+                                    <p class="form-hint">Each panel appears between two frame numbers and fades out when the scrubber leaves that range.</p>
+                                    <div id="fsPanelsList"></div>
+                                    <button type="button" class="tbtn tbtn--ghost" id="addFsPanelBtn" style="margin-top:0.5rem;width:100%;justify-content:center">+ Add text panel</button>
                                   </div>
                                 </div>
 
@@ -2325,6 +2367,7 @@
                     initCustomHtmlEditor(index);
                     initCarouselEditor(index);
                     initCinemaRevealEditor(index);
+                    initFrameScrubberEditor(index);
                     initSplitRevealEditor(index);
                 });
                 wire("sec-intro", (v) => {
@@ -2413,6 +2456,8 @@
                 initCarouselEditor(index);
                 // Initialise cinema reveal editor (shown only for cinema-reveal layout)
                 initCinemaRevealEditor(index);
+                // Initialise frame scrubber editor
+                initFrameScrubberEditor(index);
                 // Initialise split reveal editor (shown only for split-reveal layout)
                 initSplitRevealEditor(index);
 
@@ -3703,6 +3748,162 @@ function initBlocksEditor(sectionIndex) {
           };
 
           renderBlocks();
+        }
+
+        function initFrameScrubberEditor(sectionIndex) {
+          const section = content.sections[sectionIndex];
+          const editor  = document.getElementById('frameScrubberEditor');
+          const list    = document.getElementById('fsPanelsList');
+          const isFS    = section.layout === 'frame-scrubber';
+
+          editor.style.display = isFS ? 'block' : 'none';
+          if (!isFS) return;
+
+          if (!section.scrubber) section.scrubber = {};
+          if (!section.scrubber_panels) section.scrubber_panels = [];
+
+          // ── Scrubber settings ─────────────────────────────────────────
+          const baseUrlInput    = document.getElementById('fs-base-url');
+          const frameCountInput = document.getElementById('fs-frame-count');
+          const scrollLenInput  = document.getElementById('fs-scroll-length');
+          const prefixInput     = document.getElementById('fs-prefix');
+          const digitsInput     = document.getElementById('fs-digits');
+          const posterInput     = document.getElementById('fs-poster');
+
+          baseUrlInput.value    = section.scrubber.base_url     || '';
+          frameCountInput.value = section.scrubber.frame_count  || 60;
+          scrollLenInput.value  = section.scrubber.scroll_length || 5;
+          prefixInput.value     = section.scrubber.frame_prefix  || 'frame-';
+          digitsInput.value     = section.scrubber.frame_digits  || 3;
+          posterInput.value     = section.scrubber.poster        || '';
+
+          baseUrlInput.oninput    = e => { section.scrubber.base_url      = e.target.value;       scheduleAutosave(); };
+          frameCountInput.oninput = e => { section.scrubber.frame_count   = parseInt(e.target.value) || 60;  scheduleAutosave(); };
+          scrollLenInput.oninput  = e => { section.scrubber.scroll_length = parseInt(e.target.value) || 5;   scheduleAutosave(); };
+          prefixInput.oninput     = e => { section.scrubber.frame_prefix  = e.target.value;       scheduleAutosave(); };
+          digitsInput.oninput     = e => { section.scrubber.frame_digits  = parseInt(e.target.value) || 3;   scheduleAutosave(); };
+          posterInput.oninput     = e => {
+            section.scrubber.poster = e.target.value;
+            scheduleAutosave();
+            // Refresh position pickers when poster URL changes
+            renderPanels();
+          };
+
+          // ── Text position picker (reused from panoramic pattern) ──────
+          function addPositionPicker(container, panel, i) {
+            const imageUrl = section.scrubber.poster || section.scrubber.base_url
+              ? (section.scrubber.poster || section.scrubber.base_url + (section.scrubber.frame_prefix || 'frame-') + '001.jpg')
+              : '';
+            const tx = panel.text_position ? panel.text_position.x : 8;
+            const ty = panel.text_position ? panel.text_position.y : 78;
+
+            const wrap = document.createElement('div');
+            wrap.innerHTML = `
+              <div class="focal-label" style="margin-top:0.5rem">
+                <span class="focal-label-text" style="--icon:'◧'">Text position</span>
+                <div style="display:flex;align-items:center;gap:0.5rem">
+                  <span class="focal-coords" id="fs-txpos-coords-${i}">${tx}% ${ty}%</span>
+                  <button type="button" class="focal-reset" id="fs-txpos-reset-${i}">Reset</button>
+                </div>
+              </div>
+              <div class="focal-canvas" id="fs-txpos-canvas-${i}" style="cursor:crosshair">
+                <img src="${imageUrl}" alt="" style="opacity:${imageUrl ? 1 : 0.15}">
+                <div class="focal-dot" style="left:${tx}%;top:${ty}%;background:var(--accent);font-size:8px;color:#fff;display:flex;align-items:center;justify-content:center">T</div>
+              </div>`;
+            container.appendChild(wrap);
+
+            const canvas = wrap.querySelector('.focal-canvas');
+            const dot    = wrap.querySelector('.focal-dot');
+            const coords = wrap.querySelector('.focal-coords');
+            let dragging = false;
+
+            function setPos(x, y) {
+              const px = Math.round(Math.max(0, Math.min(100, x * 100)));
+              const py = Math.round(Math.max(0, Math.min(100, y * 100)));
+              dot.style.left = px + '%';
+              dot.style.top  = py + '%';
+              coords.textContent = px + '% ' + py + '%';
+              if (!section.scrubber_panels[i].text_position) section.scrubber_panels[i].text_position = {};
+              section.scrubber_panels[i].text_position.x = px;
+              section.scrubber_panels[i].text_position.y = py;
+              scheduleAutosave();
+            }
+
+            function fromEvent(e) {
+              const r = canvas.getBoundingClientRect();
+              setPos((e.clientX - r.left) / r.width, (e.clientY - r.top) / r.height);
+            }
+
+            canvas.addEventListener('mousedown', e => { dragging = true; fromEvent(e); e.preventDefault(); });
+            document.addEventListener('mousemove', e => { if (dragging) fromEvent(e); });
+            document.addEventListener('mouseup',   () => { dragging = false; });
+            wrap.querySelector('.focal-reset').addEventListener('click', () => setPos(0.08, 0.78));
+          }
+
+          // ── Panels ────────────────────────────────────────────────────
+          function renderPanels() {
+            list.innerHTML = '';
+            const frameCount = section.scrubber.frame_count || 60;
+            section.scrubber_panels.forEach((panel, i) => {
+              const item = document.createElement('div');
+              item.className = 'block-item';
+              item.innerHTML = `
+                <div class="block-item__header">
+                  <span style="font-family:var(--font-mono);font-size:0.6rem;letter-spacing:0.1em;color:var(--ink-3)">PANEL ${i + 1}</span>
+                  <button type="button" class="block-item__delete" title="Remove panel">✕</button>
+                </div>
+                <div class="fs-panel-body" style="padding:0.5rem;display:flex;flex-direction:column;gap:0.4rem">
+                  <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.5rem">
+                    <div>
+                      <label class="form-label" style="font-size:0.65rem">From frame</label>
+                      <input class="form-input fs-frame-start" type="number" min="0" max="${frameCount - 1}" value="${panel.frame_start || 0}">
+                    </div>
+                    <div>
+                      <label class="form-label" style="font-size:0.65rem">To frame</label>
+                      <input class="form-input fs-frame-end" type="number" min="0" max="${frameCount - 1}" value="${panel.frame_end !== undefined ? panel.frame_end : frameCount - 1}">
+                    </div>
+                  </div>
+                  <textarea class="form-textarea fs-text" placeholder="Overlay text…" rows="2">${panel.text || ''}</textarea>
+                  <input class="form-input fs-attribution" placeholder="Attribution (optional)" value="${panel.attribution || ''}">
+                </div>`;
+
+              item.querySelector('.fs-frame-start').addEventListener('input', e => {
+                section.scrubber_panels[i].frame_start = parseInt(e.target.value) || 0; scheduleAutosave();
+              });
+              item.querySelector('.fs-frame-end').addEventListener('input', e => {
+                section.scrubber_panels[i].frame_end = parseInt(e.target.value) || 0; scheduleAutosave();
+              });
+              item.querySelector('.fs-text').addEventListener('input', e => {
+                section.scrubber_panels[i].text = e.target.value; scheduleAutosave();
+              });
+              item.querySelector('.fs-attribution').addEventListener('input', e => {
+                section.scrubber_panels[i].attribution = e.target.value; scheduleAutosave();
+              });
+              item.querySelector('.block-item__delete').addEventListener('click', () => {
+                section.scrubber_panels.splice(i, 1); scheduleAutosave(); renderPanels();
+              });
+
+              addPositionPicker(item.querySelector('.fs-panel-body'), panel, i);
+              list.appendChild(item);
+            });
+          }
+
+          renderPanels();
+
+          const addBtn = document.getElementById('addFsPanelBtn');
+          const newBtn = addBtn.cloneNode(true);
+          addBtn.parentNode.replaceChild(newBtn, addBtn);
+          newBtn.addEventListener('click', () => {
+            const fc = section.scrubber.frame_count || 60;
+            const existing = section.scrubber_panels;
+            const lastEnd  = existing.length ? (existing[existing.length - 1].frame_end || 0) : 0;
+            const start    = Math.min(lastEnd + 1, fc - 1);
+            const end      = Math.min(start + Math.round(fc / 5), fc - 1);
+            section.scrubber_panels.push({ frame_start: start, frame_end: end, text: '', attribution: '' });
+            scheduleAutosave();
+            renderPanels();
+            list.querySelectorAll('.fs-text')[list.querySelectorAll('.fs-text').length - 1].focus();
+          });
         }
 
         function initCinemaRevealEditor(sectionIndex) {
