@@ -1033,4 +1033,71 @@
   if (!prefersReducedMotion) {
     setupCinemaReveal();
   }
+
+  // ── Split Reveal ──────────────────────────────────────────────────
+  // Full-bleed image shrinks left (100vw → 50vw) over the first 28% of
+  // scroll; text panel fades in from the right (18–36%); inner copy
+  // then scrolls up through the remaining 64%. Mobile (<768px) is a
+  // static stacked layout — no animation needed.
+
+  function setupSplitReveal() {
+    document.querySelectorAll('.hse-section--split-reveal').forEach(function (section) {
+      var media     = section.querySelector('.hse-sr__media');
+      var copy      = section.querySelector('.hse-sr__copy');
+      var copyInner = section.querySelector('.hse-sr__copy-inner');
+
+      if (!media || !copy || !copyInner) return;
+
+      function isMobile() { return window.innerWidth <= 768; }
+
+      function reset() {
+        media.style.width     = '';
+        copy.style.opacity    = '';
+        copy.style.transform  = '';
+        copyInner.style.transform = '';
+        section.querySelectorAll('.hse-sr__image-card').forEach(function (c) {
+          c.classList.add('is-visible');
+        });
+      }
+
+      ScrollTrigger.create({
+        trigger: section,
+        start: 'top top',
+        end: 'bottom bottom',
+        onUpdate: function (self) {
+          if (isMobile()) { reset(); return; }
+
+          var p = self.progress;
+
+          // Image shrinks from 100vw → 50vw over first 28% of scroll
+          var shrink = Math.min(1, p / 0.28);
+          media.style.width = (100 - 50 * shrink) + 'vw';
+
+          // Copy panel fades + slides in from 18% → 36%
+          var copyP = Math.max(0, Math.min(1, (p - 0.18) / 0.18));
+          copy.style.opacity   = copyP;
+          copy.style.transform = 'translateX(' + (60 * (1 - copyP)) + 'px)';
+
+          // Inner copy scrolls up from 36% → 100%
+          var textP     = Math.max(0, Math.min(1, (p - 0.36) / 0.64));
+          var scrollDist = Math.max(0, copyInner.offsetHeight - window.innerHeight);
+          copyInner.style.transform = 'translateY(' + (-scrollDist * textP) + 'px)';
+        },
+      });
+
+      // Image cards slide in when they enter the (virtual) viewport
+      section.querySelectorAll('.hse-sr__image-card').forEach(function (card) {
+        ScrollTrigger.create({
+          trigger: card,
+          start: 'top 78%',
+          once: true,
+          onEnter: function () { card.classList.add('is-visible'); },
+        });
+      });
+    });
+  }
+
+  if (!prefersReducedMotion) {
+    setupSplitReveal();
+  }
 })();

@@ -1316,6 +1316,9 @@
                                         <option value="cinema-reveal">
                                             Cinema Reveal
                                         </option>
+                                        <option value="split-reveal">
+                                            Split Reveal
+                                        </option>
                                     </select>
                                 </div>
                                 <div class="form-group">
@@ -1469,6 +1472,30 @@
                                   <div class="form-group">
                                     <label class="form-label" for="cr-caption">Caption <span class="form-hint">optional</span></label>
                                     <input class="form-input" id="cr-caption" placeholder="Brief description shown below the video">
+                                  </div>
+                                </div>
+
+                                <!-- Split reveal editor (shown only for split-reveal layout) -->
+                                <div id="splitRevealEditor" style="display:none">
+                                  <div class="form-group">
+                                    <label class="form-label">Section image</label>
+                                    <input class="form-input" id="sr-img-url" data-image-field placeholder="Image URL https://…">
+                                    <input class="form-input" id="sr-img-alt" placeholder="Image alt text" style="margin-top:0.35rem">
+                                  </div>
+                                  <div class="form-group">
+                                    <label class="form-label">Heading <span class="form-hint">shown over the image</span></label>
+                                    <input class="form-input" id="sr-heading-em" placeholder="Bold/accent words (e.g. Main Quad)">
+                                    <input class="form-input" id="sr-heading" placeholder="Light remainder (e.g. makeover)" style="margin-top:0.35rem">
+                                    <p class="form-hint">First field: accent colour + bold. Second field: light weight. Leave second blank for single-colour heading.</p>
+                                  </div>
+                                  <div class="form-group">
+                                    <label class="form-label">Copy blocks</label>
+                                    <p class="form-hint">Add paragraphs and inline image rows that scroll in the right-hand panel.</p>
+                                    <div id="sr-blocks-list"></div>
+                                    <div style="display:flex;gap:0.5rem;margin-top:0.5rem">
+                                      <button type="button" class="tbtn tbtn--ghost" id="sr-add-para" style="flex:1;justify-content:center">+ Paragraph</button>
+                                      <button type="button" class="tbtn tbtn--ghost" id="sr-add-row"  style="flex:1;justify-content:center">+ Image row</button>
+                                    </div>
                                   </div>
                                 </div>
 
@@ -2298,6 +2325,7 @@
                     initCustomHtmlEditor(index);
                     initCarouselEditor(index);
                     initCinemaRevealEditor(index);
+                    initSplitRevealEditor(index);
                 });
                 wire("sec-intro", (v) => {
                     content.sections[index].intro = v;
@@ -2385,6 +2413,8 @@
                 initCarouselEditor(index);
                 // Initialise cinema reveal editor (shown only for cinema-reveal layout)
                 initCinemaRevealEditor(index);
+                // Initialise split reveal editor (shown only for split-reveal layout)
+                initSplitRevealEditor(index);
 
                 // Reset image field enhancement so it re-initialises with correct URL and focal
                 const heroInput = document.getElementById("sec-hero-url");
@@ -3533,6 +3563,148 @@ function initBlocksEditor(sectionIndex) {
         </script>
 
         <script>
+        function initSplitRevealEditor(sectionIndex) {
+          const section = content.sections[sectionIndex];
+          const editor  = document.getElementById('splitRevealEditor');
+          const isSR    = section.layout === 'split-reveal';
+
+          editor.style.display = isSR ? 'block' : 'none';
+          if (!isSR) return;
+
+          if (!section.split_reveal) section.split_reveal = {};
+          if (!section.split_reveal.image) section.split_reveal.image = {};
+          if (!section.split_reveal.blocks) section.split_reveal.blocks = [];
+
+          const sr = section.split_reveal;
+
+          // ── Static fields ───────────────────────────────────────
+          const imgUrl  = document.getElementById('sr-img-url');
+          const imgAlt  = document.getElementById('sr-img-alt');
+          const headEm  = document.getElementById('sr-heading-em');
+          const headRest = document.getElementById('sr-heading');
+
+          imgUrl.value   = sr.image.url     || '';
+          imgAlt.value   = sr.image.alt     || '';
+          headEm.value   = sr.heading_em    || '';
+          headRest.value = sr.heading       || '';
+
+          imgUrl.oninput   = e => { sr.image.url  = e.target.value; scheduleAutosave(); };
+          imgAlt.oninput   = e => { sr.image.alt  = e.target.value; scheduleAutosave(); };
+          headEm.oninput   = e => { sr.heading_em = e.target.value; scheduleAutosave(); };
+          headRest.oninput = e => { sr.heading    = e.target.value; scheduleAutosave(); };
+
+          // Wire image field enhancement for the section image
+          imgUrl.setAttribute('data-image-field', '');
+          if (sr.image.focal) imgUrl.dataset.existingFocal = sr.image.focal;
+          const oldWrap = imgUrl.closest('.img-field-wrap');
+          if (oldWrap) { oldWrap.parentNode.insertBefore(imgUrl, oldWrap); oldWrap.remove(); }
+          setTimeout(() => {
+            if (window.initImageFields) {
+              initImageFields(projectId, (fieldId, url, focal) => {
+                if (fieldId === 'sr-img-url') {
+                  sr.image.url   = url;
+                  sr.image.focal = focal;
+                  scheduleAutosave();
+                }
+              }, editor);
+            }
+          }, 50);
+
+          // ── Blocks list ─────────────────────────────────────────
+          const list    = document.getElementById('sr-blocks-list');
+          const addPara = document.getElementById('sr-add-para');
+          const addRow  = document.getElementById('sr-add-row');
+
+          function renderBlocks() {
+            list.innerHTML = '';
+            sr.blocks.forEach((block, i) => {
+              const item = document.createElement('div');
+              item.className = 'block-item';
+
+              if (block.type === 'image-row') {
+                const imagesHtml = (block.images || []).map((img, j) => `
+                  <div style="display:flex;gap:0.35rem;align-items:center;margin-top:0.35rem">
+                    <input class="form-input sr-row-img-url" data-i="${j}" placeholder="Image URL" value="${img.url || ''}" style="flex:2">
+                    <input class="form-input sr-row-img-cap" data-i="${j}" placeholder="Caption" value="${img.caption || ''}" style="flex:1">
+                    <button type="button" class="tbtn tbtn--ghost sr-row-img-del" data-i="${j}" style="padding:0.25rem 0.4rem;min-width:0">✕</button>
+                  </div>`).join('');
+
+                item.innerHTML = `
+                  <div class="block-item__header">
+                    <span style="font-family:var(--font-mono);font-size:0.6rem;letter-spacing:0.1em;color:var(--ink-3)">IMAGE ROW</span>
+                    <button type="button" class="block-item__delete" title="Remove block">✕</button>
+                  </div>
+                  <div style="padding:0.5rem">
+                    ${imagesHtml}
+                    <button type="button" class="tbtn tbtn--ghost sr-row-add-img" style="margin-top:0.35rem;width:100%;justify-content:center;font-size:0.7rem">+ Add image</button>
+                  </div>`;
+
+                item.querySelectorAll('.sr-row-img-url').forEach(el => {
+                  el.addEventListener('input', e => {
+                    block.images[+e.target.dataset.i].url = e.target.value;
+                    scheduleAutosave();
+                  });
+                });
+                item.querySelectorAll('.sr-row-img-cap').forEach(el => {
+                  el.addEventListener('input', e => {
+                    block.images[+e.target.dataset.i].caption = e.target.value;
+                    scheduleAutosave();
+                  });
+                });
+                item.querySelectorAll('.sr-row-img-del').forEach(el => {
+                  el.addEventListener('click', e => {
+                    block.images.splice(+e.target.dataset.i, 1);
+                    scheduleAutosave();
+                    renderBlocks();
+                  });
+                });
+                item.querySelector('.sr-row-add-img').addEventListener('click', () => {
+                  block.images.push({ url: '', alt: '', caption: '' });
+                  scheduleAutosave();
+                  renderBlocks();
+                });
+
+              } else {
+                // Paragraph
+                item.innerHTML = `
+                  <div class="block-item__header">
+                    <span style="font-family:var(--font-mono);font-size:0.6rem;letter-spacing:0.1em;color:var(--ink-3)">PARAGRAPH</span>
+                    <button type="button" class="block-item__delete" title="Remove block">✕</button>
+                  </div>
+                  <div style="padding:0.5rem">
+                    <textarea class="form-textarea sr-para-text" rows="3" placeholder="Paragraph text…">${block.text || ''}</textarea>
+                  </div>`;
+
+                item.querySelector('.sr-para-text').addEventListener('input', e => {
+                  sr.blocks[i].text = e.target.value;
+                  scheduleAutosave();
+                });
+              }
+
+              item.querySelector('.block-item__delete').addEventListener('click', () => {
+                sr.blocks.splice(i, 1);
+                scheduleAutosave();
+                renderBlocks();
+              });
+
+              list.appendChild(item);
+            });
+          }
+
+          addPara.onclick = () => {
+            sr.blocks.push({ type: 'p', text: '' });
+            scheduleAutosave();
+            renderBlocks();
+          };
+          addRow.onclick = () => {
+            sr.blocks.push({ type: 'image-row', images: [{ url: '', alt: '', caption: '' }, { url: '', alt: '', caption: '' }] });
+            scheduleAutosave();
+            renderBlocks();
+          };
+
+          renderBlocks();
+        }
+
         function initCinemaRevealEditor(sectionIndex) {
           const section = content.sections[sectionIndex];
           const editor  = document.getElementById('cinemaRevealEditor');

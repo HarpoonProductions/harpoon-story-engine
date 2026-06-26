@@ -1,0 +1,227 @@
+/*
+ * Harpoon Story Engine — Split Reveal
+ * css/layouts/split-reveal.css
+ *
+ * Full-bleed image shrinks left as the user scrolls, revealing a
+ * text panel from the right. JS drives the width/opacity animation.
+ */
+
+/* ── Section container ───────────────────────────────────────────── */
+
+.hse-section--split-reveal {
+  position: relative;
+  height: 300vh;
+  background: var(--hse-ink);
+}
+
+/* ── Sticky canvas ───────────────────────────────────────────────── */
+
+.hse-sr__sticky {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow: hidden;
+  display: flex;
+  background: var(--hse-ink);
+}
+
+/* ── Left: image panel ───────────────────────────────────────────── */
+
+.hse-sr__media {
+  position: relative;
+  height: 100vh;
+  width: 100vw;     /* animated by JS: 100vw → 50vw */
+  flex: 0 0 auto;
+  overflow: hidden;
+}
+
+.hse-sr__media img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  pointer-events: none;
+}
+
+.hse-sr__media-heading {
+  position: absolute;
+  left: var(--hse-page-pad);
+  bottom: 10vh;
+  z-index: 2;
+  max-width: 60%;
+}
+
+.hse-sr__heading {
+  margin: 0;
+  color: var(--hse-warm);
+  font-family: var(--hse-font-display);
+  font-size: clamp(2rem, 4.5vw, 3.75rem);
+  font-weight: 300;
+  line-height: 0.95;
+  background: var(--hse-ink);
+  padding: 0.4em 0.6em;
+  display: inline;
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+}
+
+.hse-sr__heading-em {
+  color: var(--hse-accent);
+  font-weight: 700;
+  font-style: normal;
+}
+
+/* ── Right: copy panel ───────────────────────────────────────────── */
+
+.hse-sr__copy {
+  height: 100vh;
+  width: 50vw;
+  flex: 0 0 50vw;
+  overflow: hidden;
+  background: var(--hse-ink-2);
+  color: var(--hse-warm);
+  border-left: 3px solid var(--hse-accent);
+  opacity: 0;                    /* animated by JS */
+  transform: translateX(60px);   /* animated by JS */
+}
+
+.hse-sr__copy-inner {
+  height: auto;
+  padding: 50vh var(--hse-space-lg) 10vh var(--hse-space-lg);
+  box-sizing: border-box;
+}
+
+.hse-sr__copy-inner > p {
+  font-family: var(--hse-font-body);
+  font-size: 0.95rem;
+  line-height: 1.65;
+  color: var(--hse-warm-2);
+  margin: 0 0 1.4em;
+}
+
+.hse-sr__copy-inner > p:last-child {
+  margin-bottom: 0;
+}
+
+/* ── Inline image row ────────────────────────────────────────────── */
+
+.hse-sr__image-row {
+  display: flex;
+  gap: 1.25rem;
+  margin: 2.5rem 0;
+}
+
+.hse-sr__image-card {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  opacity: 0;
+  transform: translateX(80px);
+  transition:
+    transform 0.9s cubic-bezier(0.22, 1, 0.36, 1),
+    opacity 0.9s ease;
+}
+
+.hse-sr__image-card:nth-child(2) { transition-delay: 0.15s; }
+.hse-sr__image-card:nth-child(3) { transition-delay: 0.30s; }
+
+.hse-sr__image-card.is-visible {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+.hse-sr__image-card img {
+  width: 100%;
+  display: block;
+  border-radius: var(--hse-radius-sm, 0.5rem);
+}
+
+.hse-sr__image-caption {
+  display: block;
+  margin-top: 0.5rem;
+  font-family: var(--hse-font-mono);
+  font-size: var(--hse-font-size-micro);
+  letter-spacing: var(--hse-tracking-md);
+  color: var(--hse-warm-3);
+}
+
+/* ── Mobile: stacked layout, no animation ────────────────────────── */
+
+@media (max-width: 768px) {
+  .hse-section--split-reveal {
+    height: auto;
+  }
+
+  .hse-sr__sticky {
+    position: relative;
+    height: auto;
+    display: block;
+  }
+
+  .hse-sr__media {
+    width: 100%;
+    height: 70vh;
+  }
+
+  .hse-sr__media-heading {
+    max-width: calc(100% - 2 * var(--hse-page-pad));
+  }
+
+  .hse-sr__copy {
+    width: 100%;
+    height: auto;
+    opacity: 1;
+    transform: none;
+    border-left: none;
+    border-top: 3px solid var(--hse-accent);
+  }
+
+  .hse-sr__copy-inner {
+    padding: 2.5rem var(--hse-page-pad) 3rem;
+  }
+
+  .hse-sr__image-row {
+    flex-direction: column;
+  }
+
+  .hse-sr__image-card {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* ── Reduced motion: static stacked layout ───────────────────────── */
+
+@media (prefers-reduced-motion: reduce) {
+  .hse-section--split-reveal {
+    height: auto;
+  }
+
+  .hse-sr__sticky {
+    position: relative;
+    height: auto;
+    flex-direction: column;
+  }
+
+  .hse-sr__media {
+    width: 100%;
+    height: 70vh;
+  }
+
+  .hse-sr__copy {
+    width: 100%;
+    height: auto;
+    flex: none;
+    opacity: 1;
+    transform: none;
+  }
+
+  .hse-sr__copy-inner {
+    padding: 2.5rem var(--hse-page-pad) 3rem;
+  }
+
+  .hse-sr__image-card {
+    opacity: 1;
+    transform: none;
+  }
+}
