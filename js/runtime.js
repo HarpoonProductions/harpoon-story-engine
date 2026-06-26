@@ -1105,25 +1105,55 @@
         return String(i + 1).padStart(digits, "0");
       }
 
-      // Pre-load all frames
-      drawLoading(0);
-      for (var i = 0; i < frameCount; i++) {
-        (function (idx) {
-          var img = new Image();
-          frames[idx] = img;
-          img.onload = function () {
-            loaded++;
-            if (loaded < frameCount) {
-              drawLoading(loaded);
-            } else {
-              drawFrame(0);
-              updateText(0);
-            }
-          };
-          img.onerror = function () { loaded++; };
-          img.src = baseUrl + prefix + pad(idx) + ".jpg";
-        })(i);
+      // Show poster (or blank) until frames arrive
+      var posterUrl = section.dataset.poster || "";
+      if (posterUrl) {
+        var posterImg = new Image();
+        posterImg.onload = function () { drawFrame_raw(posterImg); };
+        posterImg.src = posterUrl;
+      } else {
+        drawLoading(0);
       }
+
+      function drawFrame_raw(img) {
+        var vw = window.innerWidth, vh = window.innerHeight;
+        var iw = img.naturalWidth,  ih = img.naturalHeight;
+        var scale = Math.max(vw / iw, vh / ih);
+        var w = iw * scale, h = ih * scale;
+        ctx.clearRect(0, 0, vw, vh);
+        ctx.drawImage(img, (vw - w) / 2, (vh - h) / 2, w, h);
+      }
+
+      function startPreload() {
+        if (frames[0]) return; // already started
+        if (!posterUrl) drawLoading(0);
+        for (var i = 0; i < frameCount; i++) {
+          (function (idx) {
+            var img = new Image();
+            frames[idx] = img;
+            img.onload = function () {
+              loaded++;
+              if (loaded < frameCount) {
+                if (!posterUrl) drawLoading(loaded);
+              } else {
+                drawFrame(0);
+                updateText(0);
+              }
+            };
+            img.onerror = function () { loaded++; };
+            img.src = baseUrl + prefix + pad(idx) + ".jpg";
+          })(i);
+        }
+      }
+
+      // Begin loading when the section is ~1.5 viewports away
+      var observer = new IntersectionObserver(function (entries) {
+        if (entries[0].isIntersecting) {
+          observer.disconnect();
+          startPreload();
+        }
+      }, { rootMargin: "150% 0px" });
+      observer.observe(section);
 
       // ScrollTrigger scrub
       ScrollTrigger.create({
