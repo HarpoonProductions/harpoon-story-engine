@@ -133,6 +133,9 @@ function renderHead(meta, config, title, basePath, staging, heroImageUrl) {
   <link rel="stylesheet" href="${css('css/layouts/frame-scrubber.css')}">
   <link rel="stylesheet" href="${css('css/layouts/split-reveal.css')}">
 
+  <!-- Print stylesheet — media=print so it never affects screen rendering -->
+  <link rel="stylesheet" href="${css('css/print.css')}" media="print">
+
   <!-- Per-project brand tokens -->
   <style>
     :root {

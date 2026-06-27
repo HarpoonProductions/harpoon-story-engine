@@ -58,7 +58,11 @@ function renderVideoBg(video) {
   const autoplay = video.autoplay !== false ? ' autoplay' : '';
   const loop     = video.loop     !== false ? ' loop' : '';
   const muted    = video.muted    !== false ? ' muted' : '';
-  return `<video class="hse-cover__bg-video"${autoplay}${muted}${loop} playsinline${poster}>
+  // The poster img is hidden on screen (video takes over) but visible in print
+  const posterImg = video.poster
+    ? `<img class="hse-cover__bg-img hse-cover__bg-poster" src="${escHtml(video.poster)}" alt="" aria-hidden="true">`
+    : '';
+  return `${posterImg}<video class="hse-cover__bg-video"${autoplay}${muted}${loop} playsinline${poster}>
     <source src="${escHtml(video.url)}" type="video/mp4">
   </video>`;
 }
