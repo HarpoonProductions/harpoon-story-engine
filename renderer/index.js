@@ -71,7 +71,10 @@ function buildPage(meta, config, cover, sections, basePath, registryLogoUrl) {
   const base = basePath
     ? "/" + basePath.replace(/^\//, "").replace(/\/$/, "")
     : "";
-  const head = renderHead(meta, config, null, basePath);
+  // Pass hero image URL so the head can emit a preload hint
+  // For video covers, preload the poster instead so the first frame appears immediately
+  const heroImageUrl = cover?.hero_image?.url || cover?.hero_video?.poster || null;
+  const head = renderHead(meta, config, null, basePath, false, heroImageUrl);
   const nav = renderNav(meta, sections, registryLogoUrl);
   const coverHtml = renderCover(cover);
 
@@ -127,8 +130,6 @@ ${sectionsHtml}
   opacity: 0.5;
 }
 </style>
-
-<script src="${base ? base + "/js/runtime.js" : "js/runtime.js"}"></script>
 
 </body>
 </html>`;

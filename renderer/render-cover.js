@@ -71,6 +71,8 @@ function renderImageBg(image) {
   return `<img class="hse-cover__bg-img"
     src="${escHtml(image.url)}"
     alt="${escHtml(image.alt || '')}"
+    fetchpriority="high"
+    decoding="async"
     aria-hidden="true"${focalStyle}>`;
 }
 

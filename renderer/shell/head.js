@@ -12,7 +12,7 @@ const path = require('path');
  * @param {string} basePath  - root-relative base path, e.g. '/opera-voices-2026'
  * @returns {string} HTML string
  */
-function renderHead(meta, config, title, basePath, staging) {
+function renderHead(meta, config, title, basePath, staging, heroImageUrl) {
   const pageTitle = title
     ? `${title} — ${meta.title}`
     : meta.title;
@@ -60,6 +60,11 @@ function renderHead(meta, config, title, basePath, staging) {
     : '';
 
   // Pre-compute conditional HTML blocks (avoids nested template literals)
+  // Ensure font-display=swap is always present so text renders immediately
+  function withSwap(url) {
+    return url.includes('display=') ? url : url + '&display=swap';
+  }
+
   const defaultFontsLink = '<link rel="preconnect" href="https://fonts.googleapis.com">\n' +
     '  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>\n' +
     '  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,700;1,400;1,500&family=DM+Sans:wght@300;400;500&family=DM+Mono:wght@400&display=swap" rel="stylesheet">';
@@ -67,7 +72,7 @@ function renderHead(meta, config, title, basePath, staging) {
   const fontsHtml = googleFontsUrl
     ? '<link rel="preconnect" href="https://fonts.googleapis.com">\n' +
       '  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>\n' +
-      `  <link href="${googleFontsUrl}" rel="stylesheet">`
+      `  <link href="${withSwap(googleFontsUrl)}" rel="stylesheet">`
     : useDefaultFonts ? defaultFontsLink : '';
 
   const tokenSetHtml = tokenSetCss
@@ -87,9 +92,13 @@ function renderHead(meta, config, title, basePath, staging) {
   <!-- Fonts (default set uses Google Fonts; client token sets may specify their own) -->
   ${fontsHtml}
 
-  <!-- GSAP + ScrollTrigger -->
-  <script src="${js('js/vendor/gsap.min.js')}"></script>
-  <script src="${js('js/vendor/ScrollTrigger.min.js')}"></script>
+  ${heroImageUrl ? `<!-- Preload hero image so LCP fires as early as possible -->
+  <link rel="preload" as="image" href="${escHtml(heroImageUrl)}">` : ''}
+
+  <!-- GSAP + ScrollTrigger + runtime (deferred — does not block first paint) -->
+  <script defer src="${js('js/vendor/gsap.min.js')}"></script>
+  <script defer src="${js('js/vendor/ScrollTrigger.min.js')}"></script>
+  <script defer src="${js('js/runtime.js')}"></script>
 
   <!-- Story Engine styles -->
   <link rel="stylesheet" href="${css('css/tokens.css')}">
