@@ -110,10 +110,10 @@
     function dim() {
       nav.classList.add("hse-nav--dim");
     }
-    function undim() {
+    function undim(delay) {
       clearTimeout(hideTimer);
       nav.classList.remove("hse-nav--dim");
-      hideTimer = setTimeout(dim, 2500);
+      hideTimer = setTimeout(dim, delay || 2500);
     }
 
     // Cover exit / entry
@@ -121,11 +121,11 @@
     if (cover) {
       ScrollTrigger.create({
         trigger: cover,
-        start: "50% top",   // halfway through the cover
+        start: "35% top",   // 35% through the cover
         onEnter: function () {
           inStory = true;
           nav.classList.add("hse-nav--story");
-          undim();
+          undim(2500); // generous first appearance
         },
         onLeaveBack: function () {
           inStory = false;
@@ -135,29 +135,29 @@
       });
     }
 
-    // Scroll-up reveals the strip
+    // Scroll-up reveals the strip (quicker re-hide)
     window.addEventListener("scroll", function () {
       var y = window.scrollY;
-      if (inStory && y < lastScrollY) undim();
+      if (inStory && y < lastScrollY) undim(1500);
       lastScrollY = y;
     }, { passive: true });
 
     // Cursor near top reveals the strip (desktop)
     document.addEventListener("mousemove", function (e) {
       if (!inStory) return;
-      if (e.clientY < 80) undim();
+      if (e.clientY < 80) undim(1500);
     });
 
     // Tap near top reveals the strip (mobile)
     document.addEventListener("touchstart", function (e) {
       if (!inStory) return;
-      if (e.touches[0].clientY < 80) undim();
+      if (e.touches[0].clientY < 80) undim(1500);
     }, { passive: true });
-    nav.addEventListener("mouseenter", function () { if (inStory) undim(); });
+    nav.addEventListener("mouseenter", function () { if (inStory) undim(1500); });
     nav.addEventListener("mouseleave", function () {
       if (inStory) {
         clearTimeout(hideTimer);
-        hideTimer = setTimeout(dim, 2500);
+        hideTimer = setTimeout(dim, 1500);
       }
     });
 
