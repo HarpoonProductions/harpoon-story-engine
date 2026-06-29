@@ -596,6 +596,10 @@
           "default": false,
           "description": "true = brand colour from this section bleeds into the next section background"
         },
+        "custom_css": {
+          "type": "string",
+          "description": "Raw CSS injected in a scoped <style> tag for this section only"
+        },
         "intro": {
           "type": "string",
           "description": "One or two sentence section intro"

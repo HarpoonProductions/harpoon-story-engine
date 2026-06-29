@@ -171,6 +171,14 @@ function renderPrintHeader(meta, cover) {
 
 function renderSection(section) {
   const layout = section.layout || "default";
+  const html = renderSectionHtml(section, layout);
+  if (section.custom_css && section.custom_css.trim()) {
+    return html + `\n<style data-section-override="${esc(section.id)}">\n${section.custom_css}\n</style>`;
+  }
+  return html;
+}
+
+function renderSectionHtml(section, layout) {
   switch (layout) {
     case "scroll-carousel":
       return renderScrollCarousel(section);
@@ -403,4 +411,4 @@ function esc(str) {
     .replace(/"/g, "&quot;");
 }
 
-module.exports = { render };
+module.exports = { render, renderSection };

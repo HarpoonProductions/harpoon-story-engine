@@ -357,6 +357,30 @@ app.get("/api/schema", (req, res) => {
   }
 });
 
+// Return CSS class names found in a rendered section (for the CSS override panel)
+app.get("/api/project/:id/section/:index/classes", (req, res) => {
+  try {
+    const content = JSON.parse(fs.readFileSync(projectFile(req.params.id), "utf8"));
+    const section = content.sections[parseInt(req.params.index, 10)];
+    if (!section) return res.status(404).json({ error: "Section not found" });
+
+    const { renderSection } = require("./renderer/index.js");
+    const html = renderSection(section);
+
+    // Extract every class name, deduplicate, sort by prefix
+    const classRe = /class="([^"]+)"/g;
+    const seen = new Set();
+    let m;
+    while ((m = classRe.exec(html)) !== null) {
+      m[1].trim().split(/\s+/).forEach(c => { if (c) seen.add(c); });
+    }
+    const classes = Array.from(seen).sort();
+    res.json({ sectionId: section.id, classes });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // Trigger a manual re-render
 app.post("/api/project/:id/render", (req, res) => {
   const result = renderToPreview(req.params.id);

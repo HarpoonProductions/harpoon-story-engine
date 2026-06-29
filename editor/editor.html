@@ -514,6 +514,88 @@
                 line-height: 1.5;
             }
 
+            /* ── CSS Override panel ─────────────────────────────── */
+            #cssOverridePanel {
+                border: 1px solid var(--bg-3);
+                border-radius: 6px;
+                overflow: hidden;
+            }
+            .css-override__toggle {
+                display: flex;
+                align-items: center;
+                gap: 0.5rem;
+                padding: 0.6rem 0.75rem;
+                font-family: var(--font-mono);
+                font-size: 0.62rem;
+                letter-spacing: 0.08em;
+                text-transform: uppercase;
+                color: var(--ink-2);
+                cursor: pointer;
+                user-select: none;
+                background: var(--bg);
+                list-style: none;
+            }
+            .css-override__toggle::-webkit-details-marker { display: none; }
+            .css-override__toggle::before {
+                content: '▶';
+                font-size: 0.55rem;
+                transition: transform 0.2s ease;
+                color: var(--ink-3);
+            }
+            #cssOverridePanel[open] .css-override__toggle::before {
+                transform: rotate(90deg);
+            }
+            .css-override__body {
+                padding: 0.75rem;
+                border-top: 1px solid var(--bg-3);
+                display: flex;
+                flex-direction: column;
+                gap: 0.6rem;
+            }
+            .css-override__chips {
+                display: flex;
+                flex-wrap: wrap;
+                gap: 0.35rem;
+            }
+            .css-chip {
+                font-family: var(--font-mono);
+                font-size: 0.58rem;
+                padding: 0.2rem 0.5rem;
+                background: var(--bg-2);
+                border: 1px solid var(--bg-3);
+                border-radius: 3px;
+                color: var(--accent);
+                cursor: pointer;
+                transition: background 0.15s, border-color 0.15s;
+                line-height: 1.6;
+            }
+            .css-chip:hover {
+                background: var(--bg-3);
+                border-color: var(--accent);
+            }
+            .css-override__editor {
+                width: 100%;
+                min-height: 160px;
+                font-family: var(--font-mono);
+                font-size: 0.65rem;
+                line-height: 1.6;
+                padding: 0.6rem;
+                background: var(--bg);
+                border: 1px solid var(--bg-3);
+                border-radius: 4px;
+                color: var(--ink);
+                resize: vertical;
+                box-sizing: border-box;
+            }
+            .css-override__editor:focus {
+                outline: none;
+                border-color: var(--accent);
+            }
+            .css-override__hint {
+                margin: 0;
+                min-height: 1em;
+            }
+
             /* ── Tab panels ── */
             .tab-panel {
                 display: none;
@@ -1710,6 +1792,17 @@
                                     clusters — edit the JSON directly for now.
                                     Full block editors coming next.
                                 </p>
+
+                                <!-- CSS Override panel -->
+                                <details id="cssOverridePanel" style="margin-top:1.5rem">
+                                  <summary class="css-override__toggle">Override CSS for this section</summary>
+                                  <div class="css-override__body">
+                                    <p class="form-hint">Click a class to insert it into the editor below. CSS is scoped to this section only.</p>
+                                    <div id="cssClassChips" class="css-override__chips"></div>
+                                    <textarea id="cssOverrideEditor" class="css-override__editor" spellcheck="false" placeholder="/* e.g. #my-section .hse-inner { max-width: 900px; } */"></textarea>
+                                    <p class="form-hint css-override__hint" id="cssOverrideHint"></p>
+                                  </div>
+                                </details>
                             </div>
                         </div>
                         <!-- Status tab -->
@@ -2560,6 +2653,8 @@
                 initFrameScrubberEditor(index);
                 // Initialise split reveal editor (shown only for split-reveal layout)
                 initSplitRevealEditor(index);
+                // Initialise CSS override panel
+                initCssOverridePanel(index);
 
                 // Reset image field enhancement so it re-initialises with correct URL and focal
                 const heroInput = document.getElementById("sec-hero-url");
@@ -4203,6 +4298,81 @@ function initBlocksEditor(sectionIndex) {
           aspectSel.oninput   = e => { section.cinema.aspect  = e.target.value; scheduleAutosave(); };
           captionInput.oninput = e => { section.cinema.caption = e.target.value; scheduleAutosave(); };
         }
+        function initCssOverridePanel(sectionIndex) {
+          const section   = content.sections[sectionIndex];
+          const panel     = document.getElementById('cssOverridePanel');
+          const chipsEl   = document.getElementById('cssClassChips');
+          const textarea  = document.getElementById('cssOverrideEditor');
+          const hint      = document.getElementById('cssOverrideHint');
+
+          // Reset panel to closed state on each section open
+          panel.removeAttribute('open');
+          chipsEl.innerHTML = '';
+          textarea.value = section.custom_css || '';
+          hint.textContent = '';
+
+          // Wire textarea → autosave
+          const oldFn = textarea._cssFn;
+          if (oldFn) textarea.removeEventListener('input', oldFn);
+          const cssFn = () => {
+            content.sections[sectionIndex].custom_css = textarea.value || undefined;
+            scheduleAutosave();
+          };
+          textarea._cssFn = cssFn;
+          textarea.addEventListener('input', cssFn);
+
+          // Load classes lazily when panel is first opened
+          let classesLoaded = false;
+          panel.addEventListener('toggle', function onToggle() {
+            if (!panel.open || classesLoaded) return;
+            classesLoaded = true;
+            hint.textContent = 'Loading classes…';
+            const projectId = window.location.pathname.split('/').pop();
+            fetch(`/api/project/${projectId}/section/${sectionIndex}/classes`)
+              .then(r => r.json())
+              .then(data => {
+                hint.textContent = '';
+                chipsEl.innerHTML = '';
+                if (!data.classes || !data.classes.length) {
+                  hint.textContent = 'No classes found for this section.';
+                  return;
+                }
+                // Group by prefix (hse-text, hse-inner, etc.)
+                const groups = {};
+                data.classes.forEach(cls => {
+                  const prefix = cls.replace(/__.*$/, '').replace(/--.*$/, '');
+                  if (!groups[prefix]) groups[prefix] = [];
+                  groups[prefix].push(cls);
+                });
+                Object.keys(groups).sort().forEach(prefix => {
+                  groups[prefix].forEach(cls => {
+                    const chip = document.createElement('button');
+                    chip.type = 'button';
+                    chip.className = 'css-chip';
+                    chip.textContent = '.' + cls;
+                    chip.title = 'Insert selector';
+                    chip.addEventListener('click', () => {
+                      const selector = `#${data.sectionId} .${cls}`;
+                      const insertion = `${selector} {\n  \n}\n`;
+                      const pos = textarea.selectionStart;
+                      const before = textarea.value.slice(0, pos);
+                      const after  = textarea.value.slice(pos);
+                      const sep = (before && !before.endsWith('\n')) ? '\n' : '';
+                      textarea.value = before + sep + insertion + after;
+                      // Place cursor inside the braces
+                      const cursorPos = pos + sep.length + selector.length + 3;
+                      textarea.focus();
+                      textarea.setSelectionRange(cursorPos, cursorPos);
+                      cssFn(); // trigger autosave
+                    });
+                    chipsEl.appendChild(chip);
+                  });
+                });
+              })
+              .catch(() => { hint.textContent = 'Could not load classes.'; });
+          });
+        }
+
         </script>
 
         <script src="/editor/image-field.js"></script>
