@@ -595,6 +595,22 @@
                 margin: 0;
                 min-height: 1em;
             }
+            .css-chip-group {
+                width: 100%;
+                font-family: var(--font-mono);
+                font-size: 0.52rem;
+                letter-spacing: 0.1em;
+                text-transform: uppercase;
+                color: var(--ink-3);
+                padding: 0.4rem 0 0.15rem;
+                margin-top: 0.25rem;
+                border-top: 1px solid var(--bg-3);
+            }
+            .css-chip-group:first-child {
+                border-top: none;
+                padding-top: 0;
+                margin-top: 0;
+            }
 
             /* ── Tab panels ── */
             .tab-panel {
@@ -1968,6 +1984,7 @@
             let saveTimer = null;
             let isDirty = false;
             let activeSectionIndex = -1;
+            let skipNextReload = false; // set by CSS-only changes; cleared after each save
 
             // ── Viewport preset state ─────────────────────────────────────────
 
@@ -2181,46 +2198,50 @@
                 const mf = document.getElementById("mobileFrame");
                 const df = document.getElementById("desktopFrame");
 
-                // Capture scroll positions before reload
-                let mSY = 0,
-                    dSY = 0;
-                try {
-                    mSY = mf.contentWindow.scrollY || 0;
-                } catch {}
-                try {
-                    dSY = df.contentWindow.scrollY || 0;
-                } catch {}
-
-                // Fade out both frames smoothly rather than white-flashing
-                mf.style.transition = "opacity 0.2s";
-                df.style.transition = "opacity 0.2s";
-                mf.style.opacity = "0.4";
-                df.style.opacity = "0.4";
+                // Fade out smoothly
+                mf.style.transition = df.style.transition = "opacity 0.2s";
+                mf.style.opacity   = df.style.opacity   = "0.4";
 
                 const url = `/preview/${projectId}/?t=${Date.now()}`;
-                let mc = false,
-                    dc = false;
+                let mc = false, dc = false;
 
-                function onLoaded(frame, scrollY) {
-                    try {
-                        frame.contentWindow.scrollTo(0, scrollY);
-                    } catch {}
+                function onLoaded(frame) {
+                    // Scroll to the active section rather than restoring raw pixels
+                    const sectionId = activeSectionIndex >= 0
+                        ? (content.sections[activeSectionIndex] || {}).id
+                        : null;
+                    if (sectionId) {
+                        try {
+                            const el = frame.contentDocument.getElementById(sectionId);
+                            if (el) el.scrollIntoView({ block: "start" });
+                        } catch {}
+                    }
                     scaleFrames();
                     frame.style.opacity = "1";
                 }
 
-                mf.onload = () => {
-                    mc = true;
-                    onLoaded(mf, mSY);
-                    if (mc && dc) showVeil(false);
-                };
-                df.onload = () => {
-                    dc = true;
-                    onLoaded(df, dSY);
-                    if (mc && dc) showVeil(false);
-                };
+                mf.onload = () => { mc = true; onLoaded(mf); if (mc && dc) showVeil(false); };
+                df.onload = () => { dc = true; onLoaded(df); if (mc && dc) showVeil(false); };
                 mf.src = url;
                 df.src = url;
+            }
+
+            // Inject CSS directly into both preview iframes without reloading
+            function injectCssIntoPreview(sectionId, css) {
+                [document.getElementById("mobileFrame"), document.getElementById("desktopFrame")].forEach(function(frame) {
+                    try {
+                        const doc = frame.contentDocument;
+                        if (!doc) return;
+                        const attr = 'data-section-override';
+                        let style = doc.querySelector(`style[${attr}="${sectionId}"]`);
+                        if (!style) {
+                            style = doc.createElement('style');
+                            style.setAttribute(attr, sectionId);
+                            doc.head.appendChild(style);
+                        }
+                        style.textContent = css;
+                    } catch {}
+                });
             }
 
             function showVeil(on) {
@@ -2256,7 +2277,11 @@
                     if (data.ok) {
                         isDirty = false;
                         setStatus("saved", "Saved");
-                        reloadPreviews();
+                        if (skipNextReload) {
+                            skipNextReload = false;
+                        } else {
+                            reloadPreviews();
+                        }
                         setTimeout(() => {
                             if (!isDirty) setStatus("", "—");
                         }, 2500);
@@ -4311,11 +4336,27 @@ function initBlocksEditor(sectionIndex) {
           textarea.value = section.custom_css || '';
           hint.textContent = '';
 
-          // Wire textarea → autosave
+          const sectionId = section.id;
+
+          // Wire textarea → live inject + autosave + validation
           const oldFn = textarea._cssFn;
           if (oldFn) textarea.removeEventListener('input', oldFn);
           const cssFn = () => {
-            content.sections[sectionIndex].custom_css = textarea.value || undefined;
+            const css = textarea.value || '';
+            content.sections[sectionIndex].custom_css = css || undefined;
+            // Live-inject into preview iframes without reloading
+            injectCssIntoPreview(sectionId, css);
+            // Validation: warn if no selector references this section's id
+            const stripped = css.replace(/\/\*[\s\S]*?\*\//g, '').trim();
+            if (stripped && !stripped.includes('#' + sectionId)) {
+              hint.textContent = '⚠ Add #' + sectionId + ' to your selectors to scope to this section.';
+              hint.style.color = '#e6a817';
+            } else {
+              hint.textContent = '';
+              hint.style.color = '';
+            }
+            // CSS is already visible live — skip the post-save iframe reload
+            skipNextReload = true;
             scheduleAutosave();
           };
           textarea._cssFn = cssFn;
@@ -4343,34 +4384,42 @@ function initBlocksEditor(sectionIndex) {
                   hint.textContent = 'No classes found for this section.';
                   return;
                 }
-                // Group by prefix (hse-text, hse-inner, etc.)
+                // Group by base prefix (strip modifiers and elements)
                 const groups = {};
                 data.classes.forEach(cls => {
                   const prefix = cls.replace(/__.*$/, '').replace(/--.*$/, '');
                   if (!groups[prefix]) groups[prefix] = [];
                   groups[prefix].push(cls);
                 });
+
+                function insertChipSelector(cls) {
+                  const selector = `#${data.sectionId} .${cls}`;
+                  const insertion = `${selector} {\n  \n}\n`;
+                  const pos = textarea.selectionStart;
+                  const before = textarea.value.slice(0, pos);
+                  const after  = textarea.value.slice(pos);
+                  const sep = (before && !before.endsWith('\n')) ? '\n' : '';
+                  textarea.value = before + sep + insertion + after;
+                  const cursorPos = pos + sep.length + selector.length + 3;
+                  textarea.focus();
+                  textarea.setSelectionRange(cursorPos, cursorPos);
+                  cssFn();
+                }
+
                 Object.keys(groups).sort().forEach(prefix => {
+                  // Group label
+                  const label = document.createElement('div');
+                  label.className = 'css-chip-group';
+                  label.textContent = prefix;
+                  chipsEl.appendChild(label);
+
                   groups[prefix].forEach(cls => {
                     const chip = document.createElement('button');
                     chip.type = 'button';
                     chip.className = 'css-chip';
                     chip.textContent = '.' + cls;
-                    chip.title = 'Insert selector';
-                    chip.addEventListener('click', () => {
-                      const selector = `#${data.sectionId} .${cls}`;
-                      const insertion = `${selector} {\n  \n}\n`;
-                      const pos = textarea.selectionStart;
-                      const before = textarea.value.slice(0, pos);
-                      const after  = textarea.value.slice(pos);
-                      const sep = (before && !before.endsWith('\n')) ? '\n' : '';
-                      textarea.value = before + sep + insertion + after;
-                      // Place cursor inside the braces
-                      const cursorPos = pos + sep.length + selector.length + 3;
-                      textarea.focus();
-                      textarea.setSelectionRange(cursorPos, cursorPos);
-                      cssFn(); // trigger autosave
-                    });
+                    chip.title = `Insert: #${data.sectionId} .${cls}`;
+                    chip.addEventListener('click', () => insertChipSelector(cls));
                     chipsEl.appendChild(chip);
                   });
                 });
