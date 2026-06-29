@@ -45,10 +45,13 @@ function renderRevealCrossfade(section) {
     })
     .join("");
 
+  const transition = section.crossfade_transition || 'fade';
+
   return `<section
   class="hse-section hse-section--reveal-crossfade"
   id="${escHtml(section.id)}"
   data-layout="reveal-crossfade"
+  data-transition="${escHtml(transition)}"
   data-image-count="${images.length}">
 
   <!-- Sticky image canvas -->

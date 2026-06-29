@@ -731,6 +731,11 @@
           },
           "description": "Used by reveal-crossfade layout. Exactly two text phases corresponding to the two crossfade_images."
         },
+        "crossfade_transition": {
+          "type": "string",
+          "enum": ["fade", "wipe-left", "wipe-right", "wipe-up", "wipe-down"],
+          "description": "Transition style between crossfade images. Default: fade."
+        },
         "contributors": {
           "type": "array",
           "items": {

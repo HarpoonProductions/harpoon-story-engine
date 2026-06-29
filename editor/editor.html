@@ -1432,6 +1432,16 @@
                                 <!-- Crossfade editor (shown only for reveal-crossfade layout) -->
                                 <div id="crossfadeEditor" style="display:none">
                                   <div class="form-group">
+                                    <label class="form-label" for="cf-transition">Transition style</label>
+                                    <select class="form-input" id="cf-transition">
+                                      <option value="fade">Fade</option>
+                                      <option value="wipe-left">Wipe left → right</option>
+                                      <option value="wipe-right">Wipe right → left</option>
+                                      <option value="wipe-down">Wipe top → bottom</option>
+                                      <option value="wipe-up">Wipe bottom → top</option>
+                                    </select>
+                                  </div>
+                                  <div class="form-group">
                                     <label class="form-label">Images &amp; phases</label>
                                     <p class="form-hint">Each image is shown when its phase text scrolls into view</p>
                                     <div id="crossfadeList"></div>
@@ -3387,6 +3397,17 @@ function initCrossfadeEditor(sectionIndex) {
 
   editor.style.display = isCF ? 'block' : 'none';
   if (!isCF) return;
+
+  // Transition select
+  const transitionSelect = document.getElementById('cf-transition');
+  transitionSelect.value = section.crossfade_transition || 'fade';
+  const newTransitionSelect = transitionSelect.cloneNode(true);
+  transitionSelect.parentNode.replaceChild(newTransitionSelect, transitionSelect);
+  newTransitionSelect.value = section.crossfade_transition || 'fade';
+  newTransitionSelect.addEventListener('change', e => {
+    section.crossfade_transition = e.target.value;
+    scheduleAutosave();
+  });
 
   if (!section.crossfade_images) section.crossfade_images = [];
   if (!section.crossfade_phases) section.crossfade_phases = [];
