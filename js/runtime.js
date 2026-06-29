@@ -383,52 +383,105 @@
   }
 
   // ── 8. Reveal crossfade ────────────────────────────────────────────
-  // ── 8. Reveal crossfade ────────────────────────────────────────────
-  // Supports N images — each phase triggers a crossfade to its image.
-  // Uses opacity transitions between absolutely-positioned image layers.
+  // Supports N images with fade or scroll-scrubbed wipe transitions.
+  // Fade: opacity class toggle (instant on scroll position).
+  // Wipe: GSAP scrub animates clip-path with scroll — only the incoming
+  // image moves; outgoing images stay put underneath (z-index stacking).
+
+  var WIPE_CLIPS = {
+    "wipe-left":  { from: "inset(0 100% 0 0)",   to: "inset(0 0% 0 0)" },
+    "wipe-right": { from: "inset(0 0 0 100%)",    to: "inset(0 0 0 0%)" },
+    "wipe-down":  { from: "inset(0 0 100% 0)",    to: "inset(0 0 0% 0)" },
+    "wipe-up":    { from: "inset(100% 0 0 0)",    to: "inset(0% 0 0 0)" },
+  };
 
   function setupRevealCrossfade() {
     gsap.utils
       .toArray(".hse-section--reveal-crossfade")
       .forEach(function (section) {
-        var phases = section.querySelectorAll(".hse-cf__phase");
-        var images = section.querySelectorAll(".hse-cf__image");
+        var phases     = section.querySelectorAll(".hse-cf__phase");
+        var images     = Array.from(section.querySelectorAll(".hse-cf__image"));
+        var transition = section.dataset.transition || "fade";
+        var wipeClips  = WIPE_CLIPS[transition];
 
-        // Transition to a specific image index
-        function showImage(index) {
+        if (wipeClips) {
+          // ── Wipe mode ──────────────────────────────────────────────
+          // Image 0 sits at the bottom of the stack, fully visible.
+          // Each subsequent image starts clipped and is revealed by
+          // a GSAP scrub that ties the wipe directly to scroll position.
           images.forEach(function (img, i) {
-            if (i === index) {
-              img.classList.add("is-active");
+            img.style.zIndex = i; // higher index = on top
+            if (i === 0) {
+              gsap.set(img, { clipPath: wipeClips.to }); // fully visible
             } else {
-              img.classList.remove("is-active");
+              gsap.set(img, { clipPath: wipeClips.from }); // fully hidden
             }
           });
-          // Keep legacy is-revealed class for CSS compatibility
-          if (index > 0) {
-            section.classList.add("is-revealed");
-          } else {
-            section.classList.remove("is-revealed");
-          }
-        }
 
-        phases.forEach(function (phase, i) {
-          var imageIndex = parseInt(phase.dataset.image || i, 10);
+          images.forEach(function (img, i) {
+            if (i === 0) return; // first image is already visible
+            var phase = phases[i];
+            if (!phase) return;
 
-          ScrollTrigger.create({
-            trigger: phase,
-            start: "top 65%",
-            onEnter: function () {
-              phase.classList.add("is-visible");
-              showImage(imageIndex);
-            },
-            onLeaveBack: function () {
-              // Revert to the previous image (or image 0 if this is the first phase)
-              var prevIndex = i > 0 ? parseInt(phases[i - 1].dataset.image || (i - 1), 10) : 0;
-              showImage(prevIndex);
-              if (i === 0) phase.classList.remove("is-visible");
-            },
+            // Wipe the image in as this phase scrolls into the viewport
+            gsap.to(img, {
+              clipPath: wipeClips.to,
+              ease: "none",
+              scrollTrigger: {
+                trigger: phase,
+                start: "top bottom", // phase enters bottom of screen
+                end: "top 40%",      // phase reaches 40% down
+                scrub: 0.4,          // small lag for smoothness
+                onEnter: function () {
+                  phase.classList.add("is-visible");
+                },
+                onLeaveBack: function () {
+                  if (i === 0) phase.classList.remove("is-visible");
+                },
+              },
+            });
           });
-        });
+
+          // Phase text visibility (same as fade mode)
+          phases.forEach(function (phase, i) {
+            ScrollTrigger.create({
+              trigger: phase,
+              start: "top 65%",
+              onEnter: function () { phase.classList.add("is-visible"); },
+              onLeaveBack: function () {
+                if (i === 0) phase.classList.remove("is-visible");
+              },
+            });
+          });
+
+        } else {
+          // ── Fade mode (default) ────────────────────────────────────
+          function showImage(index) {
+            images.forEach(function (img, i) {
+              img.classList.toggle("is-active", i === index);
+            });
+            section.classList.toggle("is-revealed", index > 0);
+          }
+
+          phases.forEach(function (phase, i) {
+            var imageIndex = parseInt(phase.dataset.image || i, 10);
+            ScrollTrigger.create({
+              trigger: phase,
+              start: "top 65%",
+              onEnter: function () {
+                phase.classList.add("is-visible");
+                showImage(imageIndex);
+              },
+              onLeaveBack: function () {
+                var prevIndex = i > 0
+                  ? parseInt(phases[i - 1].dataset.image || (i - 1), 10)
+                  : 0;
+                showImage(prevIndex);
+                if (i === 0) phase.classList.remove("is-visible");
+              },
+            });
+          });
+        }
       });
   }
 

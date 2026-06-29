@@ -35,52 +35,11 @@
     opacity: 1;
 }
 
-/* ── Wipe transitions ────────────────────────────────────────────── */
-/* Each wipe variant: inactive = clipped away, active = fully revealed */
-
-/* Wipe left-to-right: new image enters from the left */
-[data-transition="wipe-left"] .hse-cf__image {
-    opacity: 1;
-    clip-path: inset(0 100% 0 0);
-    transition: clip-path 0.9s cubic-bezier(0.77, 0, 0.175, 1);
-}
-[data-transition="wipe-left"] .hse-cf__image.is-active {
-    clip-path: inset(0 0% 0 0);
-}
-
-/* Wipe right-to-left: new image enters from the right */
-[data-transition="wipe-right"] .hse-cf__image {
-    opacity: 1;
-    clip-path: inset(0 0 0 100%);
-    transition: clip-path 0.9s cubic-bezier(0.77, 0, 0.175, 1);
-}
-[data-transition="wipe-right"] .hse-cf__image.is-active {
-    clip-path: inset(0 0 0 0%);
-}
-
-/* Wipe top-to-bottom: new image enters from the top */
-[data-transition="wipe-down"] .hse-cf__image {
-    opacity: 1;
-    clip-path: inset(0 0 100% 0);
-    transition: clip-path 0.9s cubic-bezier(0.77, 0, 0.175, 1);
-}
-[data-transition="wipe-down"] .hse-cf__image.is-active {
-    clip-path: inset(0 0 0% 0);
-}
-
-/* Wipe bottom-to-top: new image enters from the bottom */
-[data-transition="wipe-up"] .hse-cf__image {
-    opacity: 1;
-    clip-path: inset(100% 0 0 0);
-    transition: clip-path 0.9s cubic-bezier(0.77, 0, 0.175, 1);
-}
-[data-transition="wipe-up"] .hse-cf__image.is-active {
-    clip-path: inset(0% 0 0 0);
-}
+/* Wipe transitions are driven entirely by GSAP scrub in runtime.js —
+   no CSS clip-path rules needed here. */
 
 @media (prefers-reduced-motion: reduce) {
     .hse-cf__image { transition: none; }
-    [data-transition] .hse-cf__image { transition: none; }
 }
 
 /* ── Gradient overlay ────────────────────────────────────────────── */
