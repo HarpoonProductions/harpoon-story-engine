@@ -411,10 +411,11 @@
           // a GSAP scrub that ties the wipe directly to scroll position.
           images.forEach(function (img, i) {
             img.style.zIndex = i; // higher index = on top
+            // opacity must be 1 for all — clip-path controls visibility in wipe mode
             if (i === 0) {
-              gsap.set(img, { clipPath: wipeClips.to }); // fully visible
+              gsap.set(img, { opacity: 1, clipPath: wipeClips.to });
             } else {
-              gsap.set(img, { clipPath: wipeClips.from }); // fully hidden
+              gsap.set(img, { opacity: 1, clipPath: wipeClips.from });
             }
           });
 
