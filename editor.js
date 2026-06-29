@@ -212,6 +212,8 @@ app.get("/api/project/:id", async (req, res) => {
     let content;
     if (db.isConfigured()) {
       content = await db.getProject(req.params.id);
+      // Register presence now that the story is open
+      db.joinPresence(req.params.id).catch(() => {});
     } else {
       const contentPath = path.join(
         PROJECTS_DIR,
@@ -227,6 +229,25 @@ app.get("/api/project/:id", async (req, res) => {
   } catch (err) {
     res.status(404).json({ error: err.message });
   }
+});
+
+// Presence: heartbeat (called every 60s by the editor client)
+app.post("/api/project/:id/presence/heartbeat", async (req, res) => {
+  if (db.isConfigured()) await db.heartbeatPresence(req.params.id).catch(() => {});
+  res.json({ ok: true });
+});
+
+// Presence: leave (called when editor navigates away)
+app.post("/api/project/:id/presence/leave", async (req, res) => {
+  if (db.isConfigured()) await db.leavePresence(req.params.id).catch(() => {});
+  res.json({ ok: true });
+});
+
+// Presence: who else is here?
+app.get("/api/project/:id/presence", async (req, res) => {
+  if (!db.isConfigured()) return res.json({ others: [] });
+  const others = await db.getOtherEditors(req.params.id).catch(() => []);
+  res.json({ others, me: db.editorName() });
 });
 
 // Save a project (autosave endpoint)

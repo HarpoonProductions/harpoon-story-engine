@@ -770,6 +770,8 @@
     <body>
         <div class="shell">
             <!-- Toolbar -->
+            <div id="presence-banner" style="display:none;background:#7c3a00;color:#fff;font-size:0.72rem;padding:0.3rem 1rem;text-align:center;position:sticky;top:0;z-index:999;"></div>
+
             <div class="toolbar" role="banner">
                 <a href="/" class="toolbar__back" aria-label="Back to projects"
                     >← Projects</a
@@ -1912,7 +1914,51 @@
                         initImageFields(projectId, onFocalUpdate);
                     }
                 }, 200);
+
+                // Presence awareness — check immediately, then every 60s
+                startPresence();
             }
+
+            // ── Presence ───────────────────────────────────────────────────────
+
+            let presenceInterval = null;
+
+            async function checkPresence() {
+                try {
+                    const res = await fetch(`/api/project/${projectId}/presence`);
+                    if (!res.ok) return;
+                    const { others, me } = await res.json();
+                    const banner = document.getElementById('presence-banner');
+                    if (others.length > 0) {
+                        const names = others.map(o => o.editor_name).join(', ');
+                        banner.textContent = `⚠️  ${names} also has this story open — saving may overwrite their changes.`;
+                        banner.style.display = 'block';
+                    } else {
+                        banner.style.display = 'none';
+                    }
+                    // Update "you are editing as" label
+                    const meLabel = document.getElementById('presence-me');
+                    if (meLabel && me) meLabel.textContent = me;
+                } catch (_) {}
+            }
+
+            function startPresence() {
+                checkPresence();
+                presenceInterval = setInterval(async () => {
+                    // Heartbeat keeps our row fresh
+                    fetch(`/api/project/${projectId}/presence/heartbeat`, { method: 'POST' }).catch(() => {});
+                    checkPresence();
+                }, 60000);
+            }
+
+            function stopPresence() {
+                clearInterval(presenceInterval);
+                navigator.sendBeacon(`/api/project/${projectId}/presence/leave`);
+            }
+
+            // Leave presence when navigating away or closing
+            window.addEventListener('beforeunload', stopPresence);
+            window.addEventListener('pagehide',     stopPresence);
 
             // ── Frame scaling ──────────────────────────────────────────────────
 

@@ -121,6 +121,54 @@ async function deleteProject(projectId) {
   if (error) throw new Error(error.message);
 }
 
+// ── Presence ──────────────────────────────────────────────────────
+// Lightweight "who has this story open" awareness.
+// Editor name comes from EDITOR_NAME in .env, falls back to hostname.
+
+const os = require("os");
+const PRESENCE_TABLE  = "story_presence";
+const STALE_MINUTES   = 3; // rows older than this are ignored
+
+function editorName() {
+  return process.env.EDITOR_NAME || os.hostname().split(".")[0];
+}
+
+async function joinPresence(projectId) {
+  const db = getClient();
+  if (!db) return;
+  const { error } = await db.from(PRESENCE_TABLE).upsert(
+    { project_id: projectId, editor_name: editorName(), last_seen: new Date().toISOString() },
+    { onConflict: "project_id,editor_name" }
+  );
+  if (error) console.warn("presence join:", error.message);
+}
+
+async function leavePresence(projectId) {
+  const db = getClient();
+  if (!db) return;
+  await db.from(PRESENCE_TABLE)
+    .delete()
+    .eq("project_id", projectId)
+    .eq("editor_name", editorName());
+}
+
+async function heartbeatPresence(projectId) {
+  return joinPresence(projectId); // upsert refreshes last_seen
+}
+
+async function getOtherEditors(projectId) {
+  const db = getClient();
+  if (!db) return [];
+  const cutoff = new Date(Date.now() - STALE_MINUTES * 60 * 1000).toISOString();
+  const { data, error } = await db.from(PRESENCE_TABLE)
+    .select("editor_name, last_seen")
+    .eq("project_id", projectId)
+    .neq("editor_name", editorName())
+    .gte("last_seen", cutoff);
+  if (error) return [];
+  return data || [];
+}
+
 module.exports = {
   isConfigured,
   listProjects,
@@ -128,4 +176,9 @@ module.exports = {
   saveProject,
   createProject,
   deleteProject,
+  editorName,
+  joinPresence,
+  leavePresence,
+  heartbeatPresence,
+  getOtherEditors,
 };
