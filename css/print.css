@@ -1,16 +1,55 @@
 /*
  * Harpoon Story Engine — Print stylesheet
  *
- * Loaded via <link media="print"> so it has zero impact on screen rendering.
- * Overrides screen layout rules to produce clean paginated output.
- *
- * Strategy:
- *  - Hide anything interactive or scroll-driven
- *  - Collapse sticky/parallax/fullscreen sections to static blocks
- *  - Force background images to print (color-adjust)
- *  - Let text and blocks flow naturally onto pages
- *  - Sensible page breaks
+ * Philosophy: text first. Strip everything decorative.
+ * Only images explicitly marked print_include="true" appear.
+ * A clean masthead (hse-print-header) replaces the cover.
  */
+
+/* ── Print header (screen) ──────────────────────────────────────── */
+/* Hidden on screen, shown only when printing */
+#hse-print-header { display: none; }
+
+/* ── Print header styles ─────────────────────────────────────────── */
+.hse-print-header__img {
+  display: block;
+  width: 100%;
+  height: 60mm;
+  object-fit: cover;
+  object-position: center 30%;
+}
+
+.hse-print-header__content {
+  padding: 6mm 0 5mm;
+  border-bottom: 1pt solid #111;
+  margin-bottom: 8mm;
+}
+
+.hse-print-header__kicker {
+  font-size: 8pt;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: #555;
+  margin: 0 0 2mm;
+}
+
+.hse-print-header__title {
+  font-size: 26pt;
+  line-height: 1.1;
+  font-weight: 700;
+  margin: 0 0 3mm;
+  color: #000;
+}
+
+.hse-print-header__meta {
+  font-size: 8.5pt;
+  color: #555;
+  margin: 0;
+}
+
+/* ════════════════════════════════════════════════════════════════════
+   Everything below applies only when printing
+   ════════════════════════════════════════════════════════════════════ */
 
 @media print {
 
@@ -18,448 +57,162 @@
 
   @page {
     size: A4;
-    margin: 18mm 16mm 22mm;
+    margin: 15mm 18mm 20mm;
   }
 
-  @page :first {
-    margin: 0; /* Cover fills the page */
-  }
-
-  /* ── Global resets ──────────────────────────────────────────────── */
-
-  *,
-  *::before,
-  *::after {
+  /* ── Suppress colour-adjustment prompts ─────────────────────────── */
+  * {
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
     animation: none !important;
     transition: none !important;
   }
 
-  body {
+  /* ── Base ───────────────────────────────────────────────────────── */
+
+  html, body {
     background: #fff !important;
     color: #111 !important;
     font-size: 10pt;
-    line-height: 1.55;
+    line-height: 1.6;
   }
 
-  /* ── Hide non-content elements ──────────────────────────────────── */
+  /* ── Show the print header ──────────────────────────────────────── */
+
+  #hse-print-header {
+    display: block !important;
+  }
+
+  /* ── Hide everything that isn't content ────────────────────────── */
 
   #hse-nav,
   #hse-nav-mobile-menu,
   #hse-progress,
-  .hse-cover__scroll-cue,
-  .hse-cover__pause-btn,
+  #hse-cover,
   .hse-skip-link,
   .hse-onward-links,
-  /* Frame scrubber canvas & progress */
+  #presence-banner,
+  /* Scroll-driven UI */
   .hse-fs__canvas,
   .hse-fs__progress-bar,
-  /* Cinema reveal video */
   .hse-cinema__card,
-  /* Scroll carousel controls */
   .hse-sc__arrow,
-  /* Toggle panels & accordion controls */
+  .hse-pan__text-item,
+  /* Interactive controls */
   .hse-toggle__btn,
   .hse-accordion__trigger {
     display: none !important;
   }
 
-  /* ── Cover ──────────────────────────────────────────────────────── */
-
-  #hse-cover {
-    position: relative;
-    height: 100vh;
-    min-height: 0;
-    page-break-after: always;
-    break-after: page;
-    display: flex;
-    align-items: flex-end;
-    overflow: hidden;
-  }
-
-  .hse-cover__bg-img,
-  .hse-cover__bg-video {
-    position: absolute;
-    inset: 0;
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-  }
-
-  /* Hide video, keep poster if available — print can't play video */
-  .hse-cover__bg-video { display: none !important; }
-
-  .hse-cover__grain { display: none; }
-
-  .hse-cover__content {
-    position: relative;
-    z-index: 1;
-    padding: 0 16mm 18mm;
-    width: 100%;
-  }
-
-  .hse-cover__kicker   { opacity: 1 !important; transform: none !important; }
-  .hse-cover__headline { opacity: 1 !important; transform: none !important; }
-  .hse-cover__body     { opacity: 1 !important; transform: none !important; }
-  .hse-cover__ctas     { display: none; } /* CTAs meaningless in print */
-  .hse-cover__colophon { opacity: 1 !important; }
-
-  /* ── Sections — general ─────────────────────────────────────────── */
+  /* ── Sections: collapse all scroll/sticky scaffolding ───────────── */
 
   .hse-section {
     position: static !important;
     height: auto !important;
     min-height: 0 !important;
     overflow: visible !important;
+    background: transparent !important;
+    padding: 6mm 0 !important;
+    margin: 0 !important;
+    border-top: 0.4pt solid #ccc;
     page-break-inside: avoid;
     break-inside: avoid;
-    padding: 8mm 0;
-    border-top: 0.5pt solid #ddd;
   }
 
   .hse-inner {
     max-width: 100% !important;
     padding: 0 !important;
     margin: 0 !important;
+    background: transparent !important;
   }
 
-  /* Reveal animations — make everything visible */
-  .hse-reveal {
-    opacity: 1 !important;
-    transform: none !important;
-  }
-
-  /* Section intro */
-  .hse-section-intro {
-    margin-bottom: 4mm;
-  }
-
-  /* ── Default / text layouts ─────────────────────────────────────── */
-
-  .hse-section--default .hse-default__body,
-  .hse-section--text .hse-text__body {
-    columns: 2;
-    column-gap: 8mm;
-  }
-
-  /* ── Sticky steps ───────────────────────────────────────────────── */
-
-  .hse-sticky-steps {
-    position: static !important;
-    height: auto !important;
-  }
-
-  .hse-sticky-steps__sticky {
-    position: static !important;
-    height: auto !important;
-  }
-
-  .hse-sticky-steps__img {
-    width: 100%;
-    height: auto;
-    max-height: 60mm;
-    object-fit: cover;
-    display: block;
-    margin-bottom: 4mm;
-    page-break-inside: avoid;
-    break-inside: avoid;
-  }
-
-  .hse-sticky-steps__step {
-    opacity: 1 !important;
-    transform: none !important;
-    padding: 3mm 0;
-    border-top: 0.3pt solid #eee;
-  }
-
-  /* ── Stackable cards ────────────────────────────────────────────── */
-
-  .hse-stackable {
-    position: static !important;
-    height: auto !important;
-  }
-
-  .hse-card-stack {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 5mm;
-  }
-
-  .hse-card-stack__card {
-    position: static !important;
-    transform: none !important;
-    opacity: 1 !important;
-    page-break-inside: avoid;
-    break-inside: avoid;
-  }
-
-  /* ── Cascading slides ───────────────────────────────────────────── */
-
-  .hse-cascading {
-    position: static !important;
-    height: auto !important;
-  }
-
-  .hse-cascading__track {
-    position: static !important;
-    transform: none !important;
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 5mm;
-  }
-
-  .hse-cascading__slide {
-    position: static !important;
-    opacity: 1 !important;
-    transform: none !important;
-    page-break-inside: avoid;
-    break-inside: avoid;
-  }
-
-  /* ── Fullbleed quote ────────────────────────────────────────────── */
-
-  .hse-section--fullbleed-quote {
-    background: var(--hse-ink-1) !important;
-    color: var(--hse-paper) !important;
-    padding: 10mm 0;
-    page-break-inside: avoid;
-    break-inside: avoid;
-  }
-
-  .hse-fbq__quote {
-    font-size: 18pt;
-    line-height: 1.25;
-  }
-
-  /* ── Reveal crossfade ───────────────────────────────────────────── */
-
-  .hse-crossfade {
-    position: static !important;
-    height: auto !important;
-  }
-
-  .hse-crossfade__item {
-    position: static !important;
-    opacity: 1 !important;
-    display: flex !important;
-    gap: 6mm;
-    align-items: flex-start;
-    padding: 3mm 0;
-    border-top: 0.3pt solid #eee;
-    page-break-inside: avoid;
-    break-inside: avoid;
-  }
-
-  .hse-crossfade__img {
-    width: 35%;
-    flex-shrink: 0;
-    height: auto;
-  }
-
-  /* ── Parallax ───────────────────────────────────────────────────── */
-
-  .hse-section--parallax {
-    position: static !important;
-    height: auto !important;
-  }
-
-  .hse-parallax__bg {
-    position: static !important;
-    height: 50mm;
-    object-fit: cover;
-    width: 100%;
-    display: block;
-    margin-bottom: 4mm;
-    transform: none !important;
-  }
-
-  /* ── Panoramic scroll ───────────────────────────────────────────── */
-
-  .hse-section--panoramic-scroll {
-    position: static !important;
-    height: auto !important;
-  }
-
-  .hse-pan__sticky {
-    position: static !important;
-    height: auto !important;
-    background-position: center !important;
-    /* Show single-image mode as a tall banner */
-    min-height: 60mm;
-  }
-
-  .hse-pan__track {
-    position: static !important;
-    transform: none !important;
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(50mm, 1fr));
-    gap: 3mm;
-  }
-
-  .hse-pan__panel {
-    position: static !important;
-    width: auto !important;
-  }
-
-  .hse-pan__img {
-    width: 100%;
-    height: auto;
-  }
-
-  /* Text overlays — hide (positioned by JS vars, meaningless in print) */
-  .hse-pan__text-item { display: none !important; }
-
-  /* ── Scroll carousel ────────────────────────────────────────────── */
-
-  .hse-section--scroll-carousel {
-    position: static !important;
-    height: auto !important;
-  }
-
-  .hse-sc__track {
-    display: grid !important;
-    grid-template-columns: repeat(auto-fill, minmax(50mm, 1fr));
-    gap: 3mm;
-    transform: none !important;
-    overflow: visible !important;
-    width: auto !important;
-  }
-
-  .hse-sc__item {
-    width: auto !important;
-    flex: none !important;
-  }
-
-  .hse-sc__img {
-    width: 100%;
-    height: auto;
-  }
-
-  /* ── Split reveal ───────────────────────────────────────────────── */
-
+  /* Unstick everything */
+  .hse-sticky-steps__sticky,
+  .hse-stackable,
+  .hse-cascading,
+  .hse-cascading__track,
+  .hse-crossfade,
+  .hse-section--parallax,
+  .hse-pan__sticky,
+  .hse-pan__track,
+  .hse-section--frame-scrubber,
+  .hse-section--scroll-carousel,
+  .hse-section--cinema-reveal,
   .hse-section--split-reveal {
     position: static !important;
     height: auto !important;
-  }
-
-  .hse-split-reveal__img-panel {
-    position: static !important;
-    width: 100% !important;
-    clip-path: none !important;
-  }
-
-  .hse-split-reveal__img-panel img {
-    width: 100%;
-    height: 60mm;
-    object-fit: cover;
-    display: block;
-    margin-bottom: 4mm;
-  }
-
-  .hse-split-reveal__text-panel {
-    position: static !important;
-    opacity: 1 !important;
+    min-height: 0 !important;
     transform: none !important;
-  }
-
-  /* ── Frame scrubber ─────────────────────────────────────────────── */
-
-  .hse-section--frame-scrubber {
-    position: static !important;
-    height: auto !important;
-  }
-
-  /* Show text panels stacked — canvas is hidden */
-  .hse-fs__text-item {
-    position: static !important;
-    opacity: 1 !important;
-    transform: none !important;
-    display: block !important;
-    padding: 4mm 0;
-    border-top: 0.3pt solid #eee;
-  }
-
-  /* ── Cinema reveal ──────────────────────────────────────────────── */
-
-  /* Cinema reveal is video-only; show a placeholder note */
-  .hse-section--cinema-reveal::before {
-    content: '[Video — view online]';
-    display: block;
-    font-style: italic;
-    color: #888;
-    font-size: 9pt;
-    padding: 4mm 0;
-  }
-
-  /* ── Blocks ─────────────────────────────────────────────────────── */
-
-  /* Pull quote */
-  .hse-pull-quote {
-    border-left: 2pt solid var(--hse-accent);
-    padding-left: 5mm;
-    margin: 5mm 0;
-    page-break-inside: avoid;
-    break-inside: avoid;
-  }
-
-  .hse-pull-quote__text {
-    font-size: 14pt;
-    line-height: 1.3;
-  }
-
-  /* Stat block */
-  .hse-stat-block {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(35mm, 1fr));
-    gap: 4mm;
-    page-break-inside: avoid;
-    break-inside: avoid;
-  }
-
-  /* Photo cluster */
-  .hse-photo-cluster {
-    page-break-inside: avoid;
-    break-inside: avoid;
-  }
-
-  /* Cards */
-  .hse-cards {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 4mm;
-  }
-
-  .hse-card {
-    page-break-inside: avoid;
-    break-inside: avoid;
-  }
-
-  /* Toggle panels — show all panels expanded */
-  .hse-toggle__panel {
-    display: block !important;
-    height: auto !important;
     overflow: visible !important;
+    background: transparent !important;
   }
 
-  /* Accordion — show all items expanded */
-  .hse-accordion__body {
+  /* Make all animated elements visible */
+  .hse-reveal,
+  [style*="opacity: 0"],
+  .hse-cover__kicker,
+  .hse-cover__headline,
+  .hse-cover__body,
+  .hse-cover__colophon {
+    opacity: 1 !important;
+    transform: none !important;
+  }
+
+  /* ── Section intro ──────────────────────────────────────────────── */
+
+  .hse-section-intro {
+    margin-bottom: 3mm;
+  }
+
+  .hse-eyebrow {
+    font-size: 7.5pt;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: #555;
+    margin-bottom: 1.5mm;
+  }
+
+  /* ── Hide ALL images by default ─────────────────────────────────── */
+  /* Only images with data-print-include appear */
+
+  img,
+  figure,
+  .hse-image,
+  .hse-photo-cluster,
+  .hse-cascading__slide img,
+  .hse-card img,
+  .hse-sc__img,
+  .hse-pan__img,
+  .hse-parallax__bg,
+  .hse-split-reveal__img-panel {
+    display: none !important;
+  }
+
+  /* Show editorially-flagged images */
+  [data-print-include],
+  [data-print-include] img {
     display: block !important;
+    max-width: 100% !important;
     height: auto !important;
+    margin: 4mm 0 !important;
+    page-break-inside: avoid;
+    break-inside: avoid;
   }
 
-  /* Contributors */
-  .hse-contributors {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(40mm, 1fr));
-    gap: 4mm;
+  [data-print-include] figcaption {
+    display: block !important;
+    font-size: 8pt;
+    color: #666;
+    margin-top: 1.5mm;
+    font-style: italic;
   }
 
   /* ── Typography ─────────────────────────────────────────────────── */
 
-  h1, h2, h3, h4 {
+  h1, h2, h3, h4, h5 {
     page-break-after: avoid;
     break-after: avoid;
+    color: #000;
   }
 
   p, li {
@@ -472,34 +225,167 @@
     text-decoration: none;
   }
 
-  /* Print URLs after links that go somewhere useful */
-  a[href^="http"]::after {
-    content: ' (' attr(href) ')';
-    font-size: 8pt;
-    color: #888;
+  /* ── Pull quote ─────────────────────────────────────────────────── */
+
+  .hse-pull-quote {
+    border-left: 2pt solid #111;
+    padding: 1mm 0 1mm 5mm;
+    margin: 5mm 0;
+    page-break-inside: avoid;
+    break-inside: avoid;
+    background: transparent !important;
   }
 
-  /* But not nav links or buttons */
-  .hse-btn::after,
-  .hse-onward-link::after { content: none; }
+  .hse-pull-quote__text {
+    font-size: 14pt;
+    line-height: 1.25;
+    color: #000;
+  }
 
-  /* ── Images ─────────────────────────────────────────────────────── */
+  .hse-pull-quote__attribution {
+    font-size: 8.5pt;
+    color: #555;
+    margin-top: 1.5mm;
+  }
 
-  img {
-    max-width: 100% !important;
-    height: auto !important;
+  /* ── Stat block ─────────────────────────────────────────────────── */
+
+  .hse-stat-block {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 4mm;
+    page-break-inside: avoid;
+    break-inside: avoid;
+    background: transparent !important;
+  }
+
+  .hse-stat {
+    background: transparent !important;
+    border-top: 1pt solid #ccc;
+    padding-top: 2mm;
+  }
+
+  .hse-stat__value {
+    font-size: 20pt;
+    font-weight: 700;
+    line-height: 1.1;
+    color: #000;
+  }
+
+  /* ── Fullbleed quote ────────────────────────────────────────────── */
+
+  .hse-section--fullbleed-quote {
+    background: transparent !important;
+    border-top: 1pt solid #ccc;
+    border-bottom: 1pt solid #ccc;
+    padding: 6mm 0 !important;
+  }
+
+  .hse-fbq__quote {
+    font-size: 16pt;
+    line-height: 1.3;
+    color: #000;
+  }
+
+  /* ── Sticky steps: linear list ──────────────────────────────────── */
+
+  .hse-sticky-steps__step {
+    opacity: 1 !important;
+    transform: none !important;
+    padding: 3mm 0;
+    border-top: 0.3pt solid #ddd;
+  }
+
+  /* ── Cascading slides: suppress the lot, text only ─────────────── */
+
+  .hse-cascading__slide {
+    position: static !important;
+    opacity: 1 !important;
+    transform: none !important;
+    padding: 2mm 0;
+    border-top: 0.3pt solid #ddd;
+  }
+
+  /* ── Reveal crossfade: stacked items ────────────────────────────── */
+
+  .hse-crossfade__item {
+    position: static !important;
+    opacity: 1 !important;
+    display: block !important;
+    padding: 3mm 0;
+    border-top: 0.3pt solid #ddd;
     page-break-inside: avoid;
     break-inside: avoid;
   }
 
+  /* ── Frame scrubber: text panels only ───────────────────────────── */
+
+  .hse-fs__text-item {
+    position: static !important;
+    opacity: 1 !important;
+    transform: none !important;
+    display: block !important;
+    padding: 3mm 0;
+    border-top: 0.3pt solid #ddd;
+  }
+
+  /* ── Cinema reveal: note ────────────────────────────────────────── */
+
+  .hse-section--cinema-reveal::before {
+    content: '[Video — view online]';
+    display: block;
+    font-style: italic;
+    color: #888;
+    font-size: 8.5pt;
+  }
+
+  /* ── Toggle panels + accordion: expand all ──────────────────────── */
+
+  .hse-toggle__panel,
+  .hse-accordion__body {
+    display: block !important;
+    height: auto !important;
+    overflow: visible !important;
+  }
+
+  /* ── Contributors ───────────────────────────────────────────────── */
+
+  .hse-contributors {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 3mm;
+    background: transparent !important;
+  }
+
+  .hse-contributor__avatar { display: none; }
+
+  /* ── Cards ──────────────────────────────────────────────────────── */
+
+  .hse-cards {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 3mm;
+    background: transparent !important;
+  }
+
+  .hse-card {
+    background: transparent !important;
+    border: 0.4pt solid #ccc !important;
+    page-break-inside: avoid;
+    break-inside: avoid;
+  }
+
+  .hse-card img { display: none !important; }
+
   /* ── Footer ─────────────────────────────────────────────────────── */
 
   #hse-footer {
-    border-top: 0.5pt solid #ddd;
-    padding-top: 4mm;
-    margin-top: 8mm;
+    border-top: 0.4pt solid #ccc;
+    padding-top: 3mm;
+    margin-top: 6mm;
     font-size: 8pt;
     color: #888;
+    background: transparent !important;
   }
 
 }

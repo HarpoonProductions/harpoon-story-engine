@@ -23,7 +23,9 @@ function renderImage(image, cls = '') {
     ? `<figcaption class="hse-image__caption hse-label">${escHtml(image.caption)}</figcaption>`
     : '';
 
-  return `<figure class="hse-image${cls ? ' ' + cls : ''}">
+  const printAttr = image.print_include ? ' data-print-include="true"' : '';
+
+  return `<figure class="hse-image${cls ? ' ' + cls : ''}"${printAttr}>
   <img
     src="${escHtml(image.url)}"
     alt="${escHtml(image.alt || '')}"

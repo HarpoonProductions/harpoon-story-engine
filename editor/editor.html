@@ -3597,7 +3597,7 @@ function initBlocksEditor(sectionIndex) {
 
             // ── Image field focal point handler ───────────────────────────────
 
-            function onFocalUpdate(fieldId, url, focal) {
+            function onFocalUpdate(fieldId, url, focal, focalPath, printInclude, printPath) {
                 if (!content) return;
                 const noFocal = focal === "50% 50%" ? undefined : focal;
                 if (
@@ -3621,6 +3621,20 @@ function initBlocksEditor(sectionIndex) {
                     if (!content.sections[activeSectionIndex].background)
                         content.sections[activeSectionIndex].background = {};
                     content.sections[activeSectionIndex].background.focal = noFocal;
+                }
+                // Write print_include via data-print-path if provided
+                if (printPath && activeSectionIndex >= 0) {
+                    const parts = printPath.split('.');
+                    let obj = content.sections[activeSectionIndex];
+                    for (let i = 0; i < parts.length - 1; i++) {
+                        if (!obj[parts[i]]) obj[parts[i]] = {};
+                        obj = obj[parts[i]];
+                    }
+                    if (printInclude) {
+                        obj[parts[parts.length - 1]] = true;
+                    } else {
+                        delete obj[parts[parts.length - 1]];
+                    }
                 }
                 scheduleAutosave();
             }

@@ -200,6 +200,10 @@
         "focal": {
           "type": "string",
           "description": "CSS object-position value for focal point cropping, e.g. '30% 20%'. Keeps the subject visible regardless of crop ratio."
+        },
+        "print_include": {
+          "type": "boolean",
+          "description": "Include this image in print and PDF versions. Use for editorially essential images only."
         }
       }
     },

@@ -77,6 +77,7 @@ function buildPage(meta, config, cover, sections, basePath, registryLogoUrl) {
   const head = renderHead(meta, config, null, basePath, false, heroImageUrl);
   const nav = renderNav(meta, sections, registryLogoUrl);
   const coverHtml = renderCover(cover);
+  const printHeaderHtml = renderPrintHeader(meta, cover);
 
   // Sections: render each, or stub if renderer not yet built
   const sectionsHtml = sections
@@ -91,6 +92,8 @@ function buildPage(meta, config, cover, sections, basePath, registryLogoUrl) {
 <div id="hse-progress" role="presentation" aria-hidden="true"></div>
 
 ${nav}
+
+${printHeaderHtml}
 
 ${coverHtml}
 
@@ -133,6 +136,33 @@ ${sectionsHtml}
 
 </body>
 </html>`;
+}
+
+// ── Print header ──────────────────────────────────────────────────────
+// Hidden on screen (display:none), shown only in @media print.
+// Provides a clean masthead: cropped hero image, title, date, org.
+
+function renderPrintHeader(meta, cover) {
+  const { escHtml } = require('./shell/head.js');
+  const heroUrl = cover?.hero_image?.url || cover?.hero_video?.poster || null;
+  const heroImg = heroUrl
+    ? `<img class="hse-print-header__img" src="${escHtml(heroUrl)}" alt="">`
+    : '';
+
+  const date = meta.date
+    ? new Date(meta.date).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })
+    : '';
+  const client = meta.client || '';
+  const meta2 = [client, date].filter(Boolean).join(' · ');
+
+  return `<div id="hse-print-header" aria-hidden="true">
+  ${heroImg}
+  <div class="hse-print-header__content">
+    ${meta.kicker ? `<p class="hse-print-header__kicker">${escHtml(meta.kicker)}</p>` : ''}
+    <h1 class="hse-print-header__title">${escHtml(meta.title || '')}</h1>
+    ${meta2 ? `<p class="hse-print-header__meta">${escHtml(meta2)}</p>` : ''}
+  </div>
+</div>`;
 }
 
 // ── Section renderer (dispatcher) ─────────────────────────────────────

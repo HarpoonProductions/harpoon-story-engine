@@ -279,6 +279,28 @@
     `;
     wrap.appendChild(focalWrap);
 
+    // Print/PDF include checkbox
+    const printPath = urlInput.dataset.printPath || '';
+    const printWrap = document.createElement('label');
+    printWrap.className = 'img-print-include';
+    printWrap.style.cssText = 'display:flex;align-items:center;gap:0.4rem;margin-top:0.4rem;font-size:0.65rem;color:var(--ink-3);cursor:pointer;user-select:none';
+    const printCheck = document.createElement('input');
+    printCheck.type      = 'checkbox';
+    printCheck.id        = 'print-include-' + fieldId;
+    printCheck.style.cssText = 'margin:0;cursor:pointer';
+    const printLabel = document.createElement('span');
+    printLabel.textContent = 'Include in print & PDF';
+    printWrap.appendChild(printCheck);
+    printWrap.appendChild(printLabel);
+    wrap.appendChild(printWrap);
+
+    // Restore existing print_include state
+    if (urlInput.dataset.printInclude === 'true') printCheck.checked = true;
+
+    printCheck.addEventListener('change', () => {
+      if (onUpdate) onUpdate(fieldId, urlInput.value, currentFocal, focalPath, printCheck.checked, printPath);
+    });
+
     const focalCanvas = focalWrap.querySelector('.focal-canvas');
     const focalImg    = focalWrap.querySelector('img');
     const focalDot    = focalWrap.querySelector('.focal-dot');
@@ -374,7 +396,7 @@
       focalCoords.textContent = currentFocal;
 
       // Notify parent
-      if (onUpdate) onUpdate(fieldId, urlInput.value, currentFocal, focalPath);
+      if (onUpdate) onUpdate(fieldId, urlInput.value, currentFocal, focalPath, printCheck.checked, printPath);
     }
 
     function focalFromEvent(e) {
