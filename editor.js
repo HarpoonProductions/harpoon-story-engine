@@ -360,7 +360,7 @@ app.get("/api/schema", (req, res) => {
 // Return CSS class names found in a rendered section (for the CSS override panel)
 app.get("/api/project/:id/section/:index/classes", (req, res) => {
   try {
-    const content = JSON.parse(fs.readFileSync(projectFile(req.params.id), "utf8"));
+    const content = JSON.parse(fs.readFileSync(path.join(PROJECTS_DIR, req.params.id, "content.json"), "utf8"));
     const section = content.sections[parseInt(req.params.index, 10)];
     if (!section) return res.status(404).json({ error: "Section not found" });
 

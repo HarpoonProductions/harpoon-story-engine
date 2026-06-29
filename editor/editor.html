@@ -4321,10 +4321,12 @@ function initBlocksEditor(sectionIndex) {
           textarea._cssFn = cssFn;
           textarea.addEventListener('input', cssFn);
 
-          // Load classes lazily when panel is first opened
+          // Load classes lazily when panel is first opened; scroll into view
           let classesLoaded = false;
           panel.addEventListener('toggle', function onToggle() {
-            if (!panel.open || classesLoaded) return;
+            if (!panel.open) return;
+            setTimeout(() => panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' }), 50);
+            if (classesLoaded) return;
             classesLoaded = true;
             hint.textContent = 'Loading classes…';
             const projectId = window.location.pathname.split('/').pop();
