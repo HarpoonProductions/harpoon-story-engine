@@ -1606,6 +1606,7 @@
                                         id="sec-hero-url"
                                         data-image-field="true"
                                         data-focal-path="section.hero_image.focal"
+                                        data-print-path="hero_image.print_include"
                                         placeholder="https://…"
                                     />
                                 </div>
@@ -2406,6 +2407,12 @@
                     if (el) el.value = val;
                 });
 
+                // Restore print_include state on hero image input
+                const heroUrlEl = document.getElementById("sec-hero-url");
+                if (heroUrlEl) {
+                    heroUrlEl.dataset.printInclude = (s.hero_image && s.hero_image.print_include) ? 'true' : '';
+                }
+
                 // Set select and checkboxes
                 document.getElementById("sec-layout").value =
                     s.layout || "default";
@@ -3142,13 +3149,15 @@ function initCascadingSlidesEditor(sectionIndex) {
   function renderSlidesAndInit() {
     renderSlides();
     if (window.initImageFields) {
-      initImageFields(projectId, (fieldId, url, focal) => {
+      initImageFields(projectId, (fieldId, url, focal, focalPath, printInclude) => {
         const match = fieldId.match(/^cs-img-url-\d+-(\d+)$/);
         if (!match) return;
         const idx = parseInt(match[1]);
         if (!section.cards[idx]) return;
         if (!section.cards[idx].image) section.cards[idx].image = {};
         section.cards[idx].image.focal = focal === '50% 50%' ? undefined : focal;
+        if (printInclude) section.cards[idx].image.print_include = true;
+        else delete section.cards[idx].image.print_include;
         scheduleAutosave();
       }, list);
     }
@@ -3243,13 +3252,15 @@ function initStackableCardsEditor(sectionIndex) {
   function renderCardsAndInit() {
     renderCards();
     if (window.initImageFields) {
-      initImageFields(projectId, (fieldId, url, focal) => {
+      initImageFields(projectId, (fieldId, url, focal, focalPath, printInclude) => {
         const match = fieldId.match(/^stk-img-url-\d+-(\d+)$/);
         if (!match) return;
         const idx = parseInt(match[1]);
         if (!section.cards[idx]) return;
         if (!section.cards[idx].image) section.cards[idx].image = {};
         section.cards[idx].image.focal = focal === '50% 50%' ? undefined : focal;
+        if (printInclude) section.cards[idx].image.print_include = true;
+        else delete section.cards[idx].image.print_include;
         scheduleAutosave();
       }, list);
     }
@@ -3339,13 +3350,15 @@ function initStickyStepsEditor(sectionIndex) {
   function renderStepsAndInit() {
     renderSteps();
     if (window.initImageFields) {
-      initImageFields(projectId, (fieldId, url, focal) => {
+      initImageFields(projectId, (fieldId, url, focal, focalPath, printInclude) => {
         const match = fieldId.match(/^ss-img-url-\d+-(\d+)$/);
         if (!match) return;
         const idx = parseInt(match[1]);
         if (!section.sticky_steps[idx]) return;
         if (!section.sticky_steps[idx].image) section.sticky_steps[idx].image = {};
         section.sticky_steps[idx].image.focal = focal === '50% 50%' ? undefined : focal;
+        if (printInclude) section.sticky_steps[idx].image.print_include = true;
+        else delete section.sticky_steps[idx].image.print_include;
         scheduleAutosave();
       }, list);
     }
@@ -3439,12 +3452,14 @@ function initCrossfadeEditor(sectionIndex) {
   function renderPairsAndInit() {
     renderPairs();
     if (window.initImageFields) {
-      initImageFields(projectId, (fieldId, url, focal) => {
+      initImageFields(projectId, (fieldId, url, focal, focalPath, printInclude) => {
         const match = fieldId.match(/^cf-img-url-\d+-(\d+)$/);
         if (!match) return;
         const idx = parseInt(match[1]);
         if (!section.crossfade_images[idx]) return;
         section.crossfade_images[idx].focal = focal === '50% 50%' ? undefined : focal;
+        if (printInclude) section.crossfade_images[idx].print_include = true;
+        else delete section.crossfade_images[idx].print_include;
         scheduleAutosave();
       }, list);
     }

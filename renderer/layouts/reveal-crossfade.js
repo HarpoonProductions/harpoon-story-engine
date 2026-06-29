@@ -24,6 +24,7 @@ function renderRevealCrossfade(section) {
         role="img"
         aria-label="${escHtml(img.alt || "")}"
         data-index="${i}">
+        ${img.print_include && img.url ? `<img src="${escHtml(img.url)}" alt="${escHtml(img.alt || '')}" data-print-include="true" style="display:none">` : ''}
       </div>`,
     )
     .join("");

@@ -39,7 +39,7 @@ function renderStickySteps(section) {
               class="hse-ss__visual-img"
               src="${escHtml(step.image.url)}"
               alt="${escHtml(step.image.alt || '')}"
-              data-step="${i + 1}">`
+              data-step="${i + 1}"${step.image.print_include ? ' data-print-include="true"' : ''}>`
           : ''
       ).join('\n')}
     </div>
