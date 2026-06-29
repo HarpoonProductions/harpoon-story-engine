@@ -331,11 +331,11 @@
         if (bg && bgScroll === "parallax") {
           // True parallax: bg translates upward at ~40% of scroll speed.
           // Scale up so the translated edges never show through overflow:hidden.
-          gsap.set(bg, { scale: 1.3 });
+          gsap.set(bg, { scale: 1.5 });
           gsap.fromTo(bg,
-            { yPercent: -10 },
+            { yPercent: -20 },
             {
-              yPercent: 10,
+              yPercent: 20,
               ease: "none",
               scrollTrigger: {
                 trigger: section,
