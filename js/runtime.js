@@ -96,45 +96,68 @@
     var nav = document.getElementById("hse-nav");
     if (!nav) return;
 
-    // Solid bg only over text-heavy sections, not full-bleed imagery
-    var textLayouts = ["default", "text", "custom-html", "parallax"];
-    document.querySelectorAll(".hse-section").forEach(function (section) {
-      var layout = section.dataset.layout;
-      if (!textLayouts.includes(layout)) return;
-      ScrollTrigger.create({
-        trigger: section,
-        start: "top 60px",
-        end: "bottom 60px",
-        onEnter:      function () { nav.classList.add("hse-nav--solid"); },
-        onLeaveBack:  function () { nav.classList.remove("hse-nav--solid"); },
-        onLeave:      function () { nav.classList.remove("hse-nav--solid"); },
-        onEnterBack:  function () { nav.classList.add("hse-nav--solid"); },
-      });
-    });
+    // ── State ──────────────────────────────────────────────────────
+    // hse-nav--story : user has scrolled past the cover
+    // hse-nav--dim   : auto-hide fired; strip + links fade out
+    //
+    // Reveal triggers: scroll-up OR cursor within 80px of top.
+    // Auto-hide fires 2.5s after the last reveal trigger.
 
-    // Cursor-at-top: reveal section links on desktop
     var hideTimer;
-    function revealNav() {
-      clearTimeout(hideTimer);
-      nav.classList.add("hse-nav--revealed");
+    var inStory  = false;
+    var lastScrollY = window.scrollY;
+
+    function dim() {
+      nav.classList.add("hse-nav--dim");
     }
-    function hideNav() {
+    function undim() {
       clearTimeout(hideTimer);
-      hideTimer = setTimeout(function () {
-        nav.classList.remove("hse-nav--revealed");
-      }, 800);
+      nav.classList.remove("hse-nav--dim");
+      hideTimer = setTimeout(dim, 2500);
     }
+
+    // Cover exit / entry
+    var cover = document.getElementById("hse-cover");
+    if (cover) {
+      ScrollTrigger.create({
+        trigger: cover,
+        start: "bottom 60px",
+        onLeave: function () {
+          inStory = true;
+          nav.classList.add("hse-nav--story");
+          undim();
+        },
+        onEnterBack: function () {
+          inStory = false;
+          clearTimeout(hideTimer);
+          nav.classList.remove("hse-nav--story", "hse-nav--dim");
+        },
+      });
+    }
+
+    // Scroll-up reveals the strip
+    window.addEventListener("scroll", function () {
+      var y = window.scrollY;
+      if (inStory && y < lastScrollY) undim();
+      lastScrollY = y;
+    }, { passive: true });
+
+    // Cursor near top reveals the strip
     document.addEventListener("mousemove", function (e) {
-      if (e.clientY < 70) {
-        revealNav();
-      } else if (!nav.matches(":hover")) {
-        hideNav();
+      if (!inStory) return;
+      if (e.clientY < 80) {
+        undim();
       }
     });
-    nav.addEventListener("mouseenter", revealNav);
-    nav.addEventListener("mouseleave", hideNav);
+    nav.addEventListener("mouseenter", function () { if (inStory) undim(); });
+    nav.addEventListener("mouseleave", function () {
+      if (inStory) {
+        clearTimeout(hideTimer);
+        hideTimer = setTimeout(dim, 2500);
+      }
+    });
 
-    // Hamburger: mobile menu
+    // ── Hamburger: mobile menu ─────────────────────────────────────
     var hamburger = document.getElementById("hse-nav-hamburger");
     var menu      = document.getElementById("hse-nav-mobile-menu");
     var closeBtn  = document.getElementById("hse-nav-mobile-close");
@@ -158,7 +181,7 @@
       });
     }
 
-    // Active nav link on scroll
+    // ── Active nav link on scroll ──────────────────────────────────
     var navLinks = nav.querySelectorAll(".hse-nav__links a");
     navLinks.forEach(function (link) {
       var id = link.getAttribute("href").replace("#", "");

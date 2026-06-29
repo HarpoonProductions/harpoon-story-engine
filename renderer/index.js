@@ -238,42 +238,6 @@ gsap.to('#hse-progress', {
   }
 });
 
-// Nav: solid background over text sections
-ScrollTrigger.create({
-  start: '80px top',
-  onEnter:     () => document.getElementById('hse-nav').classList.add('hse-nav--solid'),
-  onLeaveBack: () => document.getElementById('hse-nav').classList.remove('hse-nav--solid'),
-});
-
-// Nav: reveal section links when cursor approaches top (desktop only)
-(function () {
-  var nav = document.getElementById('hse-nav');
-  var hideTimer;
-  var REVEAL_ZONE = 70; // px from top
-
-  function reveal() {
-    clearTimeout(hideTimer);
-    nav.classList.add('hse-nav--revealed');
-  }
-  function scheduleHide() {
-    clearTimeout(hideTimer);
-    hideTimer = setTimeout(function () {
-      nav.classList.remove('hse-nav--revealed');
-    }, 800);
-  }
-
-  document.addEventListener('mousemove', function (e) {
-    if (e.clientY < REVEAL_ZONE) {
-      reveal();
-    } else if (!nav.matches(':hover')) {
-      scheduleHide();
-    }
-  });
-
-  nav.addEventListener('mouseenter', reveal);
-  nav.addEventListener('mouseleave', scheduleHide);
-})();
-
 // Nav: hamburger — mobile menu
 (function () {
   var hamburger = document.getElementById('hse-nav-hamburger');

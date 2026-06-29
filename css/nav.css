@@ -1,6 +1,11 @@
 /*
  * Harpoon Story Engine — Navigation
  * nav.css
+ *
+ * States (classes on #hse-nav):
+ *   default           — over cover: large logo, transparent, no links
+ *   hse-nav--story    — past cover: small logo, glass strip, links visible
+ *   hse-nav--dim      — auto-hide: glass and links fade out, logo stays
  */
 
 /* ── Fixed bar ───────────────────────────────────────────────────── */
@@ -13,18 +18,31 @@
   align-items: center;
   justify-content: space-between;
   padding: 1.5rem var(--hse-page-pad);
-  background: transparent;
-  transition:
-    background var(--hse-duration-mid),
-    backdrop-filter var(--hse-duration-mid);
+  /* Glass strip lives in ::before so it can fade independently */
 }
 
-/* Solid bg: over text-heavy sections (added by JS ScrollTrigger) */
-#hse-nav.hse-nav--solid {
-  background: rgba(var(--hse-ink-rgb), 0.92);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border-bottom: 1px solid var(--hse-rule);
+/* ── Glass strip (pseudo-element) ───────────────────────────────── */
+
+#hse-nav::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: rgba(var(--hse-ink-rgb), 0.6);
+  backdrop-filter: blur(20px) saturate(1.3);
+  -webkit-backdrop-filter: blur(20px) saturate(1.3);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+  opacity: 0;
+  transition: opacity 0.6s ease;
+  pointer-events: none;
+  z-index: -1;
+}
+
+#hse-nav.hse-nav--story::before {
+  opacity: 1;
+}
+
+#hse-nav.hse-nav--story.hse-nav--dim::before {
+  opacity: 0;
 }
 
 /* ── Brand / logo ────────────────────────────────────────────────── */
@@ -44,10 +62,10 @@
   width: auto;
   display: block;
   object-fit: contain;
-  transition: height 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+  transition: height 0.55s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
-#hse-nav.hse-nav--solid .hse-nav__logo {
+#hse-nav.hse-nav--story .hse-nav__logo {
   height: 28px;
 }
 
@@ -58,23 +76,25 @@
   gap: 2.5rem;
   list-style: none;
   overflow-x: auto;
-  scrollbar-width: none;        /* Firefox */
+  scrollbar-width: none;
   -webkit-overflow-scrolling: touch;
-  /* Hidden until cursor approaches top */
   opacity: 0;
   pointer-events: none;
-  transition: opacity 0.3s ease;
-  /* Fade in when nav is revealed */
+  transition: opacity 0.5s ease;
   mask-image: linear-gradient(to right, transparent 0, black 2rem, black calc(100% - 2rem), transparent 100%);
   -webkit-mask-image: linear-gradient(to right, transparent 0, black 2rem, black calc(100% - 2rem), transparent 100%);
 }
 
 .hse-nav__links::-webkit-scrollbar { display: none; }
 
-#hse-nav.hse-nav--revealed .hse-nav__links,
-#hse-nav.hse-nav--solid .hse-nav__links {
+#hse-nav.hse-nav--story .hse-nav__links {
   opacity: 1;
   pointer-events: auto;
+}
+
+#hse-nav.hse-nav--story.hse-nav--dim .hse-nav__links {
+  opacity: 0;
+  pointer-events: none;
 }
 
 .hse-nav__links a {
@@ -174,10 +194,6 @@
 /* ── Mobile breakpoint ───────────────────────────────────────────── */
 
 @media (max-width: 640px) {
-  .hse-nav__links {
-    display: none;
-  }
-  .hse-nav__hamburger {
-    display: flex;
-  }
+  .hse-nav__links { display: none; }
+  .hse-nav__hamburger { display: flex; }
 }
