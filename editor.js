@@ -45,7 +45,7 @@ try {
 const S3_BUCKET = process.env.S3_BUCKET || "";
 const AWS_REGION =
   process.env.AWS_REGION || process.env.AWS_DEFAULT_REGION || "eu-west-2";
-const { render } = require("./renderer/index");
+const { render, renderSection } = require("./renderer/index");
 
 const app = express();
 const PORT = 3001;
@@ -364,7 +364,6 @@ app.get("/api/project/:id/section/:index/classes", (req, res) => {
     const section = content.sections[parseInt(req.params.index, 10)];
     if (!section) return res.status(404).json({ error: "Section not found" });
 
-    const { renderSection } = require("./renderer/index.js");
     const html = renderSection(section);
 
     // Extract every class name, deduplicate, sort by prefix

@@ -4333,6 +4333,10 @@ function initBlocksEditor(sectionIndex) {
               .then(data => {
                 hint.textContent = '';
                 chipsEl.innerHTML = '';
+                if (data.error) {
+                  hint.textContent = 'Error: ' + data.error;
+                  return;
+                }
                 if (!data.classes || !data.classes.length) {
                   hint.textContent = 'No classes found for this section.';
                   return;
