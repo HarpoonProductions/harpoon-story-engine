@@ -155,7 +155,7 @@ function renderPrintHeader(meta, cover) {
   const client = meta.client || '';
   const meta2 = [client, date].filter(Boolean).join(' · ');
 
-  return `<div id="hse-print-header" aria-hidden="true">
+  return `<div id="hse-print-header" aria-hidden="true" style="display:none">
   ${heroImg}
   <div class="hse-print-header__content">
     ${meta.kicker ? `<p class="hse-print-header__kicker">${escHtml(meta.kicker)}</p>` : ''}
