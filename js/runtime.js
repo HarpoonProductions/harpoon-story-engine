@@ -329,19 +329,24 @@
         var bgScroll = section.dataset.bgScroll || "parallax";
 
         if (bg && bgScroll === "parallax") {
-          // Slow GSAP scrub — image drifts slightly as you scroll past
-          gsap.to(bg, {
-            scale: 1.06,
-            ease: "none",
-            scrollTrigger: {
-              trigger: section,
-              start: "top bottom",
-              end: "bottom top",
-              scrub: true,
-            },
-          });
+          // True parallax: bg translates upward at ~40% of scroll speed.
+          // Scale up so the translated edges never show through overflow:hidden.
+          gsap.set(bg, { scale: 1.3 });
+          gsap.fromTo(bg,
+            { yPercent: -10 },
+            {
+              yPercent: 10,
+              ease: "none",
+              scrollTrigger: {
+                trigger: section,
+                start: "top bottom",
+                end: "bottom top",
+                scrub: true,
+              },
+            }
+          );
         }
-        // fixed: background-attachment:fixed handles it in CSS — no JS needed
+        // fixed: background-attachment:fixed + overflow:clip handles it in CSS
         // scroll: image moves with the page — no JS needed
 
         ScrollTrigger.create({

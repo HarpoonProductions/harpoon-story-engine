@@ -4,14 +4,20 @@
   position: relative;
   min-height: 100vh;
   display: flex;
-  overflow: hidden;
-
-  /* ── Vertical position (data-pos-v) ─────── */
-  align-items: center; /* default: middle */
+  overflow: hidden; /* parallax/scroll: hide yPercent overflow on bg */
 }
 
-[data-pos-v="top"]    { align-items: flex-start; }
-[data-pos-v="bottom"] { align-items: flex-end; }
+/* fixed mode: overflow:clip lets background-attachment:fixed work  *
+ * (overflow:hidden creates a scroll container which breaks it)     */
+[data-bg-scroll="fixed"] {
+  overflow: clip;
+}
+
+/* ── Vertical position (data-pos-v) ──────────────────────────────── */
+
+.hse-section--fullbleed-quote { align-items: center; }
+[data-pos-v="top"]             { align-items: flex-start; }
+[data-pos-v="bottom"]          { align-items: flex-end; }
 
 /* ── Background image ─────────────────────────────────────────────── */
 
@@ -20,26 +26,22 @@
   inset: 0;
   background-size: cover;
   background-position: center;
-  transform: scale(1.04);
-  transition: transform 8s var(--hse-ease-out);
+  /* transform and scale are now owned by GSAP for parallax;
+     CSS only controls non-animated modes */
 }
 
-.hse-section--fullbleed-quote.is-visible .hse-fbq__bg {
-  transform: scale(1);
-}
-
-/* fixed: bg sticks in the viewport while content scrolls over it */
+/* fixed: image sticks in viewport as section scrolls over it.
+   overflow:clip on parent (above) is required for this to work. */
 [data-bg-scroll="fixed"] .hse-fbq__bg {
   background-attachment: fixed;
-  transform: none;
-  transition: none;
 }
 
-/* scroll: bg moves with the page (no GSAP, no attachment) */
+/* scroll: bg moves naturally with the page — no transform needed */
 [data-bg-scroll="scroll"] .hse-fbq__bg {
-  transform: none;
-  transition: none;
+  /* nothing extra — natural scroll */
 }
+
+/* ── Entry animation on .hse-fbq__bg removed — GSAP owns transform ─ */
 
 /* ── Grain texture ────────────────────────────────────────────────── */
 
@@ -58,7 +60,6 @@
   inset: 0;
 }
 
-/* solid: uniform dark wash (default) */
 [data-overlay="solid"] .hse-fbq__gradient,
 :not([data-overlay]) .hse-fbq__gradient {
   background: linear-gradient(
@@ -69,7 +70,6 @@
   );
 }
 
-/* top → bottom: dark at top, fades out at bottom */
 [data-overlay="gradient-tb"] .hse-fbq__gradient {
   background: linear-gradient(
     to bottom,
@@ -79,7 +79,6 @@
   );
 }
 
-/* bottom → top: dark at bottom, fades out at top */
 [data-overlay="gradient-bt"] .hse-fbq__gradient {
   background: linear-gradient(
     to top,
@@ -89,7 +88,6 @@
   );
 }
 
-/* left → right: dark at left, fades out at right */
 [data-overlay="gradient-lr"] .hse-fbq__gradient {
   background: linear-gradient(
     to right,
@@ -99,7 +97,6 @@
   );
 }
 
-/* right → left: dark at right, fades out at left */
 [data-overlay="gradient-rl"] .hse-fbq__gradient {
   background: linear-gradient(
     to left,
@@ -119,7 +116,6 @@
   width: 100%;
 }
 
-/* Horizontal position on desktop (data-pos-h) */
 @media (min-width: 641px) {
   [data-pos-h="center"] .hse-fbq__content {
     display: flex;
@@ -127,11 +123,7 @@
     align-items: center;
     text-align: center;
   }
-
-  [data-pos-h="center"] .hse-fbq__rule {
-    margin-left: auto;
-    margin-right: auto;
-  }
+  [data-pos-h="center"] .hse-fbq__rule { margin-left: auto; margin-right: auto; }
 
   [data-pos-h="right"] .hse-fbq__content {
     display: flex;
@@ -139,10 +131,7 @@
     align-items: flex-end;
     text-align: right;
   }
-
-  [data-pos-h="right"] .hse-fbq__rule {
-    margin-left: auto;
-  }
+  [data-pos-h="right"] .hse-fbq__rule { margin-left: auto; }
 }
 
 /* ── Quote block ──────────────────────────────────────────────────── */
