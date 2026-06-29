@@ -607,6 +607,30 @@
         "pull_quote": {
           "$ref": "#/definitions/pull_quote"
         },
+        "fbq_overlay": {
+          "type": "string",
+          "enum": ["solid", "gradient-tb", "gradient-bt", "gradient-lr", "gradient-rl"],
+          "default": "solid",
+          "description": "Overlay style for fullbleed-quote. solid = uniform dark wash. gradient-* = directional fade."
+        },
+        "fbq_position_v": {
+          "type": "string",
+          "enum": ["top", "middle", "bottom"],
+          "default": "middle",
+          "description": "Vertical text position for fullbleed-quote."
+        },
+        "fbq_position_h": {
+          "type": "string",
+          "enum": ["left", "center", "right"],
+          "default": "left",
+          "description": "Horizontal text position for fullbleed-quote (desktop only; mobile is always left)."
+        },
+        "fbq_bg_scroll": {
+          "type": "string",
+          "enum": ["parallax", "fixed", "scroll"],
+          "default": "parallax",
+          "description": "Background image scroll behaviour. parallax = slow GSAP scrub. fixed = image sticks while content scrolls. scroll = image moves with the page."
+        },
         "interstitial_image": {
           "$ref": "#/definitions/image"
         },

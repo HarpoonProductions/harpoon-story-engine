@@ -325,8 +325,11 @@
     gsap.utils
       .toArray(".hse-section--fullbleed-quote")
       .forEach(function (section) {
-        var bg = section.querySelector(".hse-fbq__bg");
-        if (bg) {
+        var bg       = section.querySelector(".hse-fbq__bg");
+        var bgScroll = section.dataset.bgScroll || "parallax";
+
+        if (bg && bgScroll === "parallax") {
+          // Slow GSAP scrub — image drifts slightly as you scroll past
           gsap.to(bg, {
             scale: 1.06,
             ease: "none",
@@ -338,6 +341,9 @@
             },
           });
         }
+        // fixed: background-attachment:fixed handles it in CSS — no JS needed
+        // scroll: image moves with the page — no JS needed
+
         ScrollTrigger.create({
           trigger: section,
           start: "top 75%",

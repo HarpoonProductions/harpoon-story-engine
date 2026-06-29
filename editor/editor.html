@@ -1527,6 +1527,44 @@
                                   </div>
                                 </div>
 
+                                <!-- Fullbleed quote options (shown only for fullbleed-quote layout) -->
+                                <div id="fullbleedQuoteEditor" style="display:none">
+                                  <div class="form-group">
+                                    <label class="form-label" for="fbq-overlay">Overlay style</label>
+                                    <select class="form-input" id="fbq-overlay">
+                                      <option value="solid">Solid wash</option>
+                                      <option value="gradient-tb">Gradient top → bottom</option>
+                                      <option value="gradient-bt">Gradient bottom → top</option>
+                                      <option value="gradient-lr">Gradient left → right</option>
+                                      <option value="gradient-rl">Gradient right → left</option>
+                                    </select>
+                                  </div>
+                                  <div class="form-group">
+                                    <label class="form-label">Text position</label>
+                                    <div style="display:flex;gap:0.5rem;align-items:center">
+                                      <select class="form-input" id="fbq-pos-v" style="flex:1">
+                                        <option value="top">Top</option>
+                                        <option value="middle">Middle</option>
+                                        <option value="bottom">Bottom</option>
+                                      </select>
+                                      <select class="form-input" id="fbq-pos-h" style="flex:1">
+                                        <option value="left">Left</option>
+                                        <option value="center">Centre</option>
+                                        <option value="right">Right</option>
+                                      </select>
+                                    </div>
+                                    <p class="form-hint">Vertical + horizontal (desktop only)</p>
+                                  </div>
+                                  <div class="form-group">
+                                    <label class="form-label" for="fbq-bg-scroll">Background scroll</label>
+                                    <select class="form-input" id="fbq-bg-scroll">
+                                      <option value="parallax">Parallax drift</option>
+                                      <option value="fixed">Fixed (text scrolls over image)</option>
+                                      <option value="scroll">Scroll with page</option>
+                                    </select>
+                                  </div>
+                                </div>
+
                                 <!-- Crossfade editor (shown only for reveal-crossfade layout) -->
                                 <div id="crossfadeEditor" style="display:none">
                                   <div class="form-group">
@@ -2678,6 +2716,8 @@
                 initFrameScrubberEditor(index);
                 // Initialise split reveal editor (shown only for split-reveal layout)
                 initSplitRevealEditor(index);
+                // Initialise fullbleed quote options
+                initFullbleedQuoteEditor(index);
                 // Initialise CSS override panel
                 initCssOverridePanel(index);
 
@@ -4323,6 +4363,38 @@ function initBlocksEditor(sectionIndex) {
           aspectSel.oninput   = e => { section.cinema.aspect  = e.target.value; scheduleAutosave(); };
           captionInput.oninput = e => { section.cinema.caption = e.target.value; scheduleAutosave(); };
         }
+        function initFullbleedQuoteEditor(sectionIndex) {
+          const section = content.sections[sectionIndex];
+          const editor  = document.getElementById('fullbleedQuoteEditor');
+          const isFBQ   = section.layout === 'fullbleed-quote';
+          editor.style.display = isFBQ ? 'block' : 'none';
+          if (!isFBQ) return;
+
+          const overlayEl = document.getElementById('fbq-overlay');
+          const posVEl    = document.getElementById('fbq-pos-v');
+          const posHEl    = document.getElementById('fbq-pos-h');
+          const bgScrollEl = document.getElementById('fbq-bg-scroll');
+
+          // Restore saved values
+          overlayEl.value  = section.fbq_overlay    || 'solid';
+          posVEl.value     = section.fbq_position_v || 'middle';
+          posHEl.value     = section.fbq_position_h || 'left';
+          bgScrollEl.value = section.fbq_bg_scroll  || 'parallax';
+
+          // Clone to remove any prior listeners
+          function rewire(el, setter) {
+            const fresh = el.cloneNode(true);
+            el.parentNode.replaceChild(fresh, el);
+            fresh.addEventListener('change', e => { setter(e.target.value); scheduleAutosave(); });
+            return fresh;
+          }
+
+          rewire(overlayEl,  v => { content.sections[sectionIndex].fbq_overlay    = v; });
+          rewire(posVEl,     v => { content.sections[sectionIndex].fbq_position_v = v; });
+          rewire(posHEl,     v => { content.sections[sectionIndex].fbq_position_h = v; });
+          rewire(bgScrollEl, v => { content.sections[sectionIndex].fbq_bg_scroll  = v; });
+        }
+
         function initCssOverridePanel(sectionIndex) {
           const section   = content.sections[sectionIndex];
           const panel     = document.getElementById('cssOverridePanel');
