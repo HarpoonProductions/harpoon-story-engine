@@ -3502,9 +3502,10 @@ function initBlocksEditor(sectionIndex) {
       item.className = 'block-item';
       item.draggable = true;
 
+      const alignLabels = { left: 'Left (default)', center: 'Centre', right: 'Right' };
       const alignBtns = ['left','center','right'].map(a =>
         `<button type="button" class="block-item__align-btn${block.align === a || (!block.align && a === 'left') ? ' is-active' : ''}"
-          data-align="${a}" title="${a}">${a === 'left' ? '⬛' : a === 'center' ? '▪' : '▪'}</button>`
+          data-align="${a}" title="${alignLabels[a]}" style="font-size:0.6rem;letter-spacing:0.05em">${a === 'left' ? 'L' : a === 'center' ? 'C' : 'R'}</button>`
       ).join('');
 
       item.innerHTML = `
