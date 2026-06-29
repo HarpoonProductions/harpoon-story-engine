@@ -45,13 +45,15 @@ function renderRevealCrossfade(section) {
     })
     .join("");
 
-  const transition = section.crossfade_transition || 'fade';
+  const transition  = section.crossfade_transition  || 'fade';
+  const wipeOrigin  = section.crossfade_wipe_origin || '50% 50%';
 
   return `<section
   class="hse-section hse-section--reveal-crossfade"
   id="${escHtml(section.id)}"
   data-layout="reveal-crossfade"
   data-transition="${escHtml(transition)}"
+  data-wipe-origin="${escHtml(wipeOrigin)}"
   data-image-count="${images.length}">
 
   <!-- Sticky image canvas -->

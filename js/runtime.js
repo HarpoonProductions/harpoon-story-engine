@@ -433,6 +433,17 @@
     "wipe-up":    { from: "inset(100% 0 0 0)",    to: "inset(0% 0 0 0)" },
   };
 
+  function getWipeClips(transition, sectionEl) {
+    if (transition === "circle") {
+      var origin = sectionEl.dataset.wipeOrigin || "50% 50%";
+      return {
+        from: "circle(0% at " + origin + ")",
+        to:   "circle(150% at " + origin + ")",
+      };
+    }
+    return WIPE_CLIPS[transition] || null;
+  }
+
   function setupRevealCrossfade() {
     gsap.utils
       .toArray(".hse-section--reveal-crossfade")
@@ -440,7 +451,7 @@
         var phases     = section.querySelectorAll(".hse-cf__phase");
         var images     = Array.from(section.querySelectorAll(".hse-cf__image"));
         var transition = section.dataset.transition || "fade";
-        var wipeClips  = WIPE_CLIPS[transition];
+        var wipeClips  = getWipeClips(transition, section);
 
         if (wipeClips) {
           // ── Wipe mode ──────────────────────────────────────────────

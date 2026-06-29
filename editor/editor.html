@@ -514,6 +514,46 @@
                 line-height: 1.5;
             }
 
+            /* ── Circle origin picker ───────────────────────────── */
+            .cf-origin-grid {
+                display: grid;
+                grid-template-columns: repeat(3, 1fr);
+                gap: 4px;
+                width: 90px;
+                margin-bottom: 0.4rem;
+            }
+            .cf-origin-grid button {
+                width: 26px;
+                height: 26px;
+                border-radius: 50%;
+                border: 2px solid var(--bg-3);
+                background: var(--bg-2);
+                cursor: pointer;
+                transition: background 0.15s, border-color 0.15s;
+                position: relative;
+            }
+            .cf-origin-grid button::after {
+                content: '';
+                position: absolute;
+                inset: 50%;
+                transform: translate(-50%, -50%);
+                width: 6px;
+                height: 6px;
+                border-radius: 50%;
+                background: var(--ink-3);
+                transition: background 0.15s;
+            }
+            .cf-origin-grid button:hover {
+                border-color: var(--accent);
+            }
+            .cf-origin-grid button.is-active {
+                border-color: var(--accent);
+                background: var(--bg-3);
+            }
+            .cf-origin-grid button.is-active::after {
+                background: var(--accent);
+            }
+
             /* ── CSS Override panel ─────────────────────────────── */
             #cssOverridePanel {
                 border: 1px solid var(--bg-3);
@@ -1575,7 +1615,24 @@
                                       <option value="wipe-right">Wipe right → left</option>
                                       <option value="wipe-down">Wipe top → bottom</option>
                                       <option value="wipe-up">Wipe bottom → top</option>
+                                      <option value="circle">Expanding circle</option>
                                     </select>
+                                  </div>
+                                  <div class="form-group" id="cfOriginGroup" style="display:none">
+                                    <label class="form-label">Circle origin</label>
+                                    <div class="cf-origin-grid" id="cfOriginGrid" title="Click to set the circle's starting point">
+                                      <button type="button" data-origin="0% 0%"    title="Top left"></button>
+                                      <button type="button" data-origin="50% 0%"   title="Top centre"></button>
+                                      <button type="button" data-origin="100% 0%"  title="Top right"></button>
+                                      <button type="button" data-origin="0% 50%"   title="Middle left"></button>
+                                      <button type="button" data-origin="50% 50%"  title="Centre" class="is-active"></button>
+                                      <button type="button" data-origin="100% 50%" title="Middle right"></button>
+                                      <button type="button" data-origin="0% 100%"  title="Bottom left"></button>
+                                      <button type="button" data-origin="50% 100%" title="Bottom centre"></button>
+                                      <button type="button" data-origin="100% 100%" title="Bottom right"></button>
+                                    </div>
+                                    <input class="form-input" id="cfOriginCustom" placeholder="e.g. 30% 70%" style="margin-top:0.4rem;font-family:var(--font-mono);font-size:0.75rem">
+                                    <p class="form-hint">Custom: any CSS percentage pair</p>
                                   </div>
                                   <div class="form-group">
                                     <label class="form-label">Images &amp; phases</label>
@@ -3564,8 +3621,58 @@ function initCrossfadeEditor(sectionIndex) {
   const newTransitionSelect = transitionSelect.cloneNode(true);
   transitionSelect.parentNode.replaceChild(newTransitionSelect, transitionSelect);
   newTransitionSelect.value = section.crossfade_transition || 'fade';
+
+  // Origin picker (circle only)
+  const originGroup  = document.getElementById('cfOriginGroup');
+  const originGrid   = document.getElementById('cfOriginGrid');
+  const originCustom = document.getElementById('cfOriginCustom');
+
+  function syncOriginVisibility(val) {
+    originGroup.style.display = (val === 'circle') ? 'block' : 'none';
+  }
+  syncOriginVisibility(newTransitionSelect.value);
+
+  // Restore saved origin
+  const savedOrigin = section.crossfade_wipe_origin || '50% 50%';
+  originCustom.value = savedOrigin;
+  originGrid.querySelectorAll('button').forEach(btn => {
+    btn.classList.toggle('is-active', btn.dataset.origin === savedOrigin);
+  });
+
+  function setOrigin(val) {
+    section.crossfade_wipe_origin = val;
+    originCustom.value = val;
+    originGrid.querySelectorAll('button').forEach(btn => {
+      btn.classList.toggle('is-active', btn.dataset.origin === val);
+    });
+    scheduleAutosave();
+  }
+
+  // Clone grid to clear old listeners
+  const newGrid = originGrid.cloneNode(true);
+  originGrid.parentNode.replaceChild(newGrid, originGrid);
+  newGrid.querySelectorAll('button').forEach(btn => {
+    btn.classList.toggle('is-active', btn.dataset.origin === savedOrigin);
+    btn.addEventListener('click', () => setOrigin(btn.dataset.origin));
+  });
+
+  const newCustom = originCustom.cloneNode(true);
+  originCustom.parentNode.replaceChild(newCustom, originCustom);
+  newCustom.value = savedOrigin;
+  newCustom.addEventListener('input', e => {
+    const v = e.target.value.trim();
+    if (v) {
+      section.crossfade_wipe_origin = v;
+      newGrid.querySelectorAll('button').forEach(btn => {
+        btn.classList.toggle('is-active', btn.dataset.origin === v);
+      });
+      scheduleAutosave();
+    }
+  });
+
   newTransitionSelect.addEventListener('change', e => {
     section.crossfade_transition = e.target.value;
+    syncOriginVisibility(e.target.value);
     scheduleAutosave();
   });
 

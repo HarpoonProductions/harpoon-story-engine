@@ -761,8 +761,13 @@
         },
         "crossfade_transition": {
           "type": "string",
-          "enum": ["fade", "wipe-left", "wipe-right", "wipe-up", "wipe-down"],
+          "enum": ["fade", "wipe-left", "wipe-right", "wipe-up", "wipe-down", "circle"],
           "description": "Transition style between crossfade images. Default: fade."
+        },
+        "crossfade_wipe_origin": {
+          "type": "string",
+          "default": "50% 50%",
+          "description": "Origin point for the circle transition, as 'x% y%'. Default: '50% 50%' (centre)."
         },
         "contributors": {
           "type": "array",
