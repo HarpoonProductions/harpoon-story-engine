@@ -121,13 +121,13 @@
     if (cover) {
       ScrollTrigger.create({
         trigger: cover,
-        start: "bottom 60px",
-        onLeave: function () {
+        start: "50% top",   // halfway through the cover
+        onEnter: function () {
           inStory = true;
           nav.classList.add("hse-nav--story");
           undim();
         },
-        onEnterBack: function () {
+        onLeaveBack: function () {
           inStory = false;
           clearTimeout(hideTimer);
           nav.classList.remove("hse-nav--story", "hse-nav--dim");
@@ -142,13 +142,17 @@
       lastScrollY = y;
     }, { passive: true });
 
-    // Cursor near top reveals the strip
+    // Cursor near top reveals the strip (desktop)
     document.addEventListener("mousemove", function (e) {
       if (!inStory) return;
-      if (e.clientY < 80) {
-        undim();
-      }
+      if (e.clientY < 80) undim();
     });
+
+    // Tap near top reveals the strip (mobile)
+    document.addEventListener("touchstart", function (e) {
+      if (!inStory) return;
+      if (e.touches[0].clientY < 80) undim();
+    }, { passive: true });
     nav.addEventListener("mouseenter", function () { if (inStory) undim(); });
     nav.addEventListener("mouseleave", function () {
       if (inStory) {
