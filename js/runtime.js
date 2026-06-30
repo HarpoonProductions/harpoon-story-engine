@@ -479,8 +479,8 @@
               ease: "none",
               scrollTrigger: {
                 trigger: phase,
-                start: "top bottom", // phase enters bottom of screen
-                end: "top 40%",      // phase reaches 40% down
+                start: "top 70%",    // wait until previous image has settled into full view
+                end: "top 15%",      // phase nearly at top
                 scrub: 0.4,          // small lag for smoothness
                 onEnter: function () {
                   phase.classList.add("is-visible");
