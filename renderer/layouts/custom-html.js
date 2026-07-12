@@ -16,10 +16,12 @@ function renderCustomHtml(section) {
   const scrollLock = embed.scroll_lock !== false; // default true
   const caption = embed.caption || "";
   const fullWidth = !!embed.full_width;
+  const padded = !!embed.padded;
 
   const widthClass = fullWidth ? " hse-embed--full" : "";
   const lockClass = scrollLock ? " hse-embed--scroll-locked" : "";
   const shadowAttr = shadowDom ? ' data-shadow-dom="true"' : "";
+  const paddedClass = padded ? " hse-section--padded" : "";
 
   const captionHtml = caption
     ? `<p class="hse-embed__caption">${escHtml(caption)}</p>`
@@ -32,7 +34,7 @@ function renderCustomHtml(section) {
     </div>`
     : "";
 
-  return `<section class="hse-section hse-section--custom-html" id="${escHtml(section.id)}" data-layout="custom-html">
+  return `<section class="hse-section hse-section--custom-html${paddedClass}" id="${escHtml(section.id)}" data-layout="custom-html">
   <div class="hse-inner${fullWidth ? " hse-inner--full" : ""}">
     <div class="hse-embed${widthClass}${lockClass}"${shadowAttr}>
       ${scrollOverlay}

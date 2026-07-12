@@ -4,6 +4,11 @@
  */
 
 .hse-section--custom-html {
+    padding: 0;
+}
+
+/* Add vertical breathing room when the embed needs space from adjacent sections */
+.hse-section--custom-html.hse-section--padded {
     padding: var(--hse-space-xl) 0;
 }
 

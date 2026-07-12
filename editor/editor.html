@@ -1514,6 +1514,10 @@
                                       <input type="checkbox" id="sec-custom-full-width"> Full width
                                       <span class="form-hint" style="display:inline;margin-left:0.25rem">Removes max-width constraint</span>
                                     </label>
+                                    <label class="form-label">
+                                      <input type="checkbox" id="sec-custom-padded"> Add padding
+                                      <span class="form-hint" style="display:inline;margin-left:0.25rem">Adds vertical space above and below</span>
+                                    </label>
                                   </div>
                                 </div>
 
@@ -3098,6 +3102,7 @@ function initCustomHtmlEditor(sectionIndex) {
   document.getElementById('sec-custom-shadow').checked    = !!embed.shadow_dom;
   document.getElementById('sec-custom-scroll-lock').checked = embed.scroll_lock !== false;
   document.getElementById('sec-custom-full-width').checked  = !!embed.full_width;
+  document.getElementById('sec-custom-padded').checked      = !!embed.padded;
 
   // Wire fields — remove old listeners by replacing elements
   function rewire(id, setter) {
@@ -3114,6 +3119,7 @@ function initCustomHtmlEditor(sectionIndex) {
   rewire('sec-custom-shadow',      v => { embed.shadow_dom = v; });
   rewire('sec-custom-scroll-lock', v => { embed.scroll_lock = v; });
   rewire('sec-custom-full-width',  v => { embed.full_width = v; });
+  rewire('sec-custom-padded',      v => { embed.padded = v; });
 }
 
 // ── Panoramic scroll editor ──────────────────────────────────────
