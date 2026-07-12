@@ -10,8 +10,9 @@ function renderFullbleedQuote(section) {
   const posH     = section.fbq_position_h || 'left';
   const bgScroll = section.fbq_bg_scroll  || 'parallax';
 
+  const bgPos   = (hero_image && hero_image.focal) ? hero_image.focal : '50% 50%';
   const bgStyle = hero_image
-    ? `style="background-image: url('${escHtml(hero_image.url)}')" role="img" aria-label="${escHtml(hero_image.alt || '')}"`
+    ? `style="background-image: url('${escHtml(hero_image.url)}'); background-position: ${bgPos}" role="img" aria-label="${escHtml(hero_image.alt || '')}"`
     : '';
 
   const quoteText = pull_quote

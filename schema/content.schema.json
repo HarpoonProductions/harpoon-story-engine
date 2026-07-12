@@ -575,7 +575,9 @@
             "scroll-carousel",
             "panoramic-scroll",
             "cinema-reveal",
-            "frame-scrubber"
+            "frame-scrubber",
+            "two-column",
+            "split-reveal"
           ],
           "default": "default",
           "description": "Rendering template for this section. fullbleed-quote: full-viewport hero_image with pull_quote overlaid. reveal-crossfade: two images crossfade on scroll, driven by crossfade_images and crossfade_phases."
@@ -609,9 +611,9 @@
         },
         "fbq_overlay": {
           "type": "string",
-          "enum": ["solid", "gradient-tb", "gradient-bt", "gradient-lr", "gradient-rl"],
+          "enum": ["none", "solid", "solid-light", "gradient-tb", "gradient-bt", "gradient-lr", "gradient-rl"],
           "default": "solid",
-          "description": "Overlay style for fullbleed-quote. solid = uniform dark wash. gradient-* = directional fade."
+          "description": "Overlay style for fullbleed-quote. none = no overlay. solid = dark wash. solid-light = light wash. gradient-* = directional fade."
         },
         "fbq_position_v": {
           "type": "string",

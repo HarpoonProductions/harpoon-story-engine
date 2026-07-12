@@ -261,23 +261,26 @@
     errMsg.className = 'img-upload-error';
     wrap.appendChild(errMsg);
 
-    // Focal point section
+    // Focal point section — suppressed when data-no-focal is set on the input
+    const noFocal = urlInput.hasAttribute('data-no-focal');
     const focalWrap = document.createElement('div');
     focalWrap.className = 'focal-wrap';
-    focalWrap.innerHTML = `
-      <div class="focal-label">
-        <span class="focal-label-text">Focal point</span>
-        <div style="display:flex;align-items:center;gap:0.5rem">
-          <span class="focal-coords" id="focal-coords-${fieldId}">center</span>
-          <button type="button" class="focal-reset" id="focal-reset-${fieldId}" aria-label="Reset focal point to centre">Reset</button>
+    if (!noFocal) {
+      focalWrap.innerHTML = `
+        <div class="focal-label">
+          <span class="focal-label-text">Focal point</span>
+          <div style="display:flex;align-items:center;gap:0.5rem">
+            <span class="focal-coords" id="focal-coords-${fieldId}">center</span>
+            <button type="button" class="focal-reset" id="focal-reset-${fieldId}" aria-label="Reset focal point to centre">Reset</button>
+          </div>
         </div>
-      </div>
-      <div class="focal-canvas" id="focal-canvas-${fieldId}" role="img" aria-label="Click or drag to set focal point" tabindex="0">
-        <img id="focal-img-${fieldId}" src="" alt="">
-        <div class="focal-dot" id="focal-dot-${fieldId}" style="left:50%;top:50%"></div>
-      </div>
-    `;
-    wrap.appendChild(focalWrap);
+        <div class="focal-canvas" id="focal-canvas-${fieldId}" role="img" aria-label="Click or drag to set focal point" tabindex="0">
+          <img id="focal-img-${fieldId}" src="" alt="">
+          <div class="focal-dot" id="focal-dot-${fieldId}" style="left:50%;top:50%"></div>
+        </div>
+      `;
+      wrap.appendChild(focalWrap);
+    }
 
     // Print/PDF include checkbox
     const printPath = urlInput.dataset.printPath || '';
@@ -301,11 +304,11 @@
       if (onUpdate) onUpdate(fieldId, urlInput.value, currentFocal, focalPath, printCheck.checked, printPath);
     });
 
-    const focalCanvas = focalWrap.querySelector('.focal-canvas');
-    const focalImg    = focalWrap.querySelector('img');
-    const focalDot    = focalWrap.querySelector('.focal-dot');
-    const focalCoords = focalWrap.querySelector('.focal-coords');
-    const focalReset  = focalWrap.querySelector('.focal-reset');
+    const focalCanvas = noFocal ? null : focalWrap.querySelector('.focal-canvas');
+    const focalImg    = noFocal ? null : focalWrap.querySelector('img');
+    const focalDot    = noFocal ? null : focalWrap.querySelector('.focal-dot');
+    const focalCoords = noFocal ? null : focalWrap.querySelector('.focal-coords');
+    const focalReset  = noFocal ? null : focalWrap.querySelector('.focal-reset');
 
     // Current focal value
     let currentFocal = '50% 50%';
@@ -368,6 +371,7 @@
     // ── Show focal picker when URL is populated ────────────────────
 
     function showFocalPicker(url) {
+      if (noFocal) return;
       if (!url) { focalWrap.classList.remove('is-visible'); return; }
       focalWrap.classList.add('is-visible');
       focalImg.src = url;
@@ -386,73 +390,69 @@
     // ── Focal point interaction ────────────────────────────────────
 
     function setFocal(x, y) {
-      // x, y are 0–1 fractions of the canvas dimensions
       const pctX = Math.round(x * 100);
       const pctY = Math.round(y * 100);
       currentFocal = `${pctX}% ${pctY}%`;
 
-      focalDot.style.left = (pctX) + '%';
-      focalDot.style.top  = (pctY) + '%';
-      focalCoords.textContent = currentFocal;
+      if (!noFocal) {
+        focalDot.style.left = pctX + '%';
+        focalDot.style.top  = pctY + '%';
+        focalCoords.textContent = currentFocal;
+      }
 
-      // Notify parent
       if (onUpdate) onUpdate(fieldId, urlInput.value, currentFocal, focalPath, printCheck.checked, printPath);
     }
 
-    function focalFromEvent(e) {
-      const rect = focalCanvas.getBoundingClientRect();
-      const x = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
-      const y = Math.max(0, Math.min(1, (e.clientY - rect.top)  / rect.height));
-      setFocal(x, y);
-    }
+    if (!noFocal) {
+      function focalFromEvent(e) {
+        const rect = focalCanvas.getBoundingClientRect();
+        const x = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+        const y = Math.max(0, Math.min(1, (e.clientY - rect.top)  / rect.height));
+        setFocal(x, y);
+      }
 
-    let draggingFocal = false;
+      let draggingFocal = false;
 
-    focalCanvas.addEventListener('mousedown', e => {
-      draggingFocal = true;
-      focalFromEvent(e);
-      e.preventDefault();
-    });
+      focalCanvas.addEventListener('mousedown', e => {
+        draggingFocal = true;
+        focalFromEvent(e);
+        e.preventDefault();
+      });
 
-    document.addEventListener('mousemove', e => {
-      if (draggingFocal) focalFromEvent(e);
-    });
+      document.addEventListener('mousemove', e => {
+        if (draggingFocal) focalFromEvent(e);
+      });
 
-    document.addEventListener('mouseup', () => { draggingFocal = false; });
+      document.addEventListener('mouseup', () => { draggingFocal = false; });
 
-    // Keyboard: arrow keys move focal point
-    focalCanvas.addEventListener('keydown', e => {
-      const step = e.shiftKey ? 10 : 5;
-      const cur  = currentFocal.match(/(\d+)%\s+(\d+)%/);
-      if (!cur) return;
-      let x = parseInt(cur[1]), y = parseInt(cur[2]);
-      if (e.key === 'ArrowLeft')  x = Math.max(0,   x - step);
-      if (e.key === 'ArrowRight') x = Math.min(100, x + step);
-      if (e.key === 'ArrowUp')    y = Math.max(0,   y - step);
-      if (e.key === 'ArrowDown')  y = Math.min(100, y + step);
-      else if (!e.key.startsWith('Arrow')) return;
-      e.preventDefault();
-      setFocal(x / 100, y / 100);
-    });
+      focalCanvas.addEventListener('keydown', e => {
+        const step = e.shiftKey ? 10 : 5;
+        const cur  = currentFocal.match(/(\d+)%\s+(\d+)%/);
+        if (!cur) return;
+        let x = parseInt(cur[1]), y = parseInt(cur[2]);
+        if (e.key === 'ArrowLeft')  x = Math.max(0,   x - step);
+        if (e.key === 'ArrowRight') x = Math.min(100, x + step);
+        if (e.key === 'ArrowUp')    y = Math.max(0,   y - step);
+        if (e.key === 'ArrowDown')  y = Math.min(100, y + step);
+        else if (!e.key.startsWith('Arrow')) return;
+        e.preventDefault();
+        setFocal(x / 100, y / 100);
+      });
 
-    focalReset.addEventListener('click', () => setFocal(0.5, 0.5));
+      focalReset.addEventListener('click', () => setFocal(0.5, 0.5));
 
-    // Listen for external focal updates (e.g. when switching sections)
-    focalCanvas.addEventListener('set-focal', (e) => {
-      setFocal(e.detail.x, e.detail.y);
-    });
+      focalCanvas.addEventListener('set-focal', (e) => {
+        setFocal(e.detail.x, e.detail.y);
+      });
 
-    // Initialise dot from existing value on the input, or default to centre
-    const existingFocal = urlInput.dataset.existingFocal || '';
-    if (existingFocal) {
-      const match = existingFocal.match(/(\d+)%\s*(\d+)%/);
-      if (match) {
-        setFocal(parseInt(match[1]) / 100, parseInt(match[2]) / 100);
+      const existingFocal = urlInput.dataset.existingFocal || '';
+      if (existingFocal) {
+        const match = existingFocal.match(/(\d+)%\s*(\d+)%/);
+        if (match) setFocal(parseInt(match[1]) / 100, parseInt(match[2]) / 100);
+        else setFocal(0.5, 0.5);
       } else {
         setFocal(0.5, 0.5);
       }
-    } else {
-      setFocal(0.5, 0.5);
     }
   }
 

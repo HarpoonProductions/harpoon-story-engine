@@ -2397,15 +2397,19 @@
                     const data = await res.json();
                     if (data.ok) {
                         isDirty = false;
-                        setStatus("saved", "Saved");
-                        if (skipNextReload) {
-                            skipNextReload = false;
+                        if (data.renderWarning) {
+                            setStatus("error", "Saved (preview error: " + data.renderWarning + ")");
                         } else {
-                            reloadPreviews();
+                            setStatus("saved", "Saved");
+                            if (skipNextReload) {
+                                skipNextReload = false;
+                            } else {
+                                reloadPreviews();
+                            }
+                            setTimeout(() => {
+                                if (!isDirty) setStatus("", "—");
+                            }, 2500);
                         }
-                        setTimeout(() => {
-                            if (!isDirty) setStatus("", "—");
-                        }, 2500);
                     } else {
                         setStatus("error", data.error || "Save failed");
                     }
@@ -3017,8 +3021,7 @@ function initCarouselEditor(sectionIndex) {
           ${i > 0 ? `<button type="button" class="block-item__delete" title="Remove card">✕</button>` : ''}
         </div>
         <div style="padding:0.5rem;display:flex;flex-direction:column;gap:0.4rem">
-          <input class="form-input sc-img-url" id="sc-img-url-${sectionIndex}-${i}" data-image-field
-                 ${img.focal ? `data-existing-focal="${img.focal}"` : ''}
+          <input class="form-input sc-img-url" id="sc-img-url-${sectionIndex}-${i}" data-image-field data-no-focal
                  placeholder="Image URL https://…" value="${img.url || ''}">
           <input class="form-input sc-img-alt" placeholder="Image alt text" value="${img.alt || ''}">
           <input class="form-input sc-number" placeholder="Number badge e.g. 01" value="${card.number || ''}">
@@ -3368,7 +3371,7 @@ function initCascadingSlidesEditor(sectionIndex) {
           <input class="form-input cs-tag"        data-i="${i}" placeholder="Tag (optional)" value="${card.tag || ''}">
           <input class="form-input cs-title"      data-i="${i}" placeholder="Slide title" value="${card.title || ''}">
           <textarea class="form-textarea cs-body" data-i="${i}" placeholder="Slide body text…" rows="3">${card.body || ''}</textarea>
-          <input class="form-input cs-img-url"    id="cs-img-url-${sectionIndex}-${i}" data-image-field data-i="${i}" ${img.focal ? `data-existing-focal="${img.focal}"` : ''} placeholder="Image URL https://…" value="${img.url || ''}">
+          <input class="form-input cs-img-url"    id="cs-img-url-${sectionIndex}-${i}" data-image-field data-no-focal data-i="${i}" placeholder="Image URL https://…" value="${img.url || ''}">
           <input class="form-input cs-img-alt"    data-i="${i}" placeholder="Image alt text" value="${img.alt || ''}">
           <input class="form-input cs-link-href"  data-i="${i}" placeholder="Link URL (optional)" value="${link.href || ''}">
           <input class="form-input cs-link-label" data-i="${i}" placeholder="Link label e.g. Read more" value="${link.label || ''}">
@@ -3471,7 +3474,7 @@ function initStackableCardsEditor(sectionIndex) {
           <input class="form-input stk-tag"      data-i="${i}" placeholder="Tag (optional)" value="${card.tag || ''}">
           <input class="form-input stk-title"    data-i="${i}" placeholder="Card title" value="${card.title || ''}">
           <textarea class="form-textarea stk-body" data-i="${i}" placeholder="Card body text…" rows="3">${card.body || ''}</textarea>
-          <input class="form-input stk-img-url"  id="stk-img-url-${sectionIndex}-${i}" data-image-field data-i="${i}" ${img.focal ? `data-existing-focal="${img.focal}"` : ''} placeholder="Image URL https://…" value="${img.url || ''}">
+          <input class="form-input stk-img-url"  id="stk-img-url-${sectionIndex}-${i}" data-image-field data-no-focal data-i="${i}" placeholder="Image URL https://…" value="${img.url || ''}">
           <input class="form-input stk-img-alt"  data-i="${i}" placeholder="Image alt text" value="${img.alt || ''}">
           <input class="form-input stk-link-href" data-i="${i}" placeholder="Link URL (optional)" value="${link.href || ''}">
           <input class="form-input stk-link-label" data-i="${i}" placeholder="Link label e.g. Read more" value="${link.label || ''}">
@@ -3572,7 +3575,7 @@ function initStickyStepsEditor(sectionIndex) {
         <div style="padding:0.5rem;display:flex;flex-direction:column;gap:0.4rem">
           <input class="form-input ss-title" data-i="${i}" placeholder="Step title" value="${step.title || ''}">
           <textarea class="form-textarea ss-body" data-i="${i}" placeholder="Step body text…" rows="3">${step.body || ''}</textarea>
-          <input class="form-input ss-img-url" id="ss-img-url-${sectionIndex}-${i}" data-image-field data-i="${i}" ${img.focal ? `data-existing-focal="${img.focal}"` : ''} placeholder="Image URL https://…" value="${img.url || ''}">
+          <input class="form-input ss-img-url" id="ss-img-url-${sectionIndex}-${i}" data-image-field data-no-focal data-i="${i}" placeholder="Image URL https://…" value="${img.url || ''}">
           <input class="form-input ss-img-alt" data-i="${i}" placeholder="Image alt text" value="${img.alt || ''}">
         </div>`;
 

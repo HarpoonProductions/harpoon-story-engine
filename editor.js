@@ -299,11 +299,24 @@ app.post("/api/project/:id/save", async (req, res) => {
       );
     }
 
-    // Render to local preview from content in memory
-    const result = renderToPreview(projectId, body);
+    // Render to local preview from content in memory (non-blocking — preview
+    // failures don't roll back the save)
+    let renderWarning = null;
+    try {
+      const renderResult = renderToPreview(projectId, body);
+      if (!renderResult.ok) {
+        const msg = renderResult.error ||
+          (renderResult.errors ? renderResult.errors.map(e => e.message).join("; ") : "Render failed");
+        console.warn(`[render] ${projectId}: ${msg}`);
+        renderWarning = msg;
+      }
+    } catch (renderErr) {
+      console.error(`[render] ${projectId}: ${renderErr.message}`);
+      renderWarning = renderErr.message;
+    }
 
     addRecent(projectId);
-    res.json(result);
+    res.json({ ok: true, renderWarning });
   } catch (err) {
     res.status(500).json({ ok: false, error: err.message });
   }
