@@ -445,6 +445,37 @@ app.patch("/api/project/:id/folder", async (req, res) => {
   }
 });
 
+// PATCH /api/project/:id/note — update meta.note
+app.patch("/api/project/:id/note", async (req, res) => {
+  const { id } = req.params;
+  const { note } = req.body;
+  try {
+    let content;
+    if (db.isConfigured()) {
+      content = await db.getProject(id);
+    } else {
+      const p = path.join(PROJECTS_DIR, id, "content.json");
+      content = JSON.parse(fs.readFileSync(p, "utf8"));
+    }
+    if (!content) return res.status(404).json({ error: "Project not found" });
+    if (!content.meta) content.meta = {};
+    if (note) {
+      content.meta.note = note;
+    } else {
+      delete content.meta.note;
+    }
+    if (db.isConfigured()) {
+      await db.saveProject(id, content);
+    } else {
+      const p = path.join(PROJECTS_DIR, id, "content.json");
+      fs.writeFileSync(p, JSON.stringify(content, null, 2), "utf8");
+    }
+    res.json({ ok: true });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // Serve token set registry
 app.get("/api/tokens", (req, res) => {
   try {

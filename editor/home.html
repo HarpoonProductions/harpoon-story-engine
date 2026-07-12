@@ -165,6 +165,31 @@
                 color: var(--ink-3);
                 margin-top: auto;
             }
+            .project-card__note {
+                font-size: 0.72rem;
+                color: var(--ink-3);
+                font-style: italic;
+                background: none;
+                border: none;
+                border-bottom: 1px dashed transparent;
+                padding: 0;
+                width: 100%;
+                cursor: text;
+                outline: none;
+                transition: border-color 0.15s;
+                font-family: inherit;
+            }
+            .project-card__note:hover {
+                border-bottom-color: var(--ink-3);
+            }
+            .project-card__note:focus {
+                border-bottom-color: var(--accent);
+                color: var(--ink);
+            }
+            .project-card__note::placeholder {
+                color: var(--ink-3);
+                opacity: 0.5;
+            }
             .project-card__arrow {
                 position: absolute;
                 top: 0.75rem;
@@ -801,9 +826,12 @@
                     <div class="project-card__accent" style="background:${p.accent_color}" aria-hidden="true"></div>
                     <span class="project-card__client" aria-hidden="true">${p.client || "—"}</span>
                     <span class="project-card__title" aria-hidden="true">${p.title}</span>
+                    <input class="project-card__note" type="text" value="${(p.note || '').replace(/"/g, '&quot;')}" placeholder="Add a note…" aria-label="Note for ${p.title}">
                     <span class="project-card__meta" aria-hidden="true">${p.id} · ${ago}</span>
                     <span class="project-card__arrow" aria-hidden="true">↗</span>
                     <button class="project-card__backup" aria-label="Back up ${p.title}" title="Create a backup snapshot">Back up</button>`;
+
+                wireNoteField(card, p.id);
 
                 card.querySelector(".project-card__backup").addEventListener("click", async (e) => {
                     e.preventDefault();
@@ -835,9 +863,12 @@
                     <div class="project-card__accent" style="background:${p.accent_color}" aria-hidden="true"></div>
                     <span class="project-card__backup-of" aria-hidden="true">${originLabel}</span>
                     <span class="project-card__title" aria-hidden="true">${p.title}</span>
+                    <input class="project-card__note" type="text" value="${(p.note || '').replace(/"/g, '&quot;')}" placeholder="Add a note…" aria-label="Note for ${p.title}">
                     <span class="project-card__meta" aria-hidden="true">${ago}</span>
                     <a class="project-card__arrow" href="/edit/${p.id}" aria-label="Open backup ${p.title}" title="Open this backup" style="opacity:1;position:relative;top:auto;right:auto;margin-top:0.25rem;display:inline-block">↗ Open</a>
                     <button class="project-card__promote" aria-label="Promote ${p.title} to active">↑ Promote to active</button>`;
+
+                wireNoteField(card, p.id);
 
                 card.querySelector(".project-card__promote").addEventListener("click", async () => {
                     const r = await fetch(`/api/project/${p.id}/folder`, {
@@ -858,6 +889,21 @@
                 toggle.setAttribute("aria-expanded", String(!open));
                 grid.hidden = open;
             });
+
+            function wireNoteField(card, projectId) {
+                const input = card.querySelector(".project-card__note");
+                if (!input) return;
+                // Stop clicks on the note opening the project
+                input.addEventListener("click", e => e.stopPropagation());
+                input.addEventListener("keydown", e => { if (e.key === "Enter") input.blur(); });
+                input.addEventListener("blur", async () => {
+                    await fetch(`/api/project/${projectId}/note`, {
+                        method: "PATCH",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ note: input.value }),
+                    });
+                });
+            }
 
             function timeAgo(iso) {
                 const d = Math.floor((Date.now() - new Date(iso)) / 1000);

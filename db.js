@@ -49,6 +49,7 @@ async function listProjects() {
     accent_color: row.content?.meta?.accent_color || "#1A3F6F",
     folder: row.content?.meta?.folder || "",
     backup_of: row.content?.meta?.backup_of || "",
+    note: row.content?.meta?.note || "",
     last_saved: row.updated_at,
   }));
 }
