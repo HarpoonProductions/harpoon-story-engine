@@ -100,10 +100,36 @@ const staticOpts = {
   },
 };
 
-// Serve editor UI static files
-app.use("/editor", express.static(EDITOR_DIR, staticOpts));
+// No-cache options for editor UI — ensures editor.html/JS are always fresh after restart
+const noCacheOpts = {
+  setHeaders(res, filePath) {
+    const ext = require("path").extname(filePath).toLowerCase();
+    if (mime[ext]) res.setHeader("Content-Type", mime[ext]);
+    res.setHeader("Cache-Control", "no-store");
+  },
+};
 
-// Serve preview output
+// Serve editor UI static files (no-cache so changes are immediate after restart)
+app.use("/editor", express.static(EDITOR_DIR, noCacheOpts));
+
+// Serve preview CSS and JS from SOURCE — must come before the general preview static
+// so stale copies in .preview/ are never served for these file types
+const CSS_DIR = path.join(ROOT, "css");
+const JS_DIR  = path.join(ROOT, "js");
+app.use(/^\/preview\/[^/]+\/css\//, (req, res, next) => {
+  const rel = req.path.replace(/^\/preview\/[^/]+\/css/, "");
+  express.static(CSS_DIR, noCacheOpts)(
+    Object.assign(req, { url: rel || "/" }), res, next
+  );
+});
+app.use(/^\/preview\/[^/]+\/js\//, (req, res, next) => {
+  const rel = req.path.replace(/^\/preview\/[^/]+\/js/, "");
+  express.static(JS_DIR, noCacheOpts)(
+    Object.assign(req, { url: rel || "/" }), res, next
+  );
+});
+
+// Serve preview output (HTML and assets other than CSS/JS)
 app.use("/preview", express.static(PREVIEW_DIR, staticOpts));
 
 // ── Recent projects ───────────────────────────────────────────────
