@@ -215,51 +215,65 @@
                 font-size: 0.8rem;
             }
 
-            /* ── Backup button on project cards ── */
-            .project-card__backup {
-                position: absolute;
-                bottom: 0.65rem;
-                right: 0.65rem;
+            /* ── Card actions row ── */
+            .project-card__actions {
+                display: flex;
+                align-items: center;
+                gap: 0.4rem;
+                margin-top: 0.35rem;
+                flex-wrap: wrap;
+            }
+            .project-card__open {
+                font-family: var(--font-mono);
+                font-size: 0.5rem;
+                letter-spacing: 0.1em;
+                text-transform: uppercase;
+                color: var(--accent);
+                text-decoration: none;
+                padding: 0.2rem 0.4rem;
+                border: 1px solid var(--accent);
+                border-radius: 2px;
+                transition: background 0.12s;
+            }
+            .project-card__open:hover { background: rgba(139,58,42,0.07); }
+            .project-card__backup-btn {
                 font-family: var(--font-mono);
                 font-size: 0.5rem;
                 letter-spacing: 0.1em;
                 text-transform: uppercase;
                 color: var(--ink-3);
-                background: var(--bg-2);
+                background: none;
                 border: 1px solid var(--rule);
                 border-radius: 2px;
-                padding: 0.2rem 0.45rem;
+                padding: 0.2rem 0.4rem;
                 cursor: pointer;
-                opacity: 0;
-                transition: opacity 0.12s, background 0.12s;
+                transition: all 0.12s;
                 white-space: nowrap;
             }
-            .project-card:hover .project-card__backup {
-                opacity: 1;
-            }
-            .project-card__backup:hover {
-                background: white;
-                color: var(--ink);
-                border-color: var(--ink-3);
-            }
-            .project-card__backup.is-loading {
-                opacity: 1;
+            .project-card__backup-btn:hover { color: var(--ink); border-color: var(--ink-3); background: var(--bg); }
+            .project-card__backup-btn.is-loading { opacity: 0.5; pointer-events: none; }
+            .project-card__backup-btn.is-done { color: #2d7a4f; border-color: #2d7a4f; }
+            .project-card__folder-select {
+                font-family: var(--font-mono);
+                font-size: 0.5rem;
+                letter-spacing: 0.08em;
                 color: var(--ink-3);
-                pointer-events: none;
+                background: none;
+                border: 1px solid var(--rule);
+                border-radius: 2px;
+                padding: 0.2rem 0.35rem;
+                cursor: pointer;
+                outline: none;
+                margin-left: auto;
             }
-            .project-card__backup.is-done {
-                opacity: 1;
-                color: #2d7a4f;
-                border-color: #2d7a4f;
-                background: #f0faf4;
-            }
+            .project-card__folder-select:hover { border-color: var(--ink-3); color: var(--ink); }
 
-            /* ── Back Ups section ── */
-            .backups-section {
+            /* ── Folder sections (collapsible) ── */
+            .folder-section {
                 margin-top: 0.25rem;
-                margin-bottom: 1.5rem;
+                margin-bottom: 1rem;
             }
-            .backups-toggle {
+            .folder-toggle {
                 display: flex;
                 align-items: center;
                 gap: 0.5rem;
@@ -270,10 +284,8 @@
                 margin-bottom: 0.5rem;
                 color: inherit;
             }
-            .backups-toggle:hover .section-label {
-                color: var(--ink-2);
-            }
-            .backups-toggle__count {
+            .folder-toggle:hover .section-label { color: var(--ink-2); }
+            .folder-toggle__count {
                 font-family: var(--font-mono);
                 font-size: 0.52rem;
                 color: var(--ink-3);
@@ -282,50 +294,21 @@
                 border-radius: 2px;
                 padding: 0.1rem 0.35rem;
             }
-            .backups-toggle__chevron {
+            .folder-toggle__chevron {
                 font-size: 0.6rem;
                 color: var(--ink-3);
                 transition: transform 0.15s;
             }
-            .backups-toggle[aria-expanded="true"] .backups-toggle__chevron {
+            .folder-toggle[aria-expanded="true"] .folder-toggle__chevron {
                 transform: rotate(90deg);
             }
-
-            /* ── Backup card variant ── */
-            .project-card--backup {
-                background: var(--bg);
-                opacity: 0.85;
-            }
-            .project-card--backup:hover {
-                background: var(--bg-2);
-                opacity: 1;
-            }
-            .project-card__backup-of {
+            .project-card__folder-badge {
                 font-family: var(--font-mono);
-                font-size: 0.5rem;
+                font-size: 0.48rem;
                 letter-spacing: 0.1em;
+                text-transform: uppercase;
                 color: var(--ink-3);
-                text-transform: uppercase;
-            }
-            .project-card__promote {
-                display: inline-flex;
-                align-items: center;
-                margin-top: 0.35rem;
-                font-family: var(--font-mono);
-                font-size: 0.5rem;
-                letter-spacing: 0.1em;
-                text-transform: uppercase;
-                color: var(--accent);
-                background: none;
-                border: 1px solid transparent;
-                border-radius: 2px;
-                padding: 0.2rem 0.4rem 0.2rem 0;
-                cursor: pointer;
-                transition: all 0.12s;
-            }
-            .project-card__promote:hover {
-                border-color: var(--accent);
-                padding-left: 0.4rem;
+                margin-bottom: 0.1rem;
             }
 
             .action-strip {
@@ -533,28 +516,40 @@
             </header>
 
             <main>
-                <p class="section-label" aria-hidden="true">Projects</p>
-                <section aria-label="Recent projects">
-                    <div class="project-grid" id="projectGrid" role="list">
-                        <div
-                            class="empty-state"
-                            id="emptyState"
-                            style="display: none"
-                            role="listitem"
-                        >
-                            No projects yet — create your first story
+                <p class="section-label" aria-hidden="true">In production</p>
+                <section aria-label="Stories in production">
+                    <div class="project-grid" id="productionGrid" role="list">
+                        <div class="empty-state" id="emptyState" style="display:none" role="listitem">
+                            No stories yet — create your first
                         </div>
                     </div>
                 </section>
 
-                <!-- Back Ups section — collapsed by default -->
-                <div class="backups-section" id="backupsSection" style="display:none">
-                    <button class="backups-toggle" id="backupsToggle" aria-expanded="false" aria-controls="backupsGrid">
-                        <span class="section-label" style="margin:0" aria-hidden="true">Back Ups</span>
-                        <span class="backups-toggle__count" id="backupsCount"></span>
-                        <span class="backups-toggle__chevron" aria-hidden="true">▸</span>
+                <div class="folder-section" id="publishedSection" style="display:none">
+                    <button class="folder-toggle" id="publishedToggle" aria-expanded="false" aria-controls="publishedGrid">
+                        <span class="section-label" style="margin:0">Published</span>
+                        <span class="folder-toggle__count" id="publishedCount"></span>
+                        <span class="folder-toggle__chevron" aria-hidden="true">▸</span>
+                    </button>
+                    <div class="project-grid" id="publishedGrid" role="list" hidden></div>
+                </div>
+
+                <div class="folder-section" id="backupsSection" style="display:none">
+                    <button class="folder-toggle" id="backupsToggle" aria-expanded="false" aria-controls="backupsGrid">
+                        <span class="section-label" style="margin:0">Back up</span>
+                        <span class="folder-toggle__count" id="backupsCount"></span>
+                        <span class="folder-toggle__chevron" aria-hidden="true">▸</span>
                     </button>
                     <div class="project-grid" id="backupsGrid" role="list" hidden></div>
+                </div>
+
+                <div class="folder-section" id="trashSection" style="display:none">
+                    <button class="folder-toggle" id="trashToggle" aria-expanded="false" aria-controls="trashGrid">
+                        <span class="section-label" style="margin:0">Trash</span>
+                        <span class="folder-toggle__count" id="trashCount"></span>
+                        <span class="folder-toggle__chevron" aria-hidden="true">▸</span>
+                    </button>
+                    <div class="project-grid" id="trashGrid" role="list" hidden></div>
                 </div>
 
                 <div class="action-strip">
@@ -777,133 +772,151 @@
                 window.location.href = `/edit/${id}`;
             }
 
-            // ── Load projects ─────────────────────────────────────────────────
+            // ── Folder definitions ────────────────────────────────────────────
+            const FOLDERS = [
+                { key: "",          label: "In production" },
+                { key: "published", label: "Published"     },
+                { key: "backups",   label: "Back up"       },
+                { key: "trash",     label: "Trash"         },
+            ];
 
+            // ── Load projects ─────────────────────────────────────────────────
             async function loadProjects() {
-                const res = await fetch("/api/projects");
+                const res  = await fetch("/api/projects");
                 const data = await res.json();
 
-                const grid        = document.getElementById("projectGrid");
-                const empty       = document.getElementById("emptyState");
-                const backupsSec  = document.getElementById("backupsSection");
-                const backupsGrid = document.getElementById("backupsGrid");
-                const backupsCount = document.getElementById("backupsCount");
+                const buckets = { "": [], published: [], backups: [], trash: [] };
+                data.projects.forEach(p => {
+                    const key = buckets.hasOwnProperty(p.folder) ? p.folder : "";
+                    buckets[key].push(p);
+                });
 
-                // Clear grids (keep empty-state sentinel)
-                Array.from(grid.children).forEach((c) => { if (c !== empty) c.remove(); });
-                backupsGrid.innerHTML = "";
-
-                const active  = data.projects.filter(p => p.folder !== "backups");
-                const backups = data.projects.filter(p => p.folder === "backups");
-
-                // ── Active projects ───────────────────────────────────────────
-                if (!active.length) {
-                    empty.style.display = "block";
-                } else {
+                // Production grid (always visible)
+                const prodGrid = document.getElementById("productionGrid");
+                const empty    = document.getElementById("emptyState");
+                Array.from(prodGrid.children).forEach(c => { if (c !== empty) c.remove(); });
+                if (buckets[""].length) {
                     empty.style.display = "none";
-                    active.forEach(p => grid.appendChild(makeProjectCard(p)));
-                }
-
-                // ── Back Ups section ──────────────────────────────────────────
-                if (backups.length) {
-                    backupsSec.style.display = "block";
-                    backupsCount.textContent = backups.length;
-                    backups.forEach(p => backupsGrid.appendChild(makeBackupCard(p)));
+                    buckets[""].forEach(p => prodGrid.appendChild(makeCard(p)));
                 } else {
-                    backupsSec.style.display = "none";
+                    empty.style.display = "block";
                 }
-            }
 
-            function makeProjectCard(p) {
-                const card = document.createElement("a");
-                card.className = "project-card";
-                card.href = `/edit/${p.id}`;
-                card.setAttribute("role", "listitem");
-                card.setAttribute("aria-label",
-                    `${p.title}${p.client ? ", " + p.client : ""}, last edited ${p.last_saved ? timeAgo(p.last_saved) : "never"}`);
-                const ago = p.last_saved ? timeAgo(p.last_saved) : "Never edited";
-                card.innerHTML = `
-                    <div class="project-card__accent" style="background:${p.accent_color}" aria-hidden="true"></div>
-                    <span class="project-card__client" aria-hidden="true">${p.client || "—"}</span>
-                    <span class="project-card__title" aria-hidden="true">${p.title}</span>
-                    <input class="project-card__note" type="text" value="${(p.note || '').replace(/"/g, '&quot;')}" placeholder="Add a note…" aria-label="Note for ${p.title}">
-                    <span class="project-card__meta" aria-hidden="true">${p.id} · ${ago}</span>
-                    <span class="project-card__arrow" aria-hidden="true">↗</span>
-                    <button class="project-card__backup" aria-label="Back up ${p.title}" title="Create a backup snapshot">Back up</button>`;
-
-                wireNoteField(card, p.id);
-
-                card.querySelector(".project-card__backup").addEventListener("click", async (e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    const btn = e.currentTarget;
-                    btn.textContent = "Saving…";
-                    btn.classList.add("is-loading");
-                    const r = await fetch(`/api/project/${p.id}/backup`, { method: "POST" });
-                    if (r.ok) {
-                        btn.textContent = "✓ Backed up";
-                        btn.classList.remove("is-loading");
-                        btn.classList.add("is-done");
-                        setTimeout(loadProjects, 800);
-                    } else {
-                        btn.textContent = "Failed";
-                        btn.classList.remove("is-loading");
-                    }
+                // Collapsible folder sections
+                [
+                    { key: "published", sectionId: "publishedSection", gridId: "publishedGrid", countId: "publishedCount" },
+                    { key: "backups",   sectionId: "backupsSection",   gridId: "backupsGrid",   countId: "backupsCount"   },
+                    { key: "trash",     sectionId: "trashSection",     gridId: "trashGrid",     countId: "trashCount"     },
+                ].forEach(({ key, sectionId, gridId, countId }) => {
+                    const sec   = document.getElementById(sectionId);
+                    const grid  = document.getElementById(gridId);
+                    const count = document.getElementById(countId);
+                    const items = buckets[key];
+                    sec.style.display = items.length ? "block" : "none";
+                    count.textContent = items.length || "";
+                    grid.innerHTML = "";
+                    items.forEach(p => grid.appendChild(makeCard(p)));
                 });
-                return card;
             }
 
-            function makeBackupCard(p) {
+            // ── Unified card builder ──────────────────────────────────────────
+            function makeCard(p) {
                 const card = document.createElement("div");
-                card.className = "project-card project-card--backup";
+                card.className = "project-card";
                 card.setAttribute("role", "listitem");
-                const ago = p.last_saved ? timeAgo(p.last_saved) : "Unknown";
-                const originLabel = p.backup_of ? `Backup of ${p.backup_of}` : "Backup";
+
+                const ago        = p.last_saved ? timeAgo(p.last_saved) : "Never edited";
+                const noteVal    = (p.note || "").replace(/"/g, "&quot;");
+                const folderBadge = p.folder
+                    ? `<span class="project-card__folder-badge">${FOLDERS.find(f => f.key === p.folder)?.label || p.folder}</span>`
+                    : "";
+                const backupOfBadge = p.backup_of
+                    ? `<span class="project-card__folder-badge">Backup of ${p.backup_of}</span>`
+                    : "";
+
+                // Move-to options: all folders except current
+                const moveOpts = FOLDERS
+                    .filter(f => f.key !== (p.folder || ""))
+                    .map(f => `<option value="${f.key}">${f.label}</option>`)
+                    .join("");
+
+                const backupBtn = (!p.folder || p.folder === "")
+                    ? `<button class="project-card__backup-btn" title="Snapshot this story">Make back up</button>`
+                    : "";
+
                 card.innerHTML = `
                     <div class="project-card__accent" style="background:${p.accent_color}" aria-hidden="true"></div>
-                    <span class="project-card__backup-of" aria-hidden="true">${originLabel}</span>
-                    <span class="project-card__title" aria-hidden="true">${p.title}</span>
-                    <input class="project-card__note" type="text" value="${(p.note || '').replace(/"/g, '&quot;')}" placeholder="Add a note…" aria-label="Note for ${p.title}">
-                    <span class="project-card__meta" aria-hidden="true">${ago}</span>
-                    <a class="project-card__arrow" href="/edit/${p.id}" aria-label="Open backup ${p.title}" title="Open this backup" style="opacity:1;position:relative;top:auto;right:auto;margin-top:0.25rem;display:inline-block">↗ Open</a>
-                    <button class="project-card__promote" aria-label="Promote ${p.title} to active">↑ Promote to active</button>`;
+                    ${folderBadge || backupOfBadge}
+                    <span class="project-card__client">${p.client || "—"}</span>
+                    <span class="project-card__title">${p.title}</span>
+                    <input class="project-card__note" type="text" value="${noteVal}" placeholder="Add a note…" aria-label="Note for ${p.title}">
+                    <span class="project-card__meta">${p.id} · ${ago}</span>
+                    <div class="project-card__actions">
+                        <a class="project-card__open" href="/edit/${p.id}">↗ Open</a>
+                        ${backupBtn}
+                        <select class="project-card__folder-select" aria-label="Move to folder">
+                            <option value="" disabled selected>Move to…</option>
+                            ${moveOpts}
+                        </select>
+                    </div>`;
 
-                wireNoteField(card, p.id);
-
-                card.querySelector(".project-card__promote").addEventListener("click", async () => {
-                    const r = await fetch(`/api/project/${p.id}/folder`, {
+                // Note field — preventDefault stops the <a> inside card from firing
+                const noteInput = card.querySelector(".project-card__note");
+                noteInput.addEventListener("click",   e => e.stopPropagation());
+                noteInput.addEventListener("keydown", e => { if (e.key === "Enter") noteInput.blur(); });
+                noteInput.addEventListener("blur", () => {
+                    fetch(`/api/project/${p.id}/note`, {
                         method: "PATCH",
                         headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({ folder: "" }),
+                        body: JSON.stringify({ note: noteInput.value }),
                     });
-                    if (r.ok) loadProjects();
                 });
+
+                // Make back up
+                const backupBtnEl = card.querySelector(".project-card__backup-btn");
+                if (backupBtnEl) {
+                    backupBtnEl.addEventListener("click", async (e) => {
+                        e.stopPropagation();
+                        backupBtnEl.textContent = "Saving…";
+                        backupBtnEl.classList.add("is-loading");
+                        const r = await fetch(`/api/project/${p.id}/backup`, { method: "POST" });
+                        if (r.ok) {
+                            backupBtnEl.textContent = "✓ Done";
+                            backupBtnEl.classList.remove("is-loading");
+                            backupBtnEl.classList.add("is-done");
+                            setTimeout(loadProjects, 800);
+                        } else {
+                            backupBtnEl.textContent = "Failed";
+                            backupBtnEl.classList.remove("is-loading");
+                        }
+                    });
+                }
+
+                // Move to folder
+                const folderSelect = card.querySelector(".project-card__folder-select");
+                folderSelect.addEventListener("click", e => e.stopPropagation());
+                folderSelect.addEventListener("change", async () => {
+                    await fetch(`/api/project/${p.id}/folder`, {
+                        method: "PATCH",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ folder: folderSelect.value }),
+                    });
+                    loadProjects();
+                });
+
                 return card;
             }
 
-            // ── Back Ups toggle ───────────────────────────────────────────────
-            document.getElementById("backupsToggle").addEventListener("click", () => {
-                const toggle = document.getElementById("backupsToggle");
-                const grid   = document.getElementById("backupsGrid");
-                const open   = toggle.getAttribute("aria-expanded") === "true";
-                toggle.setAttribute("aria-expanded", String(!open));
-                grid.hidden = open;
-            });
-
-            function wireNoteField(card, projectId) {
-                const input = card.querySelector(".project-card__note");
-                if (!input) return;
-                // Stop clicks on the note opening the project
-                input.addEventListener("click", e => e.stopPropagation());
-                input.addEventListener("keydown", e => { if (e.key === "Enter") input.blur(); });
-                input.addEventListener("blur", async () => {
-                    await fetch(`/api/project/${projectId}/note`, {
-                        method: "PATCH",
-                        headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({ note: input.value }),
-                    });
+            // ── Folder section toggles ────────────────────────────────────────
+            ["published", "backups", "trash"].forEach(key => {
+                document.getElementById(key + "Toggle").addEventListener("click", () => {
+                    const toggle = document.getElementById(key + "Toggle");
+                    const grid   = document.getElementById(key + "Grid");
+                    const open   = toggle.getAttribute("aria-expanded") === "true";
+                    toggle.setAttribute("aria-expanded", String(!open));
+                    grid.hidden = open;
                 });
-            }
+            });
 
             function timeAgo(iso) {
                 const d = Math.floor((Date.now() - new Date(iso)) / 1000);
