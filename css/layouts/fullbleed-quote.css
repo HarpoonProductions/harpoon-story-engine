@@ -60,6 +60,19 @@
   inset: 0;
 }
 
+[data-overlay="none"] .hse-fbq__gradient {
+  display: none;
+}
+
+[data-overlay="solid-light"] .hse-fbq__gradient {
+  background: linear-gradient(
+    135deg,
+    rgba(var(--hse-ink-rgb), 0.45) 0%,
+    rgba(var(--hse-ink-rgb), 0.20) 60%,
+    rgba(var(--hse-ink-rgb), 0.35) 100%
+  );
+}
+
 [data-overlay="solid"] .hse-fbq__gradient,
 :not([data-overlay]) .hse-fbq__gradient {
   background: linear-gradient(
