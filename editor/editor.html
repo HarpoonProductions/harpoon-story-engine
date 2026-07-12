@@ -2173,6 +2173,18 @@
                 populateForm();
                 wireInputs();
                 renderSectionList();
+
+                // Silently render on load so the preview always matches the
+                // current content (another editor may have changed it since
+                // the local .preview/ copy was last written)
+                try {
+                    await fetch(`/api/project/${projectId}/save`, {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify(content),
+                    });
+                } catch (_) {}
+
                 loadPreviews();
 
                 // Initialise image upload + focal point on cover fields
