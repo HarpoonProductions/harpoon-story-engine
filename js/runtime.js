@@ -834,41 +834,22 @@
     document
       .querySelectorAll(".hse-embed--scroll-locked")
       .forEach(function (embed) {
-        var timer = null;
-
-        function activate() {
+        // Activate on hover, deactivate on mouse leave
+        embed.addEventListener("mouseenter", function () {
           embed.classList.add("is-active");
-          clearTimeout(timer);
-          // Auto-deactivate after 5s of no interaction
-          timer = setTimeout(function () {
-            embed.classList.remove("is-active");
-          }, 5000);
-        }
+        });
+        embed.addEventListener("mouseleave", function () {
+          embed.classList.remove("is-active");
+        });
 
-        function resetTimer() {
-          if (!embed.classList.contains("is-active")) return;
-          clearTimeout(timer);
-          timer = setTimeout(function () {
-            embed.classList.remove("is-active");
-          }, 5000);
-        }
+        // Touch: activate on tap, deactivate on next page scroll
+        embed.addEventListener("touchstart", function () {
+          embed.classList.add("is-active");
+        }, { passive: true });
 
-        // Click overlay or embed to activate
-        embed.addEventListener("click", activate);
-        embed.addEventListener("mousemove", resetTimer);
-        embed.addEventListener("touchstart", activate, { passive: true });
-
-        // Deactivate when user scrolls the page (outside embed)
-        window.addEventListener(
-          "scroll",
-          function () {
-            if (embed.classList.contains("is-active")) {
-              embed.classList.remove("is-active");
-              clearTimeout(timer);
-            }
-          },
-          { passive: true },
-        );
+        window.addEventListener("scroll", function () {
+          embed.classList.remove("is-active");
+        }, { passive: true });
       });
   }
 

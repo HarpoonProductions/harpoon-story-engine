@@ -27,12 +27,7 @@ function renderCustomHtml(section) {
     ? `<p class="hse-embed__caption">${escHtml(caption)}</p>`
     : "";
 
-  const scrollOverlay = scrollLock
-    ? `
-    <div class="hse-embed__scroll-overlay" aria-hidden="true">
-      <span class="hse-embed__scroll-hint">Click to interact</span>
-    </div>`
-    : "";
+  const scrollOverlay = "";
 
   return `<section class="hse-section hse-section--custom-html${paddedClass}" id="${escHtml(section.id)}" data-layout="custom-html">
   <div class="hse-inner${fullWidth ? " hse-inner--full" : ""}">
