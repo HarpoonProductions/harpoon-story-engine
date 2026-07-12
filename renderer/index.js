@@ -22,6 +22,7 @@ const { renderPanoramicScroll } = require("./layouts/panoramic-scroll");
 const { renderCinemaReveal }    = require("./layouts/cinema-reveal");
 const { renderFrameScrubber }   = require("./layouts/frame-scrubber");
 const { renderSplitReveal }     = require("./layouts/split-reveal");
+const { renderTwoColumn }       = require("./layouts/two-column");
 
 /**
  * Top-level render function.
@@ -190,6 +191,8 @@ function renderSectionHtml(section, layout) {
       return renderFrameScrubber(section);
     case "split-reveal":
       return renderSplitReveal(section);
+    case "two-column":
+      return renderTwoColumn(section);
     case "custom-html":
       return renderCustomHtml(section);
     case "text":

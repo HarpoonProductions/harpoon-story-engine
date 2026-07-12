@@ -1462,6 +1462,9 @@
                                         <option value="split-reveal">
                                             Split Reveal
                                         </option>
+                                        <option value="two-column">
+                                            Two Column
+                                        </option>
                                     </select>
                                 </div>
                                 <div class="form-group">
@@ -1779,6 +1782,24 @@
                                     <div style="display:flex;gap:0.5rem;margin-top:0.5rem">
                                       <button type="button" class="tbtn tbtn--ghost" id="sr-add-para" style="flex:1;justify-content:center">+ Paragraph</button>
                                       <button type="button" class="tbtn tbtn--ghost" id="sr-add-row"  style="flex:1;justify-content:center">+ Image row</button>
+                                    </div>
+                                  </div>
+                                </div>
+
+                                <!-- Two column editor (shown only for two-column layout) -->
+                                <div id="twoColumnEditor" style="display:none">
+                                  <div class="form-group">
+                                    <label class="form-label" for="tc-split">Column split <span class="form-hint" id="tc-split-label">50 / 50</span></label>
+                                    <input type="range" id="tc-split" min="20" max="80" step="5" value="50" style="width:100%">
+                                  </div>
+                                  <div class="form-group">
+                                    <label class="form-label">Blocks <span class="form-hint">Left column first, then add a Column Break, then right column</span></label>
+                                    <div id="tc-blocks-list"></div>
+                                    <div style="display:flex;gap:0.4rem;flex-wrap:wrap;margin-top:0.5rem">
+                                      <button type="button" class="tbtn tbtn--ghost" id="tc-add-para"  style="flex:1;justify-content:center;min-width:7rem">+ Paragraph</button>
+                                      <button type="button" class="tbtn tbtn--ghost" id="tc-add-image" style="flex:1;justify-content:center;min-width:7rem">+ Image</button>
+                                      <button type="button" class="tbtn tbtn--ghost" id="tc-add-html"  style="flex:1;justify-content:center;min-width:7rem">+ HTML / Embed</button>
+                                      <button type="button" class="tbtn tbtn--ghost" id="tc-add-break" style="flex:1;justify-content:center;min-width:7rem">+ Column Break</button>
                                     </div>
                                   </div>
                                 </div>
@@ -2682,6 +2703,7 @@
                     initCinemaRevealEditor(index);
                     initFrameScrubberEditor(index);
                     initSplitRevealEditor(index);
+                    initTwoColumnEditor(index);
                 });
                 wire("sec-intro", (v) => {
                     content.sections[index].intro = v;
@@ -2773,6 +2795,8 @@
                 initFrameScrubberEditor(index);
                 // Initialise split reveal editor (shown only for split-reveal layout)
                 initSplitRevealEditor(index);
+                // Initialise two column editor (shown only for two-column layout)
+                initTwoColumnEditor(index);
                 // Initialise fullbleed quote options
                 initFullbleedQuoteEditor(index);
                 // Initialise CSS override panel
@@ -4009,6 +4033,132 @@ function initBlocksEditor(sectionIndex) {
         </script>
 
         <script>
+        function initTwoColumnEditor(sectionIndex) {
+          const section = content.sections[sectionIndex];
+          const editor  = document.getElementById('twoColumnEditor');
+          const isTC    = section.layout === 'two-column';
+
+          editor.style.display = isTC ? 'block' : 'none';
+          if (!isTC) return;
+
+          if (!section.two_column) section.two_column = {};
+          if (!section.two_column.blocks) section.two_column.blocks = [];
+          const tc = section.two_column;
+
+          // ── Split slider ──────────────────────────────────────────
+          const splitInput = document.getElementById('tc-split');
+          const splitLabel = document.getElementById('tc-split-label');
+          splitInput.value = tc.split || 50;
+
+          function updateSplitLabel() {
+            const v = parseInt(splitInput.value, 10);
+            splitLabel.textContent = `${v} / ${100 - v}`;
+          }
+          updateSplitLabel();
+          splitInput.oninput = () => {
+            tc.split = parseInt(splitInput.value, 10);
+            updateSplitLabel();
+            scheduleAutosave();
+          };
+
+          // ── Blocks list ───────────────────────────────────────────
+          const list     = document.getElementById('tc-blocks-list');
+          const addPara  = document.getElementById('tc-add-para');
+          const addImage = document.getElementById('tc-add-image');
+          const addHtml  = document.getElementById('tc-add-html');
+          const addBreak = document.getElementById('tc-add-break');
+
+          function renderBlocks() {
+            list.innerHTML = '';
+            tc.blocks.forEach((block, i) => {
+              const item = document.createElement('div');
+              item.className = 'block-item';
+
+              if (block.type === 'column-break') {
+                item.innerHTML = `
+                  <div class="block-item__header" style="background:var(--accent);opacity:0.15;border-radius:4px;padding:0.4rem 0.6rem;display:flex;align-items:center;justify-content:space-between">
+                    <span style="font-family:var(--font-mono);font-size:0.6rem;letter-spacing:0.12em;color:var(--ink)">── COLUMN BREAK ──</span>
+                    <button type="button" class="block-item__delete" title="Remove column break" style="color:var(--ink)">✕</button>
+                  </div>`;
+
+              } else if (block.type === 'image') {
+                item.innerHTML = `
+                  <div class="block-item__header">
+                    <span style="font-family:var(--font-mono);font-size:0.6rem;letter-spacing:0.1em;color:var(--ink-3)">IMAGE</span>
+                    <button type="button" class="block-item__delete" title="Remove">✕</button>
+                  </div>
+                  <div style="padding:0.5rem;display:flex;flex-direction:column;gap:0.35rem">
+                    <input class="form-input tc-img-url" data-image-field placeholder="Image URL https://…" value="${block.url || ''}">
+                    <input class="form-input tc-img-alt" placeholder="Alt text" value="${block.alt || ''}">
+                    <input class="form-input tc-img-cap" placeholder="Caption (optional)" value="${block.caption || ''}">
+                  </div>`;
+                item.querySelector('.tc-img-url').addEventListener('input', e => { tc.blocks[i].url = e.target.value; scheduleAutosave(); });
+                item.querySelector('.tc-img-alt').addEventListener('input', e => { tc.blocks[i].alt = e.target.value; scheduleAutosave(); });
+                item.querySelector('.tc-img-cap').addEventListener('input', e => { tc.blocks[i].caption = e.target.value; scheduleAutosave(); });
+
+                // Wire image-field upload enhancement
+                const urlEl = item.querySelector('.tc-img-url');
+                setTimeout(() => {
+                  if (window.initImageFields) {
+                    initImageFields(projectId, (fieldId, url, focal) => {
+                      tc.blocks[i].url   = url;
+                      tc.blocks[i].focal = focal;
+                      scheduleAutosave();
+                    }, item);
+                  }
+                }, 50);
+
+              } else if (block.type === 'html') {
+                item.innerHTML = `
+                  <div class="block-item__header">
+                    <span style="font-family:var(--font-mono);font-size:0.6rem;letter-spacing:0.1em;color:var(--ink-3)">HTML / EMBED</span>
+                    <button type="button" class="block-item__delete" title="Remove">✕</button>
+                  </div>
+                  <div style="padding:0.5rem">
+                    <textarea class="form-textarea tc-html-code" rows="4" placeholder="Paste embed code or HTML…" style="font-family:var(--font-mono);font-size:0.72rem">${block.code || ''}</textarea>
+                  </div>`;
+                item.querySelector('.tc-html-code').addEventListener('input', e => { tc.blocks[i].code = e.target.value; scheduleAutosave(); });
+
+              } else {
+                // paragraph
+                item.innerHTML = `
+                  <div class="block-item__header">
+                    <span style="font-family:var(--font-mono);font-size:0.6rem;letter-spacing:0.1em;color:var(--ink-3)">PARAGRAPH</span>
+                    <button type="button" class="block-item__delete" title="Remove">✕</button>
+                  </div>
+                  <div style="padding:0.5rem">
+                    <textarea class="form-textarea tc-para-text" rows="3" placeholder="Paragraph text…">${block.text || ''}</textarea>
+                  </div>`;
+                item.querySelector('.tc-para-text').addEventListener('input', e => { tc.blocks[i].text = e.target.value; scheduleAutosave(); });
+              }
+
+              const delBtn = item.querySelector('.block-item__delete');
+              if (delBtn) {
+                delBtn.addEventListener('click', () => {
+                  tc.blocks.splice(i, 1);
+                  scheduleAutosave();
+                  renderBlocks();
+                });
+              }
+
+              list.appendChild(item);
+            });
+          }
+
+          addPara.onclick  = () => { tc.blocks.push({ type: 'p', text: '' }); scheduleAutosave(); renderBlocks(); };
+          addImage.onclick = () => { tc.blocks.push({ type: 'image', url: '', alt: '', caption: '' }); scheduleAutosave(); renderBlocks(); };
+          addHtml.onclick  = () => { tc.blocks.push({ type: 'html', code: '' }); scheduleAutosave(); renderBlocks(); };
+          addBreak.onclick = () => {
+            // Only one column break allowed
+            if (tc.blocks.some(b => b.type === 'column-break')) return;
+            tc.blocks.push({ type: 'column-break' });
+            scheduleAutosave();
+            renderBlocks();
+          };
+
+          renderBlocks();
+        }
+
         function initSplitRevealEditor(sectionIndex) {
           const section = content.sections[sectionIndex];
           const editor  = document.getElementById('splitRevealEditor');
