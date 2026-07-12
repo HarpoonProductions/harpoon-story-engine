@@ -711,10 +711,6 @@
             .body:has(.preview--hidden) .divider {
                 display: none;
             }
-            /* Auto-hide mobile viewport when space is tight */
-            .viewport--mobile.is-hidden {
-                display: none;
-            }
             .preview__toolbar {
                 display: flex;
                 align-items: center;
@@ -764,61 +760,56 @@
                 gap: 1rem;
                 padding: 1rem;
                 overflow: hidden;
+                align-items: flex-start;
             }
 
-            .viewport {
-                display: flex;
-                flex-direction: column;
-                gap: 0.4rem;
-            }
+            /* Mobile: fixed-size simulation, scaled to fit available height */
             .viewport--mobile {
                 flex-shrink: 0;
-            }
-            .viewport--desktop {
-                flex: 1;
-                min-width: 0;
-            }
-
-            .viewport__header {
                 display: flex;
-                align-items: center;
-                gap: 0.5rem;
+                flex-direction: column;
+                gap: 0.3rem;
+                height: 100%;
             }
-            .viewport__label {
-                font-family: var(--font-mono);
-                font-size: 0.52rem;
-                letter-spacing: 0.18em;
-                text-transform: uppercase;
-                color: var(--ink-3);
-                display: flex;
-                align-items: center;
-                gap: 0.35rem;
-            }
-            .viewport__label::before {
-                content: "";
-                display: inline-block;
-                width: 5px;
-                height: 5px;
-                border-radius: 50%;
-            }
-            .viewport--mobile .viewport__label::before {
-                background: #2980b9;
-            }
-            .viewport--desktop .viewport__label::before {
-                background: #8e44ad;
-            }
-
-            .mobile-clip,
-            .desktop-clip {
+            .mobile-clip {
                 border: 1px solid var(--rule);
                 background: white;
                 position: relative;
                 overflow: hidden;
                 box-shadow: 0 2px 8px rgba(26, 25, 22, 0.08);
+                flex-shrink: 0;
+            }
+
+            /* Desktop: fluid — fills remaining width at actual size, no scaling */
+            .viewport--desktop {
+                flex: 1;
+                min-width: 0;
+                display: flex;
+                flex-direction: column;
+                gap: 0.3rem;
+                height: 100%;
             }
             .desktop-clip {
                 flex: 1;
-                min-width: 0;
+                position: relative;
+                overflow: hidden;
+                border: 1px solid var(--rule);
+                background: white;
+                box-shadow: 0 2px 8px rgba(26, 25, 22, 0.08);
+            }
+            #desktopFrame {
+                position: absolute;
+                inset: 0;
+                width: 100%;
+                height: 100%;
+            }
+
+            .viewport__hint {
+                font-family: var(--font-mono);
+                font-size: 0.48rem;
+                letter-spacing: 0.1em;
+                color: var(--ink-3);
+                text-align: center;
             }
 
             iframe {
@@ -1995,113 +1986,34 @@
 
                 <!-- Preview -->
                 <div class="preview" id="previewPanel">
-                    <div
-                        class="preview__toolbar"
-                        role="toolbar"
-                        aria-label="Preview controls"
-                    >
-                        <span class="preview__label">📱 Mobile</span>
-                        <label class="sr-only" for="mobilePreset"
-                            >Mobile viewport</label
-                        >
-                        <select
-                            class="viewport-select"
-                            id="mobilePreset"
-                            onchange="applyPreset('mobile')"
-                            aria-label="Mobile viewport size"
-                        >
+                    <div class="preview__toolbar" role="toolbar" aria-label="Preview controls">
+                        <span class="preview__label">📱</span>
+                        <label class="sr-only" for="mobilePreset">Mobile device</label>
+                        <select class="viewport-select" id="mobilePreset" onchange="applyPreset('mobile')" aria-label="Mobile viewport size">
                             <option value="390:844">iPhone 15 (390×844)</option>
                             <option value="375:667">iPhone SE (375×667)</option>
-                            <option value="430:932">
-                                iPhone 15 Pro Max (430×932)
-                            </option>
+                            <option value="430:932">iPhone 15 Pro Max (430×932)</option>
                             <option value="360:800">Android (360×800)</option>
-                            <option value="768:1024">
-                                iPad Mini (768×1024)
-                            </option>
+                            <option value="768:1024">iPad Mini (768×1024)</option>
                         </select>
-                        <span style="flex: 1"></span>
-                        <span class="preview__label">🖥 Desktop</span>
-                        <label class="sr-only" for="desktopPreset"
-                            >Desktop viewport</label
-                        >
-                        <select
-                            class="viewport-select"
-                            id="desktopPreset"
-                            onchange="applyPreset('desktop')"
-                            aria-label="Desktop viewport size"
-                        >
-                            <option value="1280:800">
-                                Small laptop (1280×800)
-                            </option>
-                            <option value="1440:900">
-                                MacBook Air (1440×900)
-                            </option>
-                            <option value="1920:1080">
-                                Full HD (1920×1080)
-                            </option>
-                            <option value="2560:1440">Wide (2560×1440)</option>
-                            <option value="1024:768">
-                                iPad landscape (1024×768)
-                            </option>
-                        </select>
+                        <span style="flex:1"></span>
+                        <span class="preview__label">🖥</span>
                     </div>
 
                     <div class="preview__viewports" id="viewports">
                         <div class="viewport viewport--mobile">
-                            <div class="viewport__header">
-                                <div class="viewport__label">Mobile</div>
-                            </div>
                             <div class="mobile-clip" id="mobileClip">
-                                <iframe
-                                    id="mobileFrame"
-                                    title="Mobile preview of the story"
-                                    src=""
-                                    scrolling="yes"
-                                ></iframe>
-                                <div
-                                    class="rendering-veil"
-                                    id="mobileVeil"
-                                    aria-hidden="true"
-                                >
-                                    <span>Rendering…</span>
-                                </div>
+                                <iframe id="mobileFrame" title="Mobile preview" src="" scrolling="yes"></iframe>
+                                <div class="rendering-veil" id="mobileVeil" aria-hidden="true"><span>Rendering…</span></div>
                             </div>
-                            <div
-                                class="device-hint"
-                                id="mobileHint"
-                                aria-live="polite"
-                            >
-                                390 × 844
-                            </div>
+                            <div class="viewport__hint" id="mobileHintBelow"></div>
                         </div>
-
                         <div class="viewport viewport--desktop">
-                            <div class="viewport__header">
-                                <div class="viewport__label">Desktop</div>
-                            </div>
                             <div class="desktop-clip" id="desktopClip">
-                                <iframe
-                                    id="desktopFrame"
-                                    title="Desktop preview of the story"
-                                    src=""
-                                    scrolling="yes"
-                                ></iframe>
-                                <div
-                                    class="rendering-veil"
-                                    id="desktopVeil"
-                                    aria-hidden="true"
-                                >
-                                    <span>Rendering…</span>
-                                </div>
+                                <iframe id="desktopFrame" title="Desktop preview" src="" scrolling="yes"></iframe>
+                                <div class="rendering-veil" id="desktopVeil" aria-hidden="true"><span>Rendering…</span></div>
                             </div>
-                            <div
-                                class="device-hint"
-                                id="desktopHint"
-                                aria-live="polite"
-                            >
-                                1280 × 800
-                            </div>
+                            <div class="viewport__hint" id="desktopHintBelow"></div>
                         </div>
                     </div>
                 </div>
@@ -2141,11 +2053,9 @@
             };
 
             function applyPreset(which) {
-                const select = document.getElementById(
-                    which === "mobile" ? "mobilePreset" : "desktopPreset",
-                );
+                const select = document.getElementById("mobilePreset");
                 const [w, h] = select.value.split(":").map(Number);
-                PRESETS[which] = { w, h };
+                PRESETS.mobile = { w, h };
                 scaleFrames();
             }
 
@@ -2153,6 +2063,7 @@
 
             async function boot() {
                 setupDivider();
+                setupDesktopHint();
                 scaleFrames();
                 window.addEventListener("resize", scaleFrames);
 
@@ -2241,55 +2152,45 @@
             window.addEventListener('pagehide',     stopPresence);
 
             // ── Frame scaling ──────────────────────────────────────────────────
+            // Mobile: scale-simulated fixed device viewport
+            // Desktop: fluid — fills available width at 1:1, no scaling
 
             function scaleFrames() {
                 const viewports = document.getElementById("viewports");
-                const mClip = document.getElementById("mobileClip");
-                const dClip = document.getElementById("desktopClip");
+                const mClip  = document.getElementById("mobileClip");
                 const mFrame = document.getElementById("mobileFrame");
-                const dFrame = document.getElementById("desktopFrame");
 
-                const availH = viewports.clientHeight - 52;
+                // Available height minus padding
+                const availH = viewports.clientHeight - 32;
+                // Mobile gets at most 28% of the panel width
+                const maxMW  = Math.floor(viewports.clientWidth * 0.28);
 
-                const mp = PRESETS.mobile;
-                const mMaxW = Math.floor(viewports.clientWidth * 0.35);
-                const mScaleW = mMaxW / mp.w;
-                const mScaleH = availH / mp.h;
-                const mScale = Math.min(mScaleW, mScaleH);
-                const mClipW = Math.round(mp.w * mScale);
-                const mClipH = Math.round(mp.h * mScale);
+                const mp     = PRESETS.mobile;
+                const scale  = Math.min(maxMW / mp.w, availH / mp.h);
+                const clipW  = Math.round(mp.w * scale);
+                const clipH  = Math.round(mp.h * scale);
 
-                mClip.style.width = mClipW + "px";
-                mClip.style.height = mClipH + "px";
-                mFrame.style.transform = `scale(${mScale})`;
-                mFrame.style.transformOrigin = "top left";
-                mFrame.style.width = mp.w + "px";
+                mClip.style.width  = clipW + "px";
+                mClip.style.height = clipH + "px";
+                mFrame.style.width  = mp.w + "px";
                 mFrame.style.height = mp.h + "px";
+                mFrame.style.transform       = `scale(${scale})`;
+                mFrame.style.transformOrigin = "top left";
 
-                const mHint = document.getElementById("mobileHint");
-                if (mHint)
-                    mHint.textContent = `${mp.w} × ${mp.h} · ${Math.round(mScale * 100)}%`;
+                const mHint = document.getElementById("mobileHintBelow");
+                if (mHint) mHint.textContent = `${mp.w} × ${mp.h}`;
+            }
 
-                const dp = PRESETS.desktop;
-                const dAvailW = dClip.clientWidth;
-                const dScaleW = dAvailW / dp.w;
-                const dScaleH = availH / dp.h;
-                const dScale = Math.min(dScaleW, dScaleH);
-                const dClipW = Math.round(dp.w * dScale);
-                const dClipH = Math.round(dp.h * dScale);
-
-                dClip.style.width = dClipW + "px";
-                dClip.style.height = dClipH + "px";
-                dFrame.style.transform = `scale(${dScale})`;
-                dFrame.style.transformOrigin = "top left";
-                dFrame.style.width = dp.w + "px";
-                dFrame.style.height = dp.h + "px";
-
-                const dHint = document.getElementById("desktopHint");
-                if (dHint)
-                    dHint.textContent = `${dp.w} × ${dp.h} · ${Math.round(dScale * 100)}%`;
-
-                updateMobileVisibility();
+            // ResizeObserver keeps the desktop width hint live as the panel resizes
+            function setupDesktopHint() {
+                const clip = document.getElementById("desktopClip");
+                const hint = document.getElementById("desktopHintBelow");
+                if (!clip || !hint) return;
+                const ro = new ResizeObserver(entries => {
+                    const w = Math.round(entries[0].contentRect.width);
+                    hint.textContent = w + "px wide";
+                });
+                ro.observe(clip);
             }
 
             // ── Draggable divider ──────────────────────────────────────────────
@@ -2348,12 +2249,11 @@
             // ── Preview ↔ editor scroll sync ──────────────────────────────────
 
             function scrollPreviewToSection(sectionId) {
-                ['mobileFrame', 'desktopFrame'].forEach(function(frameId) {
-                    const frame = document.getElementById(frameId);
+                ['mobileFrame', 'desktopFrame'].forEach(function(id) {
+                    const frame = document.getElementById(id);
                     if (frame && frame.contentWindow) {
                         frame.contentWindow.postMessage(
-                            { type: 'hse-scroll-to', id: sectionId },
-                            '*'
+                            { type: 'hse-scroll-to', id: sectionId }, '*'
                         );
                     }
                 });
@@ -2389,10 +2289,12 @@
                 const btn = document.getElementById("togglePreviewBtn");
                 panel.classList.toggle("preview--hidden", !previewVisible);
                 divider.style.display = previewVisible ? "" : "none";
-                btn.textContent = previewVisible ? "Preview ⇥" : "Preview ⇤";
-                btn.title = previewVisible ? "Hide preview (P)" : "Show preview (P)";
+                btn.textContent = previewVisible ? "Hide preview" : "Show preview";
                 if (previewVisible) scaleFrames();
             }
+
+            // Hide mobile preset select by default (desktop is active)
+            document.getElementById("mobilePreset").style.display = "none";
 
             // Keyboard shortcut: P (when not in a text field)
             document.addEventListener("keydown", (e) => {
@@ -2403,41 +2305,36 @@
                 }
             });
 
-            // Auto-hide mobile viewport when desktop preview is too narrow
-            function updateMobileVisibility() {
-                const panel = document.getElementById("previewPanel");
-                const mobileVp = document.querySelector(".viewport--mobile");
-                if (!mobileVp || !panel) return;
-                const availW = panel.offsetWidth;
-                mobileVp.classList.toggle("is-hidden", availW < 700);
-            }
-
             // ── Preview ────────────────────────────────────────────────────────
+
+            function activeFrame() {
+                return document.getElementById("desktopFrame");
+            }
+            function activeVeil() {
+                return document.getElementById("desktopVeil");
+            }
 
             function loadPreviews() {
                 const url = `/preview/${projectId}/`;
-                document.getElementById("mobileFrame").src = url;
-                document.getElementById("desktopFrame").src = url;
-                document.getElementById("mobileFrame").onload = scaleFrames;
-                document.getElementById("desktopFrame").onload = scaleFrames;
+                const mf = document.getElementById("mobileFrame");
+                const df = document.getElementById("desktopFrame");
+                mf.src = url;
+                df.src = url;
+                df.onload = mf.onload = scaleFrames;
             }
 
             function reloadPreviews() {
                 const mf = document.getElementById("mobileFrame");
                 const df = document.getElementById("desktopFrame");
-
-                // Fade out smoothly
-                mf.style.transition = df.style.transition = "opacity 0.2s";
-                mf.style.opacity   = df.style.opacity   = "0.4";
-
                 const url = `/preview/${projectId}/?t=${Date.now()}`;
-                let mc = false, dc = false;
+
+                const active = activeFrame();
+                active.style.transition = "opacity 0.2s";
+                active.style.opacity = "0.4";
 
                 function onLoaded(frame) {
-                    // Scroll to the active section rather than restoring raw pixels
                     const sectionId = activeSectionIndex >= 0
-                        ? (content.sections[activeSectionIndex] || {}).id
-                        : null;
+                        ? (content.sections[activeSectionIndex] || {}).id : null;
                     if (sectionId) {
                         try {
                             const el = frame.contentDocument.getElementById(sectionId);
@@ -2446,10 +2343,11 @@
                     }
                     scaleFrames();
                     frame.style.opacity = "1";
+                    showVeil(false);
                 }
 
-                mf.onload = () => { mc = true; onLoaded(mf); if (mc && dc) showVeil(false); };
-                df.onload = () => { dc = true; onLoaded(df); if (mc && dc) showVeil(false); };
+                mf.onload = () => onLoaded(mf);
+                df.onload = () => onLoaded(df);
                 mf.src = url;
                 df.src = url;
             }
@@ -2473,12 +2371,7 @@
             }
 
             function showVeil(on) {
-                document
-                    .getElementById("mobileVeil")
-                    .classList.toggle("is-on", on);
-                document
-                    .getElementById("desktopVeil")
-                    .classList.toggle("is-on", on);
+                activeVeil().classList.toggle("is-on", on);
             }
 
             function openPreviewInBrowser() {
