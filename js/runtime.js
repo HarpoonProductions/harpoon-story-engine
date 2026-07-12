@@ -1324,4 +1324,39 @@
   if (!prefersReducedMotion) {
     setupSplitReveal();
   }
+
+  // ── Editor ↔ preview scroll sync ──────────────────────────────────
+
+  // Scroll to a section when the editor requests it
+  window.addEventListener('message', function(e) {
+    if (!e.data || e.data.type !== 'hse-scroll-to') return;
+    var el = document.getElementById(e.data.id);
+    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  });
+
+  // Report which section is nearest the top as the user scrolls
+  (function() {
+    var sections = Array.from(document.querySelectorAll('.hse-section[id]'));
+    if (!sections.length || window.self === window.top) return;
+
+    var lastReported = null;
+
+    function reportVisible() {
+      var midY = window.scrollY + window.innerHeight * 0.35;
+      var current = sections[0];
+      for (var i = 0; i < sections.length; i++) {
+        if (sections[i].getBoundingClientRect().top + window.scrollY <= midY) {
+          current = sections[i];
+        }
+      }
+      if (current && current.id !== lastReported) {
+        lastReported = current.id;
+        window.parent.postMessage({ type: 'hse-section-in-view', id: current.id }, '*');
+      }
+    }
+
+    window.addEventListener('scroll', reportVisible, { passive: true });
+    reportVisible();
+  })();
+
 })();

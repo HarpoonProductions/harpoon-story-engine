@@ -371,6 +371,10 @@
                 background: var(--bg);
                 border-color: var(--rule);
             }
+            .section-item.is-preview-active {
+                border-color: #2980b9;
+                background: rgba(41, 128, 185, 0.06);
+            }
             .section-item.is-active {
                 background: var(--bg-2);
                 border-color: var(--bg-3);
@@ -2329,6 +2333,39 @@
                 });
             }
 
+            // ── Preview ↔ editor scroll sync ──────────────────────────────────
+
+            function scrollPreviewToSection(sectionId) {
+                ['mobileFrame', 'desktopFrame'].forEach(function(frameId) {
+                    const frame = document.getElementById(frameId);
+                    if (frame && frame.contentWindow) {
+                        frame.contentWindow.postMessage(
+                            { type: 'hse-scroll-to', id: sectionId },
+                            '*'
+                        );
+                    }
+                });
+            }
+
+            // Listen for section-in-view messages from preview iframes
+            window.addEventListener('message', function(e) {
+                if (!e.data || e.data.type !== 'hse-section-in-view') return;
+                const id = e.data.id;
+                const idx = content && content.sections
+                    ? content.sections.findIndex(s => s.id === id)
+                    : -1;
+                if (idx === -1) return;
+
+                // Highlight the section item without opening the editor panel
+                document.querySelectorAll('.section-item').forEach((el, i) => {
+                    el.classList.toggle('is-preview-active', i === idx);
+                });
+
+                // Ensure the highlighted item is visible in the sidebar list
+                const item = document.getElementById('section-item-' + idx);
+                if (item) item.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+            });
+
             // ── Preview toggle ─────────────────────────────────────────────────
 
             let previewVisible = true;
@@ -2678,6 +2715,9 @@
             function editSection(index) {
                 activeSectionIndex = index;
                 const s = content.sections[index];
+
+                // Scroll both preview iframes to this section
+                scrollPreviewToSection(s.id);
 
                 document.getElementById("sectionEditor").style.display =
                     "block";
