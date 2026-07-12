@@ -24,6 +24,8 @@ function renderFullbleedQuote(section) {
       </blockquote>`
     : '';
 
+  const noOverlay = overlay === 'none';
+
   return `<section
   class="hse-section hse-section--fullbleed-quote"
   id="${escHtml(section.id)}"
@@ -33,8 +35,8 @@ function renderFullbleedQuote(section) {
   data-pos-h="${escHtml(posH)}"
   data-bg-scroll="${escHtml(bgScroll)}">
   <div class="hse-fbq__bg" ${bgStyle}></div>
-  <div class="hse-fbq__grain"></div>
-  <div class="hse-fbq__gradient"></div>
+  ${noOverlay ? '' : '<div class="hse-fbq__grain"></div>'}
+  ${noOverlay ? '' : '<div class="hse-fbq__gradient"></div>'}
   <div class="hse-fbq__content hse-inner">
     ${quoteText}
   </div>
