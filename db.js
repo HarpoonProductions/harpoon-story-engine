@@ -38,15 +38,17 @@ async function listProjects() {
   const db = getClient();
   const { data, error } = await db
     .from(TABLE)
-    .select("project_id, content->meta, updated_at")
+    .select("project_id, content, updated_at")
     .order("updated_at", { ascending: false });
 
   if (error) throw new Error(error.message);
   return data.map((row) => ({
     id: row.project_id,
-    title: row.content?.title || row.project_id,
-    client: row.content?.client || "",
-    accent_color: row.content?.accent_color || "#1A3F6F",
+    title: row.content?.meta?.title || row.project_id,
+    client: row.content?.meta?.client || "",
+    accent_color: row.content?.meta?.accent_color || "#1A3F6F",
+    folder: row.content?.meta?.folder || "",
+    backup_of: row.content?.meta?.backup_of || "",
     last_saved: row.updated_at,
   }));
 }

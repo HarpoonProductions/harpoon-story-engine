@@ -185,6 +185,8 @@ app.get("/api/projects", async (req, res) => {
               client: meta.client || "",
               last_saved: stat ? stat.mtime.toISOString() : null,
               accent_color: meta.accent_color || "#1A3F6F",
+              folder: meta.folder || "",
+              backup_of: meta.backup_of || "",
             };
           });
       }
@@ -331,6 +333,86 @@ app.post("/api/project/create", async (req, res) => {
     renderToPreview(id, newContent);
     addRecent(id);
     res.json({ ok: true, id });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ── Backup a project ──────────────────────────────────────────────
+// Deep-copies the current content into a new project row tagged
+// meta.folder = "backups". The copy is independent — no sync.
+
+app.post("/api/project/:id/backup", async (req, res) => {
+  const { id } = req.params;
+  const now = new Date();
+  const stamp = now.toISOString().replace(/[-:T]/g, "").slice(0, 12); // YYYYMMDDHHmm
+  const backupId = `${id}--bak-${stamp}`;
+
+  try {
+    let original;
+    if (db.isConfigured()) {
+      original = await db.getProject(id);
+    } else {
+      const p = path.join(PROJECTS_DIR, id, "content.json");
+      original = JSON.parse(fs.readFileSync(p, "utf8"));
+    }
+    if (!original) return res.status(404).json({ error: "Project not found" });
+
+    // Deep copy and tag as backup
+    const copy = JSON.parse(JSON.stringify(original));
+    if (!copy.meta) copy.meta = {};
+    copy.meta.project_id = backupId;
+    copy.meta.folder     = "backups";
+    copy.meta.backup_of  = id;
+    copy.meta.backed_up_at = now.toISOString();
+    copy.meta.last_saved   = now.toISOString();
+
+    if (db.isConfigured()) {
+      await db.createProject(backupId, copy);
+    } else {
+      const backupDir = path.join(PROJECTS_DIR, backupId);
+      fs.mkdirSync(backupDir, { recursive: true });
+      fs.writeFileSync(path.join(backupDir, "content.json"), JSON.stringify(copy, null, 2), "utf8");
+    }
+
+    res.json({ ok: true, backupId });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ── Move a project to/from a folder ──────────────────────────────
+// PATCH body: { folder: "backups" | "" }
+
+app.patch("/api/project/:id/folder", async (req, res) => {
+  const { id } = req.params;
+  const { folder } = req.body;
+
+  try {
+    let content;
+    if (db.isConfigured()) {
+      content = await db.getProject(id);
+    } else {
+      const p = path.join(PROJECTS_DIR, id, "content.json");
+      content = JSON.parse(fs.readFileSync(p, "utf8"));
+    }
+    if (!content) return res.status(404).json({ error: "Project not found" });
+
+    if (!content.meta) content.meta = {};
+    if (folder) {
+      content.meta.folder = folder;
+    } else {
+      delete content.meta.folder;
+    }
+
+    if (db.isConfigured()) {
+      await db.saveProject(id, content);
+    } else {
+      const p = path.join(PROJECTS_DIR, id, "content.json");
+      fs.writeFileSync(p, JSON.stringify(content, null, 2), "utf8");
+    }
+
+    res.json({ ok: true });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

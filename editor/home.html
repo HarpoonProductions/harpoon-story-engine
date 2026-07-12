@@ -190,6 +190,119 @@
                 font-size: 0.8rem;
             }
 
+            /* ── Backup button on project cards ── */
+            .project-card__backup {
+                position: absolute;
+                bottom: 0.65rem;
+                right: 0.65rem;
+                font-family: var(--font-mono);
+                font-size: 0.5rem;
+                letter-spacing: 0.1em;
+                text-transform: uppercase;
+                color: var(--ink-3);
+                background: var(--bg-2);
+                border: 1px solid var(--rule);
+                border-radius: 2px;
+                padding: 0.2rem 0.45rem;
+                cursor: pointer;
+                opacity: 0;
+                transition: opacity 0.12s, background 0.12s;
+                white-space: nowrap;
+            }
+            .project-card:hover .project-card__backup {
+                opacity: 1;
+            }
+            .project-card__backup:hover {
+                background: white;
+                color: var(--ink);
+                border-color: var(--ink-3);
+            }
+            .project-card__backup.is-loading {
+                opacity: 1;
+                color: var(--ink-3);
+                pointer-events: none;
+            }
+            .project-card__backup.is-done {
+                opacity: 1;
+                color: #2d7a4f;
+                border-color: #2d7a4f;
+                background: #f0faf4;
+            }
+
+            /* ── Back Ups section ── */
+            .backups-section {
+                margin-top: 0.25rem;
+                margin-bottom: 1.5rem;
+            }
+            .backups-toggle {
+                display: flex;
+                align-items: center;
+                gap: 0.5rem;
+                background: none;
+                border: none;
+                cursor: pointer;
+                padding: 0.4rem 0;
+                margin-bottom: 0.5rem;
+                color: inherit;
+            }
+            .backups-toggle:hover .section-label {
+                color: var(--ink-2);
+            }
+            .backups-toggle__count {
+                font-family: var(--font-mono);
+                font-size: 0.52rem;
+                color: var(--ink-3);
+                background: var(--bg-2);
+                border: 1px solid var(--rule);
+                border-radius: 2px;
+                padding: 0.1rem 0.35rem;
+            }
+            .backups-toggle__chevron {
+                font-size: 0.6rem;
+                color: var(--ink-3);
+                transition: transform 0.15s;
+            }
+            .backups-toggle[aria-expanded="true"] .backups-toggle__chevron {
+                transform: rotate(90deg);
+            }
+
+            /* ── Backup card variant ── */
+            .project-card--backup {
+                background: var(--bg);
+                opacity: 0.85;
+            }
+            .project-card--backup:hover {
+                background: var(--bg-2);
+                opacity: 1;
+            }
+            .project-card__backup-of {
+                font-family: var(--font-mono);
+                font-size: 0.5rem;
+                letter-spacing: 0.1em;
+                color: var(--ink-3);
+                text-transform: uppercase;
+            }
+            .project-card__promote {
+                display: inline-flex;
+                align-items: center;
+                margin-top: 0.35rem;
+                font-family: var(--font-mono);
+                font-size: 0.5rem;
+                letter-spacing: 0.1em;
+                text-transform: uppercase;
+                color: var(--accent);
+                background: none;
+                border: 1px solid transparent;
+                border-radius: 2px;
+                padding: 0.2rem 0.4rem 0.2rem 0;
+                cursor: pointer;
+                transition: all 0.12s;
+            }
+            .project-card__promote:hover {
+                border-color: var(--accent);
+                padding-left: 0.4rem;
+            }
+
             .action-strip {
                 display: flex;
                 gap: 0.6rem;
@@ -408,6 +521,17 @@
                         </div>
                     </div>
                 </section>
+
+                <!-- Back Ups section — collapsed by default -->
+                <div class="backups-section" id="backupsSection" style="display:none">
+                    <button class="backups-toggle" id="backupsToggle" aria-expanded="false" aria-controls="backupsGrid">
+                        <span class="section-label" style="margin:0" aria-hidden="true">Back Ups</span>
+                        <span class="backups-toggle__count" id="backupsCount"></span>
+                        <span class="backups-toggle__chevron" aria-hidden="true">▸</span>
+                    </button>
+                    <div class="project-grid" id="backupsGrid" role="list" hidden></div>
+                </div>
+
                 <div class="action-strip">
                     <button class="btn btn--ghost" onclick="openExisting()">
                         Open existing JSON
@@ -633,39 +757,107 @@
             async function loadProjects() {
                 const res = await fetch("/api/projects");
                 const data = await res.json();
-                const grid = document.getElementById("projectGrid");
-                const empty = document.getElementById("emptyState");
-                Array.from(grid.children).forEach((c) => {
-                    if (c !== empty) c.remove();
-                });
 
-                if (!data.projects.length) {
+                const grid        = document.getElementById("projectGrid");
+                const empty       = document.getElementById("emptyState");
+                const backupsSec  = document.getElementById("backupsSection");
+                const backupsGrid = document.getElementById("backupsGrid");
+                const backupsCount = document.getElementById("backupsCount");
+
+                // Clear grids (keep empty-state sentinel)
+                Array.from(grid.children).forEach((c) => { if (c !== empty) c.remove(); });
+                backupsGrid.innerHTML = "";
+
+                const active  = data.projects.filter(p => p.folder !== "backups");
+                const backups = data.projects.filter(p => p.folder === "backups");
+
+                // ── Active projects ───────────────────────────────────────────
+                if (!active.length) {
                     empty.style.display = "block";
-                    return;
+                } else {
+                    empty.style.display = "none";
+                    active.forEach(p => grid.appendChild(makeProjectCard(p)));
                 }
-                empty.style.display = "none";
 
-                data.projects.forEach((p) => {
-                    const card = document.createElement("a");
-                    card.className = "project-card";
-                    card.href = `/edit/${p.id}`;
-                    card.setAttribute("role", "listitem");
-                    card.setAttribute(
-                        "aria-label",
-                        `${p.title}${p.client ? ", " + p.client : ""}, last edited ${p.last_saved ? timeAgo(p.last_saved) : "never"}`,
-                    );
-                    const ago = p.last_saved
-                        ? timeAgo(p.last_saved)
-                        : "Never edited";
-                    card.innerHTML = `
-      <div class="project-card__accent" style="background:${p.accent_color}" aria-hidden="true"></div>
-      <span class="project-card__client" aria-hidden="true">${p.client || "—"}</span>
-      <span class="project-card__title" aria-hidden="true">${p.title}</span>
-      <span class="project-card__meta" aria-hidden="true">${p.id} · ${ago}</span>
-      <span class="project-card__arrow" aria-hidden="true">↗</span>`;
-                    grid.appendChild(card);
-                });
+                // ── Back Ups section ──────────────────────────────────────────
+                if (backups.length) {
+                    backupsSec.style.display = "block";
+                    backupsCount.textContent = backups.length;
+                    backups.forEach(p => backupsGrid.appendChild(makeBackupCard(p)));
+                } else {
+                    backupsSec.style.display = "none";
+                }
             }
+
+            function makeProjectCard(p) {
+                const card = document.createElement("a");
+                card.className = "project-card";
+                card.href = `/edit/${p.id}`;
+                card.setAttribute("role", "listitem");
+                card.setAttribute("aria-label",
+                    `${p.title}${p.client ? ", " + p.client : ""}, last edited ${p.last_saved ? timeAgo(p.last_saved) : "never"}`);
+                const ago = p.last_saved ? timeAgo(p.last_saved) : "Never edited";
+                card.innerHTML = `
+                    <div class="project-card__accent" style="background:${p.accent_color}" aria-hidden="true"></div>
+                    <span class="project-card__client" aria-hidden="true">${p.client || "—"}</span>
+                    <span class="project-card__title" aria-hidden="true">${p.title}</span>
+                    <span class="project-card__meta" aria-hidden="true">${p.id} · ${ago}</span>
+                    <span class="project-card__arrow" aria-hidden="true">↗</span>
+                    <button class="project-card__backup" aria-label="Back up ${p.title}" title="Create a backup snapshot">Back up</button>`;
+
+                card.querySelector(".project-card__backup").addEventListener("click", async (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    const btn = e.currentTarget;
+                    btn.textContent = "Saving…";
+                    btn.classList.add("is-loading");
+                    const r = await fetch(`/api/project/${p.id}/backup`, { method: "POST" });
+                    if (r.ok) {
+                        btn.textContent = "✓ Backed up";
+                        btn.classList.remove("is-loading");
+                        btn.classList.add("is-done");
+                        setTimeout(loadProjects, 800);
+                    } else {
+                        btn.textContent = "Failed";
+                        btn.classList.remove("is-loading");
+                    }
+                });
+                return card;
+            }
+
+            function makeBackupCard(p) {
+                const card = document.createElement("div");
+                card.className = "project-card project-card--backup";
+                card.setAttribute("role", "listitem");
+                const ago = p.last_saved ? timeAgo(p.last_saved) : "Unknown";
+                const originLabel = p.backup_of ? `Backup of ${p.backup_of}` : "Backup";
+                card.innerHTML = `
+                    <div class="project-card__accent" style="background:${p.accent_color}" aria-hidden="true"></div>
+                    <span class="project-card__backup-of" aria-hidden="true">${originLabel}</span>
+                    <span class="project-card__title" aria-hidden="true">${p.title}</span>
+                    <span class="project-card__meta" aria-hidden="true">${ago}</span>
+                    <a class="project-card__arrow" href="/edit/${p.id}" aria-label="Open backup ${p.title}" title="Open this backup" style="opacity:1;position:relative;top:auto;right:auto;margin-top:0.25rem;display:inline-block">↗ Open</a>
+                    <button class="project-card__promote" aria-label="Promote ${p.title} to active">↑ Promote to active</button>`;
+
+                card.querySelector(".project-card__promote").addEventListener("click", async () => {
+                    const r = await fetch(`/api/project/${p.id}/folder`, {
+                        method: "PATCH",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ folder: "" }),
+                    });
+                    if (r.ok) loadProjects();
+                });
+                return card;
+            }
+
+            // ── Back Ups toggle ───────────────────────────────────────────────
+            document.getElementById("backupsToggle").addEventListener("click", () => {
+                const toggle = document.getElementById("backupsToggle");
+                const grid   = document.getElementById("backupsGrid");
+                const open   = toggle.getAttribute("aria-expanded") === "true";
+                toggle.setAttribute("aria-expanded", String(!open));
+                grid.hidden = open;
+            });
 
             function timeAgo(iso) {
                 const d = Math.floor((Date.now() - new Date(iso)) / 1000);
