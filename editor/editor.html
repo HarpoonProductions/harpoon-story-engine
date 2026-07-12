@@ -4158,15 +4158,19 @@ function initBlocksEditor(sectionIndex) {
             });
           }
 
-          addPara.onclick  = () => { tc.blocks.push({ type: 'p', text: '' }); scheduleAutosave(); renderBlocks(); };
-          addImage.onclick = () => { tc.blocks.push({ type: 'image', url: '', alt: '', caption: '' }); scheduleAutosave(); renderBlocks(); };
-          addHtml.onclick  = () => { tc.blocks.push({ type: 'html', code: '' }); scheduleAutosave(); renderBlocks(); };
-          addBreak.onclick = () => {
-            // Only one column break allowed
-            if (tc.blocks.some(b => b.type === 'column-break')) return;
-            tc.blocks.push({ type: 'column-break' });
+          function addBlock(block) {
+            tc.blocks.push(block);
             scheduleAutosave();
             renderBlocks();
+            list.lastElementChild?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+          }
+
+          addPara.onclick  = () => addBlock({ type: 'p', text: '' });
+          addImage.onclick = () => addBlock({ type: 'image', url: '', alt: '', caption: '' });
+          addHtml.onclick  = () => addBlock({ type: 'html', code: '' });
+          addBreak.onclick = () => {
+            if (tc.blocks.some(b => b.type === 'column-break')) return;
+            addBlock({ type: 'column-break' });
           };
 
           renderBlocks();
