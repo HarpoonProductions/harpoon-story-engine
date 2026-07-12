@@ -698,6 +698,18 @@
                 background: var(--bg-2);
                 overflow: hidden;
                 min-width: 0;
+                transition: none;
+            }
+            .preview--hidden {
+                display: none;
+            }
+            .preview--hidden + .divider,
+            .body:has(.preview--hidden) .divider {
+                display: none;
+            }
+            /* Auto-hide mobile viewport when space is tight */
+            .viewport--mobile.is-hidden {
+                display: none;
             }
             .preview__toolbar {
                 display: flex;
@@ -934,6 +946,15 @@
                     ></div>
                     <span id="statusText">—</span>
                 </div>
+                <button
+                    class="tbtn tbtn--ghost"
+                    id="togglePreviewBtn"
+                    onclick="togglePreview()"
+                    aria-label="Toggle preview panel"
+                    title="Toggle preview (P)"
+                >
+                    Preview ⇥
+                </button>
                 <button
                     class="tbtn tbtn--ghost"
                     onclick="openPreviewInBrowser()"
@@ -2249,6 +2270,8 @@
                 const dHint = document.getElementById("desktopHint");
                 if (dHint)
                     dHint.textContent = `${dp.w} × ${dp.h} · ${Math.round(dScale * 100)}%`;
+
+                updateMobileVisibility();
             }
 
             // ── Draggable divider ──────────────────────────────────────────────
@@ -2302,6 +2325,40 @@
                     sidebar.style.width = w + "px";
                     scaleFrames();
                 });
+            }
+
+            // ── Preview toggle ─────────────────────────────────────────────────
+
+            let previewVisible = true;
+
+            function togglePreview() {
+                previewVisible = !previewVisible;
+                const panel = document.getElementById("previewPanel");
+                const divider = document.getElementById("divider");
+                const btn = document.getElementById("togglePreviewBtn");
+                panel.classList.toggle("preview--hidden", !previewVisible);
+                divider.style.display = previewVisible ? "" : "none";
+                btn.textContent = previewVisible ? "Preview ⇥" : "Preview ⇤";
+                btn.title = previewVisible ? "Hide preview (P)" : "Show preview (P)";
+                if (previewVisible) scaleFrames();
+            }
+
+            // Keyboard shortcut: P (when not in a text field)
+            document.addEventListener("keydown", (e) => {
+                if (e.key === "p" && !e.metaKey && !e.ctrlKey && !e.altKey) {
+                    const tag = document.activeElement?.tagName;
+                    if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT") return;
+                    togglePreview();
+                }
+            });
+
+            // Auto-hide mobile viewport when desktop preview is too narrow
+            function updateMobileVisibility() {
+                const panel = document.getElementById("previewPanel");
+                const mobileVp = document.querySelector(".viewport--mobile");
+                if (!mobileVp || !panel) return;
+                const availW = panel.offsetWidth;
+                mobileVp.classList.toggle("is-hidden", availW < 700);
             }
 
             // ── Preview ────────────────────────────────────────────────────────
