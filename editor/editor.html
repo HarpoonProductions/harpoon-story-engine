@@ -206,12 +206,51 @@
             }
             .sidebar__body {
                 flex: 1;
+                overflow: hidden;
+                display: flex;
+                flex-direction: column;
+                min-height: 0;
+            }
+
+            /* Non-sections tabs scroll as one pane */
+            .tab-panel.is-active:not(#tab-sections) {
                 overflow-y: auto;
                 padding: 1rem;
+                flex: 1;
+                min-height: 0;
                 scrollbar-width: thin;
                 scrollbar-color: var(--bg-3) transparent;
             }
-            .sidebar__body::-webkit-scrollbar {
+
+            /* Sections tab: two independent scroll panes */
+            #tab-sections.is-active {
+                display: flex;
+                flex-direction: column;
+                flex: 1;
+                min-height: 0;
+                overflow: hidden;
+            }
+            .section-rail-pane {
+                flex: 0 1 40%;
+                min-height: 80px;
+                overflow-y: auto;
+                padding: 0.75rem 1rem 0.5rem;
+                border-bottom: 1px solid var(--rule);
+                scrollbar-width: thin;
+                scrollbar-color: var(--bg-3) transparent;
+            }
+            .section-editor-pane {
+                flex: 1;
+                min-height: 0;
+                overflow-y: auto;
+                padding: 0;
+                scrollbar-width: thin;
+                scrollbar-color: var(--bg-3) transparent;
+            }
+            .sidebar__body::-webkit-scrollbar,
+            .tab-panel.is-active:not(#tab-sections)::-webkit-scrollbar,
+            .section-rail-pane::-webkit-scrollbar,
+            .section-editor-pane::-webkit-scrollbar {
                 width: 3px;
             }
             .sidebar__body::-webkit-scrollbar-thumb {
@@ -1418,21 +1457,24 @@
                             aria-labelledby="tab-btn-sections"
                             tabindex="0"
                         >
-                            <div
-                                class="section-list"
-                                id="sectionList"
-                                role="listbox"
-                                aria-label="Story sections"
-                                aria-activedescendant=""
-                            ></div>
-                            <button
-                                class="add-section-btn"
-                                onclick="addSection()"
-                                aria-label="Add a new section to the story"
-                            >
-                                + Add section
-                            </button>
+                            <div class="section-rail-pane" aria-label="Section rail">
+                                <div
+                                    class="section-list"
+                                    id="sectionList"
+                                    role="listbox"
+                                    aria-label="Story sections"
+                                    aria-activedescendant=""
+                                ></div>
+                                <button
+                                    class="add-section-btn"
+                                    onclick="addSection()"
+                                    aria-label="Add a new section to the story"
+                                >
+                                    + Add section
+                                </button>
+                            </div>
 
+                            <div class="section-editor-pane">
                             <div
                                 class="section-editor"
                                 id="sectionEditor"
@@ -2062,6 +2104,7 @@
                                   </div>
                                 </details>
                             </div>
+                            </div><!-- /section-editor-pane -->
                         </div>
                         <!-- Status tab -->
                         <div
