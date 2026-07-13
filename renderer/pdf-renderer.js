@@ -109,8 +109,12 @@ function buildHead(meta, fontsLink, tokenSetCss, accent, accent2, reg) {
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     /* ── @page rules for Puppeteer ── */
-    /* Zero margin — all spacing owned by CSS. Cover bleeds to edge. */
-    @page { size: A4 portrait; margin: 0; }
+    /* 12mm top margin = space for the fixed running header on every body page.
+       9mm bottom margin = space for Puppeteer's footer template (page numbers).
+       :first removes the top margin on page 1 so the cover stays full-bleed;
+       the fixed header's z-index is lower than the cover's so it's hidden there. */
+    @page         { size: A4 portrait; margin: 12mm 0 9mm; }
+    @page :first  { margin-top: 0; }
 
     html {
       font-family: var(--hpdf-sans);
@@ -139,7 +143,7 @@ function buildHead(meta, fontsLink, tokenSetCss, accent, accent2, reg) {
 
     /* ── Cover page ── */
     .hpdf-cover {
-      height: 297mm;
+      height: calc(297mm - 9mm); /* 9mm reserved for Puppeteer footer on page 1 */
       display: flex;
       flex-direction: column;
     }
@@ -484,8 +488,7 @@ function buildHead(meta, fontsLink, tokenSetCss, accent, accent2, reg) {
         flex-shrink: 0;
       }
 
-      /* Push body columns below the fixed header */
-      .hpdf-columns { padding-top: calc(12mm + 10mm); }
+      /* No padding-top needed — @page margin-top:12mm reserves header space on every page */
     }
 
     /* Hidden on screen — only rendered in @media print above */

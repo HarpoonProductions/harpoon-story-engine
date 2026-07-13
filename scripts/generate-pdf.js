@@ -112,8 +112,8 @@ async function generate() {
       displayHeaderFooter: true,
       headerTemplate:      '<span></span>',  // required but empty — header handled by CSS
       footerTemplate,
-      margin: { top: 0, right: 0, bottom: '9mm', left: 0 },
-      // top:0    — cover bleeds to top edge; fixed CSS header handles body pages
+      margin: { top: '12mm', right: 0, bottom: '9mm', left: 0 },
+      // top:12mm   — matches @page margin-top; @page :first overrides to 0 for cover
       // bottom:9mm — Puppeteer footer template space (page numbers + title)
     });
 
