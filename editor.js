@@ -958,6 +958,24 @@ app.get("/edit/:id", (req, res) => {
   res.sendFile(path.join(EDITOR_DIR, "editor.html"));
 });
 
+// ── Print version ─────────────────────────────────────────────────
+// Branded text-only render served live from Supabase content.
+// Readers can print or Cmd+P → Save as PDF from here.
+
+app.get("/print/:id", async (req, res) => {
+  try {
+    const { renderPrint } = require("./renderer/print-renderer");
+    const content = await db.getProject(req.params.id);
+    if (!content) return res.status(404).send("Story not found");
+    const html = renderPrint(content);
+    res.setHeader("Content-Type", "text/html; charset=utf-8");
+    res.send(html);
+  } catch (err) {
+    console.error("[print]", err);
+    res.status(500).send("Could not generate print version: " + err.message);
+  }
+});
+
 // ── Asset passthrough ─────────────────────────────────────────────
 // Rendered HTML uses root-relative paths like /projectId/css/tokens.css
 // This middleware intercepts those and serves from .preview/

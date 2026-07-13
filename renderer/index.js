@@ -24,6 +24,7 @@ const { renderFrameScrubber }   = require("./layouts/frame-scrubber");
 const { renderSplitReveal }     = require("./layouts/split-reveal");
 const { renderTwoColumn }       = require("./layouts/two-column");
 const { renderCoverLayout }     = require("./layouts/cover");
+const { renderPrint }           = require("./print-renderer");
 
 /**
  * Top-level render function.
@@ -64,7 +65,14 @@ function render(content, outputDir, options) {
   const outPath = path.join(outputDir, "index.html");
   fs.writeFileSync(outPath, html, "utf8");
 
-  return [outPath];
+  // Generate print version alongside the main HTML
+  const printHtml = renderPrint(content);
+  const printDir  = path.join(outputDir, "print");
+  fs.mkdirSync(printDir, { recursive: true });
+  const printPath = path.join(printDir, "index.html");
+  fs.writeFileSync(printPath, printHtml, "utf8");
+
+  return [outPath, printPath];
 }
 
 // ── Page assembly ─────────────────────────────────────────────────
