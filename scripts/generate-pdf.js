@@ -85,20 +85,15 @@ async function generate() {
     console.log('[pdf] Printing…');
 
     await page.pdf({
-      path:              outPath,
-      format:            'A4',
-      landscape:         landscape,
-      printBackground:   true,   // required for coloured backgrounds (cover, header bar)
-      preferCSSPageSize: false,   // use Puppeteer's A4, not @page
-      margin: {
-        top:    '18mm',
-        right:  '22mm',
-        bottom: '22mm',
-        left:   '22mm',
-      },
-      // Cover page has no margin (full-bleed) — handled in CSS with @page :first
-      // Puppeteer doesn't support @page :first margin overrides, so the cover
-      // uses padding/positioning within the standard margin box.
+      path:            outPath,
+      format:          'A4',
+      landscape:       landscape,
+      printBackground: true,  // required for cover background + header bar colour
+      preferCSSPageSize: true, // honour @page { size: A4 } in CSS
+      margin: { top: 0, right: 0, bottom: 0, left: 0 },
+      // Zero Puppeteer margins — all spacing is owned by the CSS:
+      // Cover: height:297mm fills the page edge-to-edge (full bleed)
+      // Body:  running header + .hpdf-columns padding handle internal margins
     });
 
     const stat = fs.statSync(outPath);

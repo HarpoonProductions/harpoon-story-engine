@@ -106,8 +106,8 @@ function buildHead(meta, fontsLink, tokenSetCss, accent, accent2, reg) {
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     /* ── @page rules for Puppeteer ── */
-    @page        { size: A4 portrait; margin: 0; }
-    @page body   { margin: 0; }
+    /* Zero margin — all spacing owned by CSS. Cover bleeds to edge. */
+    @page { size: A4 portrait; margin: 0; }
 
     html {
       font-family: var(--hpdf-sans);
@@ -430,19 +430,10 @@ function buildHead(meta, fontsLink, tokenSetCss, accent, accent2, reg) {
     .hpdf-panel__title { font-weight: 600; font-size: 9.5pt; margin-bottom: 0.5mm; }
     .hpdf-panel__body  { font-size: 9pt; color: #333; }
 
-    /* Running footer (print) */
     @media print {
-      .hpdf-page {
-        width: 210mm;
-        margin: 0;
-        box-shadow: none;
-        page-break-after: always;
-        break-after: page;
-      }
-      .hpdf-body {
-        page-break-after: auto;
-        break-after: auto;
-      }
+      .hpdf-page   { width: 210mm; margin: 0; box-shadow: none; }
+      .hpdf-cover  { page-break-after: always; break-after: page; }
+      .hpdf-body   { page-break-after: auto;   break-after: auto; }
     }
   </style>
 </head>`;
