@@ -960,7 +960,23 @@ app.get("/edit/:id", (req, res) => {
 
 // ── Print version ─────────────────────────────────────────────────
 // Branded text-only render served live from Supabase content.
-// Readers can print or Cmd+P → Save as PDF from here.
+// Track 2 PDF preview — A4 layout, fed to Puppeteer at publish time.
+
+app.get("/pdf-preview/:id", async (req, res) => {
+  try {
+    const { renderPdf } = require("./renderer/pdf-renderer");
+    const content = await db.getProject(req.params.id);
+    if (!content) return res.status(404).send("Story not found");
+    const html = renderPdf(content);
+    res.setHeader("Content-Type", "text/html; charset=utf-8");
+    res.send(html);
+  } catch (err) {
+    console.error("[pdf-preview]", err);
+    res.status(500).send("Could not generate PDF preview: " + err.message);
+  }
+});
+
+// Track 1 — Readers can print or Cmd+P → Save as PDF from here.
 
 app.get("/print/:id", async (req, res) => {
   try {
