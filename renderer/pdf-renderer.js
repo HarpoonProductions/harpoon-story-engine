@@ -58,16 +58,11 @@ function renderPdf(content) {
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=DM+Sans:wght@300;400;500&family=DM+Mono:wght@400&display=swap" rel="stylesheet">`;
 
-  const logoUrl = meta.logo_url || registryEntry.logo_url || null;
-
-  const head = buildHead(meta, fontsLink, tokenSetCss, accent, accent2, registryEntry);
-  const coverHtml = buildCoverPage(meta, coverData, logoUrl, accent);
-  const bodyHtml  = buildBodyPages(meta, bodySections, logoUrl, accent, registryEntry);
-
-  // Fixed print header — hidden on screen, repeats on every printed page.
-  // Cover hides it via z-index:999 on page 1.
-  const logoUrl    = meta.logo_url || registryEntry.logo_url || null;
+  const logoUrl     = meta.logo_url || registryEntry.logo_url || null;
+  const head        = buildHead(meta, fontsLink, tokenSetCss, accent, accent2, registryEntry);
   const printHeader = buildPrintHeader(meta, logoUrl);
+  const coverHtml   = buildCoverPage(meta, coverData, logoUrl, accent);
+  const bodyHtml    = buildBodyPages(meta, bodySections, logoUrl, accent, registryEntry);
 
   return `${head}
 <body>
