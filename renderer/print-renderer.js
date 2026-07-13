@@ -86,16 +86,23 @@ function renderPrintHead(meta, config, coverData) {
   <title>${escHtml(meta.title || '')} — Print version</title>
   ${fontsLink}
   <style>
-    /* ── Token set override ── */
+    /* ── Font defaults — overridden by token set below if present ── */
+    :root {
+      --hse-font-display: 'Playfair Display', Georgia, serif;
+      --hse-font-body:    'DM Sans', system-ui, sans-serif;
+      --hse-font-mono:    'DM Mono', monospace;
+    }
+
+    /* ── Token set override (sets --hse-* brand vars) ── */
     ${tokenSetCss}
 
-    /* ── Brand tokens ── */
+    /* ── Print brand tokens — bridged from token set ── */
     :root {
-      --hpe-accent:  ${accent};
-      --hpe-accent2: ${accent2};
-      --hpe-font-serif: ${registryEntry?.font_serif || "'Playfair Display', Georgia, serif"};
-      --hpe-font-sans:  ${registryEntry?.font_sans  || "'DM Sans', system-ui, sans-serif"};
-      --hpe-font-mono:  ${registryEntry?.font_mono  || "'DM Mono', monospace"};
+      --hpe-accent:     ${accent};
+      --hpe-accent2:    ${accent2};
+      --hpe-font-serif: var(--hse-font-display);
+      --hpe-font-sans:  var(--hse-font-body);
+      --hpe-font-mono:  var(--hse-font-mono);
     }
 
     /* ── Page ── */
@@ -114,8 +121,8 @@ function renderPrintHead(meta, config, coverData) {
 
     /* ── Cover block ── */
     .hpe-cover {
-      margin-bottom: 12mm;
-      padding-bottom: 8mm;
+      margin-bottom: 6mm;
+      padding-bottom: 5mm;
       border-bottom: 2pt solid var(--hpe-accent);
     }
     .hpe-cover__kicker {
@@ -385,10 +392,10 @@ function renderPrintCoverBlock(meta, cover) {
 // ── Section dispatcher ───────────────────────────────────────────
 
 function renderPrintSection(section) {
-  const layout = section.layout || 'default';
-  const num    = section.num ? String(section.num).padStart(2, '0') : null;
+  const layout   = section.layout || 'default';
+  const navLabel = section.nav_label || null;
 
-  const numHtml   = num ? `<p class="hpe-section__num">${escHtml(num)}</p>` : '';
+  const numHtml   = navLabel ? `<p class="hpe-section__num">${escHtml(navLabel)}</p>` : '';
   const titleHtml = section.title
     ? `<h2 class="hpe-section__title">${escHtml(section.title)}</h2>` : '';
   const introHtml = section.intro
