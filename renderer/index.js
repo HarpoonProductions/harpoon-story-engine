@@ -23,6 +23,7 @@ const { renderCinemaReveal }    = require("./layouts/cinema-reveal");
 const { renderFrameScrubber }   = require("./layouts/frame-scrubber");
 const { renderSplitReveal }     = require("./layouts/split-reveal");
 const { renderTwoColumn }       = require("./layouts/two-column");
+const { renderCoverLayout }     = require("./layouts/cover");
 
 /**
  * Top-level render function.
@@ -72,13 +73,19 @@ function buildPage(meta, config, cover, sections, basePath, registryLogoUrl) {
   const base = basePath
     ? "/" + basePath.replace(/^\//, "").replace(/\/$/, "")
     : "";
-  // Pass hero image URL so the head can emit a preload hint
-  // For video covers, preload the poster instead so the first frame appears immediately
-  const heroImageUrl = cover?.hero_image?.url || cover?.hero_video?.poster || null;
+
+  // If a section with layout "cover" exists, use it; otherwise fall back to
+  // the legacy top-level cover object so existing stories keep working.
+  const coverSection = sections.find((s) => s.layout === "cover");
+  const coverData    = coverSection || cover || {};
+
+  const heroImageUrl = coverData.hero_image?.url || coverData.hero_video?.poster || null;
   const head = renderHead(meta, config, null, basePath, false, heroImageUrl);
   const nav = renderNav(meta, sections, registryLogoUrl);
-  const coverHtml = renderCover(cover);
-  const printHeaderHtml = renderPrintHeader(meta, cover);
+
+  // Legacy cover rendered before <main>; section-based cover renders inside it
+  const legacyCoverHtml = coverSection ? "" : renderCover(cover || {});
+  const printHeaderHtml = renderPrintHeader(meta, coverData);
 
   // Sections: render each, or stub if renderer not yet built
   const sectionsHtml = sections
@@ -96,7 +103,7 @@ ${nav}
 
 ${printHeaderHtml}
 
-${coverHtml}
+${legacyCoverHtml}
 
 <main id="hse-main">
 
@@ -193,6 +200,8 @@ function renderSectionHtml(section, layout) {
       return renderSplitReveal(section);
     case "two-column":
       return renderTwoColumn(section);
+    case "cover":
+      return renderCoverLayout(section);
     case "custom-html":
       return renderCustomHtml(section);
     case "text":

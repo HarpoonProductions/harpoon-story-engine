@@ -585,7 +585,8 @@
             "cinema-reveal",
             "frame-scrubber",
             "two-column",
-            "split-reveal"
+            "split-reveal",
+            "cover"
           ],
           "default": "default",
           "description": "Rendering template for this section. fullbleed-quote: full-viewport hero_image with pull_quote overlaid. reveal-crossfade: two images crossfade on scroll, driven by crossfade_images and crossfade_phases."
