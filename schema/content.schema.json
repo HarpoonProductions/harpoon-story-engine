@@ -239,10 +239,7 @@
           "type": "boolean",
           "default": true
         }
-      },
-      "required": [
-        "url"
-      ]
+      }
     },
     "button": {
       "type": "object",
