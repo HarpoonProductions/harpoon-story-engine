@@ -1447,6 +1447,14 @@
                                     >
                                     <button
                                         class="section-delete"
+                                        id="sectionDuplicateBtn"
+                                        aria-label="Duplicate this section"
+                                        style="background:transparent;border:1px solid var(--rule);color:var(--ink-2);margin-right:0.35rem"
+                                    >
+                                        Duplicate
+                                    </button>
+                                    <button
+                                        class="section-delete"
                                         id="sectionDeleteBtn"
                                         aria-label="Delete this section"
                                     >
@@ -2093,6 +2101,7 @@
                             <option value="768:1024">iPad Mini (768×1024)</option>
                         </select>
                         <span style="flex:1"></span>
+                        <button id="refreshPreviewBtn" class="tbtn tbtn--ghost" style="font-size:0.72rem;padding:0.25rem 0.6rem;gap:0.3rem" title="Refresh preview (keeps scroll position)">↺ Refresh</button>
                         <span class="preview__label">🖥</span>
                     </div>
 
@@ -2414,6 +2423,10 @@
                 }
             });
 
+            document.getElementById("refreshPreviewBtn").addEventListener("click", () => {
+                reloadPreviews();
+            });
+
             // ── Preview ────────────────────────────────────────────────────────
 
             function activeFrame() {
@@ -2510,11 +2523,7 @@
                             setStatus("error", "Saved (preview error: " + data.renderWarning + ")");
                         } else {
                             setStatus("saved", "Saved");
-                            if (skipNextReload) {
-                                skipNextReload = false;
-                            } else {
-                                reloadPreviews();
-                            }
+                            skipNextReload = false;
                             setTimeout(() => {
                                 if (!isDirty) setStatus("", "—");
                             }, 2500);
@@ -2767,6 +2776,8 @@
                     s.title || s.id || `Section ${index + 1}`;
                 document.getElementById("sectionDeleteBtn").onclick = () =>
                     deleteSection(index);
+                document.getElementById("sectionDuplicateBtn").onclick = () =>
+                    duplicateSection(index);
 
                 // Remove old event listeners cleanly
                 sectionEditorListeners.forEach(({ el, fn }) =>
@@ -2994,6 +3005,19 @@
                 if (!sectionsTab.classList.contains("is-active")) {
                     sectionsTab.click();
                 }
+            }
+
+            function duplicateSection(index) {
+                const original = content.sections[index];
+                const copy = JSON.parse(JSON.stringify(original));
+                // Generate a unique ID and bump num
+                copy.id = original.id + '-copy';
+                copy.title = (original.title || original.id) + ' (copy)';
+                copy.num = content.sections.length + 1;
+                content.sections.splice(index + 1, 0, copy);
+                renderSectionList();
+                editSection(index + 1);
+                scheduleAutosave();
             }
 
             function deleteSection(index) {
