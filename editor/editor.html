@@ -2655,7 +2655,7 @@
                     item.setAttribute("draggable", "true");
                     item.innerHTML = `
       <span class="section-item__drag" aria-hidden="true" title="Drag to reorder">⠿</span>
-      <span class="section-item__num" aria-hidden="true">${String(s.num || i + 1).padStart(2, "0")}</span>
+      <span class="section-item__num" aria-hidden="true">${String(i + 1).padStart(2, "0")}</span>
       <span class="section-item__label" aria-hidden="true">${s.title || s.id || "Untitled"}</span>
       <span class="section-item__layout" aria-hidden="true">${s.layout || "default"}</span>
       <span class="section-item__move" aria-hidden="true">
