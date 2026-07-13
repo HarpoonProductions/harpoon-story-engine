@@ -2833,53 +2833,55 @@
                     sectionEditorListeners.push({ el, fn });
                 }
 
+                // Use activeSectionIndex (not captured index) so reorders never stale
+                const asi = () => activeSectionIndex;
+                const s_  = () => content.sections[asi()];
+
                 wire("sec-id", (v) => {
-                    content.sections[index].id = v;
+                    s_().id = v;
                 });
                 wire("sec-title", (v) => {
-                    content.sections[index].title = v;
+                    s_().title = v;
                     renderSectionList();
                     document.getElementById("sectionEditorTitle").textContent =
                         v || "Section";
                 });
                 wire("sec-nav-label", (v) => {
-                    content.sections[index].nav_label = v;
+                    s_().nav_label = v;
                 });
                 wire("sec-layout", (v) => {
-                    content.sections[index].layout = v;
+                    s_().layout = v;
                     renderSectionList();
-                    initBlocksEditor(index);
-                    initPanoramicScrollEditor(index);
-                    initCascadingSlidesEditor(index);
-                    initStackableCardsEditor(index);
-                    initStickyStepsEditor(index);
-                    initCrossfadeEditor(index);
-                    initCustomHtmlEditor(index);
-                    initCarouselEditor(index);
-                    initCinemaRevealEditor(index);
-                    initFrameScrubberEditor(index);
-                    initSplitRevealEditor(index);
-                    initTwoColumnEditor(index);
-                    initCoverEditor(index);
+                    initBlocksEditor(asi());
+                    initPanoramicScrollEditor(asi());
+                    initCascadingSlidesEditor(asi());
+                    initStackableCardsEditor(asi());
+                    initStickyStepsEditor(asi());
+                    initCrossfadeEditor(asi());
+                    initCustomHtmlEditor(asi());
+                    initCarouselEditor(asi());
+                    initCinemaRevealEditor(asi());
+                    initFrameScrubberEditor(asi());
+                    initSplitRevealEditor(asi());
+                    initTwoColumnEditor(asi());
+                    initCoverEditor(asi());
                 });
                 wire("sec-intro", (v) => {
-                    content.sections[index].intro = v;
+                    s_().intro = v;
                 });
                 wire("sec-hero-url", (v) => {
-                    if (!content.sections[index].hero_image)
-                        content.sections[index].hero_image = {};
-                    content.sections[index].hero_image.url = v;
+                    if (!s_().hero_image) s_().hero_image = {};
+                    s_().hero_image.url = v;
                 });
                 wire("sec-hero-alt", (v) => {
-                    if (!content.sections[index].hero_image)
-                        content.sections[index].hero_image = {};
-                    content.sections[index].hero_image.alt = v;
+                    if (!s_().hero_image) s_().hero_image = {};
+                    s_().hero_image.alt = v;
                 });
 
                 // Background image wiring
                 function ensureBg() {
-                    if (!content.sections[index].background) content.sections[index].background = {};
-                    return content.sections[index].background;
+                    if (!s_().background) s_().background = {};
+                    return s_().background;
                 }
                 wire("sec-bg-tint",       (v) => { ensureBg().tint = parseFloat(v); });
                 wire("sec-bg-tint-color", (v) => { ensureBg().tint_color = v; });
@@ -2895,7 +2897,7 @@
                     const hasBg = !!bgUrlInput.value;
                     bgControls.style.display = hasBg ? "block" : "none";
                     if (hasBg) {
-                        const bg = content.sections[index].background || {};
+                        const bg = s_().background || {};
                         bgTint.value      = bg.tint      ?? 0.5;
                         bgTintColor.value = bg.tint_color || "#000000";
                         bgFixed.checked   = !!bg.fixed;
@@ -2911,54 +2913,37 @@
                 sectionEditorListeners.push({ el: bgUrlInput, fn: bgUrlFn });
 
                 wire("sec-nav-exclude", (v) => {
-                    content.sections[index].nav_exclude = v;
+                    s_().nav_exclude = v;
                 });
                 wire("sec-color-bleed", (v) => {
-                    content.sections[index].color_bleed = v;
+                    s_().color_bleed = v;
                 });
                 wire("sec-pq-text", (v) => {
-                    if (!content.sections[index].pull_quote)
-                        content.sections[index].pull_quote = {};
-                    content.sections[index].pull_quote.text = v;
+                    if (!s_().pull_quote) s_().pull_quote = {};
+                    s_().pull_quote.text = v;
                 });
                 wire("sec-pq-attr", (v) => {
-                    if (!content.sections[index].pull_quote)
-                        content.sections[index].pull_quote = {};
-                    content.sections[index].pull_quote.attribution = v;
+                    if (!s_().pull_quote) s_().pull_quote = {};
+                    s_().pull_quote.attribution = v;
                 });
 
                 renderSectionList();
                 document.getElementById("sec-id").focus();
 
-                // Initialise blocks editor (shown only for text layout)
                 initBlocksEditor(index);
-                // Initialise panoramic scroll editor (shown only for panoramic-scroll layout)
                 initPanoramicScrollEditor(index);
-                // Initialise cascading slides editor (shown only for cascading-slides layout)
                 initCascadingSlidesEditor(index);
-                // Initialise stackable cards editor (shown only for stackable-cards layout)
                 initStackableCardsEditor(index);
-                // Initialise sticky steps editor (shown only for sticky-steps layout)
                 initStickyStepsEditor(index);
-                // Initialise crossfade editor (shown only for reveal-crossfade layout)
                 initCrossfadeEditor(index);
-                // Initialise custom HTML editor (shown only for custom-html layout)
                 initCustomHtmlEditor(index);
-                // Initialise carousel editor (shown only for scroll-carousel layout)
                 initCarouselEditor(index);
-                // Initialise cinema reveal editor (shown only for cinema-reveal layout)
                 initCinemaRevealEditor(index);
-                // Initialise frame scrubber editor
                 initFrameScrubberEditor(index);
-                // Initialise split reveal editor (shown only for split-reveal layout)
                 initSplitRevealEditor(index);
-                // Initialise two column editor (shown only for two-column layout)
                 initTwoColumnEditor(index);
-                // Initialise cover editor (shown only for cover layout)
                 initCoverEditor(index);
-                // Initialise fullbleed quote options
                 initFullbleedQuoteEditor(index);
-                // Initialise CSS override panel
                 initCssOverridePanel(index);
 
                 // Reset image field enhancement so it re-initialises with correct URL and focal
@@ -2987,13 +2972,25 @@
                 }, 50);
             }
 
+            function sectionLetterKey(n) {
+                // 1→a, 2→b, …, 26→z, 27→aa, 28→ab, …
+                let s = '';
+                while (n > 0) {
+                    n--;
+                    s = String.fromCharCode(97 + (n % 26)) + s;
+                    n = Math.floor(n / 26);
+                }
+                return s;
+            }
+
             function addSection() {
                 if (!content.sections) content.sections = [];
                 const n = content.sections.length + 1;
+                const key = sectionLetterKey(n);
                 content.sections.push({
-                    id: `section-${n}`,
+                    id: `section-${key}`,
                     num: n,
-                    title: `Section ${n}`,
+                    title: `Section ${key.toUpperCase()}`,
                     layout: "default",
                     intro: "",
                 });
@@ -3047,6 +3044,7 @@
                     activeSectionIndex++;
                 }
                 renderSectionList();
+                if (activeSectionIndex >= 0) editSection(activeSectionIndex);
                 scheduleAutosave();
             }
 
