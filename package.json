@@ -1,6 +1,6 @@
 {
   "name": "harpoon-story-engine",
-  "version": "0.1.0",
+  "version": "0.3.0",
   "description": "Renders Harpoon Story Engine JSON content files into HTML publications",
   "main": "main.js",
   "scripts": {
