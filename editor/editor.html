@@ -1239,6 +1239,17 @@
                             aria-labelledby="tab-btn-cover"
                             tabindex="0"
                         >
+                            <div id="cover-tab-legacy-notice" style="display:none">
+                                <p style="font-size:0.85rem;color:var(--ink-2,#555);margin:0 0 1rem">This story uses a legacy cover. It still renders correctly.</p>
+                            </div>
+                            <div id="cover-tab-redirect" style="display:none;text-align:center;padding:2rem 1rem">
+                                <p style="font-size:1.5rem;margin:0 0 0.5rem">🎨</p>
+                                <p style="font-weight:600;margin:0 0 0.5rem">Cover is now a section</p>
+                                <p style="font-size:0.85rem;color:var(--ink-2,#555);margin:0 0 1.25rem">Edit the cover section in the Sections tab.</p>
+                                <button type="button" class="tbtn tbtn--primary" id="cover-tab-go-to-section">Go to cover section →</button>
+                            </div>
+                            <!-- Legacy fields (hidden once a cover section exists) -->
+                            <div id="cover-tab-fields">
                             <div class="form-group">
                                 <label class="form-label" for="cover-kicker"
                                     >Kicker</label
@@ -1396,6 +1407,7 @@
                                     placeholder="Produced by…"
                                 />
                             </div>
+                            </div>
                         </div>
 
                         <!-- Sections tab -->
@@ -1461,6 +1473,7 @@
                                         >Layout</label
                                     >
                                     <select class="form-select" id="sec-layout">
+                                        <option value="cover">Cover</option>
                                         <option value="default">Default</option>
                                         <option value="sticky-steps">
                                             Sticky Steps
@@ -1557,6 +1570,66 @@
                                       <input type="checkbox" id="sec-custom-padded"> Add padding
                                       <span class="form-hint" style="display:inline;margin-left:0.25rem">Adds vertical space above and below</span>
                                     </label>
+                                  </div>
+                                </div>
+
+                                <!-- Cover editor (shown only for cover layout) -->
+                                <div id="coverEditor" style="display:none">
+                                  <div class="form-group">
+                                    <label class="form-label" for="cov-kicker">Kicker</label>
+                                    <input class="form-input" id="cov-kicker" placeholder="Client · Event">
+                                  </div>
+                                  <div class="form-group">
+                                    <label class="form-label" for="cov-headline">Headline</label>
+                                    <input class="form-input" id="cov-headline" placeholder="Main headline">
+                                  </div>
+                                  <div class="form-group">
+                                    <label class="form-label" for="cov-headline-em">Headline italic</label>
+                                    <input class="form-input" id="cov-headline-em" placeholder="Emphasised portion">
+                                    <p class="form-hint">Rendered in italic below the main headline</p>
+                                  </div>
+                                  <div class="form-group">
+                                    <label class="form-label" for="cov-body">Intro</label>
+                                    <textarea class="form-textarea" id="cov-body" placeholder="Opening paragraph…"></textarea>
+                                  </div>
+                                  <p class="form-section-title">Hero</p>
+                                  <div class="form-group">
+                                    <label class="form-label" for="cov-hero-url">Image URL</label>
+                                    <input class="form-input" id="cov-hero-url" data-image-field="true" placeholder="https://…">
+                                  </div>
+                                  <div class="form-group">
+                                    <label class="form-label" for="cov-hero-alt">Image alt text</label>
+                                    <input class="form-input" id="cov-hero-alt" placeholder="Describe the image">
+                                  </div>
+                                  <p class="form-section-title">Video <span style="font-weight:300;text-transform:none;letter-spacing:0">(overrides image)</span></p>
+                                  <div class="form-group">
+                                    <label class="form-label" for="cov-video-url">Video URL (MP4)</label>
+                                    <input class="form-input" id="cov-video-url" data-image-field="true" placeholder="https://…/video.mp4">
+                                  </div>
+                                  <div class="form-group">
+                                    <label class="form-label" for="cov-video-poster">Poster image URL</label>
+                                    <input class="form-input" id="cov-video-poster" placeholder="Shown before video loads">
+                                  </div>
+                                  <p class="form-section-title">CTAs</p>
+                                  <div class="form-group">
+                                    <label class="form-label" for="cov-cta1-label">Primary label</label>
+                                    <input class="form-input" id="cov-cta1-label" placeholder="Read the report">
+                                  </div>
+                                  <div class="form-group">
+                                    <label class="form-label" for="cov-cta1-href">Primary link</label>
+                                    <input class="form-input" id="cov-cta1-href" placeholder="#section-id">
+                                  </div>
+                                  <div class="form-group">
+                                    <label class="form-label" for="cov-cta2-label">Secondary label</label>
+                                    <input class="form-input" id="cov-cta2-label" placeholder="Watch the film">
+                                  </div>
+                                  <div class="form-group">
+                                    <label class="form-label" for="cov-cta2-href">Secondary link</label>
+                                    <input class="form-input" id="cov-cta2-href" placeholder="https://…">
+                                  </div>
+                                  <div class="form-group">
+                                    <label class="form-label" for="cov-colophon">Colophon</label>
+                                    <input class="form-input" id="cov-colophon" placeholder="Produced by…">
                                   </div>
                                 </div>
 
@@ -2618,6 +2691,8 @@
                     list.appendChild(item);
                 });
 
+                syncCoverTab();
+
                 // Update aria-activedescendant
                 const list2 = document.getElementById("sectionList");
                 if (activeSectionIndex >= 0) {
@@ -2627,6 +2702,28 @@
                     );
                 } else {
                     list2.removeAttribute("aria-activedescendant");
+                }
+            }
+
+            function syncCoverTab() {
+                const hasCoverSection = (content.sections || []).some(s => s.layout === 'cover');
+                const redirect = document.getElementById('cover-tab-redirect');
+                const fields   = document.getElementById('cover-tab-fields');
+                const notice   = document.getElementById('cover-tab-legacy-notice');
+                if (redirect) redirect.style.display = hasCoverSection ? 'block' : 'none';
+                if (fields)   fields.style.display   = hasCoverSection ? 'none'  : 'block';
+                if (notice)   notice.style.display   = 'none';
+
+                const goBtn = document.getElementById('cover-tab-go-to-section');
+                if (goBtn && !goBtn._wired) {
+                    goBtn._wired = true;
+                    goBtn.addEventListener('click', () => {
+                        const idx = (content.sections || []).findIndex(s => s.layout === 'cover');
+                        if (idx >= 0) {
+                            editSection(idx);
+                            document.getElementById('tab-btn-sections').click();
+                        }
+                    });
                 }
             }
 
@@ -2752,6 +2849,7 @@
                     initFrameScrubberEditor(index);
                     initSplitRevealEditor(index);
                     initTwoColumnEditor(index);
+                    initCoverEditor(index);
                 });
                 wire("sec-intro", (v) => {
                     content.sections[index].intro = v;
@@ -2845,6 +2943,8 @@
                 initSplitRevealEditor(index);
                 // Initialise two column editor (shown only for two-column layout)
                 initTwoColumnEditor(index);
+                // Initialise cover editor (shown only for cover layout)
+                initCoverEditor(index);
                 // Initialise fullbleed quote options
                 initFullbleedQuoteEditor(index);
                 // Initialise CSS override panel
@@ -3163,6 +3263,81 @@ function initCustomHtmlEditor(sectionIndex) {
   rewire('sec-custom-scroll-lock', v => { embed.scroll_lock = v; });
   rewire('sec-custom-full-width',  v => { embed.full_width = v; });
   rewire('sec-custom-padded',      v => { embed.padded = v; });
+}
+
+// ── Cover editor ──────────────────────────────────────────────────
+
+function initCoverEditor(sectionIndex) {
+  const s = content.sections[sectionIndex];
+  const editor = document.getElementById('coverEditor');
+  const isCover = s.layout === 'cover';
+
+  editor.style.display = isCover ? 'block' : 'none';
+  if (!isCover) return;
+
+  // Auto-set nav_exclude when cover layout first selected
+  if (s.nav_exclude === undefined) {
+    s.nav_exclude = true;
+    document.getElementById('sec-nav-exclude').checked = true;
+  }
+
+  // Ensure nested objects exist
+  if (!s.hero_image) s.hero_image = {};
+  if (!s.hero_video) s.hero_video = {};
+  if (!s.cta_primary) s.cta_primary = {};
+  if (!s.cta_secondary) s.cta_secondary = {};
+
+  // Populate fields
+  document.getElementById('cov-kicker').value       = s.kicker || '';
+  document.getElementById('cov-headline').value     = s.headline || '';
+  document.getElementById('cov-headline-em').value  = s.headline_em || '';
+  document.getElementById('cov-body').value         = s.body || '';
+  document.getElementById('cov-hero-url').value     = s.hero_image.url || '';
+  document.getElementById('cov-hero-alt').value     = s.hero_image.alt || '';
+  document.getElementById('cov-video-url').value    = s.hero_video.url || '';
+  document.getElementById('cov-video-poster').value = s.hero_video.poster || '';
+  document.getElementById('cov-cta1-label').value   = s.cta_primary.label || '';
+  document.getElementById('cov-cta1-href').value    = s.cta_primary.href || '';
+  document.getElementById('cov-cta2-label').value   = s.cta_secondary.label || '';
+  document.getElementById('cov-cta2-href').value    = s.cta_secondary.href || '';
+  document.getElementById('cov-colophon').value     = s.colophon || '';
+
+  function rewire(id, setter) {
+    const el = document.getElementById(id);
+    const fresh = el.cloneNode(true);
+    el.parentNode.replaceChild(fresh, el);
+    fresh.addEventListener('input', () => { setter(fresh.value); scheduleAutosave(); });
+    return fresh;
+  }
+
+  rewire('cov-kicker',       v => { content.sections[sectionIndex].kicker = v; });
+  rewire('cov-headline',     v => { content.sections[sectionIndex].headline = v; });
+  rewire('cov-headline-em',  v => { content.sections[sectionIndex].headline_em = v; });
+  rewire('cov-body',         v => { content.sections[sectionIndex].body = v; });
+  rewire('cov-hero-url',     v => { if (!content.sections[sectionIndex].hero_image) content.sections[sectionIndex].hero_image = {}; content.sections[sectionIndex].hero_image.url = v; });
+  rewire('cov-hero-alt',     v => { if (!content.sections[sectionIndex].hero_image) content.sections[sectionIndex].hero_image = {}; content.sections[sectionIndex].hero_image.alt = v; });
+  rewire('cov-video-url',    v => { if (!content.sections[sectionIndex].hero_video) content.sections[sectionIndex].hero_video = {}; content.sections[sectionIndex].hero_video.url = v; });
+  rewire('cov-video-poster', v => { if (!content.sections[sectionIndex].hero_video) content.sections[sectionIndex].hero_video = {}; content.sections[sectionIndex].hero_video.poster = v; });
+  rewire('cov-cta1-label',   v => { if (!content.sections[sectionIndex].cta_primary) content.sections[sectionIndex].cta_primary = {}; content.sections[sectionIndex].cta_primary.label = v; });
+  rewire('cov-cta1-href',    v => { if (!content.sections[sectionIndex].cta_primary) content.sections[sectionIndex].cta_primary = {}; content.sections[sectionIndex].cta_primary.href = v; });
+  rewire('cov-cta2-label',   v => { if (!content.sections[sectionIndex].cta_secondary) content.sections[sectionIndex].cta_secondary = {}; content.sections[sectionIndex].cta_secondary.label = v; });
+  rewire('cov-cta2-href',    v => { if (!content.sections[sectionIndex].cta_secondary) content.sections[sectionIndex].cta_secondary = {}; content.sections[sectionIndex].cta_secondary.href = v; });
+  rewire('cov-colophon',     v => { content.sections[sectionIndex].colophon = v; });
+
+  // Re-initialise image fields so focal picker works on hero image
+  setTimeout(() => {
+    const heroInput = document.getElementById('cov-hero-url');
+    if (heroInput) {
+      heroInput.dataset.enhanced = '';
+      heroInput.dataset.existingFocal = s.hero_image?.focal || '';
+      heroInput.dataset.focalPath = `sections.${sectionIndex}.hero_image.focal`;
+      const oldWrap = heroInput.closest('.img-field-wrap');
+      if (oldWrap) { oldWrap.parentNode.insertBefore(heroInput, oldWrap); oldWrap.remove(); }
+    }
+    if (window.initImageFields) {
+      initImageFields(projectId, onFocalUpdate, document.getElementById('coverEditor'));
+    }
+  }, 50);
 }
 
 // ── Panoramic scroll editor ──────────────────────────────────────

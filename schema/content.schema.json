@@ -863,6 +863,38 @@
             "$ref": "#/definitions/carousel_card"
           },
           "default": []
+        },
+        "kicker": {
+          "type": "string",
+          "description": "Eyebrow line above the headline (cover layout)"
+        },
+        "headline": {
+          "type": "string",
+          "description": "Main cover headline"
+        },
+        "headline_em": {
+          "type": "string",
+          "description": "Italic portion of the cover headline"
+        },
+        "body": {
+          "type": "string",
+          "description": "Opening paragraph (cover layout)"
+        },
+        "hero_video": {
+          "$ref": "#/definitions/video",
+          "description": "Cover background video; overrides hero_image when present"
+        },
+        "cta_primary": {
+          "$ref": "#/definitions/button",
+          "description": "Primary CTA button (cover layout)"
+        },
+        "cta_secondary": {
+          "$ref": "#/definitions/button",
+          "description": "Secondary CTA button (cover layout)"
+        },
+        "colophon": {
+          "type": "string",
+          "description": "Small-print credit line at the base of the cover"
         }
       }
     },
