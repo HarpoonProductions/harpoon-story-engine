@@ -121,220 +121,135 @@ function renderPrintHead(meta, config, coverData) {
 
     /* ── Cover block ── */
     .hpe-cover {
-      margin-bottom: 6mm;
+      margin-bottom: 5mm;
       padding-bottom: 5mm;
-      border-bottom: 2pt solid var(--hpe-accent);
+      border-bottom: 1.5pt solid var(--hpe-accent);
     }
     .hpe-cover__kicker {
-      font-family: var(--hpe-font-mono);
-      font-size: 7pt;
-      letter-spacing: 0.18em;
+      font-size: 7.5pt;
+      letter-spacing: 0.15em;
       text-transform: uppercase;
       color: var(--hpe-accent);
       margin: 0 0 3mm;
     }
     .hpe-cover__headline {
-      font-family: var(--hpe-font-serif);
-      font-size: 26pt;
-      line-height: 1.15;
+      font-size: 22pt;
+      line-height: 1.2;
       font-weight: 700;
-      margin: 0 0 2mm;
-      color: #111;
+      margin: 0 0 3mm;
     }
-    .hpe-cover__headline em {
-      font-style: italic;
-      color: var(--hpe-accent);
-    }
+    .hpe-cover__headline em { font-style: italic; }
     .hpe-cover__body {
-      font-size: 11.5pt;
-      line-height: 1.6;
+      font-size: 11pt;
+      line-height: 1.65;
       color: #333;
-      margin: 3mm 0 0;
-      max-width: 90%;
+      margin: 0 0 3mm;
     }
     .hpe-cover__meta {
-      font-family: var(--hpe-font-mono);
-      font-size: 7pt;
+      font-size: 7.5pt;
       color: #888;
-      letter-spacing: 0.1em;
+      letter-spacing: 0.08em;
       text-transform: uppercase;
-      margin-top: 4mm;
-    }
-    .hpe-cover__hero {
-      width: 100%;
-      max-height: 55mm;
-      object-fit: cover;
-      object-position: center;
-      display: block;
-      margin-bottom: 6mm;
     }
 
-    /* ── Section ── */
-    .hpe-section {
-      margin-bottom: 9mm;
-      page-break-inside: avoid;
-      break-inside: avoid;
-    }
+    /* ── Sections ── */
+    .hpe-section { margin-bottom: 6mm; }
     .hpe-section + .hpe-section {
-      padding-top: 7mm;
+      margin-top: 6mm;
+      padding-top: 5mm;
       border-top: 0.5pt solid #ddd;
     }
-    .hpe-section__num {
-      font-family: var(--hpe-font-mono);
+    .hpe-section__label {
       font-size: 6.5pt;
-      letter-spacing: 0.15em;
-      color: var(--hpe-accent);
+      letter-spacing: 0.18em;
       text-transform: uppercase;
+      color: var(--hpe-accent);
       margin: 0 0 1.5mm;
     }
     .hpe-section__title {
-      font-family: var(--hpe-font-serif);
-      font-size: 17pt;
+      font-size: 15pt;
       font-weight: 700;
-      line-height: 1.2;
+      line-height: 1.25;
       margin: 0 0 3mm;
-      color: #111;
       page-break-after: avoid;
       break-after: avoid;
     }
     .hpe-section__intro {
-      font-size: 11pt;
-      line-height: 1.6;
+      font-size: 10.5pt;
+      line-height: 1.65;
       color: #333;
-      margin: 0 0 4mm;
       font-style: italic;
+      margin: 0 0 3mm;
     }
 
-    /* ── Text blocks ── */
-    .hpe-block { margin: 0 0 3mm; }
-    .hpe-block p, .hpe-block-p { margin: 0 0 2.5mm; }
+    /* ── Body text ── */
+    p { margin: 0 0 2.5mm; }
     .hpe-block-h2 {
-      font-family: var(--hpe-font-serif);
-      font-size: 13pt;
+      font-size: 12pt;
       font-weight: 700;
       margin: 5mm 0 2mm;
       page-break-after: avoid;
       break-after: avoid;
     }
     .hpe-block-h3 {
-      font-family: var(--hpe-font-serif);
-      font-size: 11pt;
+      font-size: 10.5pt;
       font-weight: 600;
       margin: 4mm 0 1.5mm;
       page-break-after: avoid;
       break-after: avoid;
     }
     .hpe-block-h4 {
-      font-family: var(--hpe-font-sans);
       font-size: 9pt;
       font-weight: 600;
-      letter-spacing: 0.06em;
+      letter-spacing: 0.05em;
       text-transform: uppercase;
       margin: 4mm 0 1mm;
     }
-    .hpe-block-blockquote {
-      border-left: 2pt solid var(--hpe-accent);
-      margin: 3mm 0 3mm 3mm;
+    blockquote, .hpe-block-blockquote {
+      margin: 3mm 0 3mm 4mm;
       padding-left: 4mm;
+      border-left: 1.5pt solid #ccc;
       font-style: italic;
-      color: #333;
+      color: #444;
     }
-    .hpe-block--lead { font-size: 11.5pt; line-height: 1.6; }
+    .hpe-block--lead  { font-size: 11pt; }
     .hpe-block--caption { font-size: 8pt; color: #666; }
-    .hpe-block--mono { font-family: var(--hpe-font-mono); font-size: 8.5pt; }
 
-    /* ── Pull quote ── */
-    .hpe-pull-quote {
-      border-left: 2.5pt solid var(--hpe-accent);
-      padding: 1mm 0 1mm 5mm;
-      margin: 4mm 0;
-      page-break-inside: avoid;
-      break-inside: avoid;
-    }
+    /* ── Pull quote — plain italic, no box ── */
+    .hpe-pull-quote { margin: 4mm 0 4mm 4mm; }
     .hpe-pull-quote__text {
-      font-family: var(--hpe-font-serif);
-      font-size: 13pt;
-      line-height: 1.3;
+      font-size: 11pt;
       font-style: italic;
-      margin: 0 0 1.5mm;
+      line-height: 1.45;
     }
     .hpe-pull-quote__attr {
       font-size: 8pt;
       color: #666;
-      font-style: normal;
-    }
-
-    /* ── Stat block ── */
-    .hpe-stats {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 4mm;
-      margin: 4mm 0;
-      page-break-inside: avoid;
-      break-inside: avoid;
-    }
-    .hpe-stat {
-      border-top: 1.5pt solid var(--hpe-accent);
-      padding-top: 2mm;
-      min-width: 28mm;
-      flex: 1;
-    }
-    .hpe-stat__value {
-      font-family: var(--hpe-font-serif);
-      font-size: 20pt;
-      font-weight: 700;
-      line-height: 1;
-      color: var(--hpe-accent);
-    }
-    .hpe-stat__label { font-size: 8pt; color: #555; margin-top: 1mm; }
-
-    /* ── Toggle panels / accordion ── */
-    .hpe-panel { margin: 2mm 0; page-break-inside: avoid; break-inside: avoid; }
-    .hpe-panel__title {
-      font-weight: 600;
-      font-size: 9.5pt;
-      margin: 0 0 1mm;
-      color: var(--hpe-accent);
-    }
-    .hpe-panel__body { font-size: 9.5pt; color: #333; margin: 0 0 2mm; padding-left: 3mm; }
-
-    /* ── Print image ── */
-    .hpe-print-img {
       display: block;
-      width: 100%;
-      max-height: 80mm;
-      object-fit: contain;
-      object-position: left top;
-      margin: 4mm 0;
-      page-break-inside: avoid;
-      break-inside: avoid;
-    }
-    .hpe-print-img__caption {
-      font-size: 7.5pt;
-      color: #777;
-      font-style: italic;
       margin-top: 1mm;
     }
 
-    /* ── Visual-only stub ── */
-    .hpe-visual-stub {
-      color: #999;
-      font-size: 8pt;
-      font-style: italic;
-      margin: 2mm 0 4mm;
-    }
+    /* ── Stats — simple list ── */
+    .hpe-stats { margin: 3mm 0; }
+    .hpe-stat { margin: 0 0 2mm; }
+    .hpe-stat__value { font-weight: 700; font-size: 11pt; }
+    .hpe-stat__label { font-size: 9pt; color: #555; }
+
+    /* ── Panels (accordion / toggle) ── */
+    .hpe-panel { margin: 0 0 2mm; }
+    .hpe-panel__title { font-weight: 600; font-size: 10pt; margin: 0 0 0.5mm; }
+    .hpe-panel__body  { font-size: 9.5pt; color: #333; margin: 0 0 2mm; }
 
     /* ── Footer ── */
     .hpe-print-footer {
-      margin-top: 12mm;
+      margin-top: 10mm;
       padding-top: 3mm;
       border-top: 0.5pt solid #ccc;
-      display: flex;
-      justify-content: space-between;
-      font-family: var(--hpe-font-mono);
       font-size: 7pt;
       color: #aaa;
       letter-spacing: 0.08em;
+      display: flex;
+      justify-content: space-between;
     }
 
     /* ── Screen styles (viewing in browser before printing) ── */
@@ -362,15 +277,10 @@ function renderPrintHead(meta, config, coverData) {
 // ── Cover block ──────────────────────────────────────────────────
 
 function renderPrintCoverBlock(meta, cover) {
-  const heroUrl = cover?.hero_image?.url || cover?.hero_video?.poster || null;
-  const heroHtml = heroUrl
-    ? `<img class="hpe-cover__hero" src="${escHtml(heroUrl)}" alt="${escHtml(cover?.hero_image?.alt || '')}">`
-    : '';
-
-  const kicker = cover?.kicker || meta.kicker || '';
-  const headline = cover?.headline || meta.title || '';
+  const kicker     = cover?.kicker || meta.kicker || '';
+  const headline   = cover?.headline || meta.title || '';
   const headlineEm = cover?.headline_em || '';
-  const body = cover?.body || '';
+  const body       = cover?.body || '';
 
   const dateParts = [];
   if (meta.client) dateParts.push(meta.client);
@@ -381,9 +291,8 @@ function renderPrintCoverBlock(meta, cover) {
   }
 
   return `<header class="hpe-cover">
-  ${heroHtml}
   ${kicker ? `<p class="hpe-cover__kicker">${escHtml(kicker)}</p>` : ''}
-  <h1 class="hpe-cover__headline">${escHtml(headline)}${headlineEm ? `<br><em>${escHtml(headlineEm)}</em>` : ''}</h1>
+  <h1 class="hpe-cover__headline">${escHtml(headline)}${headlineEm ? ` <em>${escHtml(headlineEm)}</em>` : ''}</h1>
   ${body ? `<p class="hpe-cover__body">${escHtml(body)}</p>` : ''}
   ${dateParts.length ? `<p class="hpe-cover__meta">${escHtml(dateParts.join(' · '))}</p>` : ''}
 </header>`;
@@ -395,7 +304,7 @@ function renderPrintSection(section) {
   const layout   = section.layout || 'default';
   const navLabel = section.nav_label || null;
 
-  const numHtml   = navLabel ? `<p class="hpe-section__num">${escHtml(navLabel)}</p>` : '';
+  const numHtml   = navLabel ? `<p class="hpe-section__label">${escHtml(navLabel)}</p>` : '';
   const titleHtml = section.title
     ? `<h2 class="hpe-section__title">${escHtml(section.title)}</h2>` : '';
   const introHtml = section.intro
@@ -404,12 +313,8 @@ function renderPrintSection(section) {
 
   const header = `${numHtml}${titleHtml}${introHtml}`;
 
-  // Visual-only layouts: title + intro only, with a note
-  if (VISUAL_ONLY.has(layout)) {
-    const stub = `<p class="hpe-visual-stub">[Interactive ${layout} section — see online version]</p>`;
-    return header || stub
-      ? `<section class="hpe-section">${header}${stub}</section>` : '';
-  }
+  // Visual-only layouts: skip entirely — no stub note in a clean print doc
+  if (VISUAL_ONLY.has(layout)) return '';
 
   const body = renderPrintSectionBody(section, layout);
   if (!header && !body) return '';
@@ -458,19 +363,9 @@ function renderPrintSectionBody(section, layout) {
     parts.push(renderPrintStickySteps(section.sticky_steps));
   }
 
-  // Fullbleed quote — treat as a pull quote
-  if (layout === 'fullbleed-quote' && section.pull_quote?.text) {
-    // Already handled above via pull_quote
-  }
-
   // Parallax — body text if present
   if (layout === 'parallax' && section.body) {
-    parts.push(`<p class="hpe-block-p">${escHtml(section.body)}</p>`);
-  }
-
-  // Print-flagged hero image
-  if (section.hero_image?.url && section.hero_image?.print_include) {
-    parts.push(renderPrintImage(section.hero_image));
+    parts.push(`<p>${escHtml(section.body)}</p>`);
   }
 
   return parts.filter(Boolean).join('\n');
@@ -528,21 +423,11 @@ function renderPrintStickySteps(steps) {
   return steps.map((s, i) => {
     const title = s.title || `Step ${i + 1}`;
     const body  = s.body || '';
-    const img   = s.image?.print_include ? renderPrintImage(s.image) : '';
     return `<div class="hpe-panel">
   <p class="hpe-panel__title">${escHtml(title)}</p>
   ${body ? `<p class="hpe-panel__body">${escHtml(body)}</p>` : ''}
-  ${img}
 </div>`;
   }).join('\n');
-}
-
-function renderPrintImage(image) {
-  if (!image?.url) return '';
-  return `<figure>
-  <img class="hpe-print-img" src="${escHtml(image.url)}" alt="${escHtml(image.alt || '')}">
-  ${image.caption ? `<figcaption class="hpe-print-img__caption">${escHtml(image.caption)}</figcaption>` : ''}
-</figure>`;
 }
 
 module.exports = { renderPrint };
