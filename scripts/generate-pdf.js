@@ -82,18 +82,39 @@ async function generate() {
     // Let any final layout settle (images, CSS transitions)
     await new Promise(r => setTimeout(r, 800));
 
+    // Read story metadata from embedded <meta> tags for the footer template
+    const storyTitle  = await page.$eval('meta[name="hpdf-title"]',  el => el.content).catch(() => '');
+    const storyClient = await page.$eval('meta[name="hpdf-client"]', el => el.content).catch(() => '');
+
+    // Footer template — rendered by Puppeteer in the bottom margin of every page.
+    // Must use inline styles only (no access to page CSS). Font-size defaults to 0pt.
+    const footerLabel = [storyClient, storyTitle].filter(Boolean).join(' · ');
+    const footerTemplate = `
+      <div style="width:100%;display:flex;justify-content:space-between;align-items:center;
+                  padding:0 16mm;font-size:7pt;color:#aaa;font-family:sans-serif;
+                  letter-spacing:0.06em;">
+        <span style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:130mm;">
+          ${footerLabel.replace(/</g, '&lt;').replace(/>/g, '&gt;')}
+        </span>
+        <span style="white-space:nowrap;flex-shrink:0;">
+          <span class="pageNumber"></span> / <span class="totalPages"></span>
+        </span>
+      </div>`;
+
     console.log('[pdf] Printing…');
 
     await page.pdf({
-      path:            outPath,
-      format:          'A4',
-      landscape:       landscape,
-      printBackground: true,  // required for cover background + header bar colour
-      preferCSSPageSize: true, // honour @page { size: A4 } in CSS
-      margin: { top: 0, right: 0, bottom: 0, left: 0 },
-      // Zero Puppeteer margins — all spacing is owned by the CSS:
-      // Cover: height:297mm fills the page edge-to-edge (full bleed)
-      // Body:  running header + .hpdf-columns padding handle internal margins
+      path:                outPath,
+      format:              'A4',
+      landscape:           landscape,
+      printBackground:     true,   // required for cover background + header bar colour
+      preferCSSPageSize:   true,   // honour @page { size: A4 } in CSS
+      displayHeaderFooter: true,
+      headerTemplate:      '<span></span>',  // required but empty — header handled by CSS
+      footerTemplate,
+      margin: { top: 0, right: 0, bottom: '9mm', left: 0 },
+      // top:0    — cover bleeds to top edge; fixed CSS header handles body pages
+      // bottom:9mm — Puppeteer footer template space (page numbers + title)
     });
 
     const stat = fs.statSync(outPath);
