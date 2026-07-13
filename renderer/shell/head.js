@@ -79,12 +79,24 @@ function renderHead(meta, config, title, basePath, staging, heroImageUrl) {
     ? '<style>\n' + tokenSetCss + '\n</style>'
     : '';
 
+  // OG / social tags
+  const ogTitle       = escHtml(meta.title || '');
+  const ogDescription = escHtml(meta.og_description || '');
+  const ogImage       = escHtml(meta.og_image || heroImageUrl || '');
+  const ogTags = [
+    ogTitle       ? `<meta property="og:title" content="${ogTitle}">` : '',
+    ogDescription ? `<meta property="og:description" content="${ogDescription}">` : '',
+    ogImage       ? `<meta property="og:image" content="${ogImage}">` : '',
+    ogImage       ? `<meta name="twitter:card" content="summary_large_image">` : '',
+  ].filter(Boolean).join('\n  ');
+
   return `<!DOCTYPE html>
 <html lang="${meta.language || 'en'}">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>${escHtml(pageTitle)}</title>
+  ${ogTags}
   ${robotsMeta}
   ${plausibleScript}
   ${pwaThemeColor}

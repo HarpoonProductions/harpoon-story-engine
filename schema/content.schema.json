@@ -58,6 +58,14 @@
           "type": "string",
           "description": "Token set ID from tokens/registry.json. Defaults to 'default'.",
           "default": "default"
+        },
+        "og_description": {
+          "type": "string",
+          "description": "Social sharing description (og:description). One or two sentences."
+        },
+        "og_image": {
+          "type": "string",
+          "description": "Social sharing image URL (og:image). Falls back to cover hero image if blank."
         }
       }
     },

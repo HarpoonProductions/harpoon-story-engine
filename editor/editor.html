@@ -1194,18 +1194,28 @@
                                 </select>
                                 <p class="form-hint">Entrance animation for all headings throughout the story</p>
                             </div>
- 
+
+                            <p class="form-section-title">Social sharing</p>
                             <div class="form-group">
-                                <label class="form-label" for="meta-heading-animation">Heading animation</label>
-                                <select class="form-select" id="meta-heading-animation" data-path="config.heading_animation">
-                                    <option value="none">None</option>
-                                    <option value="fade-up">Fade up</option>
-                                    <option value="fade-down">Fade down</option>
-                                    <option value="fade-left">Fade from left</option>
-                                    <option value="fade-right">Fade from right</option>
-                                    <option value="fade-in">Fade in</option>
-                                </select>
-                                <p class="form-hint">Entrance animation for all headings throughout the story</p>
+                                <label class="form-label" for="meta-og-description">Description</label>
+                                <textarea
+                                    class="form-textarea"
+                                    id="meta-og-description"
+                                    data-path="meta.og_description"
+                                    placeholder="One or two sentences for link previews on social media and messaging apps…"
+                                    rows="3"
+                                ></textarea>
+                                <p class="form-hint">Used for og:description. Keep under 160 characters for best results.</p>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label" for="meta-og-image">Share image URL</label>
+                                <input
+                                    class="form-input"
+                                    id="meta-og-image"
+                                    data-path="meta.og_image"
+                                    placeholder="https://… (leave blank to use cover image)"
+                                />
+                                <p class="form-hint">Shown when the story is shared on social media. Recommended: 1200×630px. Falls back to the cover hero image.</p>
                             </div>
 
                             <p class="form-section-title">Analytics</p>
