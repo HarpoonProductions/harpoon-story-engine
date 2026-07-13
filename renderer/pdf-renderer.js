@@ -305,16 +305,28 @@ function buildHead(meta, fontsLink, tokenSetCss, accent, accent2, reg) {
       column-rule: 0.5pt solid #e0e0e0;
     }
 
-    /* Section headings and pull quotes break out of columns */
-    .hpdf-section { break-inside: avoid-column; }
+    /* ── Column flow rules ──────────────────────────────────────────
+       Only running prose flows in two columns.
+       Everything structural (headers, intros, pull quotes, stats,
+       panels, cards) uses column-span:all to stay full-width.
+    ────────────────────────────────────────────────────────────── */
+
+    /* Section header block — always full-width */
+    .hpdf-section__header {
+      column-span: all;
+      padding-top: 7mm;
+      border-top: 0.5pt solid #ddd;
+      margin-bottom: 0;
+      break-after: avoid;
+    }
+    .hpdf-section__header:first-child { padding-top: 0; border-top: none; }
 
     .hpdf-section__label {
       font-size: 6pt;
       letter-spacing: 0.2em;
       text-transform: uppercase;
       color: var(--hpdf-accent);
-      margin-bottom: 1.5mm;
-      break-after: avoid;
+      margin-bottom: 2mm;
     }
 
     .hpdf-section__title {
@@ -322,45 +334,21 @@ function buildHead(meta, fontsLink, tokenSetCss, accent, accent2, reg) {
       font-size: 14pt;
       font-weight: 700;
       line-height: 1.2;
-      margin-bottom: 3mm;
-      break-after: avoid;
-      column-span: all;
-      padding-top: 6mm;
-      border-top: 0.5pt solid #ddd;
+      margin-bottom: 0;
     }
 
-    .hpdf-section__title:first-child {
-      padding-top: 0;
-      border-top: none;
-    }
-
-    .hpdf-section__label + .hpdf-section__title {
-      padding-top: 0;
-      border-top: none;
-    }
-
-    /* Label always breaks columns when it spans — pull both label + title out */
-    .hpdf-section__header {
-      column-span: all;
-      padding-top: 6mm;
-      border-top: 0.5pt solid #ddd;
-      margin-bottom: 3mm;
-      break-after: avoid;
-    }
-
-    .hpdf-section__header:first-child { padding-top: 0; border-top: none; }
-
+    /* Intro — full-width, italic lead-in */
     .hpdf-section__intro {
+      column-span: all;
       font-size: 10.5pt;
       line-height: 1.65;
       font-style: italic;
       color: #333;
-      column-span: all;
-      margin-bottom: 4mm;
+      margin: 3mm 0 3mm;
       break-after: avoid;
     }
 
-    /* Body text */
+    /* Body prose flows in two columns */
     p { margin-bottom: 2.5mm; }
 
     .hpdf-h2 {
@@ -394,7 +382,7 @@ function buildHead(meta, fontsLink, tokenSetCss, accent, accent2, reg) {
       color: #444;
     }
 
-    /* Pull quotes span both columns */
+    /* Pull quotes — full-width */
     .hpdf-pull-quote {
       column-span: all;
       border-top: 1.5pt solid var(--hpdf-accent);
@@ -418,7 +406,7 @@ function buildHead(meta, fontsLink, tokenSetCss, accent, accent2, reg) {
       display: block;
     }
 
-    /* Stats */
+    /* Stats — full-width flex row */
     .hpdf-stats {
       column-span: all;
       display: flex;
@@ -426,9 +414,7 @@ function buildHead(meta, fontsLink, tokenSetCss, accent, accent2, reg) {
       gap: 4mm;
       margin: 4mm 0;
     }
-
     .hpdf-stat { flex: 1; min-width: 28mm; }
-
     .hpdf-stat__value {
       font-family: var(--hpdf-serif);
       font-size: 22pt;
@@ -436,11 +422,11 @@ function buildHead(meta, fontsLink, tokenSetCss, accent, accent2, reg) {
       line-height: 1;
       color: var(--hpdf-accent);
     }
-
     .hpdf-stat__label { font-size: 8pt; color: #555; margin-top: 1mm; }
 
-    /* Panels / accordion — simple */
-    .hpdf-panel { margin-bottom: 2mm; break-inside: avoid; }
+    /* Panels / cards / accordion — full-width, stacked vertically */
+    .hpdf-panels { column-span: all; margin: 3mm 0; }
+    .hpdf-panel { margin-bottom: 2.5mm; break-inside: avoid; }
     .hpdf-panel__title { font-weight: 600; font-size: 9.5pt; margin-bottom: 0.5mm; }
     .hpdf-panel__body  { font-size: 9pt; color: #333; }
 
@@ -521,7 +507,7 @@ function buildBodyPages(meta, sections, logoUrl, accent, reg) {
   ${logoHtml}
 </div>`;
 
-  const body = sections.map(renderPdfSection).filter(Boolean).join('\n\n');
+  const body = sections.flatMap(s => renderPdfSection(s)).filter(Boolean).join('\n');
 
   if (!body) return '';
 
@@ -534,39 +520,48 @@ ${body}
 }
 
 // ── Section renderer ──────────────────────────────────────────────
+// Elements are emitted FLAT — direct children of .hpdf-columns.
+// This is required for column-span:all to work reliably in Chrome.
+// A .hpdf-section wrapper div traps column-span inside a fragmentation
+// boundary, preventing panels/pull-quotes from escaping to full-width.
 
 function renderPdfSection(section) {
   const navLabel = section.nav_label || null;
   const title    = section.title || '';
   const intro    = section.intro || '';
 
-  // Header block spans both columns
-  const headerHtml = (navLabel || title)
-    ? `<div class="hpdf-section__header">
+  const parts = [];
+
+  // Section header — spans both columns
+  if (navLabel || title) {
+    parts.push(`<div class="hpdf-section__header">
   ${navLabel ? `<p class="hpdf-section__label">${escHtml(navLabel)}</p>` : ''}
   ${title    ? `<h2 class="hpdf-section__title">${escHtml(title)}</h2>` : ''}
-</div>` : '';
+</div>`);
+  }
 
-  const introHtml = intro
-    ? intro.split(/\n\n+/).map(p =>
-        `<p class="hpdf-section__intro">${escHtml(p.trim())}</p>`
-      ).join('') : '';
+  // Intro — spans both columns
+  if (intro) {
+    intro.split(/\n\n+/).forEach(p => {
+      parts.push(`<p class="hpdf-section__intro">${escHtml(p.trim())}</p>`);
+    });
+  }
 
-  const bodyHtml = renderPdfSectionBody(section);
+  // Body content — mix of two-column prose and full-width spanning elements
+  parts.push(...renderPdfSectionBody(section));
 
-  if (!headerHtml && !introHtml && !bodyHtml) return '';
-
-  return `<div class="hpdf-section">
-${headerHtml}${introHtml}
-${bodyHtml}
-</div>`;
+  return parts.filter(Boolean).join('\n');
 }
 
+// Returns an array of HTML strings — each is a direct child of .hpdf-columns.
+// Prose blocks are plain <p>/<h2> etc (flow in columns).
+// Pull quotes, stats, panels use column-span:all (full-width).
 function renderPdfSectionBody(section) {
   const layout = section.layout || 'default';
   const parts  = [];
 
   if (section.blocks?.length) {
+    // Blocks may contain inline headings — emit individually so they flow naturally
     parts.push(renderPdfBlocks(section.blocks));
   }
 
@@ -604,7 +599,7 @@ function renderPdfSectionBody(section) {
     parts.push(`<p>${escHtml(section.body)}</p>`);
   }
 
-  return parts.filter(Boolean).join('\n');
+  return parts.filter(Boolean);
 }
 
 // ── Element renderers ─────────────────────────────────────────────
@@ -640,7 +635,7 @@ function renderPdfStats(stats) {
 }
 
 function renderPdfPanels(panels) {
-  return panels.map(p => {
+  const items = panels.map(p => {
     const title = p.title || p.label || '';
     const body  = p.body  || p.content || '';
     if (!title && !body) return '';
@@ -649,6 +644,7 @@ function renderPdfPanels(panels) {
   ${body  ? `<p class="hpdf-panel__body">${escHtml(body)}</p>`   : ''}
 </div>`;
   }).filter(Boolean).join('\n');
+  return items ? `<div class="hpdf-panels">${items}</div>` : '';
 }
 
 module.exports = { renderPdf };
