@@ -450,7 +450,7 @@ function buildHead(meta, fontsLink, tokenSetCss, accent, accent2, reg) {
       .hpdf-print-header {
         display: flex;
         position: fixed;
-        top: 0; left: 0; right: 0;
+        top: -12mm; left: 0; right: 0;
         height: 12mm;
         z-index: 10;
         background: var(--hpdf-accent);

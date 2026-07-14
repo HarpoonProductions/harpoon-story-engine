@@ -94,7 +94,7 @@ async function generate() {
     // Must use inline styles only (no access to page CSS). Font-size defaults to 0pt.
     const footerLabel = [storyClient, storyTitle].filter(Boolean).join(' · ');
     const footerTemplate = `
-      <div style="width:100%;display:flex;justify-content:space-between;align-items:center;
+      <div id="hpdf-footer" style="width:100%;display:flex;justify-content:space-between;align-items:center;
                   padding:0 16mm;font-size:7pt;color:#aaa;font-family:sans-serif;
                   letter-spacing:0.06em;">
         <span style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:130mm;">
@@ -103,7 +103,15 @@ async function generate() {
         <span style="white-space:nowrap;flex-shrink:0;">
           <span class="pageNumber"></span> / <span class="totalPages"></span>
         </span>
-      </div>`;
+      </div>
+      <script>
+        (function() {
+          var pn = document.querySelector('.pageNumber');
+          if (pn && pn.textContent.trim() === '1') {
+            document.getElementById('hpdf-footer').style.visibility = 'hidden';
+          }
+        })();
+      </script>`;
 
     console.log('[pdf] Printing…');
 
