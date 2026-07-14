@@ -26,7 +26,7 @@ def main():
     out_path = sys.argv[2]
 
     print(f"[tag-pdf] Reading: {in_path}")
-    pdf = pikepdf.open(in_path)
+    pdf = pikepdf.open(in_path, allow_overwriting_input=True)
 
     # ── 1. XMP metadata stream (fixes 7.1-8) ──────────────────────────
     # PDF/UA-1 requires a valid XMP metadata stream in the document catalog.
