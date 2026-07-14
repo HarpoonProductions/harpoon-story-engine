@@ -133,59 +133,6 @@ jobs:
 
           echo "Generated $GENERATED PDF(s)"
 
-      - name: Generate audio
-        env:
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        run: |
-          set -e
-          INPUT_PROJECT="${{ github.event.inputs.project }}"
-          S3_BUCKET="${{ secrets.S3_BUCKET }}"
-          GENERATED=0
-
-          for DIR in dist/*/; do
-            PROJECT_ID=$(basename "$DIR")
-            CONTENT_JSON="projects/${PROJECT_ID}/content.json"
-
-            # Skip if no content (shouldn't happen, but guard)
-            if [ ! -f "$CONTENT_JSON" ]; then continue; fi
-
-            # Check meta.generate_audio flag
-            GENERATE=$(node -e "
-              const c = require('./${CONTENT_JSON}');
-              process.stdout.write(String(!!(c.meta && c.meta.generate_audio)));
-            ")
-            if [ "$GENERATE" != "true" ]; then continue; fi
-
-            # Skip if a specific project was requested and this isn't it
-            if [ -n "$INPUT_PROJECT" ] && [ "$PROJECT_ID" != "$INPUT_PROJECT" ]; then
-              continue
-            fi
-
-            echo "Generating audio: $PROJECT_ID"
-            OUTPUT=$(node scripts/generate-audio.js "$PROJECT_ID" \
-              --content "$CONTENT_JSON" \
-              --bucket "$S3_BUCKET" \
-              --prefix "${PROJECT_ID}/")
-
-            echo "$OUTPUT"
-
-            # Extract S3 key from script output and copy to canonical path
-            POLLY_KEY=$(echo "$OUTPUT" | grep '^AUDIO_S3_KEY=' | cut -d= -f2-)
-            if [ -n "$POLLY_KEY" ]; then
-              aws s3 cp "s3://${S3_BUCKET}/${POLLY_KEY}" \
-                "s3://${S3_BUCKET}/${PROJECT_ID}/story.mp3" \
-                --content-type "audio/mpeg" \
-                --cache-control "public, max-age=300"
-              aws s3 rm "s3://${S3_BUCKET}/${POLLY_KEY}"
-              echo "✓ Audio uploaded: s3://${S3_BUCKET}/${PROJECT_ID}/story.mp3"
-            fi
-
-            GENERATED=$((GENERATED + 1))
-          done
-
-          echo "Generated $GENERATED audio file(s)"
-
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
@@ -257,6 +204,54 @@ jobs:
 
             echo "✓ Deployed: s3://${S3_PATH}"
           done
+
+      - name: Generate audio
+        run: |
+          set -e
+          INPUT_PROJECT="${{ github.event.inputs.project }}"
+          S3_BUCKET="${{ secrets.S3_BUCKET }}"
+          GENERATED=0
+
+          for DIR in dist/*/; do
+            PROJECT_ID=$(basename "$DIR")
+            CONTENT_JSON="projects/${PROJECT_ID}/content.json"
+
+            if [ ! -f "$CONTENT_JSON" ]; then continue; fi
+
+            # Check meta.generate_audio flag
+            GENERATE=$(node -e "
+              const c = require('./${CONTENT_JSON}');
+              process.stdout.write(String(!!(c.meta && c.meta.generate_audio)));
+            ")
+            if [ "$GENERATE" != "true" ]; then continue; fi
+
+            if [ -n "$INPUT_PROJECT" ] && [ "$PROJECT_ID" != "$INPUT_PROJECT" ]; then
+              continue
+            fi
+
+            echo "Generating audio: $PROJECT_ID"
+            OUTPUT=$(node scripts/generate-audio.js "$PROJECT_ID" \
+              --content "$CONTENT_JSON" \
+              --bucket "$S3_BUCKET" \
+              --prefix "${PROJECT_ID}/")
+
+            echo "$OUTPUT"
+
+            # Polly names the file with a UUID — copy to canonical path and remove the original
+            POLLY_KEY=$(echo "$OUTPUT" | grep '^AUDIO_S3_KEY=' | cut -d= -f2-)
+            if [ -n "$POLLY_KEY" ]; then
+              aws s3 cp "s3://${S3_BUCKET}/${POLLY_KEY}" \
+                "s3://${S3_BUCKET}/${PROJECT_ID}/story.mp3" \
+                --content-type "audio/mpeg" \
+                --cache-control "public, max-age=300"
+              aws s3 rm "s3://${S3_BUCKET}/${POLLY_KEY}"
+              echo "✓ Audio: s3://${S3_BUCKET}/${PROJECT_ID}/story.mp3"
+            fi
+
+            GENERATED=$((GENERATED + 1))
+          done
+
+          echo "Generated $GENERATED audio file(s)"
 
       - name: Invalidate CloudFront cache
         run: |
