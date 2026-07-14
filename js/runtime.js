@@ -1472,6 +1472,47 @@
     });
 
     closeBtn.addEventListener('click', closePlayer);
+
+    // ── Analytics ────────────────────────────────────────────────────
+    // Safe wrapper — no-ops if Plausible isn't loaded (preview, editor)
+    function track(event, props) {
+      if (typeof window.plausible === 'function') {
+        window.plausible(event, props ? { props: props } : undefined);
+      }
+    }
+
+    // Fire once on first play
+    var played = false;
+    audio.addEventListener('play', function () {
+      if (!played) { track('Audio Play'); played = true; }
+    });
+
+    // 50% and completion milestones
+    var tracked50 = false, trackedComplete = false;
+    audio.addEventListener('timeupdate', function () {
+      if (!audio.duration) return;
+      var pct = audio.currentTime / audio.duration;
+      if (!tracked50 && pct >= 0.5) {
+        track('Audio 50%');
+        tracked50 = true;
+      }
+    });
+    audio.addEventListener('ended', function () {
+      if (!trackedComplete) { track('Audio Complete'); trackedComplete = true; }
+      audio.currentTime = 0;
+      updatePlayBtn();
+    });
+  })();
+
+  // ── PDF download tracking ──────────────────────────────────────────
+  (function () {
+    var pdfLink = document.querySelector('.hse-nav__pdf-link');
+    if (!pdfLink) return;
+    pdfLink.addEventListener('click', function () {
+      if (typeof window.plausible === 'function') {
+        window.plausible('PDF Download');
+      }
+    });
   })();
 
   // Report which section is nearest the top as the user scrolls
