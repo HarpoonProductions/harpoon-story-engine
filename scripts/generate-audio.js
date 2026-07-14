@@ -89,12 +89,11 @@ async function generate() {
   console.log(`[audio] Task submitted: ${taskId}`);
 
   // Poll until complete (Polly async tasks typically take 10–60s)
-  const outputUri = await poll(polly, taskId);
-  console.log(`[audio] Done — ${outputUri}`);
+  await poll(polly, taskId);
 
-  // Polly names the file <taskId>.mp3 — print the S3 key for CI to rename/move
-  const pollyKey = outputUri.replace(`s3://${bucket}/`, '');
-  console.log(`[audio] S3 key: ${pollyKey}`);
+  // Polly always names the output file <prefix>.<taskId>.mp3
+  const pollyKey = `${prefix}.${taskId}.mp3`;
+  console.log(`[audio] Done — s3://${bucket}/${pollyKey}`);
 
   // Emit a machine-readable line for the CI shell to capture
   console.log(`AUDIO_S3_KEY=${pollyKey}`);
