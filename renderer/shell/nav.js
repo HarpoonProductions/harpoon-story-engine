@@ -74,11 +74,13 @@ function renderNav(meta, sections, registryLogoUrl, basePath) {
   <ul class="hse-nav__links" role="list">
     ${links}
   </ul>
-  ${pdfLink}
-  ${audioBtn}
-  <button class="hse-nav__hamburger" id="hse-nav-hamburger" aria-label="Open menu" aria-expanded="false">
-    <span></span><span></span><span></span>
-  </button>
+  <div class="hse-nav__actions">
+    ${pdfLink}
+    ${audioBtn}
+    <button class="hse-nav__hamburger" id="hse-nav-hamburger" aria-label="Open menu" aria-expanded="false">
+      <span></span><span></span><span></span>
+    </button>
+  </div>
 </nav>
 <div class="hse-nav__mobile-menu" id="hse-nav-mobile-menu" aria-hidden="true">
   <button class="hse-nav__mobile-close" id="hse-nav-mobile-close" aria-label="Close menu">✕</button>

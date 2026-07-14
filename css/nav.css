@@ -214,6 +214,15 @@
   line-height: 1;
 }
 
+/* ── Actions group (pdf + audio + hamburger) ─────────────────────── */
+
+.hse-nav__actions {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  flex-shrink: 0;
+}
+
 /* ── Audio trigger button ────────────────────────────────────────── */
 
 .hse-nav__audio-btn {
