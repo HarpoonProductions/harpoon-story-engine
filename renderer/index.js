@@ -103,7 +103,7 @@ function buildPage(meta, config, cover, sections, basePath, registryLogoUrl) {
 
   const heroImageUrl = coverData.hero_image?.url || coverData.hero_video?.poster || null;
   const head = renderHead(meta, config, null, basePath, false, heroImageUrl);
-  const nav = renderNav(meta, sections, registryLogoUrl);
+  const nav = renderNav(meta, sections, registryLogoUrl, base);
 
   // Legacy cover rendered before <main>; section-based cover renders inside it
   const legacyCoverHtml = coverSection ? "" : renderCover(cover || {});
