@@ -85,6 +85,48 @@ jobs:
             echo "Rendered $RENDERED project(s)"
           fi
 
+      - name: Install Puppeteer system dependencies
+        run: |
+          sudo apt-get update -q
+          sudo apt-get install -y -q \
+            libgbm-dev libasound2t64 libxss1 \
+            libatk1.0-0 libatk-bridge2.0-0 libcups2 libdrm2 \
+            libgtk-3-0 libnspr4 libnss3 libxcomposite1 \
+            libxdamage1 libxrandr2 libxfixes3
+
+      - name: Generate PDFs
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+        run: |
+          set -e
+          INPUT_PROJECT="${{ github.event.inputs.project }}"
+          GENERATED=0
+
+          for DIR in dist/*/; do
+            PROJECT_ID=$(basename "$DIR")
+            PREVIEW_HTML="${DIR}pdf-preview/index.html"
+
+            # Skip if no pdf-preview file (meta.generate_pdf not enabled)
+            if [ ! -f "$PREVIEW_HTML" ]; then
+              continue
+            fi
+
+            # Skip if a specific project was requested and this isn't it
+            if [ -n "$INPUT_PROJECT" ] && [ "$PROJECT_ID" != "$INPUT_PROJECT" ]; then
+              continue
+            fi
+
+            echo "Generating PDF: $PROJECT_ID"
+            node scripts/generate-pdf.js "$PROJECT_ID" \
+              --file "$PREVIEW_HTML" \
+              --out "${DIR}story.pdf"
+
+            GENERATED=$((GENERATED + 1))
+          done
+
+          echo "Generated $GENERATED PDF(s)"
+
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
@@ -142,7 +184,17 @@ jobs:
               --exclude "*.html" \
               --exclude "*.css" \
               --exclude "*.js" \
+              --exclude "*.pdf" \
               --cache-control "public, max-age=86400"
+
+            # PDFs — explicit content-type, no-cache so clients always get the latest
+            if [ -f "${DIR}story.pdf" ]; then
+              aws s3 cp "${DIR}story.pdf" "s3://${S3_PATH}story.pdf" \
+                --content-type "application/pdf" \
+                --content-disposition "inline; filename=\"story.pdf\"" \
+                --cache-control "public, max-age=300"
+              echo "✓ PDF uploaded: s3://${S3_PATH}story.pdf"
+            fi
 
             echo "✓ Deployed: s3://${S3_PATH}"
           done

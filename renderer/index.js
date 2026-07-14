@@ -25,6 +25,7 @@ const { renderSplitReveal }     = require("./layouts/split-reveal");
 const { renderTwoColumn }       = require("./layouts/two-column");
 const { renderCoverLayout }     = require("./layouts/cover");
 const { renderPrint }           = require("./print-renderer");
+const { renderPdf }             = require("./pdf-renderer");
 
 /**
  * Top-level render function.
@@ -65,14 +66,27 @@ function render(content, outputDir, options) {
   const outPath = path.join(outputDir, "index.html");
   fs.writeFileSync(outPath, html, "utf8");
 
-  // Generate print version alongside the main HTML
+  // Track 1 — print version (always generated)
   const printHtml = renderPrint(content);
   const printDir  = path.join(outputDir, "print");
   fs.mkdirSync(printDir, { recursive: true });
   const printPath = path.join(printDir, "index.html");
   fs.writeFileSync(printPath, printHtml, "utf8");
 
-  return [outPath, printPath];
+  const written = [outPath, printPath];
+
+  // Track 2 — PDF preview HTML (only when meta.generate_pdf is true)
+  // Puppeteer loads this file in CI to produce story.pdf
+  if (meta.generate_pdf) {
+    const pdfHtml        = renderPdf(content);
+    const pdfPreviewDir  = path.join(outputDir, "pdf-preview");
+    fs.mkdirSync(pdfPreviewDir, { recursive: true });
+    const pdfPreviewPath = path.join(pdfPreviewDir, "index.html");
+    fs.writeFileSync(pdfPreviewPath, pdfHtml, "utf8");
+    written.push(pdfPreviewPath);
+  }
+
+  return written;
 }
 
 // ── Page assembly ─────────────────────────────────────────────────

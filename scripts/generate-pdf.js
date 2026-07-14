@@ -34,6 +34,7 @@ if (!args.length || args[0].startsWith('--')) {
 const projectId  = args[0];
 const port       = getArg('--port', '3001');
 const landscape  = args.includes('--landscape');
+const filePath   = getArg('--file', null);   // local file path for CI (no server needed)
 const defaultOut = path.join(process.cwd(), '.pdf-output', `${projectId}.pdf`);
 const outPath    = getArg('--out', defaultOut);
 
@@ -42,11 +43,14 @@ function getArg(flag, fallback) {
   return i !== -1 && args[i + 1] ? args[i + 1] : fallback;
 }
 
+// Build the URL to load — file:// in CI, http:// locally
+const url = filePath
+  ? `file://${path.resolve(filePath)}`
+  : `http://localhost:${port}/pdf-preview/${projectId}`;
+
 // ── Main ──────────────────────────────────────────────────────────
 
 async function generate() {
-  const url = `http://localhost:${port}/pdf-preview/${projectId}`;
-
   // Ensure output directory exists
   fs.mkdirSync(path.dirname(outPath), { recursive: true });
 

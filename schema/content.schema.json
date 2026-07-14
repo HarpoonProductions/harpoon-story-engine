@@ -59,6 +59,11 @@
           "description": "Token set ID from tokens/registry.json. Defaults to 'default'.",
           "default": "default"
         },
+        "generate_pdf": {
+          "type": "boolean",
+          "description": "Generate a publication-quality PDF at deploy time. PDF is uploaded to S3 and linked from the story nav.",
+          "default": false
+        },
         "og_description": {
           "type": "string",
           "description": "Social sharing description (og:description). One or two sentences."
