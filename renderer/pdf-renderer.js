@@ -58,15 +58,13 @@ function renderPdf(content) {
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=DM+Sans:wght@300;400;500&family=DM+Mono:wght@400&display=swap" rel="stylesheet">`;
 
-  const logoUrl     = meta.logo_url || registryEntry.logo_url || null;
-  const head        = buildHead(meta, fontsLink, tokenSetCss, accent, accent2, registryEntry);
-  const printHeader = buildPrintHeader(meta, logoUrl);
-  const coverHtml   = buildCoverPage(meta, coverData, logoUrl, accent);
-  const bodyHtml    = buildBodyPages(meta, bodySections, logoUrl, accent, registryEntry);
+  const logoUrl  = meta.logo_url || registryEntry.logo_url || null;
+  const head     = buildHead(meta, fontsLink, tokenSetCss, accent, accent2, registryEntry);
+  const coverHtml = buildCoverPage(meta, coverData, logoUrl, accent);
+  const bodyHtml  = buildBodyPages(meta, bodySections, logoUrl, accent, registryEntry);
 
   return `${head}
 <body>
-${printHeader}
 ${coverHtml}
 ${bodyHtml}
 </body>
@@ -83,6 +81,7 @@ function buildHead(meta, fontsLink, tokenSetCss, accent, accent2, reg) {
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="hpdf-title"  content="${escHtml(meta.title  || '')}">
   <meta name="hpdf-client" content="${escHtml(meta.client || '')}">
+  <meta name="hpdf-accent" content="${escHtml(accent || '#1a3a5c')}">
   <title>${escHtml(meta.title || '')} — PDF</title>
   ${fontsLink}
   <style>
@@ -437,77 +436,16 @@ function buildHead(meta, fontsLink, tokenSetCss, accent, accent2, reg) {
     .hpdf-panel__title { font-weight: 600; font-size: 9.5pt; margin-bottom: 0.5mm; }
     .hpdf-panel__body  { font-size: 9pt; color: #333; }
 
-    /* ── Print: fixed running header repeats on every body page ── */
+    /* ── Print ── */
     @media print {
       .hpdf-page  { width: 210mm; margin: 0; box-shadow: none; }
       .hpdf-cover { page-break-after: always; break-after: page; }
       .hpdf-body  { page-break-after: auto;   break-after: auto; }
-
-      /* Cover sits on top of the fixed header on page 1 */
-      .hpdf-cover { position: relative; z-index: 999; }
-
-      /* Fixed header — invisible on screen, repeats on every print page */
-      .hpdf-print-header {
-        display: flex;
-        position: fixed;
-        top: -12mm; left: 0; right: 0;
-        height: 12mm;
-        z-index: 10;
-        background: var(--hpdf-accent);
-        color: white;
-        align-items: center;
-        justify-content: space-between;
-        padding: 0 16mm;
-        gap: 4mm;
-      }
-      .hpdf-print-header__title {
-        font-family: var(--hpdf-mono);
-        font-size: 6pt;
-        letter-spacing: 0.16em;
-        text-transform: uppercase;
-        opacity: 0.9;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-      }
-      .hpdf-print-header__client {
-        font-family: var(--hpdf-mono);
-        font-size: 6pt;
-        letter-spacing: 0.1em;
-        text-transform: uppercase;
-        opacity: 0.6;
-        white-space: nowrap;
-        flex-shrink: 0;
-      }
-      .hpdf-print-header__logo {
-        height: 5mm;
-        width: auto;
-        object-fit: contain;
-        opacity: 0.85;
-        filter: brightness(0) invert(1);
-        flex-shrink: 0;
-      }
-
-      /* No padding-top needed — @page margin-top:12mm reserves header space on every page */
+      /* Running header is screen-only; Puppeteer headerTemplate handles print */
+      .hpdf-running-header { display: none; }
     }
-
-    /* Hidden on screen — only rendered in @media print above */
-    @media screen { .hpdf-print-header { display: none; } }
   </style>
 </head>`;
-}
-
-// ── Fixed print header (repeats every page via position:fixed) ────
-
-function buildPrintHeader(meta, logoUrl) {
-  const logoHtml = logoUrl
-    ? `<img class="hpdf-print-header__logo" src="${escHtml(logoUrl)}" alt="">`
-    : '';
-  return `<div class="hpdf-print-header" aria-hidden="true">
-  <span class="hpdf-print-header__title">${escHtml(meta.title || '')}</span>
-  ${meta.client ? `<span class="hpdf-print-header__client">${escHtml(meta.client)}</span>` : ''}
-  ${logoHtml}
-</div>`;
 }
 
 // ── Cover page ────────────────────────────────────────────────────

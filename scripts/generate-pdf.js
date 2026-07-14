@@ -86,32 +86,63 @@ async function generate() {
     // Let any final layout settle (images, CSS transitions)
     await new Promise(r => setTimeout(r, 800));
 
-    // Read story metadata from embedded <meta> tags for the footer template
+    // Read story metadata from embedded <meta> tags
     const storyTitle  = await page.$eval('meta[name="hpdf-title"]',  el => el.content).catch(() => '');
     const storyClient = await page.$eval('meta[name="hpdf-client"]', el => el.content).catch(() => '');
+    const accentColor = await page.$eval('meta[name="hpdf-accent"]', el => el.content).catch(() => '#1a3a5c');
 
-    // Footer template — rendered by Puppeteer in the bottom margin of every page.
-    // Must use inline styles only (no access to page CSS). Font-size defaults to 0pt.
+    // Escape helper for template strings
+    const esc = s => s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+
+    // Suppress-on-page-1 script — uses MutationObserver because Puppeteer injects
+    // the pageNumber text asynchronously after the template renders.
+    const suppressOnPage1 = (elId) => `
+      <script>
+        (function() {
+          var el = document.getElementById('${elId}');
+          var pn = document.querySelector('.pageNumber');
+          if (!el || !pn) return;
+          var check = function() {
+            if (pn.textContent.trim() === '1') el.style.visibility = 'hidden';
+          };
+          check();
+          new MutationObserver(check).observe(pn, { childList: true, characterData: true, subtree: true });
+        })();
+      </script>`;
+
+    // Header template — Puppeteer renders this in the top margin of every page.
+    // Must use inline styles only. Hidden on page 1 (cover is full-bleed).
+    const headerTemplate = `
+      <div id="hpdf-hdr" style="width:100%;height:12mm;display:flex;align-items:center;
+           justify-content:space-between;padding:0 16mm;box-sizing:border-box;
+           background:${accentColor};color:white;font-family:sans-serif;font-size:0;">
+        <span style="font-size:6pt;letter-spacing:0.16em;text-transform:uppercase;
+                     opacity:0.9;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+                     max-width:140mm;">
+          ${esc(storyTitle)}
+        </span>
+        <span style="font-size:6pt;letter-spacing:0.1em;text-transform:uppercase;
+                     opacity:0.6;white-space:nowrap;flex-shrink:0;">
+          ${esc(storyClient)}
+        </span>
+      </div>
+      ${suppressOnPage1('hpdf-hdr')}`;
+
+    // Footer template — page numbers in the bottom margin of every page.
+    // Also hidden on page 1.
     const footerLabel = [storyClient, storyTitle].filter(Boolean).join(' · ');
     const footerTemplate = `
-      <div id="hpdf-footer" style="width:100%;display:flex;justify-content:space-between;align-items:center;
-                  padding:0 16mm;font-size:7pt;color:#aaa;font-family:sans-serif;
-                  letter-spacing:0.06em;">
+      <div id="hpdf-ftr" style="width:100%;display:flex;justify-content:space-between;
+           align-items:center;padding:0 16mm;font-size:7pt;color:#aaa;font-family:sans-serif;
+           letter-spacing:0.06em;box-sizing:border-box;">
         <span style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:130mm;">
-          ${footerLabel.replace(/</g, '&lt;').replace(/>/g, '&gt;')}
+          ${esc(footerLabel)}
         </span>
         <span style="white-space:nowrap;flex-shrink:0;">
           <span class="pageNumber"></span> / <span class="totalPages"></span>
         </span>
       </div>
-      <script>
-        (function() {
-          var pn = document.querySelector('.pageNumber');
-          if (pn && pn.textContent.trim() === '1') {
-            document.getElementById('hpdf-footer').style.visibility = 'hidden';
-          }
-        })();
-      </script>`;
+      ${suppressOnPage1('hpdf-ftr')}`;
 
     console.log('[pdf] Printing…');
 
@@ -119,14 +150,12 @@ async function generate() {
       path:                outPath,
       format:              'A4',
       landscape:           landscape,
-      printBackground:     true,   // required for cover background + header bar colour
-      preferCSSPageSize:   true,   // honour @page { size: A4 } in CSS
+      printBackground:     true,
+      preferCSSPageSize:   true,
       displayHeaderFooter: true,
-      headerTemplate:      '<span></span>',  // required but empty — header handled by CSS
+      headerTemplate,
       footerTemplate,
       margin: { top: '12mm', right: 0, bottom: '9mm', left: 0 },
-      // top:12mm   — matches @page margin-top; @page :first overrides to 0 for cover
-      // bottom:9mm — Puppeteer footer template space (page numbers + title)
     });
 
     const stat = fs.statSync(outPath);
