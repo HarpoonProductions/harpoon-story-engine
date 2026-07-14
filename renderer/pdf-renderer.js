@@ -113,7 +113,7 @@ function buildHead(meta, fontsLink, tokenSetCss, accent, accent2, reg) {
        :first removes the top margin on page 1 so the cover stays full-bleed;
        the fixed header's z-index is lower than the cover's so it's hidden there. */
     @page         { size: A4 portrait; margin: 12mm 0 9mm; }
-    @page :first  { margin-top: 0; }
+    @page :first  { margin-top: 0; margin-bottom: 0; }
 
     html {
       font-family: var(--hpdf-sans);

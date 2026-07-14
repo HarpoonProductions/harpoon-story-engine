@@ -94,26 +94,11 @@ async function generate() {
     // Escape helper for template strings
     const esc = s => s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 
-    // Suppress-on-page-1 script — uses MutationObserver because Puppeteer injects
-    // the pageNumber text asynchronously after the template renders.
-    const suppressOnPage1 = (elId) => `
-      <script>
-        (function() {
-          var el = document.getElementById('${elId}');
-          var pn = document.querySelector('.pageNumber');
-          if (!el || !pn) return;
-          var check = function() {
-            if (pn.textContent.trim() === '1') el.style.visibility = 'hidden';
-          };
-          check();
-          new MutationObserver(check).observe(pn, { childList: true, characterData: true, subtree: true });
-        })();
-      </script>`;
-
-    // Header template — Puppeteer renders this in the top margin of every page.
-    // Must use inline styles only. Hidden on page 1 (cover is full-bleed).
+    // Header template — Puppeteer renders this in the top 12mm margin of every page.
+    // Must use inline styles only. Page 1 (cover) has margin-top:0 via @page :first
+    // so no header space exists there — no JS suppression needed.
     const headerTemplate = `
-      <div id="hpdf-hdr" style="width:100%;height:12mm;display:flex;align-items:center;
+      <div style="width:100%;height:12mm;display:flex;align-items:center;
            justify-content:space-between;padding:0 16mm;box-sizing:border-box;
            background:${accentColor};color:white;font-family:sans-serif;font-size:0;">
         <span style="font-size:6pt;letter-spacing:0.16em;text-transform:uppercase;
@@ -125,14 +110,14 @@ async function generate() {
                      opacity:0.6;white-space:nowrap;flex-shrink:0;">
           ${esc(storyClient)}
         </span>
-      </div>
-      ${suppressOnPage1('hpdf-hdr')}`;
+      </div>`;
 
-    // Footer template — page numbers in the bottom margin of every page.
-    // Also hidden on page 1.
+    // Footer template — page numbers in the bottom margin of body pages.
+    // Page 1 (cover) has margin-bottom:0 via @page :first so the footer has
+    // no space to render there — no JS suppression needed.
     const footerLabel = [storyClient, storyTitle].filter(Boolean).join(' · ');
     const footerTemplate = `
-      <div id="hpdf-ftr" style="width:100%;display:flex;justify-content:space-between;
+      <div style="width:100%;display:flex;justify-content:space-between;
            align-items:center;padding:0 16mm;font-size:7pt;color:#aaa;font-family:sans-serif;
            letter-spacing:0.06em;box-sizing:border-box;">
         <span style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:130mm;">
@@ -141,8 +126,7 @@ async function generate() {
         <span style="white-space:nowrap;flex-shrink:0;">
           <span class="pageNumber"></span> / <span class="totalPages"></span>
         </span>
-      </div>
-      ${suppressOnPage1('hpdf-ftr')}`;
+      </div>`;
 
     console.log('[pdf] Printing…');
 
