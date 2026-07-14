@@ -54,7 +54,7 @@ function buildAudioScript(content) {
   // Headline
   const fullHeadline = headlineEm ? `${title} ${headlineEm}` : title;
   if (fullHeadline) {
-    parts.push(`<p><prosody rate="90%" pitch="+2%">${x(fullHeadline)}</prosody></p>`);
+    parts.push(`<p><prosody rate="85%">${x(fullHeadline)}</prosody></p>`);
     parts.push(`<break time="600ms"/>`);
   }
 
@@ -82,7 +82,7 @@ function buildAudioScript(content) {
     // Crosshead
     const crosshead = section.nav_label || section.title || '';
     if (crosshead) {
-      sectionParts.push(`<p><prosody rate="95%" pitch="+1%"><emphasis level="moderate">${x(crosshead)}</emphasis></prosody></p>`);
+      sectionParts.push(`<p><prosody rate="90%">${x(crosshead)}</prosody></p>`);
       sectionParts.push(`<break time="500ms"/>`);
     }
 
@@ -107,7 +107,7 @@ function buildAudioScript(content) {
     // Panels layout — title + body per panel, skip images
     if (PANELS_LAYOUT.has(section.layout) && section.panels) {
       for (const panel of section.panels) {
-        if (panel.title) sectionParts.push(`<p><emphasis level="moderate">${x(panel.title)}</emphasis></p>`);
+        if (panel.title) sectionParts.push(`<p><prosody rate="90%">${x(panel.title)}</prosody></p>`);
         if (panel.body)  sectionParts.push(`<p>${x(stripHtml(panel.body))}</p>`);
       }
     }
