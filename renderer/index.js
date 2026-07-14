@@ -133,7 +133,7 @@ ${sectionsHtml}
 
 </main>
 
-<footer class="hse-footer" role="contentinfo">
+<footer class="hse-footer">
   <span class="hse-footer__brand">${esc(meta.title)}</span>
   <span class="hse-footer__credit">Produced with the Harpoon Story Engine</span>
 </footer>
@@ -159,8 +159,7 @@ ${sectionsHtml}
   font-family: var(--hse-font-mono);
   font-size: 0.6rem;
   letter-spacing: 0.12em;
-  color: var(--hse-warm-3);
-  opacity: 0.5;
+  color: var(--hse-warm-2);
 }
 </style>
 

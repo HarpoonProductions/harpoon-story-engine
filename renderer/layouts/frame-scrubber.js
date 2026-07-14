@@ -45,6 +45,7 @@ function renderFrameScrubber(section) {
 
   <div class="hse-fs__sticky">
     <canvas class="hse-fs__canvas"
+            role="img"
             aria-label="${escHtml(section.title || 'Animated sequence')}"></canvas>
 
     <div class="hse-fs__gradient" aria-hidden="true"></div>

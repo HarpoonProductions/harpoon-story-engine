@@ -166,18 +166,42 @@
     var menu      = document.getElementById("hse-nav-mobile-menu");
     var closeBtn  = document.getElementById("hse-nav-mobile-close");
     if (hamburger && menu) {
+      var focusableSelectors = 'a[href], button:not([disabled]), [tabindex]:not([tabindex="-1"])';
+
       function openMenu() {
         menu.classList.add("is-open");
         menu.setAttribute("aria-hidden", "false");
         hamburger.setAttribute("aria-expanded", "true");
         document.body.style.overflow = "hidden";
+        // Move focus into the menu and trap it there
+        var first = menu.querySelector(focusableSelectors);
+        if (first) first.focus();
       }
+
       function closeMenu() {
         menu.classList.remove("is-open");
         menu.setAttribute("aria-hidden", "true");
         hamburger.setAttribute("aria-expanded", "false");
         document.body.style.overflow = "";
+        hamburger.focus();
       }
+
+      // Focus trap: keep Tab / Shift+Tab inside the open menu
+      menu.addEventListener("keydown", function (e) {
+        if (!menu.classList.contains("is-open")) return;
+        if (e.key === "Escape") { closeMenu(); return; }
+        if (e.key !== "Tab") return;
+        var focusable = Array.prototype.slice.call(menu.querySelectorAll(focusableSelectors));
+        if (!focusable.length) return;
+        var first = focusable[0];
+        var last  = focusable[focusable.length - 1];
+        if (e.shiftKey) {
+          if (document.activeElement === first) { e.preventDefault(); last.focus(); }
+        } else {
+          if (document.activeElement === last)  { e.preventDefault(); first.focus(); }
+        }
+      });
+
       hamburger.addEventListener("click", openMenu);
       if (closeBtn) closeBtn.addEventListener("click", closeMenu);
       menu.querySelectorAll("a").forEach(function (a) {
