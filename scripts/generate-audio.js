@@ -55,10 +55,8 @@ async function generate() {
   const content = JSON.parse(fs.readFileSync(contentPath, 'utf8'));
   const meta    = content.meta || {};
 
-  const voice = meta.audio_voice || 'Amy';
-  // Neural async synthesis is only available in specific regions.
-  // eu-west-1 (Ireland) is the nearest region that supports it.
-  const region = process.env.POLLY_REGION || 'eu-west-1';
+  const voice  = meta.audio_voice || 'Amy';
+  const region = process.env.AWS_REGION || process.env.AWS_DEFAULT_REGION || 'eu-west-2';
 
   console.log(`[audio] Project: ${projectId}`);
   console.log(`[audio] Voice:   ${voice} (neural)`);
