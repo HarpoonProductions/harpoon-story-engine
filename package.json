@@ -21,6 +21,7 @@
   "author": "Harpoon Productions Ltd",
   "license": "UNLICENSED",
   "dependencies": {
+    "@aws-sdk/client-polly": "^3.1086.0",
     "@aws-sdk/client-s3": "^3.1046.0",
     "@aws-sdk/lib-storage": "^3.1046.0",
     "@supabase/supabase-js": "^2.106.1",

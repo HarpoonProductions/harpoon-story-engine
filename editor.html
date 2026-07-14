@@ -984,6 +984,45 @@
                                     >Generate publication PDF at deploy time</label
                                 >
                             </div>
+
+                            <p class="form-section-title">Audio</p>
+                            <div class="form-group form-group--checkbox">
+                                <input
+                                    type="checkbox"
+                                    class="form-checkbox"
+                                    id="meta-generate-audio"
+                                    data-path="meta.generate_audio"
+                                />
+                                <label class="form-label" for="meta-generate-audio"
+                                    >Generate narrated audio at deploy time</label
+                                >
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label" for="meta-audio-voice">Voice</label>
+                                <select
+                                    class="form-input"
+                                    id="meta-audio-voice"
+                                    data-path="meta.audio_voice"
+                                >
+                                    <option value="Amy">Amy (British, female)</option>
+                                    <option value="Brian">Brian (British, male)</option>
+                                    <option value="Joanna">Joanna (American, female)</option>
+                                    <option value="Matthew">Matthew (American, male)</option>
+                                    <option value="Lucia">Lucia (Spanish, female)</option>
+                                    <option value="Lupe">Lupe (US Spanish, female)</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label" for="meta-audio-url">Human narration URL</label>
+                                <input
+                                    type="url"
+                                    class="form-input"
+                                    id="meta-audio-url"
+                                    data-path="meta.audio_url"
+                                    placeholder="https://…/narration.mp3"
+                                />
+                                <p class="form-hint">If set, this MP3 is used instead of generated audio.</p>
+                            </div>
                         </div>
 
                         <!-- Cover tab -->

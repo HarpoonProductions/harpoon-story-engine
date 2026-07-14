@@ -64,6 +64,21 @@
           "description": "Generate a publication-quality PDF at deploy time. PDF is uploaded to S3 and linked from the story nav.",
           "default": false
         },
+        "generate_audio": {
+          "type": "boolean",
+          "description": "Generate a narrated MP3 audio version at deploy time using AWS Polly.",
+          "default": false
+        },
+        "audio_voice": {
+          "type": "string",
+          "description": "AWS Polly neural voice ID for audio generation. Defaults to Amy (British English).",
+          "enum": ["Amy", "Brian", "Joanna", "Matthew", "Lucia", "Lupe"],
+          "default": "Amy"
+        },
+        "audio_url": {
+          "type": "string",
+          "description": "URL of a human-recorded narration audio file. If set, this is used instead of the generated audio."
+        },
         "og_description": {
           "type": "string",
           "description": "Social sharing description (og:description). One or two sentences."
