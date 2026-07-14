@@ -116,9 +116,9 @@ def main():
         raw = b''
         if isinstance(cs, pikepdf.Array):
             for s in cs:
-                raw += s.read_raw_bytes()
+                raw += s.read_bytes()
         else:
-            raw = cs.read_raw_bytes()
+            raw = cs.read_bytes()
 
         # If the page content has no BMC/BDC markers at all, the entire
         # page is untagged — wrap it in an Artifact marked-content sequence.
