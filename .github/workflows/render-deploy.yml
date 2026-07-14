@@ -94,6 +94,9 @@ jobs:
             libgtk-3-0 libnspr4 libnss3 libxcomposite1 \
             libxdamage1 libxrandr2 libxfixes3
 
+      - name: Install Python dependencies
+        run: pip install -r requirements.txt --quiet
+
       - name: Generate PDFs
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
@@ -121,6 +124,9 @@ jobs:
             node scripts/generate-pdf.js "$PROJECT_ID" \
               --file "$PREVIEW_HTML" \
               --out "${DIR}story.pdf"
+
+            echo "Post-processing for PDF/UA-1 accessibility: $PROJECT_ID"
+            python3 scripts/tag-pdf.py "${DIR}story.pdf" "${DIR}story.pdf"
 
             GENERATED=$((GENERATED + 1))
           done
