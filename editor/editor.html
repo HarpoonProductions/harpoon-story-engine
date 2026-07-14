@@ -262,6 +262,18 @@
             .form-group {
                 margin-bottom: 0.85rem;
             }
+            .form-group--checkbox {
+                display: flex;
+                align-items: center;
+                gap: 0.5rem;
+            }
+            .form-group--checkbox .form-label {
+                margin-bottom: 0;
+            }
+            .form-checkbox {
+                flex-shrink: 0;
+                accent-color: var(--accent);
+            }
             .form-label {
                 display: block;
                 font-family: var(--font-mono);
@@ -1267,6 +1279,19 @@
                                     data-path="config.analytics.plausible_domain"
                                     placeholder="project.harpoon.productions"
                                 />
+                            </div>
+
+                            <p class="form-section-title">PDF</p>
+                            <div class="form-group form-group--checkbox">
+                                <input
+                                    type="checkbox"
+                                    class="form-checkbox"
+                                    id="meta-generate-pdf"
+                                    data-path="meta.generate_pdf"
+                                />
+                                <label class="form-label" for="meta-generate-pdf"
+                                    >Generate publication PDF at deploy time</label
+                                >
                             </div>
                         </div>
 
