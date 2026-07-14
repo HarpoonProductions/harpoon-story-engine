@@ -127,22 +127,43 @@
   max-width: 480px;
 }
 
-/* ── Mobile: stack vertically ────────────────────────────────────── */
+/* ── Mobile ───────────────────────────────────────────────────────── */
 
 @media (max-width: 768px) {
   .hse-ss__body {
     grid-template-columns: 1fr;
+    gap: 0;
+    padding: 0;
+  }
+
+  /* Visual stays sticky at the top so the image remains in view as steps scroll */
+  .hse-ss__visual-col {
+    position: sticky;
+    top: 60px; /* clear nav */
+    z-index: 1;
   }
 
   .hse-ss__visual {
     position: relative;
     top: auto;
-    height: 280px;
+    height: 42vw;
+    min-height: 220px;
+    max-height: 320px;
   }
 
+  .hse-ss__text-col {
+    padding: var(--hse-space-md) var(--hse-page-pad) var(--hse-space-xl);
+  }
+
+  /* Each step tall enough that scrolling through it feels deliberate */
   .hse-ss__step {
-    min-height: auto;
+    min-height: 60vh;
     opacity: 1;
-    padding: var(--hse-space-md) 0;
+    padding: var(--hse-space-lg) 0;
+  }
+
+  /* Active step stands out; inactive ones are dimmed */
+  .hse-ss__step:not(.is-active) {
+    opacity: 0.4;
   }
 }

@@ -4,6 +4,9 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Test Nation</title>
+  <meta property="og:title" content="Test Nation">
+  <meta property="og:image" content="https://stories.har.pn/cricket-test-nation-2026/images/AdobeStock_247707715.jpeg-hpn2560.jpg">
+  <meta name="twitter:card" content="summary_large_image">
   
   <script defer data-domain="cricket-test-nation-2026.harpoon.productions" src="https://analytics.harpoonproductions.com/js/script.js"></script>
   <meta name="theme-color" content="#001A3D">
@@ -13,9 +16,13 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,700;1,400;1,500&family=DM+Sans:wght@300;400;500&family=DM+Mono:wght@400&display=swap" rel="stylesheet">
 
-  <!-- GSAP + ScrollTrigger -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+  <!-- Preload hero image so LCP fires as early as possible -->
+  <link rel="preload" as="image" href="https://stories.har.pn/cricket-test-nation-2026/images/AdobeStock_247707715.jpeg-hpn2560.jpg">
+
+  <!-- GSAP + ScrollTrigger + runtime (deferred — does not block first paint) -->
+  <script defer src="js/vendor/gsap.min.js"></script>
+  <script defer src="js/vendor/ScrollTrigger.min.js"></script>
+  <script defer src="js/runtime.js"></script>
 
   <!-- Story Engine styles -->
   <link rel="stylesheet" href="css/tokens.css">
@@ -67,6 +74,14 @@
   <link rel="stylesheet" href="css/layouts/parallax.css">
   <link rel="stylesheet" href="css/layouts/fullbleed-quote.css">
   <link rel="stylesheet" href="css/layouts/reveal-crossfade.css">
+  <link rel="stylesheet" href="css/layouts/panoramic-scroll.css">
+  <link rel="stylesheet" href="css/layouts/cinema-reveal.css">
+  <link rel="stylesheet" href="css/layouts/frame-scrubber.css">
+  <link rel="stylesheet" href="css/layouts/split-reveal.css">
+  <link rel="stylesheet" href="css/layouts/two-column.css">
+
+  <!-- Print stylesheet — media=print so it never affects screen rendering -->
+  <link rel="stylesheet" href="css/print.css" media="print">
 
   <!-- Per-project brand tokens -->
   <style>
@@ -83,7 +98,7 @@
 <div id="hse-progress" role="presentation" aria-hidden="true"></div>
 
 <nav id="hse-nav" aria-label="Publication sections">
-  <a class="hse-nav__brand" href="#hse-cover">Test Nation</a>
+  <a class="hse-nav__brand" href="#hse-cover"><img class="hse-nav__logo" src="https://assets.ecb.co.uk/logo/ecb-white.svg" alt="Test Nation"></a>
   <ul class="hse-nav__links" role="list">
     <li><a href="#opening">Opening</a></li>
       <li><a href="#bazball">Bazball</a></li>
@@ -93,10 +108,35 @@
       <li><a href="#voices">Voices</a></li>
       <li><a href="#briefing">Briefing</a></li>
   </ul>
+  
+  <button class="hse-nav__hamburger" id="hse-nav-hamburger" aria-label="Open menu" aria-expanded="false">
+    <span></span><span></span><span></span>
+  </button>
 </nav>
+<div class="hse-nav__mobile-menu" id="hse-nav-mobile-menu" aria-hidden="true">
+  <button class="hse-nav__mobile-close" id="hse-nav-mobile-close" aria-label="Close menu">✕</button>
+  <ul role="list">
+    <li><a href="#opening">Opening</a></li>
+      <li><a href="#bazball">Bazball</a></li>
+      <li><a href="#the-ashes">The Ashes</a></li>
+      <li><a href="#womens-cricket">Women's Cricket</a></li>
+      <li><a href="#county-game">County Cricket</a></li>
+      <li><a href="#voices">Voices</a></li>
+      <li><a href="#briefing">Briefing</a></li>
+  </ul>
+</div>
+
+<div id="hse-print-header" aria-hidden="true" style="display:none">
+  <img class="hse-print-header__img" src="https://stories.har.pn/cricket-test-nation-2026/images/AdobeStock_247707715.jpeg-hpn2560.jpg" alt="">
+  <div class="hse-print-header__content">
+    
+    <h1 class="hse-print-header__title">Test Nation</h1>
+    <p class="hse-print-header__meta">England and Wales Cricket Board · 1 April 2026</p>
+  </div>
+</div>
 
 <section id="hse-cover">
-  <video class="hse-cover__bg-video" autoplay muted loop playsinline poster="https://stories.har.pn/cricket-test-nation-2026/images/AdobeStock_247707715.jpeg-hpn2560.jpg">
+  <img class="hse-cover__bg-img hse-cover__bg-poster" src="https://stories.har.pn/cricket-test-nation-2026/images/AdobeStock_247707715.jpeg-hpn2560.jpg" alt="" aria-hidden="true"><video class="hse-cover__bg-video" autoplay muted loop playsinline poster="https://stories.har.pn/cricket-test-nation-2026/images/AdobeStock_247707715.jpeg-hpn2560.jpg">
     <source src="https://stories.har.pn/cricket-test-nation-2026/images/cricketAdobeStock_169922170.mp4" type="video/mp4">
   </video>
   <div class="hse-cover__grain"></div>
@@ -283,9 +323,15 @@
 
 </section>
 
-<section class="hse-section hse-section--fullbleed-quote" id="ashes-interlude" data-layout="fullbleed-quote">
-  <div class="hse-fbq__bg" style="background-image: url('https://stories.har.pn/cricket-test-nation-2026/images/AdobeStock_247707715.jpeg-hpn2560.jpg')"
-       role="img" aria-label="Cricket ground at close of play, long shadows across the outfield"></div>
+<section
+  class="hse-section hse-section--fullbleed-quote"
+  id="ashes-interlude"
+  data-layout="fullbleed-quote"
+  data-overlay="solid"
+  data-pos-v="middle"
+  data-pos-h="left"
+  data-bg-scroll="parallax">
+  <div class="hse-fbq__bg" style="background-image: url('https://stories.har.pn/cricket-test-nation-2026/images/AdobeStock_247707715.jpeg-hpn2560.jpg'); background-position: 50% 50%" role="img" aria-label="Cricket ground at close of play, long shadows across the outfield"></div>
   <div class="hse-fbq__grain"></div>
   <div class="hse-fbq__gradient"></div>
   <div class="hse-fbq__content hse-inner">
@@ -377,6 +423,8 @@
   class="hse-section hse-section--reveal-crossfade"
   id="summer-crossfade"
   data-layout="reveal-crossfade"
+  data-transition="fade"
+  data-wipe-origin="50% 50%"
   data-image-count="2">
 
   <!-- Sticky image canvas -->
@@ -386,17 +434,19 @@
       
       <div
         class="hse-cf__image hse-cf__image--0 is-active"
-        style="background-image: url('https://stories.har.pn/cricket-test-nation-2026/images/AdobeStock_247707715.jpeg-hpn2560.jpg')"
+        style="background-image: url('https://stories.har.pn/cricket-test-nation-2026/images/AdobeStock_247707715.jpeg-hpn2560.jpg');"
         role="img"
         aria-label="Ground staff removing covers at dawn, heavy dew on the outfield"
         data-index="0">
+        
       </div>
       <div
         class="hse-cf__image hse-cf__image--1"
-        style="background-image: url('https://stories.har.pn/cricket-test-nation-2026/images/AdobeStock_247707715.jpeg-hpn2560.jpg')"
+        style="background-image: url('https://stories.har.pn/cricket-test-nation-2026/images/AdobeStock_247707715.jpeg-hpn2560.jpg');"
         role="img"
         aria-label="Full ground at evening, long shadows across the outfield"
         data-index="1">
+        
       </div>
 
       <!-- Overlay gradient -->
@@ -799,7 +849,7 @@
 
 </main>
 
-<footer class="hse-footer" role="contentinfo">
+<footer class="hse-footer">
   <span class="hse-footer__brand">Test Nation</span>
   <span class="hse-footer__credit">Produced with the Harpoon Story Engine</span>
 </footer>
@@ -825,12 +875,9 @@
   font-family: var(--hse-font-mono);
   font-size: 0.6rem;
   letter-spacing: 0.12em;
-  color: var(--hse-warm-3);
-  opacity: 0.5;
+  color: var(--hse-warm-2);
 }
 </style>
-
-<script src="js/runtime.js"></script>
 
 </body>
 </html>

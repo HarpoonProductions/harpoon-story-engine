@@ -4,6 +4,9 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>The Voices That Remain</title>
+  <meta property="og:title" content="The Voices That Remain">
+  <meta property="og:image" content="https://stories.har.pn/opera-voices-2026/images/opera-AdobeStock_591210749.jpeg-hpn2560.jpg">
+  <meta name="twitter:card" content="summary_large_image">
   
   <script defer data-domain="opera-voices-2026.harpoon.productions" src="https://analytics.harpoonproductions.com/js/script.js"></script>
   <meta name="theme-color" content="#0D0005">
@@ -11,9 +14,13 @@
   <!-- Fonts (default set uses Google Fonts; client token sets may specify their own) -->
   
 
-  <!-- GSAP + ScrollTrigger -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+  <!-- Preload hero image so LCP fires as early as possible -->
+  <link rel="preload" as="image" href="https://stories.har.pn/opera-voices-2026/images/opera-AdobeStock_591210749.jpeg-hpn2560.jpg">
+
+  <!-- GSAP + ScrollTrigger + runtime (deferred — does not block first paint) -->
+  <script defer src="js/vendor/gsap.min.js"></script>
+  <script defer src="js/vendor/ScrollTrigger.min.js"></script>
+  <script defer src="js/runtime.js"></script>
 
   <!-- Story Engine styles -->
   <link rel="stylesheet" href="css/tokens.css">
@@ -116,6 +123,14 @@
   <link rel="stylesheet" href="css/layouts/parallax.css">
   <link rel="stylesheet" href="css/layouts/fullbleed-quote.css">
   <link rel="stylesheet" href="css/layouts/reveal-crossfade.css">
+  <link rel="stylesheet" href="css/layouts/panoramic-scroll.css">
+  <link rel="stylesheet" href="css/layouts/cinema-reveal.css">
+  <link rel="stylesheet" href="css/layouts/frame-scrubber.css">
+  <link rel="stylesheet" href="css/layouts/split-reveal.css">
+  <link rel="stylesheet" href="css/layouts/two-column.css">
+
+  <!-- Print stylesheet — media=print so it never affects screen rendering -->
+  <link rel="stylesheet" href="css/print.css" media="print">
 
   <!-- Per-project brand tokens -->
   <style>
@@ -132,20 +147,49 @@
 <div id="hse-progress" role="presentation" aria-hidden="true"></div>
 
 <nav id="hse-nav" aria-label="Publication sections">
-  <a class="hse-nav__brand" href="#hse-cover">The Voices That Remain</a>
+  <a class="hse-nav__brand" href="#hse-cover"><img class="hse-nav__logo" src="https://assets.roh.org.uk/logo/roh-white.svg" alt="The Voices That Remain"></a>
   <ul class="hse-nav__links" role="list">
     <li><a href="#overture">Overture</a></li>
       <li><a href="#the-voice">The Voice</a></li>
+      <li><a href="#section-10">Section 10</a></li>
       <li><a href="#new-works">New Works</a></li>
       <li><a href="#audiences">Audiences</a></li>
       <li><a href="#contributors">The Company</a></li>
       <li><a href="#briefing">Briefing</a></li>
       <li><a href="#section-9">Section 9</a></li>
   </ul>
+  <a class="hse-nav__pdf-link" href="story.pdf" target="_blank" rel="noopener" aria-label="Download PDF" title="Download PDF">
+    <svg aria-hidden="true" focusable="false" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg>
+  </a>
+  <button class="hse-nav__hamburger" id="hse-nav-hamburger" aria-label="Open menu" aria-expanded="false">
+    <span></span><span></span><span></span>
+  </button>
 </nav>
+<div class="hse-nav__mobile-menu" id="hse-nav-mobile-menu" aria-hidden="true">
+  <button class="hse-nav__mobile-close" id="hse-nav-mobile-close" aria-label="Close menu">✕</button>
+  <ul role="list">
+    <li><a href="#overture">Overture</a></li>
+      <li><a href="#the-voice">The Voice</a></li>
+      <li><a href="#section-10">Section 10</a></li>
+      <li><a href="#new-works">New Works</a></li>
+      <li><a href="#audiences">Audiences</a></li>
+      <li><a href="#contributors">The Company</a></li>
+      <li><a href="#briefing">Briefing</a></li>
+      <li><a href="#section-9">Section 9</a></li>
+  </ul>
+</div>
+
+<div id="hse-print-header" aria-hidden="true" style="display:none">
+  <img class="hse-print-header__img" src="https://stories.har.pn/opera-voices-2026/images/opera-AdobeStock_591210749.jpeg-hpn2560.jpg" alt="">
+  <div class="hse-print-header__content">
+    
+    <h1 class="hse-print-header__title">The Voices That Remain</h1>
+    <p class="hse-print-header__meta">Royal Opera House · 1 February 2026</p>
+  </div>
+</div>
 
 <section id="hse-cover">
-  <video class="hse-cover__bg-video" autoplay muted loop playsinline poster="https://stories.har.pn/opera-voices-2026/images/opera-AdobeStock_591210749.jpeg-hpn2560.jpg">
+  <img class="hse-cover__bg-img hse-cover__bg-poster" src="https://stories.har.pn/opera-voices-2026/images/opera-AdobeStock_591210749.jpeg-hpn2560.jpg" alt="" aria-hidden="true"><video class="hse-cover__bg-video" autoplay muted loop playsinline poster="https://stories.har.pn/opera-voices-2026/images/opera-AdobeStock_591210749.jpeg-hpn2560.jpg">
     <source src="https://stories.har.pn/opera-voices-2026/images/opera-AdobeStock_619983025.mp4" type="video/mp4">
   </video>
   <div class="hse-cover__grain"></div>
@@ -332,9 +376,31 @@
 
 </section>
 
-<section class="hse-section hse-section--fullbleed-quote" id="drama-interlude" data-layout="fullbleed-quote">
-  <div class="hse-fbq__bg" style="background-image: url('https://stories.har.pn/opera-voices-2026/images/opera-AdobeStock_150971585.jpeg-hpn2560.jpg')"
-       role="img" aria-label="Dramatic stage lighting, performance in progress"></div>
+<section
+  class="hse-section hse-section--fullbleed-quote"
+  id="section-10"
+  data-layout="fullbleed-quote"
+  data-overlay="solid"
+  data-pos-v="middle"
+  data-pos-h="left"
+  data-bg-scroll="parallax">
+  <div class="hse-fbq__bg" style="background-image: url(''); background-position: 50% 50%" role="img" aria-label=""></div>
+  <div class="hse-fbq__grain"></div>
+  <div class="hse-fbq__gradient"></div>
+  <div class="hse-fbq__content hse-inner">
+    
+  </div>
+</section>
+
+<section
+  class="hse-section hse-section--fullbleed-quote"
+  id="drama-interlude"
+  data-layout="fullbleed-quote"
+  data-overlay="solid"
+  data-pos-v="middle"
+  data-pos-h="left"
+  data-bg-scroll="parallax">
+  <div class="hse-fbq__bg" style="background-image: url('https://stories.har.pn/opera-voices-2026/images/opera-AdobeStock_150971585.jpeg-hpn2560.jpg'); background-position: 50% 50%" role="img" aria-label="Dramatic stage lighting, performance in progress"></div>
   <div class="hse-fbq__grain"></div>
   <div class="hse-fbq__gradient"></div>
   <div class="hse-fbq__content hse-inner">
@@ -426,6 +492,8 @@
   class="hse-section hse-section--reveal-crossfade"
   id="voices-crossfade"
   data-layout="reveal-crossfade"
+  data-transition="fade"
+  data-wipe-origin="50% 50%"
   data-image-count="2">
 
   <!-- Sticky image canvas -->
@@ -435,17 +503,19 @@
       
       <div
         class="hse-cf__image hse-cf__image--0 is-active"
-        style="background-image: url('https://stories.har.pn/opera-voices-2026/images/opera-AdobeStock_156137275.jpeg-hpn2560.jpg')"
+        style="background-image: url('https://stories.har.pn/opera-voices-2026/images/opera-AdobeStock_156137275.jpeg-hpn2560.jpg');"
         role="img"
         aria-label="Empty rehearsal room with grand piano, morning light"
         data-index="0">
+        
       </div>
       <div
         class="hse-cf__image hse-cf__image--1"
-        style="background-image: url('https://stories.har.pn/opera-voices-2026/images/opera-AdobeStock_220275532.jpeg-hpn2560.jpg')"
+        style="background-image: url('https://stories.har.pn/opera-voices-2026/images/opera-AdobeStock_220275532.jpeg-hpn2560.jpg');"
         role="img"
         aria-label="Full company on stage, opening night, auditorium packed"
         data-index="1">
+        
       </div>
 
       <!-- Overlay gradient -->
@@ -788,8 +858,6 @@
   opacity: 0.5;
 }
 </style>
-
-<script src="js/runtime.js"></script>
 
 </body>
 </html>

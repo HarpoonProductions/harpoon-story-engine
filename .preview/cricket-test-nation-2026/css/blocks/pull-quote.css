@@ -27,6 +27,8 @@
   font-family: var(--hse-font-mono);
   font-size: var(--hse-font-size-label);
   letter-spacing: var(--hse-tracking-sm);
-  color: var(--hse-warm-3);
+  color: var(--hse-ink-3);
   font-style: normal;
+  display: block;
+  margin-top: 0.5rem;
 }

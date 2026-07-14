@@ -96,33 +96,131 @@
     var nav = document.getElementById("hse-nav");
     if (!nav) return;
 
-    ScrollTrigger.create({
-      start: "80px top",
-      onEnter: function () {
-        nav.classList.add("hse-nav--solid");
-      },
-      onLeaveBack: function () {
-        nav.classList.remove("hse-nav--solid");
-      },
+    // ── State ──────────────────────────────────────────────────────
+    // hse-nav--story : user has scrolled past the cover
+    // hse-nav--dim   : auto-hide fired; strip + links fade out
+    //
+    // Reveal triggers: scroll-up OR cursor within 80px of top.
+    // Auto-hide fires 2.5s after the last reveal trigger.
+
+    var hideTimer;
+    var inStory  = false;
+    var lastScrollY = window.scrollY;
+
+    function dim() {
+      nav.classList.add("hse-nav--dim");
+    }
+    function undim(delay) {
+      clearTimeout(hideTimer);
+      nav.classList.remove("hse-nav--dim");
+      hideTimer = setTimeout(dim, delay || 2500);
+    }
+
+    // Cover exit / entry
+    var cover = document.getElementById("hse-cover");
+    if (cover) {
+      ScrollTrigger.create({
+        trigger: cover,
+        start: "35% top",   // 35% through the cover
+        onEnter: function () {
+          inStory = true;
+          nav.classList.add("hse-nav--story");
+          undim(2500); // generous first appearance
+        },
+        onLeaveBack: function () {
+          inStory = false;
+          clearTimeout(hideTimer);
+          nav.classList.remove("hse-nav--story", "hse-nav--dim");
+        },
+      });
+    }
+
+    // Scroll-up reveals the strip (quicker re-hide)
+    window.addEventListener("scroll", function () {
+      var y = window.scrollY;
+      if (inStory && y < lastScrollY) undim(1500);
+      lastScrollY = y;
+    }, { passive: true });
+
+    // Cursor near top reveals the strip (desktop)
+    document.addEventListener("mousemove", function (e) {
+      if (!inStory) return;
+      if (e.clientY < 80) undim(1500);
     });
 
-    var navLinks = nav.querySelectorAll(".hse-nav__links a");
+    // Tap near top reveals the strip (mobile)
+    document.addEventListener("touchstart", function (e) {
+      if (!inStory) return;
+      if (e.touches[0].clientY < 80) undim(1500);
+    }, { passive: true });
+    nav.addEventListener("mouseenter", function () { if (inStory) undim(1500); });
+    nav.addEventListener("mouseleave", function () {
+      if (inStory) {
+        clearTimeout(hideTimer);
+        hideTimer = setTimeout(dim, 1500);
+      }
+    });
 
+    // ── Hamburger: mobile menu ─────────────────────────────────────
+    var hamburger = document.getElementById("hse-nav-hamburger");
+    var menu      = document.getElementById("hse-nav-mobile-menu");
+    var closeBtn  = document.getElementById("hse-nav-mobile-close");
+    if (hamburger && menu) {
+      var focusableSelectors = 'a[href], button:not([disabled]), [tabindex]:not([tabindex="-1"])';
+
+      function openMenu() {
+        menu.classList.add("is-open");
+        menu.setAttribute("aria-hidden", "false");
+        hamburger.setAttribute("aria-expanded", "true");
+        document.body.style.overflow = "hidden";
+        // Move focus into the menu and trap it there
+        var first = menu.querySelector(focusableSelectors);
+        if (first) first.focus();
+      }
+
+      function closeMenu() {
+        menu.classList.remove("is-open");
+        menu.setAttribute("aria-hidden", "true");
+        hamburger.setAttribute("aria-expanded", "false");
+        document.body.style.overflow = "";
+        hamburger.focus();
+      }
+
+      // Focus trap: keep Tab / Shift+Tab inside the open menu
+      menu.addEventListener("keydown", function (e) {
+        if (!menu.classList.contains("is-open")) return;
+        if (e.key === "Escape") { closeMenu(); return; }
+        if (e.key !== "Tab") return;
+        var focusable = Array.prototype.slice.call(menu.querySelectorAll(focusableSelectors));
+        if (!focusable.length) return;
+        var first = focusable[0];
+        var last  = focusable[focusable.length - 1];
+        if (e.shiftKey) {
+          if (document.activeElement === first) { e.preventDefault(); last.focus(); }
+        } else {
+          if (document.activeElement === last)  { e.preventDefault(); first.focus(); }
+        }
+      });
+
+      hamburger.addEventListener("click", openMenu);
+      if (closeBtn) closeBtn.addEventListener("click", closeMenu);
+      menu.querySelectorAll("a").forEach(function (a) {
+        a.addEventListener("click", closeMenu);
+      });
+    }
+
+    // ── Active nav link on scroll ──────────────────────────────────
+    var navLinks = nav.querySelectorAll(".hse-nav__links a");
     navLinks.forEach(function (link) {
       var id = link.getAttribute("href").replace("#", "");
       var el = document.getElementById(id);
       if (!el) return;
-
       ScrollTrigger.create({
         trigger: el,
         start: "top 50%",
         end: "bottom 50%",
-        onEnter: function () {
-          setActiveNav(navLinks, id);
-        },
-        onEnterBack: function () {
-          setActiveNav(navLinks, id);
-        },
+        onEnter:     function () { setActiveNav(navLinks, id); },
+        onEnterBack: function () { setActiveNav(navLinks, id); },
       });
     });
   }
@@ -251,19 +349,30 @@
     gsap.utils
       .toArray(".hse-section--fullbleed-quote")
       .forEach(function (section) {
-        var bg = section.querySelector(".hse-fbq__bg");
-        if (bg) {
-          gsap.to(bg, {
-            scale: 1.06,
-            ease: "none",
-            scrollTrigger: {
-              trigger: section,
-              start: "top bottom",
-              end: "bottom top",
-              scrub: true,
-            },
-          });
+        var bg       = section.querySelector(".hse-fbq__bg");
+        var bgScroll = section.dataset.bgScroll || "parallax";
+
+        if (bg && bgScroll === "parallax") {
+          // True parallax: bg translates upward at ~40% of scroll speed.
+          // Scale up so the translated edges never show through overflow:hidden.
+          gsap.set(bg, { scale: 1.5 });
+          gsap.fromTo(bg,
+            { yPercent: -20 },
+            {
+              yPercent: 20,
+              ease: "none",
+              scrollTrigger: {
+                trigger: section,
+                start: "top bottom",
+                end: "bottom top",
+                scrub: true,
+              },
+            }
+          );
         }
+        // fixed: background-attachment:fixed + overflow:clip handles it in CSS
+        // scroll: image moves with the page — no JS needed
+
         ScrollTrigger.create({
           trigger: section,
           start: "top 75%",
@@ -336,47 +445,117 @@
   }
 
   // ── 8. Reveal crossfade ────────────────────────────────────────────
-  // ── 8. Reveal crossfade ────────────────────────────────────────────
-  // Supports N images — each phase triggers a crossfade to its image.
-  // Uses opacity transitions between absolutely-positioned image layers.
+  // Supports N images with fade or scroll-scrubbed wipe transitions.
+  // Fade: opacity class toggle (instant on scroll position).
+  // Wipe: GSAP scrub animates clip-path with scroll — only the incoming
+  // image moves; outgoing images stay put underneath (z-index stacking).
+
+  var WIPE_CLIPS = {
+    "wipe-left":  { from: "inset(0 100% 0 0)",   to: "inset(0 0% 0 0)" },
+    "wipe-right": { from: "inset(0 0 0 100%)",    to: "inset(0 0 0 0%)" },
+    "wipe-down":  { from: "inset(0 0 100% 0)",    to: "inset(0 0 0% 0)" },
+    "wipe-up":    { from: "inset(100% 0 0 0)",    to: "inset(0% 0 0 0)" },
+  };
+
+  function getWipeClips(transition, sectionEl) {
+    if (transition === "circle") {
+      var origin = sectionEl.dataset.wipeOrigin || "50% 50%";
+      return {
+        from: "circle(0% at " + origin + ")",
+        to:   "circle(150% at " + origin + ")",
+      };
+    }
+    return WIPE_CLIPS[transition] || null;
+  }
 
   function setupRevealCrossfade() {
     gsap.utils
       .toArray(".hse-section--reveal-crossfade")
       .forEach(function (section) {
-        var phases = section.querySelectorAll(".hse-cf__phase");
-        var images = section.querySelectorAll(".hse-cf__image");
+        var phases     = section.querySelectorAll(".hse-cf__phase");
+        var images     = Array.from(section.querySelectorAll(".hse-cf__image"));
+        var transition = section.dataset.transition || "fade";
+        var wipeClips  = getWipeClips(transition, section);
 
-        // Transition to a specific image index
-        function showImage(index) {
+        if (wipeClips) {
+          // ── Wipe mode ──────────────────────────────────────────────
+          // Image 0 sits at the bottom of the stack, fully visible.
+          // Each subsequent image starts clipped and is revealed by
+          // a GSAP scrub that ties the wipe directly to scroll position.
           images.forEach(function (img, i) {
-            if (i === index) {
-              img.classList.add("is-active");
+            img.style.zIndex = i; // higher index = on top
+            // opacity must be 1 for all — clip-path controls visibility in wipe mode
+            if (i === 0) {
+              gsap.set(img, { opacity: 1, clipPath: wipeClips.to });
             } else {
-              img.classList.remove("is-active");
+              gsap.set(img, { opacity: 1, clipPath: wipeClips.from });
             }
           });
-          // Keep legacy is-revealed class for CSS compatibility
-          if (index > 0) {
-            section.classList.add("is-revealed");
-          } else {
-            section.classList.remove("is-revealed");
-          }
-        }
 
-        phases.forEach(function (phase, i) {
-          var imageIndex = parseInt(phase.dataset.image || i, 10);
+          images.forEach(function (img, i) {
+            if (i === 0) return; // first image is already visible
+            var phase = phases[i];
+            if (!phase) return;
 
-          ScrollTrigger.create({
-            trigger: phase,
-            start: "top 65%",
-            once: true,
-            onEnter: function () {
-              phase.classList.add("is-visible");
-              showImage(imageIndex);
-            },
+            // Wipe the image in as this phase scrolls into the viewport
+            gsap.to(img, {
+              clipPath: wipeClips.to,
+              ease: "none",
+              scrollTrigger: {
+                trigger: phase,
+                start: "top 70%",    // wait until previous image has settled into full view
+                end: "top 15%",      // phase nearly at top
+                scrub: 0.4,          // small lag for smoothness
+                onEnter: function () {
+                  phase.classList.add("is-visible");
+                },
+                onLeaveBack: function () {
+                  if (i === 0) phase.classList.remove("is-visible");
+                },
+              },
+            });
           });
-        });
+
+          // Phase text visibility (same as fade mode)
+          phases.forEach(function (phase, i) {
+            ScrollTrigger.create({
+              trigger: phase,
+              start: "top 65%",
+              onEnter: function () { phase.classList.add("is-visible"); },
+              onLeaveBack: function () {
+                if (i === 0) phase.classList.remove("is-visible");
+              },
+            });
+          });
+
+        } else {
+          // ── Fade mode (default) ────────────────────────────────────
+          function showImage(index) {
+            images.forEach(function (img, i) {
+              img.classList.toggle("is-active", i === index);
+            });
+            section.classList.toggle("is-revealed", index > 0);
+          }
+
+          phases.forEach(function (phase, i) {
+            var imageIndex = parseInt(phase.dataset.image || i, 10);
+            ScrollTrigger.create({
+              trigger: phase,
+              start: "top 65%",
+              onEnter: function () {
+                phase.classList.add("is-visible");
+                showImage(imageIndex);
+              },
+              onLeaveBack: function () {
+                var prevIndex = i > 0
+                  ? parseInt(phases[i - 1].dataset.image || (i - 1), 10)
+                  : 0;
+                showImage(prevIndex);
+                if (i === 0) phase.classList.remove("is-visible");
+              },
+            });
+          });
+        }
       });
   }
 
@@ -679,41 +858,22 @@
     document
       .querySelectorAll(".hse-embed--scroll-locked")
       .forEach(function (embed) {
-        var timer = null;
-
-        function activate() {
+        // Activate on hover, deactivate on mouse leave
+        embed.addEventListener("mouseenter", function () {
           embed.classList.add("is-active");
-          clearTimeout(timer);
-          // Auto-deactivate after 5s of no interaction
-          timer = setTimeout(function () {
-            embed.classList.remove("is-active");
-          }, 5000);
-        }
+        });
+        embed.addEventListener("mouseleave", function () {
+          embed.classList.remove("is-active");
+        });
 
-        function resetTimer() {
-          if (!embed.classList.contains("is-active")) return;
-          clearTimeout(timer);
-          timer = setTimeout(function () {
-            embed.classList.remove("is-active");
-          }, 5000);
-        }
+        // Touch: activate on tap, deactivate on next page scroll
+        embed.addEventListener("touchstart", function () {
+          embed.classList.add("is-active");
+        }, { passive: true });
 
-        // Click overlay or embed to activate
-        embed.addEventListener("click", activate);
-        embed.addEventListener("mousemove", resetTimer);
-        embed.addEventListener("touchstart", activate, { passive: true });
-
-        // Deactivate when user scrolls the page (outside embed)
-        window.addEventListener(
-          "scroll",
-          function () {
-            if (embed.classList.contains("is-active")) {
-              embed.classList.remove("is-active");
-              clearTimeout(timer);
-            }
-          },
-          { passive: true },
-        );
+        window.addEventListener("scroll", function () {
+          embed.classList.remove("is-active");
+        }, { passive: true });
       });
   }
 
@@ -824,7 +984,83 @@
 
   if (!prefersReducedMotion) {
     setupScrollCarousel();
+    setupPanoramicScroll();
   }
+  // ── Panoramic scroll ──────────────────────────────────────────────
+  // Full-viewport image track pans horizontally as the user scrolls.
+  // GSAP scrub drives the translation; text overlays crossfade per panel.
+
+  function setupPanoramicScroll() {
+    document.querySelectorAll(".hse-section--panoramic-scroll").forEach(function (section) {
+      var textItems = Array.from(section.querySelectorAll(".hse-pan__text-item"));
+      var dots      = Array.from(section.querySelectorAll(".hse-pan__dot"));
+      var mode      = section.dataset.panMode; // "single" or "multi"
+      var count     = textItems.length || 1;
+      var isMobile  = window.matchMedia("(max-width: 768px)").matches;
+
+      var currentIndex = 0;
+
+      function setActivePanel(index) {
+        if (index === currentIndex) return;
+        currentIndex = index;
+        textItems.forEach(function (item, i) {
+          item.classList.toggle("is-active", i === index);
+        });
+        dots.forEach(function (dot, i) {
+          dot.classList.toggle("is-active", i === index);
+        });
+      }
+
+      // Mobile: snap softly to each panel stop after the user lifts their finger
+      var snapConfig = (isMobile && count > 1) ? {
+        snap: {
+          snapTo: 1 / (count - 1),
+          duration: { min: 0.2, max: 0.5 },
+          ease: "power2.inOut",
+        }
+      } : {};
+
+      var scrollTriggerConfig = Object.assign({
+        trigger: section,
+        start: "top top",
+        end: "bottom bottom",
+        scrub: isMobile ? 0.8 : 1.2,
+        invalidateOnRefresh: true,
+        onUpdate: function (self) {
+          var index = Math.round(self.progress * (count - 1));
+          setActivePanel(index);
+        },
+      }, snapConfig);
+
+      if (mode === "single") {
+        // ── Single-image: animate backgroundPositionX on sticky ──────
+        var sticky = section.querySelector(".hse-pan__sticky--single");
+        if (!sticky) return;
+        // Mobile: subtle pan within portrait crop (40% travel), desktop: full sweep
+        var fromPos = isMobile ? "30% 50%" : "0% 50%";
+        var toPos   = isMobile ? "70% 50%" : "100% 50%";
+        gsap.fromTo(sticky,
+          { backgroundPosition: fromPos },
+          {
+            backgroundPosition: toPos,
+            ease: "none",
+            scrollTrigger: scrollTriggerConfig,
+          }
+        );
+      } else {
+        // ── Multi-image: translate the track ─────────────────────────
+        var track  = section.querySelector(".hse-pan__track");
+        var panels = Array.from(section.querySelectorAll(".hse-pan__panel"));
+        if (!track || panels.length < 2) return;
+        gsap.to(track, {
+          x: function () { return -(panels.length - 1) * window.innerWidth; },
+          ease: "none",
+          scrollTrigger: scrollTriggerConfig,
+        });
+      }
+    });
+  }
+
   // ── Global heading animations ─────────────────────────────────────
   // Reads data-heading-animation from <body> and triggers entrance
   // animations on all h2/h3 elements as they scroll into view.
@@ -865,4 +1101,286 @@
       el.classList.add("hse-heading-visible");
     });
   }
+
+  // ── Cinema reveal ─────────────────────────────────────────────────
+  // Video card starts contained (65vw, rounded corners) and expands to
+  // fill the viewport as the user scrolls. MP4 videos autoplay when fully
+  // expanded; YouTube/Vimeo iframes remain click-to-play.
+
+  function setupCinemaReveal() {
+    document.querySelectorAll('.hse-section--cinema-reveal').forEach(function (section) {
+      var sticky = section.querySelector('.hse-cr__sticky');
+      var card   = section.querySelector('.hse-cr__card');
+      var header = section.querySelector('.hse-cr__header');
+
+      if (!card) return;
+
+      var tl = gsap.timeline()
+        .to(card,   { width: '100vw', borderRadius: 0, ease: 'none' }, 0)
+        .to(header, { opacity: 0, y: -24, ease: 'power2.in', duration: 0.35 }, 0);
+
+      ScrollTrigger.create({
+        trigger: section,
+        start: 'top top',
+        end: '+=150%',
+        pin: sticky,
+        scrub: 1.5,
+        animation: tl,
+        onLeave: function () {
+          var video = section.querySelector('.hse-cr__video');
+          if (video) { video.muted = true; video.play().catch(function () {}); }
+          var iframe = section.querySelector('.hse-cr__iframe');
+          if (iframe && iframe.src.indexOf('autoplay') === -1) {
+            iframe.src += (iframe.src.indexOf('?') !== -1 ? '&' : '?') + 'autoplay=1&mute=1';
+          }
+        },
+      });
+    });
+  }
+
+  if (!prefersReducedMotion) {
+    setupCinemaReveal();
+  }
+
+  // ── Frame Scrubber ────────────────────────────────────────────────
+  // Pre-loads a JPEG sequence and draws frames to a canvas as the user
+  // scrolls. Text overlays activate when scroll enters their frame range.
+
+  function setupFrameScrubber() {
+    document.querySelectorAll(".hse-section--frame-scrubber").forEach(function (section) {
+      var canvas    = section.querySelector(".hse-fs__canvas");
+      var textItems = Array.from(section.querySelectorAll(".hse-fs__text-item"));
+      var bar       = section.querySelector(".hse-fs__progress-bar span");
+      if (!canvas) return;
+
+      var ctx        = canvas.getContext("2d");
+      var baseUrl    = section.dataset.baseUrl    || "";
+      var frameCount = parseInt(section.dataset.frameCount)  || 1;
+      var prefix     = section.dataset.framePrefix || "frame-";
+      var digits     = parseInt(section.dataset.frameDigits) || 3;
+      var frames     = new Array(frameCount);
+      var loaded     = 0;
+      var currentIdx = -1;
+
+      // Size canvas to device pixels for sharpness
+      function resize() {
+        var dpr = window.devicePixelRatio || 1;
+        canvas.width  = window.innerWidth  * dpr;
+        canvas.height = window.innerHeight * dpr;
+        canvas.style.width  = window.innerWidth  + "px";
+        canvas.style.height = window.innerHeight + "px";
+        ctx.scale(dpr, dpr);
+        if (currentIdx >= 0) drawFrame(currentIdx);
+      }
+      window.addEventListener("resize", function () { resize(); });
+      resize();
+
+      // Cover-fit draw
+      function drawFrame(idx) {
+        var img = frames[idx];
+        if (!img || !img.complete || !img.naturalWidth) return;
+        var vw = window.innerWidth, vh = window.innerHeight;
+        var iw = img.naturalWidth,  ih = img.naturalHeight;
+        var scale = Math.max(vw / iw, vh / ih);
+        var w = iw * scale, h = ih * scale;
+        ctx.clearRect(0, 0, vw, vh);
+        ctx.drawImage(img, (vw - w) / 2, (vh - h) / 2, w, h);
+        currentIdx = idx;
+      }
+
+      // Loading indicator
+      function drawLoading(n) {
+        var vw = window.innerWidth, vh = window.innerHeight;
+        ctx.fillStyle = "#0a1428";
+        ctx.fillRect(0, 0, vw, vh);
+        ctx.fillStyle = "rgba(255,255,255,0.4)";
+        ctx.font = "13px monospace";
+        ctx.textAlign = "center";
+        ctx.fillText("Loading " + Math.round(n / frameCount * 100) + "%", vw / 2, vh / 2);
+      }
+
+      // Text overlay activation by frame range
+      function updateText(idx) {
+        textItems.forEach(function (item) {
+          var start = parseInt(item.dataset.frameStart) || 0;
+          var end   = parseInt(item.dataset.frameEnd)   || frameCount;
+          item.classList.toggle("is-active", idx >= start && idx <= end);
+        });
+      }
+
+      // Zero-pad frame index (1-based)
+      function pad(i) {
+        return String(i + 1).padStart(digits, "0");
+      }
+
+      // Show poster (or blank) until frames arrive
+      var posterUrl = section.dataset.poster || "";
+      if (posterUrl) {
+        var posterImg = new Image();
+        posterImg.onload = function () { drawFrame_raw(posterImg); };
+        posterImg.src = posterUrl;
+      } else {
+        drawLoading(0);
+      }
+
+      function drawFrame_raw(img) {
+        var vw = window.innerWidth, vh = window.innerHeight;
+        var iw = img.naturalWidth,  ih = img.naturalHeight;
+        var scale = Math.max(vw / iw, vh / ih);
+        var w = iw * scale, h = ih * scale;
+        ctx.clearRect(0, 0, vw, vh);
+        ctx.drawImage(img, (vw - w) / 2, (vh - h) / 2, w, h);
+      }
+
+      function startPreload() {
+        if (frames[0]) return; // already started
+        if (!posterUrl) drawLoading(0);
+        for (var i = 0; i < frameCount; i++) {
+          (function (idx) {
+            var img = new Image();
+            frames[idx] = img;
+            img.onload = function () {
+              loaded++;
+              if (loaded < frameCount) {
+                if (!posterUrl) drawLoading(loaded);
+              } else {
+                drawFrame(0);
+                updateText(0);
+              }
+            };
+            img.onerror = function () { loaded++; };
+            img.src = baseUrl + prefix + pad(idx) + ".jpg";
+          })(i);
+        }
+      }
+
+      // Begin loading when the section is ~1.5 viewports away
+      var observer = new IntersectionObserver(function (entries) {
+        if (entries[0].isIntersecting) {
+          observer.disconnect();
+          startPreload();
+        }
+      }, { rootMargin: "150% 0px" });
+      observer.observe(section);
+
+      // ScrollTrigger scrub
+      ScrollTrigger.create({
+        trigger: section,
+        start: "top top",
+        end: "bottom bottom",
+        scrub: true,
+        onUpdate: function (self) {
+          var idx = Math.min(Math.round(self.progress * (frameCount - 1)), frameCount - 1);
+          if (bar) bar.style.width = (self.progress * 100) + "%";
+          if (idx === currentIdx) return;
+          drawFrame(idx);
+          updateText(idx);
+        },
+      });
+    });
+  }
+
+  setupFrameScrubber();
+
+  // ── Split Reveal ──────────────────────────────────────────────────
+  // Full-bleed image shrinks left (100vw → 50vw) over the first 28% of
+  // scroll; text panel fades in from the right (18–36%); inner copy
+  // then scrolls up through the remaining 64%. Mobile (<768px) is a
+  // static stacked layout — no animation needed.
+
+  function setupSplitReveal() {
+    document.querySelectorAll('.hse-section--split-reveal').forEach(function (section) {
+      var media     = section.querySelector('.hse-sr__media');
+      var copy      = section.querySelector('.hse-sr__copy');
+      var copyInner = section.querySelector('.hse-sr__copy-inner');
+
+      if (!media || !copy || !copyInner) return;
+
+      function isMobile() { return window.innerWidth <= 768; }
+
+      function reset() {
+        media.style.width     = '';
+        copy.style.opacity    = '';
+        copy.style.transform  = '';
+        copyInner.style.transform = '';
+        section.querySelectorAll('.hse-sr__image-card').forEach(function (c) {
+          c.classList.add('is-visible');
+        });
+      }
+
+      ScrollTrigger.create({
+        trigger: section,
+        start: 'top top',
+        end: 'bottom bottom',
+        onUpdate: function (self) {
+          if (isMobile()) { reset(); return; }
+
+          var p = self.progress;
+
+          // Image shrinks from 100vw → 50vw over first 28% of scroll
+          var shrink = Math.min(1, p / 0.28);
+          media.style.width = (100 - 50 * shrink) + 'vw';
+
+          // Copy panel fades + slides in from 18% → 36%
+          var copyP = Math.max(0, Math.min(1, (p - 0.18) / 0.18));
+          copy.style.opacity   = copyP;
+          copy.style.transform = 'translateX(' + (60 * (1 - copyP)) + 'px)';
+
+          // Inner copy scrolls up from 36% → 100%
+          var textP     = Math.max(0, Math.min(1, (p - 0.36) / 0.64));
+          var scrollDist = Math.max(0, copyInner.offsetHeight - window.innerHeight);
+          copyInner.style.transform = 'translateY(' + (-scrollDist * textP) + 'px)';
+        },
+      });
+
+      // Image cards slide in when they enter the (virtual) viewport
+      section.querySelectorAll('.hse-sr__image-card').forEach(function (card) {
+        ScrollTrigger.create({
+          trigger: card,
+          start: 'top 78%',
+          once: true,
+          onEnter: function () { card.classList.add('is-visible'); },
+        });
+      });
+    });
+  }
+
+  if (!prefersReducedMotion) {
+    setupSplitReveal();
+  }
+
+  // ── Editor ↔ preview scroll sync ──────────────────────────────────
+
+  // Scroll to a section when the editor requests it
+  window.addEventListener('message', function(e) {
+    if (!e.data || e.data.type !== 'hse-scroll-to') return;
+    var el = document.getElementById(e.data.id);
+    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  });
+
+  // Report which section is nearest the top as the user scrolls
+  (function() {
+    var sections = Array.from(document.querySelectorAll('.hse-section[id]'));
+    if (!sections.length || window.self === window.top) return;
+
+    var lastReported = null;
+
+    function reportVisible() {
+      var midY = window.scrollY + window.innerHeight * 0.35;
+      var current = sections[0];
+      for (var i = 0; i < sections.length; i++) {
+        if (sections[i].getBoundingClientRect().top + window.scrollY <= midY) {
+          current = sections[i];
+        }
+      }
+      if (current && current.id !== lastReported) {
+        lastReported = current.id;
+        window.parent.postMessage({ type: 'hse-section-in-view', id: current.id }, '*');
+      }
+    }
+
+    window.addEventListener('scroll', reportVisible, { passive: true });
+    reportVisible();
+  })();
+
 })();

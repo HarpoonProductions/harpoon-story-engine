@@ -4,22 +4,46 @@
   position: relative;
   min-height: 100vh;
   display: flex;
-  align-items: center;
-  overflow: hidden;
+  overflow: hidden; /* parallax/scroll: hide yPercent overflow on bg */
 }
+
+/* fixed mode: overflow:clip lets background-attachment:fixed work  *
+ * (overflow:hidden creates a scroll container which breaks it)     */
+[data-bg-scroll="fixed"] {
+  overflow: clip;
+}
+
+/* ── Vertical position (data-pos-v) ──────────────────────────────── */
+
+.hse-section--fullbleed-quote { align-items: center; }
+[data-pos-v="top"]             { align-items: flex-start; }
+[data-pos-v="bottom"]          { align-items: flex-end; }
+
+/* ── Background image ─────────────────────────────────────────────── */
 
 .hse-fbq__bg {
   position: absolute;
   inset: 0;
   background-size: cover;
   background-position: center;
-  transform: scale(1.04);
-  transition: transform 8s var(--hse-ease-out);
+  /* transform and scale are now owned by GSAP for parallax;
+     CSS only controls non-animated modes */
 }
 
-.hse-section--fullbleed-quote.is-visible .hse-fbq__bg {
-  transform: scale(1);
+/* fixed: image sticks in viewport as section scrolls over it.
+   overflow:clip on parent (above) is required for this to work. */
+[data-bg-scroll="fixed"] .hse-fbq__bg {
+  background-attachment: fixed;
 }
+
+/* scroll: bg moves naturally with the page — no transform needed */
+[data-bg-scroll="scroll"] .hse-fbq__bg {
+  /* nothing extra — natural scroll */
+}
+
+/* ── Entry animation on .hse-fbq__bg removed — GSAP owns transform ─ */
+
+/* ── Grain texture ────────────────────────────────────────────────── */
 
 .hse-fbq__grain {
   position: absolute;
@@ -29,9 +53,28 @@
   pointer-events: none;
 }
 
+/* ── Overlay gradient (data-overlay) ─────────────────────────────── */
+
 .hse-fbq__gradient {
   position: absolute;
   inset: 0;
+}
+
+[data-overlay="none"] .hse-fbq__gradient {
+  display: none;
+}
+
+[data-overlay="solid-light"] .hse-fbq__gradient {
+  background: linear-gradient(
+    135deg,
+    rgba(var(--hse-ink-rgb), 0.45) 0%,
+    rgba(var(--hse-ink-rgb), 0.20) 60%,
+    rgba(var(--hse-ink-rgb), 0.35) 100%
+  );
+}
+
+[data-overlay="solid"] .hse-fbq__gradient,
+:not([data-overlay]) .hse-fbq__gradient {
   background: linear-gradient(
     135deg,
     rgba(var(--hse-ink-rgb), 0.82) 0%,
@@ -40,12 +83,71 @@
   );
 }
 
+[data-overlay="gradient-tb"] .hse-fbq__gradient {
+  background: linear-gradient(
+    to bottom,
+    rgba(var(--hse-ink-rgb), 0.88) 0%,
+    rgba(var(--hse-ink-rgb), 0.55) 50%,
+    rgba(var(--hse-ink-rgb), 0.10) 100%
+  );
+}
+
+[data-overlay="gradient-bt"] .hse-fbq__gradient {
+  background: linear-gradient(
+    to top,
+    rgba(var(--hse-ink-rgb), 0.88) 0%,
+    rgba(var(--hse-ink-rgb), 0.55) 50%,
+    rgba(var(--hse-ink-rgb), 0.10) 100%
+  );
+}
+
+[data-overlay="gradient-lr"] .hse-fbq__gradient {
+  background: linear-gradient(
+    to right,
+    rgba(var(--hse-ink-rgb), 0.90) 0%,
+    rgba(var(--hse-ink-rgb), 0.55) 45%,
+    rgba(var(--hse-ink-rgb), 0.08) 100%
+  );
+}
+
+[data-overlay="gradient-rl"] .hse-fbq__gradient {
+  background: linear-gradient(
+    to left,
+    rgba(var(--hse-ink-rgb), 0.90) 0%,
+    rgba(var(--hse-ink-rgb), 0.55) 45%,
+    rgba(var(--hse-ink-rgb), 0.08) 100%
+  );
+}
+
+/* ── Text content position ────────────────────────────────────────── */
+
 .hse-fbq__content {
   position: relative;
   z-index: 2;
   padding-top: var(--hse-space-2xl);
   padding-bottom: var(--hse-space-2xl);
+  width: 100%;
 }
+
+@media (min-width: 641px) {
+  [data-pos-h="center"] .hse-fbq__content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+  [data-pos-h="center"] .hse-fbq__rule { margin-left: auto; margin-right: auto; }
+
+  [data-pos-h="right"] .hse-fbq__content {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    text-align: right;
+  }
+  [data-pos-h="right"] .hse-fbq__rule { margin-left: auto; }
+}
+
+/* ── Quote block ──────────────────────────────────────────────────── */
 
 .hse-fbq__quote {
   max-width: 680px;

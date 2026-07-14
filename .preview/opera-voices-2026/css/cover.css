@@ -17,6 +17,9 @@
 
 /* ── Background (image or video) ────────────────────────────────── */
 
+/* Poster img sits behind the video; hidden on screen, shown in print */
+.hse-cover__bg-poster { display: none; }
+
 .hse-cover__bg-img,
 .hse-cover__bg-video {
   position: absolute;

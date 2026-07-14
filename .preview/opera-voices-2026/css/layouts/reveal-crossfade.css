@@ -35,6 +35,9 @@
     opacity: 1;
 }
 
+/* Wipe transitions are driven entirely by GSAP scrub in runtime.js —
+   no CSS clip-path rules needed here. */
+
 @media (prefers-reduced-motion: reduce) {
     .hse-cf__image { transition: none; }
 }
