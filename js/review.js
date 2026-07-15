@@ -6,9 +6,7 @@
  * Activates on the review.* subdomain (or ?review=1 for local testing).
  * Lets reviewers click anywhere on a published story to place a sticky
  * note. Notes are saved to Supabase and restored on subsequent visits.
- *
- * Each reviewer gets a name (prompted once, stored in localStorage) and
- * a colour derived from that name.
+ * Supports threaded replies on any top-level annotation.
  */
 
 (function () {
@@ -36,9 +34,10 @@
   }
 
   // ── Reviewer identity ─────────────────────────────────────────────
-  var STORAGE_KEY = 'hse-reviewer';
+  var STORAGE_KEY    = 'hse-reviewer';
+  var PASSWORD_KEY   = 'hse-review-auth';
+  var REVIEW_PASSWORD = 'review';
   var COLOURS = ['#D4A017', '#3A7DC9', '#C94A3A', '#3A9E6B', '#9B59B6', '#C0392B'];
-  // Warm amber, blue, red, green, purple, crimson — distinct on dark and light
 
   var reviewer = null;
   try { reviewer = JSON.parse(localStorage.getItem(STORAGE_KEY)); } catch (e) {}
@@ -58,9 +57,9 @@
   // ── Supabase REST helpers ─────────────────────────────────────────
   function apiFetch(method, path, body) {
     var headers = {
-      'apikey': supabaseKey,
+      'apikey':        supabaseKey,
       'Authorization': 'Bearer ' + supabaseKey,
-      'Content-Type': 'application/json'
+      'Content-Type':  'application/json'
     };
     if (method === 'POST') headers['Prefer'] = 'return=representation';
 
@@ -113,8 +112,7 @@
         '</div>' +
         '<span class="hse-review-toolbar__hint">Click anywhere to add a note</span>' +
         '<label class="hse-review-toolbar__toggle">' +
-          '<input type="checkbox" id="hse-review-show-resolved">' +
-          ' Show resolved' +
+          '<input type="checkbox" id="hse-review-show-resolved"> Show resolved' +
         '</label>' +
       '</div>';
 
@@ -122,6 +120,46 @@
       .addEventListener('change', function (e) {
         layer.classList.toggle('hse-review-layer--show-resolved', e.target.checked);
       });
+  }
+
+  // ── Password prompt ───────────────────────────────────────────────
+  function promptForPassword() {
+    // Already authenticated this session
+    if (sessionStorage.getItem(PASSWORD_KEY) === '1') return Promise.resolve();
+
+    return new Promise(function (resolve, reject) {
+      var overlay = document.createElement('div');
+      overlay.className = 'hse-review-prompt';
+      overlay.innerHTML =
+        '<div class="hse-review-prompt__box">' +
+          '<p class="hse-review-prompt__heading">Review access</p>' +
+          '<p class="hse-review-prompt__sub">Enter the review password to continue.</p>' +
+          '<input class="hse-review-prompt__input" type="password" placeholder="Password" autocomplete="current-password">' +
+          '<p class="hse-review-prompt__error" style="display:none;color:#c62828;font-size:0.78rem;margin:0">Incorrect password</p>' +
+          '<button class="hse-review-prompt__btn">Continue</button>' +
+        '</div>';
+      document.body.appendChild(overlay);
+
+      var input = overlay.querySelector('.hse-review-prompt__input');
+      var err   = overlay.querySelector('.hse-review-prompt__error');
+      var btn   = overlay.querySelector('.hse-review-prompt__btn');
+
+      function submit() {
+        if (input.value === REVIEW_PASSWORD) {
+          sessionStorage.setItem(PASSWORD_KEY, '1');
+          document.body.removeChild(overlay);
+          resolve();
+        } else {
+          err.style.display = 'block';
+          input.value = '';
+          input.focus();
+        }
+      }
+
+      btn.addEventListener('click', submit);
+      input.addEventListener('keydown', function (e) { if (e.key === 'Enter') submit(); });
+      setTimeout(function () { input.focus(); }, 80);
+    });
   }
 
   // ── Name prompt ───────────────────────────────────────────────────
@@ -149,10 +187,7 @@
       }
 
       btn.addEventListener('click', submit);
-      input.addEventListener('keydown', function (e) {
-        if (e.key === 'Enter') submit();
-      });
-
+      input.addEventListener('keydown', function (e) { if (e.key === 'Enter') submit(); });
       setTimeout(function () { input.focus(); }, 80);
     });
   }
@@ -168,6 +203,105 @@
     return best;
   }
 
+  // ── Section-relative positioning ──────────────────────────────────
+  function sectionYOffset(pageY, anchorId) {
+    if (!anchorId) return null;
+    var el = document.getElementById(anchorId);
+    if (!el || el.offsetHeight === 0) return null;
+    var sectionTop = el.getBoundingClientRect().top + window.scrollY;
+    return (pageY - sectionTop) / el.offsetHeight;
+  }
+
+  function resolveTop(ann) {
+    if (ann.anchor_id && ann.section_y_offset != null) {
+      var el = document.getElementById(ann.anchor_id);
+      if (el) {
+        var sectionTop = el.getBoundingClientRect().top + window.scrollY;
+        var absY = sectionTop + ann.section_y_offset * el.offsetHeight;
+        return (absY / Math.max(document.body.scrollHeight, 1)) * 100;
+      }
+    }
+    return ann.y_percent;
+  }
+
+  // ── Reply rendering ───────────────────────────────────────────────
+  function renderReplyEl(reply) {
+    var div = document.createElement('div');
+    div.className = 'hse-sticky__reply';
+    div.dataset.replyId = reply.id;
+    div.innerHTML =
+      '<div class="hse-sticky__reply-header">' +
+        '<span class="hse-sticky__reply-dot" style="background:' + reply.colour + '"></span>' +
+        '<span class="hse-sticky__reply-author">' + esc(reply.reviewer_name) + '</span>' +
+        '<button class="hse-sticky__reply-delete" title="Delete reply">✕</button>' +
+      '</div>' +
+      '<p class="hse-sticky__reply-note">' + esc(reply.note).replace(/\n/g, '<br>') + '</p>';
+
+    div.querySelector('.hse-sticky__reply-delete').addEventListener('click', function (e) {
+      e.stopPropagation();
+      if (!confirm('Delete this reply?')) return;
+      deleteAnnotation(reply.id).then(function () {
+        if (div.parentNode) div.parentNode.removeChild(div);
+      });
+    });
+
+    return div;
+  }
+
+  function appendReplyForm(el, parentAnn) {
+    var thread   = el.querySelector('.hse-sticky__thread');
+    var replyBtn = el.querySelector('.hse-sticky__reply-btn');
+
+    if (el.querySelector('.hse-sticky__reply-form')) return;
+
+    var form = document.createElement('div');
+    form.className = 'hse-sticky__reply-form';
+    form.innerHTML =
+      '<textarea class="hse-sticky__reply-textarea" rows="2" placeholder="Add a reply…"></textarea>' +
+      '<div class="hse-sticky__reply-footer">' +
+        '<button class="hse-sticky__reply-save">Reply</button>' +
+        '<button class="hse-sticky__reply-cancel">Cancel</button>' +
+      '</div>';
+
+    el.insertBefore(form, replyBtn);
+
+    var textarea = form.querySelector('.hse-sticky__reply-textarea');
+    setTimeout(function () { textarea.focus(); }, 40);
+
+    form.querySelector('.hse-sticky__reply-save').addEventListener('click', function (e) {
+      e.stopPropagation();
+      var note = textarea.value.trim();
+      if (!note) return;
+
+      var row = {
+        project_id:       projectId,
+        reviewer_name:    reviewer.name,
+        colour:           reviewer.colour,
+        parent_id:        parentAnn.id,
+        note:             note,
+        resolved:         false,
+        anchor_id:        parentAnn.anchor_id,
+        section_y_offset: parentAnn.section_y_offset,
+        x_percent:        parentAnn.x_percent,
+        y_percent:        parentAnn.y_percent
+      };
+
+      saveAnnotation(row).then(function (rows) {
+        var saved = rows[0];
+        thread.appendChild(renderReplyEl(saved));
+        form.remove();
+        syncLayerHeight();
+      }).catch(function (e) {
+        console.error('[review] Reply save failed:', e);
+      });
+    });
+
+    form.querySelector('.hse-sticky__reply-cancel').addEventListener('click', function (e) {
+      e.stopPropagation();
+      form.remove();
+    });
+  }
+
   // ── Sticky element ────────────────────────────────────────────────
   var stickyZBase = 9100;
 
@@ -176,19 +310,23 @@
     el.style.zIndex = stickyZBase;
   }
 
-  function placeStickyEl(ann, isNew) {
+  function placeStickyEl(ann, isNew, replies) {
     var el = document.createElement('div');
     el.className = 'hse-sticky' + (ann.resolved ? ' hse-sticky--resolved' : '');
     if (ann.id) el.dataset.annId = ann.id;
     el.addEventListener('mousedown', function () { bringToFront(el); });
     el.addEventListener('touchstart', function () { bringToFront(el); }, { passive: true });
+    // Prevent any click inside a sticky from propagating to the document handler
+    el.addEventListener('click', function (e) { e.stopPropagation(); });
     el.style.cssText =
       'left:' + ann.x_percent + '%;' +
       'top:'  + resolveTop(ann) + '%;' +
       '--sticky-colour:' + ann.colour + ';';
 
     function renderContent(savedAnn) {
-      var a = savedAnn || ann;
+      var a        = savedAnn || ann;
+      var existing = replies || [];
+
       var resolveBtn = !a.resolved
         ? '<button class="hse-sticky__resolve" title="Mark as resolved">✓ Resolve</button>'
         : '<span class="hse-sticky__badge">Resolved</span>';
@@ -201,7 +339,17 @@
             '<button class="hse-sticky__delete" title="Delete note">✕</button>' +
           '</div>' +
         '</div>' +
-        '<p class="hse-sticky__note">' + esc(a.note).replace(/\n/g, '<br>') + '</p>';
+        '<p class="hse-sticky__note">' + esc(a.note).replace(/\n/g, '<br>') + '</p>' +
+        '<div class="hse-sticky__thread"></div>' +
+        '<button class="hse-sticky__reply-btn">↩ Reply</button>';
+
+      var thread = el.querySelector('.hse-sticky__thread');
+      existing.forEach(function (r) { thread.appendChild(renderReplyEl(r)); });
+
+      el.querySelector('.hse-sticky__reply-btn').addEventListener('click', function (e) {
+        e.stopPropagation();
+        appendReplyForm(el, a);
+      });
 
       bindButtons(el, a);
     }
@@ -218,15 +366,13 @@
         '</div>';
 
       layer.appendChild(el);
-
-      var textarea = el.querySelector('.hse-sticky__textarea');
-      setTimeout(function () { textarea.focus(); }, 50);
+      setTimeout(function () { el.querySelector('.hse-sticky__textarea').focus(); }, 50);
 
       el.querySelector('.hse-sticky__save').addEventListener('click', function () {
-        var note = textarea.value.trim();
+        var note = el.querySelector('.hse-sticky__textarea').value.trim();
         if (!note) return;
 
-        var row = {
+        saveAnnotation({
           project_id:       projectId,
           reviewer_name:    ann.reviewer_name,
           colour:           ann.colour,
@@ -236,12 +382,12 @@
           y_percent:        ann.y_percent,
           note:             note,
           resolved:         false
-        };
-
-        saveAnnotation(row).then(function (rows) {
+        }).then(function (rows) {
           var saved = rows[0];
           el.dataset.annId = saved.id;
+          replies = [];
           renderContent(saved);
+          syncLayerHeight();
         }).catch(function (e) {
           console.error('[review] Save failed:', e);
         });
@@ -274,7 +420,7 @@
     var deleteBtn = el.querySelector('.hse-sticky__delete:not(.hse-sticky__cancel-btn)');
     if (deleteBtn) {
       deleteBtn.addEventListener('click', function () {
-        if (!confirm('Delete this note permanently?')) return;
+        if (!confirm('Delete this note and all its replies?')) return;
         deleteAnnotation(ann.id).then(function () {
           if (el.parentNode) el.parentNode.removeChild(el);
         });
@@ -288,7 +434,6 @@
     if (!header) return;
 
     var dragging = false, ox = 0, oy = 0;
-
     header.style.cursor = 'grab';
 
     header.addEventListener('mousedown', function (e) {
@@ -296,16 +441,15 @@
       dragging = true;
       ox = e.clientX - el.getBoundingClientRect().left;
       oy = e.clientY - el.getBoundingClientRect().top;
-      el.style.zIndex = '10001';
+      el.style.zIndex = String(++stickyZBase);
       header.style.cursor = 'grabbing';
       e.preventDefault();
     });
 
     document.addEventListener('mousemove', function (e) {
       if (!dragging) return;
-      var layerRect = layer.getBoundingClientRect();
-      var x = ((e.clientX - ox - layerRect.left) / layer.offsetWidth)  * 100;
-      var y = ((e.clientY - oy - layerRect.top  + window.scrollY) / layer.scrollHeight) * 100;
+      var x = ((e.clientX - ox) / layer.offsetWidth)  * 100;
+      var y = ((e.clientY - oy + window.scrollY) / layer.scrollHeight) * 100;
       el.style.left = Math.max(0, Math.min(90, x)) + '%';
       el.style.top  = Math.max(0, y) + '%';
     });
@@ -313,39 +457,13 @@
     document.addEventListener('mouseup', function () {
       if (!dragging) return;
       dragging = false;
-      el.style.zIndex = '';
       header.style.cursor = 'grab';
     });
   }
 
-  // ── Section-relative Y position ───────────────────────────────────
-  // Store position as a ratio within the anchor section so stickies
-  // survive page reflow between desktop and mobile layouts.
-
-  function sectionYOffset(pageY, anchorId) {
-    if (!anchorId) return null;
-    var el = document.getElementById(anchorId);
-    if (!el || el.offsetHeight === 0) return null;
-    var sectionTop = el.getBoundingClientRect().top + window.scrollY;
-    return (pageY - sectionTop) / el.offsetHeight;
-  }
-
-  function resolveTop(ann) {
-    // Prefer section-relative positioning when available
-    if (ann.anchor_id && ann.section_y_offset != null) {
-      var el = document.getElementById(ann.anchor_id);
-      if (el) {
-        var sectionTop = el.getBoundingClientRect().top + window.scrollY;
-        var absY = sectionTop + ann.section_y_offset * el.offsetHeight;
-        return (absY / Math.max(document.body.scrollHeight, 1)) * 100;
-      }
-    }
-    return ann.y_percent; // fallback for legacy annotations
-  }
-
   // ── Click to place ────────────────────────────────────────────────
   document.addEventListener('click', function (e) {
-    // Ignore clicks on review UI elements
+    // Ignore clicks on chrome/UI elements
     if (e.target.closest('#hse-review-toolbar') ||
         e.target.closest('#hse-review-layer')   ||
         e.target.closest('.hse-review-prompt')  ||
@@ -370,7 +488,7 @@
 
   // ── Init ──────────────────────────────────────────────────────────
   function init() {
-    Promise.resolve().then(function () {
+    promptForPassword().then(function () {
       if (!reviewer) {
         return promptForName().then(function (name) {
           reviewer = { name: name, colour: colourFor(name) };
@@ -381,21 +499,28 @@
       renderToolbar();
       return loadAnnotations();
     }).then(function (rows) {
-      rows.forEach(function (ann) { placeStickyEl(ann, false); });
+      var topLevel = rows.filter(function (r) { return !r.parent_id; });
+      var byParent = {};
+      rows.filter(function (r) { return r.parent_id; }).forEach(function (r) {
+        if (!byParent[r.parent_id]) byParent[r.parent_id] = [];
+        byParent[r.parent_id].push(r);
+      });
+      topLevel.forEach(function (ann) {
+        placeStickyEl(ann, false, byParent[ann.id] || []);
+      });
+      syncLayerHeight();
     }).catch(function (e) {
       console.error('[review] Init failed:', e);
     });
   }
 
-  // Keep layer height in sync with document so % positions are accurate
+  // ── Layer height sync ─────────────────────────────────────────────
   function syncLayerHeight() {
     layer.style.height = document.body.scrollHeight + 'px';
   }
   window.addEventListener('resize', syncLayerHeight);
-  // Re-sync after images/fonts load
-  window.addEventListener('load', syncLayerHeight);
+  window.addEventListener('load',   syncLayerHeight);
 
-  // Wait for DOM ready
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', function () { syncLayerHeight(); init(); });
   } else {

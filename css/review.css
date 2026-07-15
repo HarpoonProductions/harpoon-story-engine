@@ -301,6 +301,158 @@ body.hse-review-active {
 
 .hse-sticky__save:hover { filter: brightness(1.1); }
 
+/* ── Reply thread ────────────────────────────────────────────────── */
+
+.hse-sticky__thread {
+  border-top: 1px solid rgba(0,0,0,0.06);
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.hse-sticky__reply {
+  padding: 0.4rem 0.6rem;
+  border-bottom: 1px solid rgba(0,0,0,0.05);
+  background: rgba(0,0,0,0.02);
+}
+
+.hse-sticky__reply:last-child {
+  border-bottom: none;
+}
+
+.hse-sticky__reply-header {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  margin-bottom: 0.2rem;
+}
+
+.hse-sticky__reply-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.hse-sticky__reply-author {
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: #555;
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.hse-sticky__reply-delete {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 0.6rem;
+  color: #bbb;
+  padding: 0 0.15rem;
+  line-height: 1;
+  transition: color 0.12s;
+}
+
+.hse-sticky__reply-delete:hover { color: #c62828; }
+
+.hse-sticky__reply-note {
+  margin: 0;
+  font-size: 0.75rem;
+  color: #333;
+  line-height: 1.4;
+  word-break: break-word;
+}
+
+/* ── Reply button ────────────────────────────────────────────────── */
+
+.hse-sticky__reply-btn {
+  display: block;
+  width: 100%;
+  background: none;
+  border: none;
+  border-top: 1px solid rgba(0,0,0,0.06);
+  padding: 0.3rem 0.6rem;
+  text-align: left;
+  font-family: inherit;
+  font-size: 0.7rem;
+  color: #888;
+  cursor: pointer;
+  transition: background 0.12s, color 0.12s;
+}
+
+.hse-sticky__reply-btn:hover {
+  background: rgba(0,0,0,0.04);
+  color: #444;
+}
+
+/* ── Inline reply form ───────────────────────────────────────────── */
+
+.hse-sticky__reply-form {
+  border-top: 1px solid rgba(0,0,0,0.06);
+  background: #fffef7;
+  padding: 0.35rem 0.5rem 0.4rem;
+}
+
+.hse-sticky__reply-textarea {
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
+  border: 1px solid rgba(0,0,0,0.12);
+  border-radius: 3px;
+  padding: 0.3rem 0.4rem;
+  font-family: inherit;
+  font-size: 0.75rem;
+  line-height: 1.4;
+  color: #222;
+  resize: vertical;
+  outline: none;
+  background: #fff;
+  transition: border-color 0.12s;
+}
+
+.hse-sticky__reply-textarea:focus {
+  border-color: rgba(0,0,0,0.3);
+}
+
+.hse-sticky__reply-footer {
+  display: flex;
+  gap: 0.3rem;
+  margin-top: 0.3rem;
+}
+
+.hse-sticky__reply-save {
+  background: #333;
+  color: #fff;
+  border: none;
+  border-radius: 3px;
+  font-family: inherit;
+  font-size: 0.7rem;
+  font-weight: 600;
+  padding: 0.25rem 0.55rem;
+  cursor: pointer;
+  transition: background 0.12s;
+}
+
+.hse-sticky__reply-save:hover { background: #111; }
+
+.hse-sticky__reply-cancel {
+  background: none;
+  border: 1px solid rgba(0,0,0,0.15);
+  border-radius: 3px;
+  font-family: inherit;
+  font-size: 0.7rem;
+  color: #888;
+  padding: 0.25rem 0.5rem;
+  cursor: pointer;
+  transition: background 0.12s;
+}
+
+.hse-sticky__reply-cancel:hover { background: rgba(0,0,0,0.05); }
+
 /* ── Mobile tweaks ───────────────────────────────────────────────── */
 
 @media (max-width: 640px) {
