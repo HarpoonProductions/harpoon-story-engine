@@ -175,7 +175,7 @@
     if (ann.id) el.dataset.annId = ann.id;
     el.style.cssText =
       'left:' + ann.x_percent + '%;' +
-      'top:'  + ann.y_percent + '%;' +
+      'top:'  + resolveTop(ann) + '%;' +
       '--sticky-colour:' + ann.colour + ';';
 
     function renderContent(savedAnn) {
@@ -218,14 +218,15 @@
         if (!note) return;
 
         var row = {
-          project_id:    projectId,
-          reviewer_name: ann.reviewer_name,
-          colour:        ann.colour,
-          anchor_id:     ann.anchor_id,
-          x_percent:     ann.x_percent,
-          y_percent:     ann.y_percent,
-          note:          note,
-          resolved:      false
+          project_id:       projectId,
+          reviewer_name:    ann.reviewer_name,
+          colour:           ann.colour,
+          anchor_id:        ann.anchor_id,
+          section_y_offset: ann.section_y_offset,
+          x_percent:        ann.x_percent,
+          y_percent:        ann.y_percent,
+          note:             note,
+          resolved:         false
         };
 
         saveAnnotation(row).then(function (rows) {
@@ -308,6 +309,31 @@
     });
   }
 
+  // ── Section-relative Y position ───────────────────────────────────
+  // Store position as a ratio within the anchor section so stickies
+  // survive page reflow between desktop and mobile layouts.
+
+  function sectionYOffset(pageY, anchorId) {
+    if (!anchorId) return null;
+    var el = document.getElementById(anchorId);
+    if (!el || el.offsetHeight === 0) return null;
+    var sectionTop = el.getBoundingClientRect().top + window.scrollY;
+    return (pageY - sectionTop) / el.offsetHeight;
+  }
+
+  function resolveTop(ann) {
+    // Prefer section-relative positioning when available
+    if (ann.anchor_id && ann.section_y_offset != null) {
+      var el = document.getElementById(ann.anchor_id);
+      if (el) {
+        var sectionTop = el.getBoundingClientRect().top + window.scrollY;
+        var absY = sectionTop + ann.section_y_offset * el.offsetHeight;
+        return (absY / Math.max(document.body.scrollHeight, 1)) * 100;
+      }
+    }
+    return ann.y_percent; // fallback for legacy annotations
+  }
+
   // ── Click to place ────────────────────────────────────────────────
   document.addEventListener('click', function (e) {
     // Ignore clicks on review UI elements
@@ -317,17 +343,19 @@
         e.target.closest('#hse-nav')            ||
         e.target.closest('#hse-audio-player')) return;
 
-    var pageY   = e.pageY;
-    var pageX   = e.pageX;
-    var totalH  = Math.max(document.body.scrollHeight, 1);
-    var totalW  = Math.max(document.body.clientWidth,  1);
+    var pageY    = e.pageY;
+    var pageX    = e.pageX;
+    var totalH   = Math.max(document.body.scrollHeight, 1);
+    var totalW   = Math.max(document.body.clientWidth,  1);
+    var anchorId = nearestSection(pageY);
 
     placeStickyEl({
-      reviewer_name: reviewer.name,
-      colour:        reviewer.colour,
-      anchor_id:     nearestSection(pageY),
-      x_percent:     (pageX   / totalW) * 100,
-      y_percent:     (pageY   / totalH) * 100
+      reviewer_name:    reviewer.name,
+      colour:           reviewer.colour,
+      anchor_id:        anchorId,
+      section_y_offset: sectionYOffset(pageY, anchorId),
+      x_percent:        (pageX / totalW) * 100,
+      y_percent:        (pageY / totalH) * 100
     }, true);
   }, false);
 
