@@ -149,6 +149,12 @@ function renderHead(meta, config, title, basePath, staging, heroImageUrl) {
   <!-- Print stylesheet — media=print so it never affects screen rendering -->
   <link rel="stylesheet" href="${css('css/print.css')}" media="print">
 
+  <!-- Review layer (activates only on review.* subdomain or ?review=1) -->
+  <link rel="stylesheet" href="${css('css/review.css')}">
+  <script defer src="${js('js/review.js')}"></script>
+  <meta name="hse-supabase-url" content="${process.env.SUPABASE_URL || ''}">
+  <meta name="hse-supabase-anon-key" content="${process.env.SUPABASE_ANON_KEY || ''}">
+
   <!-- Per-project brand tokens -->
   <style>
     :root {

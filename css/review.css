@@ -1,0 +1,309 @@
+/*
+ * Harpoon Story Engine — Review Layer
+ * review.css
+ *
+ * Styles for the client annotation layer. Only active when
+ * review.js is loaded and the review subdomain is detected.
+ */
+
+/* ── Body state ──────────────────────────────────────────────────── */
+
+body.hse-review-active {
+  /* Reserve space at top for the toolbar */
+  padding-top: 48px !important;
+}
+
+/* ── Review layer (sticky container) ────────────────────────────── */
+
+#hse-review-layer {
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%;
+  /* Height set by JS to match document height */
+  pointer-events: none;
+  z-index: 9000;
+}
+
+/* ── Toolbar ─────────────────────────────────────────────────────── */
+
+#hse-review-toolbar {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  height: 48px;
+  z-index: 9500;
+  background: rgba(15, 15, 15, 0.96);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+  display: flex;
+  align-items: center;
+}
+
+.hse-review-toolbar__inner {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  padding: 0 1.25rem;
+  width: 100%;
+}
+
+.hse-review-toolbar__identity {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-shrink: 0;
+}
+
+.hse-review-toolbar__dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.hse-review-toolbar__name {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #fff;
+  white-space: nowrap;
+}
+
+.hse-review-toolbar__hint {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-size: 0.75rem;
+  color: rgba(255,255,255,0.45);
+  flex: 1;
+}
+
+.hse-review-toolbar__toggle {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-size: 0.75rem;
+  color: rgba(255,255,255,0.55);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+.hse-review-toolbar__toggle input {
+  accent-color: #fff;
+  cursor: pointer;
+}
+
+/* ── Name prompt ─────────────────────────────────────────────────── */
+
+.hse-review-prompt {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  background: rgba(0,0,0,0.7);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.hse-review-prompt__box {
+  background: #1a1a1a;
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 10px;
+  padding: 2rem;
+  width: min(360px, 90vw);
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.hse-review-prompt__heading {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #fff;
+  margin: 0;
+}
+
+.hse-review-prompt__sub {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-size: 0.82rem;
+  color: rgba(255,255,255,0.5);
+  margin: 0;
+}
+
+.hse-review-prompt__input {
+  background: rgba(255,255,255,0.07);
+  border: 1px solid rgba(255,255,255,0.15);
+  border-radius: 6px;
+  color: #fff;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-size: 0.95rem;
+  padding: 0.6rem 0.75rem;
+  outline: none;
+  transition: border-color 0.15s;
+}
+
+.hse-review-prompt__input:focus {
+  border-color: rgba(255,255,255,0.4);
+}
+
+.hse-review-prompt__btn {
+  background: #fff;
+  color: #111;
+  border: none;
+  border-radius: 6px;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-size: 0.9rem;
+  font-weight: 600;
+  padding: 0.6rem 1rem;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.hse-review-prompt__btn:hover { background: #e0e0e0; }
+
+/* ── Sticky notes ────────────────────────────────────────────────── */
+
+.hse-sticky {
+  position: absolute;
+  width: 220px;
+  background: #fff;
+  border-radius: 4px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.25), 0 1px 4px rgba(0,0,0,0.15);
+  pointer-events: auto;
+  z-index: 9100;
+  transform: translateY(-50%);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-size: 0.8rem;
+}
+
+/* Colour tab at top */
+.hse-sticky::before {
+  content: '';
+  display: block;
+  height: 4px;
+  background: var(--sticky-colour, #D4A017);
+  border-radius: 4px 4px 0 0;
+}
+
+.hse-sticky--resolved {
+  display: none;
+}
+
+.hse-review-layer--show-resolved .hse-sticky--resolved {
+  display: block;
+  opacity: 0.5;
+}
+
+/* ── Sticky header ───────────────────────────────────────────────── */
+
+.hse-sticky__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.4rem 0.5rem 0.3rem;
+  background: rgba(0,0,0,0.04);
+  border-bottom: 1px solid rgba(0,0,0,0.06);
+  user-select: none;
+}
+
+.hse-sticky__author {
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: var(--sticky-colour, #D4A017);
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100px;
+}
+
+.hse-sticky__actions {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  flex-shrink: 0;
+}
+
+.hse-sticky__resolve,
+.hse-sticky__delete {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 0.7rem;
+  padding: 0.15rem 0.3rem;
+  border-radius: 3px;
+  color: #888;
+  transition: background 0.12s, color 0.12s;
+  line-height: 1;
+}
+
+.hse-sticky__resolve:hover { background: #e8f5e9; color: #2e7d32; }
+.hse-sticky__delete:hover  { background: #fdecea; color: #c62828; }
+
+.hse-sticky__badge {
+  font-size: 0.65rem;
+  color: #2e7d32;
+  font-weight: 600;
+  padding: 0.1rem 0.25rem;
+}
+
+/* ── Sticky body ─────────────────────────────────────────────────── */
+
+.hse-sticky__note {
+  margin: 0;
+  padding: 0.5rem 0.6rem 0.6rem;
+  color: #222;
+  line-height: 1.45;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+/* ── New sticky (editing state) ──────────────────────────────────── */
+
+.hse-sticky__textarea {
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
+  border: none;
+  border-top: 1px solid rgba(0,0,0,0.06);
+  padding: 0.5rem 0.6rem;
+  font-family: inherit;
+  font-size: 0.8rem;
+  line-height: 1.45;
+  color: #222;
+  resize: vertical;
+  outline: none;
+  background: #fffef7;
+}
+
+.hse-sticky__footer {
+  padding: 0.3rem 0.5rem 0.5rem;
+  display: flex;
+  gap: 0.35rem;
+}
+
+.hse-sticky__save {
+  background: var(--sticky-colour, #D4A017);
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  font-family: inherit;
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0.3rem 0.65rem;
+  cursor: pointer;
+  transition: filter 0.12s;
+}
+
+.hse-sticky__save:hover { filter: brightness(1.1); }
+
+/* ── Mobile tweaks ───────────────────────────────────────────────── */
+
+@media (max-width: 640px) {
+  .hse-sticky { width: 180px; }
+  .hse-review-toolbar__hint { display: none; }
+}
