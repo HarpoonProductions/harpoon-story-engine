@@ -1,0 +1,53 @@
+/*
+ * ════════════════════════════════════════════════════════════════════
+ *  Harpoon Platform — Client Token Set: FA - Welcome to Football
+ *  css/tokens-welcome-to-football.css
+ *
+ *  This is the canonical brand identity file for FA - Welcome to Football
+ *  across all Harpoon products — Story Engine stories, Edition OS
+ *  magazines, Briefing Engine sessions, analytics reports, and any
+ *  future Harpoon product built for this client. It is the single
+ *  source of truth for this client's visual identity within the
+ *  Harpoon platform.
+ *
+ *  Generated from manual entry, July 2026.
+ *  This file contains overrides only. Base tokens not listed here
+ *  remain at their platform defaults defined in css/tokens.css.
+ * ════════════════════════════════════════════════════════════════════
+ */
+
+/* ── Proprietary typeface — served from client CDN if available ─────
+   local() picks it up when hosted on client infrastructure.
+   Falls back to the generic stack if not available.
+*/
+@font-face {
+  font-family: 'Bebas Neue';
+  src: local('Bebas Neue');
+}
+
+:root {
+  /* ── Accent colours ── */
+  --hse-accent:   #ff4602;
+  --hse-accent-2: #c9a84c;
+
+  /* ── Neutral palette ── */
+  --hse-ink:    #ffffff;
+  --hse-ink-2:  #111116;
+  --hse-ink-3:  #1c1c24;
+  --hse-warm:   #ffdf48;
+  --hse-warm-2: #e0261c;
+  --hse-warm-3: #045bbb;
+
+  /* ── RGB channels ── */
+  --hse-ink-rgb:  255, 255, 255;
+  --hse-warm-rgb: 255, 223, 72;
+
+  /* ── Typography ── */
+  --hse-font-display: "Bebas Neue", sans-serif;
+  --hse-font-body:    'DM Sans', system-ui, sans-serif;
+  --hse-font-mono:    'DM Mono', 'Courier New', monospace;
+
+  /* ── Geometry ── */
+  --hse-max-w:  1160px;
+  --hse-text-w: 680px;
+}
