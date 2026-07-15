@@ -169,10 +169,19 @@
   }
 
   // ── Sticky element ────────────────────────────────────────────────
+  var stickyZBase = 9100;
+
+  function bringToFront(el) {
+    stickyZBase++;
+    el.style.zIndex = stickyZBase;
+  }
+
   function placeStickyEl(ann, isNew) {
     var el = document.createElement('div');
     el.className = 'hse-sticky' + (ann.resolved ? ' hse-sticky--resolved' : '');
     if (ann.id) el.dataset.annId = ann.id;
+    el.addEventListener('mousedown', function () { bringToFront(el); });
+    el.addEventListener('touchstart', function () { bringToFront(el); }, { passive: true });
     el.style.cssText =
       'left:' + ann.x_percent + '%;' +
       'top:'  + resolveTop(ann) + '%;' +
