@@ -216,7 +216,8 @@ function buildBody(institution, guide, ceremonies, asset) {
 ${buildMobileMenu(guide, ceremonies)}
 
 <div class="gg-floating-bar" id="floating-bar">
-  You are viewing <span id="floating-bar-text"></span>
+  <span class="gg-floating-bar-label">You are viewing</span>
+  <span id="floating-bar-text"></span>
 </div>
 
 <section class="gg-hero" id="hero">

@@ -149,13 +149,24 @@
   }
 
   // ── Floating bar ─────────────────────────────────────────────────────
+  // Visible only while scrolled within the active ceremony's own section —
+  // not "once past the hero, forever" (the old check just looked at the
+  // hero, so the bar stayed on through unrelated content further down the
+  // page, e.g. the welcome message and photography sections).
   (function initFloatingBar() {
     var bar = document.getElementById('floating-bar');
-    var hero = document.getElementById('hero');
-    if (!bar || !hero) return;
-    window.addEventListener('scroll', function () {
-      bar.classList.toggle('visible', hero.getBoundingClientRect().bottom < 50);
-    }, { passive: true });
+    if (!bar) return;
+    var TRIGGER_LINE = 50; // nav height — matches the hero threshold this replaces
+
+    function updateFloatingBar() {
+      var activeSection = document.querySelector('.gg-ceremony.active');
+      if (!activeSection) { bar.classList.remove('visible'); return; }
+      var rect = activeSection.getBoundingClientRect();
+      bar.classList.toggle('visible', rect.top < TRIGGER_LINE && rect.bottom > TRIGGER_LINE);
+    }
+
+    window.addEventListener('scroll', updateFloatingBar, { passive: true });
+    updateFloatingBar();
   })();
 
   // ── Procession tabs (scoped per ceremony section) ───────────────────
