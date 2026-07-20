@@ -1,0 +1,10 @@
+{
+  "name": "__NAME__",
+  "short_name": "__SHORT_NAME__",
+  "start_url": "__START_URL__",
+  "scope": "__SCOPE__",
+  "display": "standalone",
+  "background_color": "__BACKGROUND_COLOR__",
+  "theme_color": "__THEME_COLOR__",
+  "icons": __ICONS_JSON__
+}

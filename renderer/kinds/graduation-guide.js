@@ -1,6 +1,7 @@
 'use strict';
 
 const { escHtml, resolveTokenStyle, renderPlausibleScript } = require('../shell/head');
+const { buildPwaHeadTags } = require('../pwa');
 
 /**
  * Renders a content.kind === "graduation-guide" document to a full HTML
@@ -48,6 +49,7 @@ function buildHead(meta, config, institution, base, asset) {
   const title = `${escHtml(meta.title)} | ${escHtml(institution.name)}`;
   const plausibleScript = renderPlausibleScript(config);
   const tokenSetHtml = resolveTokenStyle(meta.token_set);
+  const pwaTags = buildPwaHeadTags({ enabled: !!config?.pwa?.enabled, asset });
 
   return `<head>
   <meta charset="UTF-8">
@@ -55,6 +57,7 @@ function buildHead(meta, config, institution, base, asset) {
   <meta name="theme-color" content="${escHtml(institution.primaryColor)}">
   <title>${title}</title>
   ${plausibleScript}
+  ${pwaTags}
 
   <!-- Platform Core token set (fonts/logo lookup only — colours below are this guide's own) -->
   ${tokenSetHtml}

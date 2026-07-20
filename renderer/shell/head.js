@@ -1,6 +1,7 @@
 'use strict';
 const fs   = require('fs');
 const path = require('path');
+const { buildPwaHeadTags } = require('../pwa');
 
 /**
  * Reads the Platform Core token-set CSS file for a given token_set id and
@@ -82,9 +83,12 @@ function renderHead(meta, config, title, basePath, staging, heroImageUrl) {
 
   const plausibleScript = renderPlausibleScript(config);
 
-  const pwaThemeColor = config?.pwa?.enabled && config.pwa.theme_color
-    ? `<meta name="theme-color" content="${config.pwa.theme_color}">`
-    : '';
+  const themeColorMeta = `<meta name="theme-color" content="${config?.pwa?.theme_color || accentColor}">`;
+
+  const pwaTags = buildPwaHeadTags({
+    enabled: !!config?.pwa?.enabled,
+    asset: css,
+  });
 
   // Pre-compute conditional HTML blocks (avoids nested template literals)
   // Ensure font-display=swap is always present so text renders immediately
@@ -124,7 +128,8 @@ function renderHead(meta, config, title, basePath, staging, heroImageUrl) {
   ${ogTags}
   ${robotsMeta}
   ${plausibleScript}
-  ${pwaThemeColor}
+  ${themeColorMeta}
+  ${pwaTags}
 
   <!-- Fonts (default set uses Google Fonts; client token sets may specify their own) -->
   ${fontsHtml}

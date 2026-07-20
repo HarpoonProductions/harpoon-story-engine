@@ -59,17 +59,22 @@ if (errors.length) {
   errors.forEach((e) => console.error(`    ${e.instancePath || '(root)'} — ${e.message}`));
 }
 
+(async () => {
+
 let files;
 try {
-  files = render(content, outputDir, { basePath: '' });
+  files = await render(content, outputDir, { basePath: '' });
 } catch (err) {
   console.error(`  ✗ Render threw: ${err.message}`);
   console.error(err.stack);
   process.exit(1);
 }
-assert('Rendered exactly one file (no print/PDF tracks for this kind)', files.length === 1);
+// No print/PDF tracks for this kind (narrative-only) — but PWA is
+// enabled for this project, so expect index.html + manifest.json + sw.js
+// + 2 generated icon PNGs.
+assert('Rendered index.html + manifest.json + sw.js + 2 icons (PWA enabled)', files.length === 5);
 
-const html = fs.readFileSync(files[0], 'utf8');
+const html = fs.readFileSync(files.find((f) => f.endsWith('index.html')), 'utf8');
 
 assertContains('Title includes guide + institution name', html, `${content.guide.title} | ${content.institution.name}`);
 assertContains('Plausible script uses the correct domain', html, 'analytics.har.pn/js/script.js');
@@ -98,5 +103,49 @@ const expectedStudents = content.ceremonies.reduce(
 assertCount('One student row per graduate', html, 'gg-student-name-row', expectedStudents);
 assert('searchIndex has one entry per graduate', content.searchIndex.length === expectedStudents);
 
+// ── PWA ──────────────────────────────────────────────────────────────
+
+assertContains('Manifest link present in <head>', html, 'rel="manifest"');
+assertContains('Service worker registration script present', html, "navigator.serviceWorker.register");
+
+const outDir = path.dirname(files.find((f) => f.endsWith('index.html')));
+
+let manifest;
+try {
+  manifest = JSON.parse(fs.readFileSync(path.join(outDir, 'manifest.json'), 'utf8'));
+  assert('manifest.json is valid JSON', true);
+} catch (err) {
+  assert('manifest.json is valid JSON', false);
+  manifest = {};
+}
+assert('Manifest name includes guide + institution', (manifest.name || '').includes(content.guide.title) && manifest.name.includes(content.institution.name));
+assert('Manifest theme_color matches institution.primaryColor', manifest.theme_color === content.institution.primaryColor);
+assert('Manifest background_color matches institution.lightBackground', manifest.background_color === content.institution.lightBackground);
+assert('Manifest display is standalone', manifest.display === 'standalone');
+assert('Manifest has a 192x192 icon', (manifest.icons || []).some((i) => i.sizes === '192x192'));
+assert('Manifest has a 512x512 icon', (manifest.icons || []).some((i) => i.sizes === '512x512'));
+
+const swPath = path.join(outDir, 'sw.js');
+const swJs = fs.readFileSync(swPath, 'utf8');
+assertAbsent('Service worker has no leftover template placeholders', swJs, '__CACHE_NAME__');
+assertAbsent('Service worker has no leftover precache placeholder', swJs, '__PRECACHE_URLS__');
+assertContains('Service worker precaches the page itself first', swJs, '"index.html"');
+assertContains('Service worker precaches the manifest', swJs, '"manifest.json"');
+assertContains('Service worker precaches the runtime JS', swJs, 'graduation-guide-runtime.js');
+
+for (const size of ['192', '512']) {
+  const iconPath = path.join(outDir, 'icons', `icon-${size}.png`);
+  const exists = fs.existsSync(iconPath);
+  assert(`icon-${size}.png was written`, exists);
+  if (exists) {
+    const buf = fs.readFileSync(iconPath);
+    assert(`icon-${size}.png is a valid PNG (correct magic bytes)`, buf.slice(0, 8).toString('hex') === '89504e470d0a1a0a');
+    const dims = buf.readUInt32BE(16) + 'x' + buf.readUInt32BE(20);
+    assert(`icon-${size}.png is ${size}x${size}`, dims === `${size}x${size}`);
+  }
+}
+
 console.log(`\n${passed} passed, ${failed} failed\n`);
 process.exit(failed > 0 ? 1 : 0);
+
+})();

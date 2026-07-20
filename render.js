@@ -63,13 +63,15 @@ console.log(`\n✓ Schema valid — ${content.meta.project_id}`);
 
 fs.mkdirSync(outputDir, { recursive: true });
 
-try {
-  const files = render(content, outputDir, basePath !== undefined ? { basePath } : undefined);
-  console.log(`✓ Rendered ${files.length} file(s) to ${outputDir}`);
-  files.forEach(f => console.log(`  → ${path.relative(outputDir, f)}`));
-  console.log('');
-} catch (err) {
-  console.error(`\n✗ Render error: ${err.message}`);
-  console.error(err.stack);
-  process.exit(1);
-}
+(async () => {
+  try {
+    const files = await render(content, outputDir, basePath !== undefined ? { basePath } : undefined);
+    console.log(`✓ Rendered ${files.length} file(s) to ${outputDir}`);
+    files.forEach(f => console.log(`  → ${path.relative(outputDir, f)}`));
+    console.log('');
+  } catch (err) {
+    console.error(`\n✗ Render error: ${err.message}`);
+    console.error(err.stack);
+    process.exit(1);
+  }
+})();

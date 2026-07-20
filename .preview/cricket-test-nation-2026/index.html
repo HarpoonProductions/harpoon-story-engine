@@ -10,6 +10,14 @@
   
   <script defer data-domain="cricket-test-nation-2026.harpoon.productions" src="https://analytics.har.pn/js/script.js"></script>
   <meta name="theme-color" content="#001A3D">
+  <link rel="manifest" href="manifest.json">
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', function () {
+        navigator.serviceWorker.register('sw.js').catch(function () {});
+      });
+    }
+  </script>
 
   <!-- Fonts (default set uses Google Fonts; client token sets may specify their own) -->
   <link rel="preconnect" href="https://fonts.googleapis.com">

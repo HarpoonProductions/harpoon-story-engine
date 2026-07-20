@@ -27,6 +27,7 @@ const { renderCoverLayout }     = require("./layouts/cover");
 const { renderPrint }           = require("./print-renderer");
 const { renderPdf }             = require("./pdf-renderer");
 const { renderGraduationGuide } = require("./kinds/graduation-guide");
+const { isEnabled: isPwaEnabled, writePwaFiles } = require("./pwa");
 
 /**
  * Top-level render function.
@@ -35,11 +36,15 @@ const { renderGraduationGuide } = require("./kinds/graduation-guide");
  * Currently renders in single-page mode regardless of config.layout_mode —
  * multi-page support is a future iteration.
  *
+ * Async because PWA icon generation (sharp) is inherently async when
+ * config.pwa.enabled — a no-op await for every project that hasn't
+ * opted in, but every caller needs to handle the Promise regardless.
+ *
  * @param {object} content    - validated HSE content object
  * @param {string} outputDir  - absolute path to output directory
- * @returns {string[]} Array of absolute paths to written files
+ * @returns {Promise<string[]>} Array of absolute paths to written files
  */
-function render(content, outputDir, options) {
+async function render(content, outputDir, options) {
   const opts = options || {};
 
   // Copy CSS to output directory
@@ -50,6 +55,8 @@ function render(content, outputDir, options) {
   const basePath = opts.hasOwnProperty("basePath")
     ? opts.basePath
     : content.meta.project_id || "";
+  const base = basePath ? "/" + basePath.replace(/^\//, "").replace(/\/$/, "") : "";
+  const asset = (file) => (base ? `${base}/${file}` : file);
 
   // Graduation guides are a separate render path — different document
   // shape (institution/guide/ceremonies/searchIndex, not cover/sections),
@@ -58,7 +65,27 @@ function render(content, outputDir, options) {
     const html = renderGraduationGuide(content, { basePath });
     const outPath = path.join(outputDir, "index.html");
     fs.writeFileSync(outPath, html, "utf8");
-    return [outPath];
+    const written = [outPath];
+
+    if (isPwaEnabled(content.config)) {
+      const institution = content.institution || {};
+      const guide = content.guide || {};
+      const pwaFiles = await writePwaFiles(outputDir, {
+        html,
+        asset,
+        htmlFile: "index.html",
+        name: institution.name ? `${guide.title} — ${institution.name}` : (guide.title || content.meta.title),
+        shortName: (institution.shortName || guide.title || content.meta.title || "").slice(0, 12),
+        themeColor: institution.primaryColor || "#232333",
+        backgroundColor: institution.lightBackground || institution.primaryColor || "#ffffff",
+        iconLetter: institution.shortName || institution.name || "?",
+        icons: institution.icons,
+        cacheVersion: pwaCacheVersion(content.meta),
+      });
+      written.push(...pwaFiles);
+    }
+
+    return written;
   }
 
   const { meta, config, cover, sections } = content;
@@ -98,7 +125,30 @@ function render(content, outputDir, options) {
     written.push(pdfPreviewPath);
   }
 
+  // Same PWA capability the graduation-guide kind uses above — generic,
+  // available to any narrative project that opts in via config.pwa.enabled.
+  // Nothing does yet; this proves the mechanism works for both kinds
+  // without forcing it on any existing live story.
+  if (isPwaEnabled(config)) {
+    const pwaFiles = await writePwaFiles(outputDir, {
+      html,
+      asset,
+      htmlFile: "index.html",
+      name: meta.title,
+      shortName: (meta.title || "").slice(0, 12),
+      themeColor: meta.accent_color || "#1A3F6F",
+      backgroundColor: meta.accent_color_2 || "#F2EDE6",
+      iconLetter: meta.title || "?",
+      cacheVersion: pwaCacheVersion(meta),
+    });
+    written.push(...pwaFiles);
+  }
+
   return written;
+}
+
+function pwaCacheVersion(meta) {
+  return (meta.project_id || "hse") + "-" + (meta.last_saved || meta.version || String(Date.now()));
 }
 
 // ── Page assembly ─────────────────────────────────────────────────

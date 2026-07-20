@@ -152,7 +152,7 @@ function addRecent(projectId) {
 
 // ── Render a project to .preview/ ────────────────────────────────
 
-function renderToPreview(projectId, contentObj) {
+async function renderToPreview(projectId, contentObj) {
   let content = contentObj;
 
   // If no content passed, try to load from filesystem or skip
@@ -174,7 +174,7 @@ function renderToPreview(projectId, contentObj) {
 
   const outDir = path.join(PREVIEW_DIR, projectId);
   try {
-    render(content, outDir, { basePath: "" });
+    await render(content, outDir, { basePath: "" });
     return { ok: true };
   } catch (err) {
     return { ok: false, error: err.message };
@@ -283,7 +283,7 @@ app.get("/api/project/:id/preview", async (req, res) => {
         return res.status(404).json({ ok: false, error: "Project not found" });
       content = JSON.parse(fs.readFileSync(contentPath, "utf8"));
     }
-    const result = renderToPreview(projectId, content);
+    const result = await renderToPreview(projectId, content);
     if (!result.ok) {
       const msg = result.error || (result.errors ? result.errors.map((e) => e.message).join("; ") : "Render failed");
       return res.status(500).json({ ok: false, error: msg });
@@ -337,7 +337,7 @@ app.post("/api/project/:id/save", async (req, res) => {
     // failures don't roll back the save)
     let renderWarning = null;
     try {
-      const renderResult = renderToPreview(projectId, body);
+      const renderResult = await renderToPreview(projectId, body);
       if (!renderResult.ok) {
         const msg = renderResult.error ||
           (renderResult.errors ? renderResult.errors.map(e => e.message).join("; ") : "Render failed");
@@ -404,7 +404,7 @@ app.post("/api/project/create", async (req, res) => {
         "utf8",
       );
     }
-    renderToPreview(id, newContent);
+    await renderToPreview(id, newContent);
     addRecent(id);
     res.json({ ok: true, id });
   } catch (err) {
@@ -575,8 +575,8 @@ app.get("/api/project/:id/section/:index/classes", async (req, res) => {
 });
 
 // Trigger a manual re-render
-app.post("/api/project/:id/render", (req, res) => {
-  const result = renderToPreview(req.params.id);
+app.post("/api/project/:id/render", async (req, res) => {
+  const result = await renderToPreview(req.params.id);
   res.json(result);
 });
 
@@ -1073,10 +1073,10 @@ chokidar
     ignoreInitial: true,
     awaitWriteFinish: { stabilityThreshold: 300 },
   })
-  .on("change", (filePath) => {
+  .on("change", async (filePath) => {
     const projectId = path.basename(path.dirname(filePath));
     console.log(`↺  Re-rendering ${projectId}...`);
-    renderToPreview(projectId);
+    await renderToPreview(projectId);
   });
 
 // ── Start ─────────────────────────────────────────────────────────
@@ -1089,7 +1089,7 @@ async function preRenderAll() {
       for (const p of projects) {
         try {
           const content = await db.getProject(p.id);
-          const result = renderToPreview(p.id, content);
+          const result = await renderToPreview(p.id, content);
           if (result.ok) console.log(`✓  Pre-rendered ${p.id}`);
         } catch (err) {
           console.warn(`⚠  Could not pre-render ${p.id}:`, err.message);
@@ -1099,12 +1099,11 @@ async function preRenderAll() {
       console.warn("⚠  Could not load projects from Supabase:", err.message);
     }
   } else if (fs.existsSync(PROJECTS_DIR)) {
-    fs.readdirSync(PROJECTS_DIR, { withFileTypes: true })
-      .filter((e) => e.isDirectory())
-      .forEach((e) => {
-        const result = renderToPreview(e.name);
-        if (result.ok) console.log(`✓  Pre-rendered ${e.name}`);
-      });
+    const dirs = fs.readdirSync(PROJECTS_DIR, { withFileTypes: true }).filter((e) => e.isDirectory());
+    for (const e of dirs) {
+      const result = await renderToPreview(e.name);
+      if (result.ok) console.log(`✓  Pre-rendered ${e.name}`);
+    }
   }
 }
 

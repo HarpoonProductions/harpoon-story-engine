@@ -36,6 +36,7 @@ const promoted = {
   },
   config: {
     analytics: { plausible_domain: 'analytics.har.pn' },
+    pwa: { enabled: true },
   },
   institution,
   guide: source.guide,

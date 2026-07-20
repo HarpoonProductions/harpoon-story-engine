@@ -52,6 +52,7 @@ const examples = [
 const outputBase = path.join(__dirname, 'output', 'test');
 let allPassed = true;
 
+(async () => {
 for (const example of examples) {
   console.log(`\n── ${example.name} ──────────────────────────────────────`);
 
@@ -79,7 +80,7 @@ for (const example of examples) {
   fs.mkdirSync(outDir, { recursive: true });
   let files;
   try {
-    files = render(content, outDir);
+    files = await render(content, outDir);
     assert('Render completes without error', true);
   } catch (err) {
     console.error(`  ✗ Render error: ${err.message}`);
@@ -171,12 +172,13 @@ for (const example of examples) {
   assertAbsent('No undefined values',         html, '>undefined<');
 }
 
-// ── Summary ───────────────────────────────────────────────────────
+})().then(() => {
+  // ── Summary ─────────────────────────────────────────────────────
+  console.log(`\n${'─'.repeat(52)}`);
+  console.log(`  ${passed} passed  ·  ${failed} failed  ·  ${passed + failed} total`);
+  console.log(`${'─'.repeat(52)}\n`);
 
-console.log(`\n${'─'.repeat(52)}`);
-console.log(`  ${passed} passed  ·  ${failed} failed  ·  ${passed + failed} total`);
-console.log(`${'─'.repeat(52)}\n`);
-
-if (failed > 0) {
-  process.exit(1);
-}
+  if (failed > 0) {
+    process.exit(1);
+  }
+});

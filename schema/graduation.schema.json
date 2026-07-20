@@ -37,11 +37,11 @@
         },
         "pwa": {
           "type": "object",
-          "description": "Schema present for forward compatibility — not implemented by this render path yet (see docs/graduation-guide-integration.md, deferred).",
+          "description": "Implemented via renderer/pwa.js — a Tier 1 capability (see harpoon-core), not graduation-guide-specific. Set enabled:true to generate manifest.json, sw.js, and app icons at build time. theme_color/background_color are optional overrides; institution.primaryColor/lightBackground are used by default.",
           "properties": {
             "enabled": { "type": "boolean", "default": false },
-            "theme_color": { "type": "string" },
-            "background_color": { "type": "string" }
+            "theme_color": { "type": "string", "description": "Overrides institution.primaryColor for the manifest/theme-color meta, if set." },
+            "background_color": { "type": "string", "description": "Overrides institution.lightBackground for the manifest splash background, if set." }
           }
         }
       }
@@ -80,6 +80,19 @@
             "address": { "type": "string" },
             "privacyUrl": { "type": "string" },
             "copyrightLine": { "type": "string" }
+          }
+        },
+        "icons": {
+          "type": "array",
+          "description": "Real institution logo/icon files for the PWA manifest, resolved relative to the deployed artefact's directory. Optional — when omitted, renderer/pwa.js generates a simple placeholder (institution initial on primaryColor) via sharp at build time. Supply this once a real logo is available.",
+          "items": {
+            "type": "object",
+            "required": ["src", "sizes"],
+            "properties": {
+              "src": { "type": "string" },
+              "sizes": { "type": "string", "description": "e.g. \"192x192\"" },
+              "type": { "type": "string", "description": "e.g. \"image/png\"" }
+            }
           }
         }
       }
