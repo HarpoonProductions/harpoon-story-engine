@@ -206,8 +206,13 @@ app.get("/api/projects", async (req, res) => {
             const stat = fs.existsSync(contentPath)
               ? fs.statSync(contentPath)
               : null;
+            let kind = "story";
+            try {
+              kind = JSON.parse(fs.readFileSync(contentPath, "utf8")).kind || "story";
+            } catch {}
             return {
               id: e.name,
+              kind,
               title: meta.title || e.name,
               client: meta.client || "",
               last_saved: stat ? stat.mtime.toISOString() : null,
@@ -257,6 +262,35 @@ app.get("/api/project/:id", async (req, res) => {
     res.json(content);
   } catch (err) {
     res.status(404).json({ error: err.message });
+  }
+});
+
+// Render a project on demand and return its local preview URL. Generic
+// across content kinds — renderToPreview() already dispatches on
+// content.kind via renderer/index.js's render(), so this needed no
+// kind-specific logic. Used by the home screen's "Preview" action for
+// content kinds (e.g. graduation-guide) that don't have a field-editing
+// UI — /edit/:id is narrative-story-shaped and would misrender them.
+app.get("/api/project/:id/preview", async (req, res) => {
+  const projectId = req.params.id;
+  try {
+    let content;
+    if (db.isConfigured()) {
+      content = await db.getProject(projectId);
+    } else {
+      const contentPath = path.join(PROJECTS_DIR, projectId, "content.json");
+      if (!fs.existsSync(contentPath))
+        return res.status(404).json({ ok: false, error: "Project not found" });
+      content = JSON.parse(fs.readFileSync(contentPath, "utf8"));
+    }
+    const result = renderToPreview(projectId, content);
+    if (!result.ok) {
+      const msg = result.error || (result.errors ? result.errors.map((e) => e.message).join("; ") : "Render failed");
+      return res.status(500).json({ ok: false, error: msg });
+    }
+    res.json({ ok: true, url: `/preview/${projectId}/` });
+  } catch (err) {
+    res.status(500).json({ ok: false, error: err.message });
   }
 });
 

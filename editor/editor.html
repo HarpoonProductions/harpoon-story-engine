@@ -1087,6 +1087,17 @@
                             class="sidebar__tab"
                             role="tab"
                             aria-selected="false"
+                            aria-controls="tab-guide"
+                            id="tab-btn-guide"
+                            onclick="switchTab('guide', this)"
+                            style="display:none"
+                        >
+                            Guide
+                        </button>
+                        <button
+                            class="sidebar__tab"
+                            role="tab"
+                            aria-selected="false"
                             aria-controls="tab-status"
                             id="tab-btn-status"
                             onclick="switchTab('status', this); refreshStatusPanel()"
@@ -2170,6 +2181,72 @@
                             </div>
                             </div><!-- /section-editor-pane -->
                         </div>
+                        <!-- Guide tab (content.kind === "graduation-guide" only) -->
+                        <div
+                            class="tab-panel"
+                            id="tab-guide"
+                            role="tabpanel"
+                            aria-labelledby="tab-btn-guide"
+                            tabindex="0"
+                        >
+                            <p class="form-section-title">Institution branding</p>
+                            <div class="form-group">
+                                <label class="form-label" for="gg-primary">Primary colour</label>
+                                <div class="form-color-row">
+                                    <input type="color" class="form-color-swatch" id="gg-primary-swatch" data-path="institution.primaryColor" aria-label="Primary colour picker" />
+                                    <input class="form-input" id="gg-primary" data-path="institution.primaryColor" placeholder="#232333" />
+                                </div>
+                                <p class="form-hint">Nav, chooser, ceremony panel backgrounds</p>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label" for="gg-accent">Accent colour</label>
+                                <div class="form-color-row">
+                                    <input type="color" class="form-color-swatch" id="gg-accent-swatch" data-path="institution.accentColor" aria-label="Accent colour picker" />
+                                    <input class="form-input" id="gg-accent" data-path="institution.accentColor" placeholder="#40E0CF" />
+                                </div>
+                                <p class="form-hint">Hero title, active tiles, highlights</p>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label" for="gg-bg">Light background</label>
+                                <div class="form-color-row">
+                                    <input type="color" class="form-color-swatch" id="gg-bg-swatch" data-path="institution.lightBackground" aria-label="Light background colour picker" />
+                                    <input class="form-input" id="gg-bg" data-path="institution.lightBackground" placeholder="#f0f0f0" />
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label" for="gg-text">Text colour</label>
+                                <div class="form-color-row">
+                                    <input type="color" class="form-color-swatch" id="gg-text-swatch" data-path="institution.textColor" aria-label="Text colour picker" />
+                                    <input class="form-input" id="gg-text" data-path="institution.textColor" placeholder="#161a1d" />
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label" for="gg-font-heading">Heading font family</label>
+                                <input class="form-input" id="gg-font-heading" data-path="institution.fontHeading" placeholder="Imperial Sans" />
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label" for="gg-font-body">Body font family</label>
+                                <input class="form-input" id="gg-font-body" data-path="institution.fontBody" placeholder="Imperial Sans" />
+                                <p class="form-hint">Font binaries are managed via institution.fontFiles in content.json — not editable here yet.</p>
+                            </div>
+
+                            <p class="form-section-title">Welcome section</p>
+                            <div class="form-group">
+                                <label class="form-label" for="gg-welcome-subtitle">Welcome subtitle</label>
+                                <input class="form-input" id="gg-welcome-subtitle" data-path="guide.welcomeSubtitle" placeholder="Celebrating your success" />
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label" for="gg-welcome-text">Welcome message</label>
+                                <textarea class="form-textarea" id="gg-welcome-text" rows="10" placeholder="One paragraph per blank-line-separated block…"></textarea>
+                                <p class="form-hint">Separate paragraphs with a blank line. Saved as guide.welcomeText[].</p>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label" for="gg-welcome-signers">Signers</label>
+                                <textarea class="form-textarea" id="gg-welcome-signers" rows="4" placeholder="Professor Hugh Brady | President&#10;Mr Vindi Banga | Chair of Council"></textarea>
+                                <p class="form-hint">One per line, format: Name | Title. Saved as guide.welcomeSigners[].</p>
+                            </div>
+                            <p class="form-hint" style="margin-top:1.5rem">Ceremony content (dean's welcome, procession, order of ceremony, awardees) and the student roster are not editable here — see docs/graduation-guide-integration.md for the data pipeline.</p>
+                        </div>
                         <!-- Status tab -->
                         <div
                             class="tab-panel"
@@ -2296,6 +2373,7 @@
                 populateForm();
                 wireInputs();
                 renderSectionList();
+                setupGraduationGuideTab();
 
                 // Silently render on load so the preview always matches the
                 // current content (another editor may have changed it since
@@ -2698,6 +2776,50 @@
                             });
                         scheduleAutosave();
                     });
+                });
+            }
+
+            // ── Graduation guide tab (content.kind === "graduation-guide") ─────
+            // Cover/Sections don't apply to this content shape (no cover,
+            // no sections array) — hide them, reveal the Guide tab instead.
+            // Branding + welcome-subtitle fields use the generic [data-path]
+            // mechanism above (already handled by populateForm/wireInputs).
+            // welcomeText/welcomeSigners are arrays, so they get their own
+            // small textarea <-> array handling here rather than a flat path.
+
+            function setupGraduationGuideTab() {
+                const isGuide = content.kind === "graduation-guide";
+                document.getElementById("tab-btn-cover").style.display = isGuide ? "none" : "";
+                document.getElementById("tab-btn-sections").style.display = isGuide ? "none" : "";
+                document.getElementById("tab-btn-guide").style.display = isGuide ? "" : "none";
+                if (!isGuide) return;
+
+                if (!content.guide) content.guide = {};
+
+                const textEl = document.getElementById("gg-welcome-text");
+                textEl.value = (content.guide.welcomeText || []).join("\n\n");
+                textEl.addEventListener("input", () => {
+                    content.guide.welcomeText = textEl.value
+                        .split(/\n\s*\n/)
+                        .map((p) => p.trim())
+                        .filter(Boolean);
+                    scheduleAutosave();
+                });
+
+                const signersEl = document.getElementById("gg-welcome-signers");
+                signersEl.value = (content.guide.welcomeSigners || [])
+                    .map((s) => `${s.name} | ${s.title}`)
+                    .join("\n");
+                signersEl.addEventListener("input", () => {
+                    content.guide.welcomeSigners = signersEl.value
+                        .split("\n")
+                        .map((line) => line.trim())
+                        .filter(Boolean)
+                        .map((line) => {
+                            const [name, title] = line.split("|").map((s) => s.trim());
+                            return { name: name || "", title: title || "" };
+                        });
+                    scheduleAutosave();
                 });
             }
 

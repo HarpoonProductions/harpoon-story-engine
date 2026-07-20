@@ -44,6 +44,7 @@ async function listProjects() {
   if (error) throw new Error(error.message);
   return data.map((row) => ({
     id: row.project_id,
+    kind: row.content?.kind || "story",
     title: row.content?.meta?.title || row.project_id,
     client: row.content?.meta?.client || "",
     accent_color: row.content?.meta?.accent_color || "#1A3F6F",

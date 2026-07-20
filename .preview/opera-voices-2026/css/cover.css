@@ -57,6 +57,24 @@
   z-index: 2;
 }
 
+/* ── Portrait (foreground cutout) ──────────────────────────────────
+ * Sits above the nav (z-index higher than --hse-z-nav) so a tall
+ * cutout naturally overlaps the masthead logo where the asset itself
+ * has non-transparent pixels near the top. Anchored bottom so the
+ * subject reads as standing in front of the cover, not floating.
+ */
+
+.hse-cover__portrait {
+  position: absolute;
+  inset: 0;
+  z-index: var(--hse-z-cover-portrait);
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: bottom center;
+  pointer-events: none;
+}
+
 /* ── Content ────────────────────────────────────────────────────── */
 
 .hse-cover__content {

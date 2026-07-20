@@ -98,5 +98,6 @@
   --hse-z-base:    1;
   --hse-z-raised:  10;
   --hse-z-nav:     200;
+  --hse-z-cover-portrait: 210;
   --hse-z-overlay: 500;
 }

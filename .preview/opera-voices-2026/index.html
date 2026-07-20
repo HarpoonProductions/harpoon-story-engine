@@ -8,7 +8,7 @@
   <meta property="og:image" content="https://stories.har.pn/opera-voices-2026/images/opera-AdobeStock_591210749.jpeg-hpn2560.jpg">
   <meta name="twitter:card" content="summary_large_image">
   
-  <script defer data-domain="opera-voices-2026.harpoon.productions" src="https://analytics.harpoonproductions.com/js/script.js"></script>
+  <script defer data-domain="opera-voices-2026.harpoon.productions" src="https://analytics.har.pn/js/script.js"></script>
   <meta name="theme-color" content="#0D0005">
 
   <!-- Fonts (default set uses Google Fonts; client token sets may specify their own) -->
@@ -132,6 +132,12 @@
   <!-- Print stylesheet — media=print so it never affects screen rendering -->
   <link rel="stylesheet" href="css/print.css" media="print">
 
+  <!-- Review layer (activates only on review.* subdomain or ?review=1) -->
+  <link rel="stylesheet" href="css/review.css">
+  <script defer src="js/review.js"></script>
+  <meta name="hse-supabase-url" content="https://judpcwvtwtjazprzujme.supabase.co">
+  <meta name="hse-supabase-anon-key" content="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imp1ZHBjd3Z0d3RqYXpwcnp1am1lIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njk0MjgwMjQsImV4cCI6MjA4NTAwNDAyNH0.OtH9Fi-RgfooAdjpNKpqS6vbSjUukiz_7o-qR9pMl10">
+
   <!-- Per-project brand tokens -->
   <style>
     :root {
@@ -158,12 +164,17 @@
       <li><a href="#briefing">Briefing</a></li>
       <li><a href="#section-9">Section 9</a></li>
   </ul>
-  <a class="hse-nav__pdf-link" href="story.pdf" target="_blank" rel="noopener" aria-label="Download PDF" title="Download PDF">
+  <div class="hse-nav__actions">
+    <a class="hse-nav__pdf-link" href="story.pdf" target="_blank" rel="noopener" aria-label="Download PDF (opens in new tab)" title="Download PDF">
     <svg aria-hidden="true" focusable="false" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg>
   </a>
-  <button class="hse-nav__hamburger" id="hse-nav-hamburger" aria-label="Open menu" aria-expanded="false">
-    <span></span><span></span><span></span>
+    <button class="hse-nav__audio-btn" id="hse-audio-trigger" aria-label="Listen to this story" aria-expanded="false">
+    <svg aria-hidden="true" focusable="false" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 18v-6a9 9 0 0 1 18 0v6"/><path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3zM3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z"/></svg>
   </button>
+    <button class="hse-nav__hamburger" id="hse-nav-hamburger" aria-label="Open menu" aria-expanded="false">
+      <span></span><span></span><span></span>
+    </button>
+  </div>
 </nav>
 <div class="hse-nav__mobile-menu" id="hse-nav-mobile-menu" aria-hidden="true">
   <button class="hse-nav__mobile-close" id="hse-nav-mobile-close" aria-label="Close menu">✕</button>
@@ -177,6 +188,32 @@
       <li><a href="#briefing">Briefing</a></li>
       <li><a href="#section-9">Section 9</a></li>
   </ul>
+</div>
+
+<div id="hse-audio-player" class="hse-audio-player" aria-label="Audio player" hidden>
+  <audio id="hse-audio" src="story.mp3" preload="metadata"></audio>
+  <div class="hse-audio-player__bar">
+    <button class="hse-audio__play" id="hse-audio-play" aria-label="Play">
+      <svg aria-hidden="true" focusable="false" width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+    </button>
+    <div class="hse-audio__meta">
+      <span class="hse-audio__title">The Voices That Remain</span>
+      <div class="hse-audio__controls">
+        <span class="hse-audio__time" id="hse-audio-time">0:00</span>
+        <input type="range" class="hse-audio__scrub" id="hse-audio-scrub"
+               value="0" min="0" step="0.1" aria-label="Seek">
+        <span class="hse-audio__duration" id="hse-audio-duration">–:––</span>
+      </div>
+    </div>
+    <div class="hse-audio__speeds" role="group" aria-label="Playback speed">
+      <button class="hse-audio__speed is-active" data-speed="1" aria-pressed="true">1×</button>
+      <button class="hse-audio__speed" data-speed="1.5" aria-pressed="false">1.5×</button>
+      <button class="hse-audio__speed" data-speed="2" aria-pressed="false">2×</button>
+    </div>
+    <button class="hse-audio__close" id="hse-audio-close" aria-label="Close audio player">
+      <svg aria-hidden="true" focusable="false" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </button>
+  </div>
 </div>
 
 <div id="hse-print-header" aria-hidden="true" style="display:none">
@@ -194,6 +231,7 @@
   </video>
   <div class="hse-cover__grain"></div>
   <div class="hse-cover__gradient"></div>
+  
   <div class="hse-cover__content">
     <p class="hse-cover__kicker hse-reveal">Royal Opera House · Annual Report 2026</p>
     <h1 class="hse-cover__headline hse-reveal hse-reveal-delay-1">
@@ -828,7 +866,7 @@
 
 </main>
 
-<footer class="hse-footer" role="contentinfo">
+<footer class="hse-footer">
   <span class="hse-footer__brand">The Voices That Remain</span>
   <span class="hse-footer__credit">Produced with the Harpoon Story Engine</span>
 </footer>
@@ -854,8 +892,7 @@
   font-family: var(--hse-font-mono);
   font-size: 0.6rem;
   letter-spacing: 0.12em;
-  color: var(--hse-warm-3);
-  opacity: 0.5;
+  color: var(--hse-warm-2);
 }
 </style>
 

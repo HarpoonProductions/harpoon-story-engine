@@ -316,6 +316,54 @@
                 gap: 0.6rem;
             }
 
+            /* ── Mode tabs ── */
+            .mode-tabs {
+                display: flex;
+                gap: 0.25rem;
+                margin-bottom: 1.5rem;
+                border-bottom: 1px solid var(--rule);
+            }
+            .mode-tab {
+                font-family: var(--font-mono);
+                font-size: 0.6rem;
+                letter-spacing: 0.14em;
+                text-transform: uppercase;
+                color: var(--ink-3);
+                background: none;
+                border: none;
+                border-bottom: 2px solid transparent;
+                padding: 0.6rem 0.2rem;
+                margin-right: 1.25rem;
+                cursor: pointer;
+                transition: color 0.12s;
+            }
+            .mode-tab:hover { color: var(--ink); }
+            .mode-tab.is-active {
+                color: var(--ink);
+                border-bottom-color: var(--accent);
+            }
+            .mode-note {
+                font-size: 0.74rem;
+                color: var(--ink-3);
+                font-style: italic;
+                margin-bottom: 1.25rem;
+            }
+            .project-card__preview {
+                font-family: var(--font-mono);
+                font-size: 0.5rem;
+                letter-spacing: 0.1em;
+                text-transform: uppercase;
+                color: var(--accent);
+                background: none;
+                text-decoration: none;
+                padding: 0.2rem 0.4rem;
+                border: 1px solid var(--accent);
+                border-radius: 2px;
+                cursor: pointer;
+            }
+            .project-card__preview:hover { background: rgba(139,58,42,0.07); }
+            .project-card__preview.is-loading { opacity: 0.5; pointer-events: none; }
+
             .btn {
                 display: inline-flex;
                 align-items: center;
@@ -508,6 +556,7 @@
                 </div>
                 <button
                     class="btn btn--primary"
+                    id="newStoryBtn"
                     onclick="openNewModal()"
                     aria-haspopup="dialog"
                 >
@@ -516,6 +565,13 @@
             </header>
 
             <main>
+                <div class="mode-tabs" role="tablist" aria-label="Content kind">
+                    <button class="mode-tab is-active" id="tabStory" role="tab" aria-selected="true" onclick="setMode('story')">Stories</button>
+                    <button class="mode-tab" id="tabGraduation" role="tab" aria-selected="false" onclick="setMode('graduation-guide')">Graduation Guides</button>
+                </div>
+                <p class="mode-note" id="graduationNote" style="display:none">
+                    Graduation guides are a different HSE render path (content.kind = "graduation-guide") — schema-driven ceremony/roster data, not the narrative section editor below. New guides are added via the data pipeline (scripts/promote-imperial-data.js + scripts/push-to-supabase.js), not this screen. See docs/graduation-guide-integration.md.
+                </p>
                 <p class="section-label" aria-hidden="true">In production</p>
                 <section aria-label="Stories in production">
                     <div class="project-grid" id="productionGrid" role="list">
@@ -780,13 +836,38 @@
                 { key: "trash",     label: "Trash"         },
             ];
 
+            // ── Mode (content kind) ─────────────────────────────────────────────
+            let currentMode = "story";
+            let allProjects = [];
+
+            function setMode(mode) {
+                currentMode = mode;
+                document.getElementById("tabStory").classList.toggle("is-active", mode === "story");
+                document.getElementById("tabStory").setAttribute("aria-selected", String(mode === "story"));
+                document.getElementById("tabGraduation").classList.toggle("is-active", mode === "graduation-guide");
+                document.getElementById("tabGraduation").setAttribute("aria-selected", String(mode === "graduation-guide"));
+                document.getElementById("graduationNote").style.display = mode === "graduation-guide" ? "block" : "none";
+                document.getElementById("newStoryBtn").style.display = mode === "graduation-guide" ? "none" : "inline-flex";
+                renderProjects();
+            }
+
             // ── Load projects ─────────────────────────────────────────────────
             async function loadProjects() {
                 const res  = await fetch("/api/projects");
                 const data = await res.json();
+                allProjects = data.projects;
+                renderProjects();
+            }
+
+            function renderProjects() {
+                const filtered = allProjects.filter(p =>
+                    currentMode === "graduation-guide"
+                        ? p.kind === "graduation-guide"
+                        : p.kind !== "graduation-guide"
+                );
 
                 const buckets = { "": [], published: [], backups: [], trash: [] };
-                data.projects.forEach(p => {
+                filtered.forEach(p => {
                     const key = buckets.hasOwnProperty(p.folder) ? p.folder : "";
                     buckets[key].push(p);
                 });
@@ -800,6 +881,9 @@
                     buckets[""].forEach(p => prodGrid.appendChild(makeCard(p)));
                 } else {
                     empty.style.display = "block";
+                    empty.textContent = currentMode === "graduation-guide"
+                        ? "No graduation guides yet"
+                        : "No stories yet — create your first";
                 }
 
                 // Collapsible folder sections
@@ -844,6 +928,16 @@
                     ? `<button class="project-card__backup-btn" title="Snapshot this story">Make back up</button>`
                     : "";
 
+                // Graduation guides: /edit/:id now shows a reduced tab set
+                // (Meta + Guide + Status — Cover/Sections don't apply and
+                // are hidden by setupGraduationGuideTab()), covering branding
+                // and welcome-message fields. Roster/ceremony data still
+                // isn't editable there — see the note above the grid.
+                const openAction = p.kind === "graduation-guide"
+                    ? `<a class="project-card__open" href="/edit/${p.id}">✎ Edit</a>
+                       <button class="project-card__preview" data-id="${p.id}">👁 Preview</button>`
+                    : `<a class="project-card__open" href="/edit/${p.id}">↗ Open</a>`;
+
                 card.innerHTML = `
                     <div class="project-card__accent" style="background:${p.accent_color}" aria-hidden="true"></div>
                     ${folderBadge || backupOfBadge}
@@ -852,13 +946,34 @@
                     <input class="project-card__note" type="text" value="${noteVal}" placeholder="Add a note…" aria-label="Note for ${p.title}">
                     <span class="project-card__meta">${p.id} · ${ago}</span>
                     <div class="project-card__actions">
-                        <a class="project-card__open" href="/edit/${p.id}">↗ Open</a>
+                        ${openAction}
                         ${backupBtn}
                         <select class="project-card__folder-select" aria-label="Move to folder">
                             <option value="" disabled selected>Move to…</option>
                             ${moveOpts}
                         </select>
                     </div>`;
+
+                const previewBtn = card.querySelector(".project-card__preview");
+                if (previewBtn) {
+                    previewBtn.addEventListener("click", async (e) => {
+                        e.stopPropagation();
+                        previewBtn.textContent = "Rendering…";
+                        previewBtn.classList.add("is-loading");
+                        try {
+                            const r = await fetch(`/api/project/${p.id}/preview`);
+                            const data = await r.json();
+                            if (!r.ok || !data.ok) throw new Error(data.error || "Render failed");
+                            window.open(data.url, "_blank");
+                            previewBtn.textContent = "👁 Preview";
+                        } catch (err) {
+                            previewBtn.textContent = "Failed";
+                            console.error(err);
+                            setTimeout(() => { previewBtn.textContent = "👁 Preview"; }, 2000);
+                        }
+                        previewBtn.classList.remove("is-loading");
+                    });
+                }
 
                 // Note field — preventDefault stops the <a> inside card from firing
                 const noteInput = card.querySelector(".project-card__note");
