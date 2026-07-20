@@ -36,6 +36,10 @@ function assertCount(label, html, needle, min) {
   assert(`${label} (found ${count}, expected ≥${min})`, count >= min);
 }
 
+function assertAbsent(label, html, needle) {
+  assert(label, !html.includes(needle));
+}
+
 const contentPath = path.join(__dirname, 'projects', 'imperial-2026', 'content.json');
 const outputDir   = path.join(__dirname, 'output', 'test', 'imperial-2026');
 
@@ -74,16 +78,25 @@ assertCount('One chooser tile per ceremony', html, 'class="gg-chooser-tile(?:"| 
 assertCount('One ceremony section per ceremony', html, 'class="gg-ceremony', content.ceremonies.length);
 assertContains('Active ceremony is marked active', html, 'gg-ceremony active');
 assertContains('Search-related DOM hooks present', html, 'id="nav-search-input"');
-assertContains('Result pill present', html, 'id="result-pill"');
+assertContains('Nav search results panel present', html, 'id="nav-search-panel"');
+assertContains('Find-box search results panel present', html, 'id="find-search-panel"');
+assertAbsent('Obsolete result pill removed', html, 'id="result-pill"');
+assertContains('Personalised hero hook present', html, 'id="hero-congrats"');
+assertContains('Find-in-honours-list link present and visible by default', html, 'id="hero-find-link"');
+assertContains('Default find-link has a generic fallback label', html, 'a student&#39;s name');
+assertContains('Default find-link points at the inline search box', html, 'href="#find-student"');
+assertContains('Find-a-student section has the matching anchor id', html, 'id="find-student"');
 assertContains('Runtime script linked', html, 'js/graduation-guide-runtime.js');
 assertContains('Search module CSS linked', html, 'css/kinds/graduation-guide.css');
 assertContains('Data embedded for offline use', html, 'window.GRADUATION_DATA');
+assertContains('searchIndex embedded for offline search', html, '"searchIndex"');
 
 const expectedStudents = content.ceremonies.reduce(
   (sum, c) => sum + c.courseGroups.reduce((s, g) => s + g.students.length, 0),
   0
 );
 assertCount('One student row per graduate', html, 'gg-student-name-row', expectedStudents);
+assert('searchIndex has one entry per graduate', content.searchIndex.length === expectedStudents);
 
 console.log(`\n${passed} passed, ${failed} failed\n`);
 process.exit(failed > 0 ? 1 : 0);

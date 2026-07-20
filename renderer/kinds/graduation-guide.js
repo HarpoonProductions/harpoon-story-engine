@@ -82,6 +82,73 @@ function buildBrandStyle(institution, asset) {
   </style>`;
 }
 
+// ── Ceremony Guides nav dropdown ──────────────────────────────────────────
+// Real anchor links, not a stub. On the main listing page (this page),
+// js/graduation-guide-runtime.js intercepts clicks and calls
+// selectCeremony() directly instead of relying on native anchor scroll
+// (inactive ceremonies are display:none, so a plain #anchor jump wouldn't
+// actually show one). The bare ?ceremony=C1 URL still works unintercepted
+// — e.g. from a future satellite page that isn't the main listing — since
+// handleParams() already deep-links to it on load.
+
+function buildCeremonyDropdown(guide, ceremonies) {
+  return `<div class="gg-nav-dropdown" id="ceremony-guides-dropdown">
+    <button class="gg-nav-link gg-nav-dropdown-toggle" id="ceremony-guides-toggle" aria-haspopup="true" aria-expanded="false">
+      Ceremony Guides <span class="gg-nav-caret">&#9660;</span>
+    </button>
+    <div class="gg-nav-dropdown-menu" role="menu" aria-label="Ceremony Guides">
+      ${buildCeremonyLinks(guide, ceremonies)}
+    </div>
+  </div>`;
+}
+
+// Shared between the desktop dropdown above and the mobile menu below —
+// same [data-ceremony-link] markup either way, so the runtime's single
+// click-handling pass (js/graduation-guide-runtime.js) covers both.
+function buildCeremonyLinks(guide, ceremonies) {
+  const dayLabel = (day) => {
+    const d = (guide.days || []).find((d) => d.day === day);
+    return d ? d.label : `Day ${day}`;
+  };
+
+  const groups = {};
+  ceremonies.forEach((c) => {
+    (groups[c.day] = groups[c.day] || []).push(c);
+  });
+
+  return Object.keys(groups)
+    .sort((a, b) => a - b)
+    .map((day) => {
+      const rows = groups[day]
+        .map(
+          (c) => `<a class="gg-nav-dropdown-item" data-ceremony-link="${escHtml(c.ceremonyId)}" href="?ceremony=${escHtml(c.ceremonyId)}#cer-${escHtml(c.ceremonyId)}" role="menuitem">
+        <span class="gg-nav-dropdown-item-time">${escHtml(c.ceremonyTime)}</span>
+        <span class="gg-nav-dropdown-item-label">${escHtml(c.ceremonyLabel)}</span>
+      </a>`
+        )
+        .join('\n      ');
+      return `<div class="gg-nav-dropdown-group">${escHtml(dayLabel(Number(day)))}</div>\n      ${rows}`;
+    })
+    .join('\n      ');
+}
+
+// ── Mobile menu (full-screen overlay, mirrors the narrative renderer's
+// hse-nav__mobile-menu pattern in renderer/shell/nav.js — same division
+// of a hamburger-triggered overlay, just gg-* namespaced) ─────────────
+
+function buildMobileMenu(guide, ceremonies) {
+  return `<div class="gg-nav-mobile-menu" id="gg-nav-mobile-menu" aria-hidden="true">
+  <button class="gg-nav-mobile-close" id="gg-nav-mobile-close" aria-label="Close menu">&#10005;</button>
+  <div class="gg-nav-mobile-menu__inner">
+    <a class="gg-nav-mobile-link" href="#">${escHtml(guide.title)}</a>
+    <div class="gg-nav-mobile-group-label">Ceremony Guides</div>
+    ${buildCeremonyLinks(guide, ceremonies)}
+    <a class="gg-nav-mobile-link" href="#">Explore more</a>
+    <a class="gg-nav-mobile-link" href="#">Memories of ${escHtml(guide.title)}</a>
+  </div>
+</div>`;
+}
+
 // ── <body> ──────────────────────────────────────────────────────────────
 
 function buildBody(institution, guide, ceremonies, asset) {
@@ -89,7 +156,7 @@ function buildBody(institution, guide, ceremonies, asset) {
   <a class="gg-nav-wordmark" href="#">${escHtml(institution.shortName || institution.name)}</a>
   <div class="gg-nav-links">
     <a class="gg-nav-link" href="#">${escHtml(guide.title)}</a>
-    <a class="gg-nav-link" href="#">Ceremony Guides <span class="gg-nav-caret">&#9660;</span></a>
+    ${buildCeremonyDropdown(guide, ceremonies)}
     <a class="gg-nav-link" href="#">Explore more <span class="gg-nav-caret">&#9660;</span></a>
     <a class="gg-nav-link" href="#">Memories of ${escHtml(guide.title)}</a>
   </div>
@@ -100,12 +167,17 @@ function buildBody(institution, guide, ceremonies, asset) {
       <button class="gg-nav-search-arrow" id="nav-search-submit" aria-label="Go">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
       </button>
+      <div class="gg-search-panel" id="nav-search-panel" role="listbox" hidden></div>
     </div>
     <button class="gg-nav-search-icon" id="nav-search-toggle" aria-label="Search">
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
     </button>
+    <button class="gg-nav-hamburger" id="gg-nav-hamburger" aria-label="Open menu" aria-expanded="false">
+      <span></span><span></span><span></span>
+    </button>
   </div>
 </nav>
+${buildMobileMenu(guide, ceremonies)}
 
 <div class="gg-floating-bar" id="floating-bar">
   You are viewing <span id="floating-bar-text"></span>
@@ -114,7 +186,8 @@ function buildBody(institution, guide, ceremonies, asset) {
 <section class="gg-hero" id="hero">
   <div class="gg-hero-bg"></div>
   <div class="gg-hero-content">
-    <p class="gg-hero-congrats">Congratulations!</p>
+    <p class="gg-hero-congrats" id="hero-congrats">Congratulations!</p>
+    <a class="gg-hero-find-link" id="hero-find-link" href="#find-student">Find <span id="hero-find-name">a student&#39;s name</span> in the honours list &#8594;</a>
     <div class="gg-hero-title-block">
       <h1 class="gg-hero-title">${escHtml(guide.title)}</h1>
     </div>
@@ -125,7 +198,7 @@ function buildBody(institution, guide, ceremonies, asset) {
 ${buildWelcomeSection(guide)}
 ${buildAboutSection(guide)}
 
-<section class="gg-find">
+<section class="gg-find" id="find-student">
   <h2 class="gg-find-heading">Find a graduating student</h2>
   <div class="gg-find-box">
     <div class="gg-find-label">Enter a name</div>
@@ -134,6 +207,7 @@ ${buildAboutSection(guide)}
              placeholder="Search name" autocomplete="off" autocorrect="off"
              autocapitalize="words" spellcheck="false">
       <button class="gg-find-btn" id="find-btn">Search</button>
+      <div class="gg-search-panel gg-search-panel--find" id="find-search-panel" role="listbox" hidden></div>
     </div>
   </div>
 </section>
@@ -144,14 +218,6 @@ ${buildChooserHtml(guide, ceremonies)}
 
 <div id="ceremony-sections">
 ${buildCeremonySectionsHtml(ceremonies)}
-</div>
-
-<div id="result-pill">
-  <button id="rpill-close" aria-label="Close">&#10005;</button>
-  <button id="rpill-next">
-    <span id="rpill-text">Result 1 of 1</span>
-    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg>
-  </button>
 </div>
 
 <button class="gg-return-top" id="return-top">&#8963; Return to top</button>`;

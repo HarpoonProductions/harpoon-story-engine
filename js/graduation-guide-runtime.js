@@ -58,6 +58,82 @@
     tile.addEventListener('click', function () { selectCeremony(tile.dataset.id); });
   });
 
+  // ── Ceremony Guides nav dropdown (desktop) ──────────────────────────
+  var dropdown = document.getElementById('ceremony-guides-dropdown');
+  var dropdownToggle = document.getElementById('ceremony-guides-toggle');
+
+  function closeDropdown() {
+    if (!dropdown) return;
+    dropdown.classList.remove('open');
+    if (dropdownToggle) dropdownToggle.setAttribute('aria-expanded', 'false');
+  }
+
+  if (dropdown && dropdownToggle) {
+    dropdownToggle.addEventListener('click', function (e) {
+      e.stopPropagation();
+      var opening = !dropdown.classList.contains('open');
+      dropdown.classList.toggle('open', opening);
+      dropdownToggle.setAttribute('aria-expanded', String(opening));
+    });
+    document.addEventListener('click', function (e) {
+      if (!dropdown.contains(e.target)) closeDropdown();
+    });
+  }
+
+  // ── Mobile hamburger menu ───────────────────────────────────────────
+  var hamburger = document.getElementById('gg-nav-hamburger');
+  var mobileMenu = document.getElementById('gg-nav-mobile-menu');
+  var mobileClose = document.getElementById('gg-nav-mobile-close');
+
+  function closeMobileMenu() {
+    if (!mobileMenu) return;
+    mobileMenu.classList.remove('open');
+    mobileMenu.setAttribute('aria-hidden', 'true');
+    if (hamburger) hamburger.setAttribute('aria-expanded', 'false');
+    document.body.style.overflow = '';
+  }
+
+  if (hamburger && mobileMenu) {
+    hamburger.addEventListener('click', function () {
+      mobileMenu.classList.add('open');
+      mobileMenu.setAttribute('aria-hidden', 'false');
+      hamburger.setAttribute('aria-expanded', 'true');
+      document.body.style.overflow = 'hidden';
+    });
+    if (mobileClose) mobileClose.addEventListener('click', closeMobileMenu);
+  }
+
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape') { closeDropdown(); closeMobileMenu(); }
+  });
+
+  // ── Ceremony links — shared by the desktop dropdown and the mobile
+  // menu (both render the same [data-ceremony-link] markup). On this
+  // page, the target ceremony is already in the DOM — jump to it
+  // directly via selectCeremony() instead of a native #anchor scroll
+  // (inactive ceremonies are display:none, so a bare anchor wouldn't
+  // actually show one). Elsewhere (a future satellite page), there's no
+  // #cer-X element to find, so let the href navigate to
+  // index.html?ceremony=X normally — handleParams() below picks it up.
+  document.querySelectorAll('[data-ceremony-link]').forEach(function (link) {
+    link.addEventListener('click', function (e) {
+      var id = link.dataset.ceremonyLink;
+      if (document.getElementById('cer-' + id)) {
+        e.preventDefault();
+        selectCeremony(id);
+        closeDropdown();
+        closeMobileMenu();
+      }
+    });
+  });
+
+  // Any other mobile-menu link (non-ceremony) also closes the menu on click
+  if (mobileMenu) {
+    mobileMenu.querySelectorAll('a:not([data-ceremony-link])').forEach(function (a) {
+      a.addEventListener('click', closeMobileMenu);
+    });
+  }
+
   // ── Floating bar ─────────────────────────────────────────────────────
   (function initFloatingBar() {
     var bar = document.getElementById('floating-bar');
@@ -121,102 +197,244 @@
     });
   });
 
-  // ── Search (ported from graduation-guides/assets/graduation-search.js) ─
-  var currentMatches = [];
-  var matchIdx = 0;
+  // ── Search ────────────────────────────────────────────────────────────
+  // Matches against window.GRADUATION_DATA.searchIndex — already fully
+  // embedded in the page for offline use — not the DOM. Shows a results
+  // panel (name + course + ceremony + time) so a parent can tell two
+  // students who share a name apart before jumping, instead of cycling
+  // through DOM highlights one at a time (the old, and currently broken,
+  // mechanic — this replaces it rather than patching it).
+  //
+  // Exact substring matching runs first, always. Fuzzy (Levenshtein)
+  // matching only ever runs when substring matching finds nothing — so a
+  // search for "Chen" only ever returns Chens, never fuzzes into "Chan":
+  // real distinct surnames stay distinct, fuzzy only catches likely typos
+  // on names that don't otherwise exist. Hand-rolled rather than pulling
+  // in Fuse.js from a CDN, which would silently break offline use.
 
-  function clearHighlights() {
-    document.querySelectorAll('.gg-found-text-piece').forEach(function (el) {
-      el.outerHTML = el.textContent;
-    });
-  }
+  var searchIndex = data.searchIndex || [];
+  // Only ever runs when exact substring matching finds nothing (see
+  // above), so this can be reasonably generous without risking conflating
+  // real distinct names — 0.4 catches common one-transposition typos
+  // (e.g. "Kesahv" -> "Keshav") that a stricter 0.3 misses on short names.
+  var FUZZY_THRESHOLD = 0.4;
+  var MAX_EXACT_RESULTS = 8;
+  var MAX_FUZZY_RESULTS = 5;
+  var DEBOUNCE_MS = 200;
 
-  function doSearch(query) {
-    if (!query || query.length < 2) return;
-    clearHighlights();
-    var matches = [];
-    var q = query.toLowerCase();
-
-    document.querySelectorAll('[data-student]').forEach(function (row) {
-      var name = row.dataset.student || '';
-      if (name.toLowerCase().indexOf(q) === -1) return;
-
-      var list = row.closest('.gg-student-list');
-      if (list) list.classList.add('open');
-
-      var span = row.querySelector('.gg-student-name-text');
-      if (span) {
-        var esc = query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-        var re = new RegExp('(' + esc + ')', 'gi');
-        span.innerHTML = span.textContent.replace(re, '<span class="gg-found-text-piece">$1</span>');
+  function levenshtein(a, b) {
+    var m = a.length, n = b.length;
+    if (!m) return n;
+    if (!n) return m;
+    var dp = new Array(n + 1);
+    for (var j = 0; j <= n; j++) dp[j] = j;
+    for (var i = 1; i <= m; i++) {
+      var prev = dp[0];
+      dp[0] = i;
+      for (var k = 1; k <= n; k++) {
+        var tmp = dp[k];
+        dp[k] = a[i - 1] === b[k - 1] ? prev : 1 + Math.min(prev, dp[k], dp[k - 1]);
+        prev = tmp;
       }
+    }
+    return dp[n];
+  }
 
-      var cid = row.dataset.ceremony;
-      if (cid && cid !== activeCer) selectCeremony(cid, { silent: true, noScroll: true });
-      matches.push(row);
+  // Ranks matches so "starts with the query" beats "a word inside the
+  // name starts with it" beats "matches somewhere mid-word".
+  function matchRank(name, q) {
+    var lower = name.toLowerCase();
+    if (lower.indexOf(q) === 0) return 0;
+    if (lower.indexOf(' ' + q) !== -1) return 1;
+    return 2;
+  }
+
+  function searchNames(rawQuery) {
+    var query = (rawQuery || '').trim();
+    if (query.length < 2) return { exact: [], fuzzy: [], query: query };
+
+    var q = query.toLowerCase();
+    var exact = searchIndex
+      .filter(function (entry) { return entry.name.toLowerCase().indexOf(q) !== -1; })
+      .sort(function (a, b) { return matchRank(a.name, q) - matchRank(b.name, q) || a.name.localeCompare(b.name); })
+      .slice(0, MAX_EXACT_RESULTS);
+
+    if (exact.length) return { exact: exact, fuzzy: [], query: query };
+
+    var scored = [];
+    searchIndex.forEach(function (entry) {
+      var best = Infinity;
+      entry.name.toLowerCase().split(/\s+/).forEach(function (word) {
+        var d = levenshtein(q, word) / Math.max(q.length, word.length);
+        if (d < best) best = d;
+      });
+      if (best <= FUZZY_THRESHOLD) scored.push({ entry: entry, dist: best });
+    });
+    scored.sort(function (a, b) { return a.dist - b.dist; });
+
+    return { exact: [], fuzzy: scored.slice(0, MAX_FUZZY_RESULTS).map(function (s) { return s.entry; }), query: query };
+  }
+
+  function escapeHtml(s) {
+    var d = document.createElement('div');
+    d.textContent = s == null ? '' : String(s);
+    return d.innerHTML;
+  }
+
+  function searchPanelItemHtml(entry) {
+    return '<button type="button" class="gg-search-panel-item" role="option" ' +
+      'data-result-name="' + escapeHtml(entry.name) + '" data-result-ceremony="' + escapeHtml(entry.ceremonyId) + '">' +
+      '<span class="gg-search-panel-item-name">' + escapeHtml(entry.name) + '</span>' +
+      '<span class="gg-search-panel-item-meta">' + escapeHtml(entry.course) + ' &middot; ' + escapeHtml(entry.ceremonyLabel) + ' &middot; ' + escapeHtml(entry.ceremonyTime) + '</span>' +
+      '</button>';
+  }
+
+  function renderSearchPanel(panel, results) {
+    if (!panel) return;
+    if (results.query.length < 2) {
+      panel.classList.remove('show');
+      panel.innerHTML = '';
+      return;
+    }
+
+    var html;
+    if (results.exact.length) {
+      html = results.exact.map(searchPanelItemHtml).join('');
+    } else if (results.fuzzy.length) {
+      html = '<div class="gg-search-panel-heading">Did you mean&hellip;</div>' + results.fuzzy.map(searchPanelItemHtml).join('');
+    } else {
+      html = '<div class="gg-search-panel-note">No matches for &ldquo;' + escapeHtml(results.query) + '&rdquo;</div>';
+    }
+    panel.innerHTML = html;
+    panel.classList.add('show');
+
+    panel.querySelectorAll('[data-result-name]').forEach(function (item) {
+      item.addEventListener('click', function () {
+        jumpToStudent(item.dataset.resultName, item.dataset.resultCeremony);
+        panel.classList.remove('show');
+      });
+    });
+  }
+
+  function cssEscape(s) {
+    return window.CSS && CSS.escape ? CSS.escape(s) : String(s).replace(/["\\]/g, '\\$&');
+  }
+
+  // Jumps straight to one specific student — used both when a search
+  // result is picked and for the ?student_name=&ceremony= share deep-link,
+  // which already knows exactly who to show (no disambiguation needed).
+  function jumpToStudent(name, ceremonyId) {
+    if (ceremonyId && ceremonyId !== activeCer) selectCeremony(ceremonyId, { silent: true, noScroll: true });
+    var row = document.querySelector('[data-student="' + cssEscape(name) + '"][data-ceremony="' + cssEscape(ceremonyId) + '"]');
+    if (!row) return;
+    var list = row.closest('.gg-student-list');
+    if (list) list.classList.add('open');
+    var top = row.getBoundingClientRect().top + window.pageYOffset - 200;
+    window.scrollTo({ top: Math.max(0, top), behavior: 'smooth' });
+    row.classList.add('gg-jumped-to');
+    setTimeout(function () { row.classList.remove('gg-jumped-to'); }, 2000);
+  }
+
+  function wireSearchBox(inputId, panelId) {
+    var input = document.getElementById(inputId);
+    var panel = document.getElementById(panelId);
+    if (!input || !panel) return;
+
+    var timer = null;
+    var lastTracked = '';
+
+    input.addEventListener('input', function () {
+      clearTimeout(timer);
+      var value = input.value;
+      timer = setTimeout(function () {
+        var results = searchNames(value);
+        renderSearchPanel(panel, results);
+        if (results.query && results.query !== lastTracked && (results.exact.length || results.fuzzy.length)) {
+          track('Student Searched', { query: results.query.slice(0, 50) });
+          lastTracked = results.query;
+        }
+      }, DEBOUNCE_MS);
     });
 
-    currentMatches = matches;
-    matchIdx = 0;
-    track('Student Searched', { query: query.slice(0, 50) });
-    if (matches.length) scrollToMatch(0);
+    input.addEventListener('keydown', function (e) {
+      if (e.key === 'Enter') {
+        clearTimeout(timer);
+        var results = searchNames(input.value);
+        var top = results.exact[0] || results.fuzzy[0];
+        if (top) jumpToStudent(top.name, top.ceremonyId);
+        panel.classList.remove('show');
+      } else if (e.key === 'Escape') {
+        panel.classList.remove('show');
+      }
+    });
+
+    document.addEventListener('click', function (e) {
+      if (e.target !== input && !panel.contains(e.target)) panel.classList.remove('show');
+    });
   }
 
-  function scrollToMatch(idx) {
-    var el = currentMatches[idx];
-    if (!el) return;
-    var top = el.getBoundingClientRect().top + window.pageYOffset - 200;
-    window.scrollTo({ top: Math.max(0, top), behavior: 'smooth' });
-    var textEl = document.getElementById('rpill-text');
-    if (textEl) textEl.textContent = 'Result ' + (idx + 1) + ' of ' + currentMatches.length;
-    var pill = document.getElementById('result-pill');
-    if (pill) pill.classList.toggle('show', currentMatches.length > 1);
-  }
+  wireSearchBox('nav-search-input', 'nav-search-panel');
+  wireSearchBox('inputField1', 'find-search-panel');
 
   document.getElementById('nav-search-toggle')?.addEventListener('click', function () {
     var inp = document.getElementById('nav-search-input');
     inp.classList.toggle('open');
-    if (inp.classList.contains('open')) inp.focus();
-  });
-  document.getElementById('nav-search-input')?.addEventListener('keydown', function (e) {
-    if (e.key === 'Enter') doSearch(this.value.trim());
+    if (inp.classList.contains('open')) {
+      inp.focus();
+    } else {
+      document.getElementById('nav-search-panel')?.classList.remove('show');
+    }
   });
   document.getElementById('nav-search-submit')?.addEventListener('click', function () {
-    doSearch(document.getElementById('nav-search-input').value.trim());
+    var input = document.getElementById('nav-search-input');
+    renderSearchPanel(document.getElementById('nav-search-panel'), searchNames(input.value));
   });
   document.getElementById('find-btn')?.addEventListener('click', function () {
-    doSearch(document.getElementById('inputField1').value.trim());
-  });
-  document.getElementById('inputField1')?.addEventListener('keydown', function (e) {
-    if (e.key === 'Enter') doSearch(this.value.trim());
-  });
-  document.getElementById('rpill-next')?.addEventListener('click', function () {
-    if (currentMatches.length < 2) return;
-    matchIdx = (matchIdx + 1) % currentMatches.length;
-    scrollToMatch(matchIdx);
-  });
-  document.getElementById('rpill-close')?.addEventListener('click', function () {
-    document.getElementById('result-pill')?.classList.remove('show');
-    clearHighlights();
-    currentMatches = [];
+    var input = document.getElementById('inputField1');
+    renderSearchPanel(document.getElementById('find-search-panel'), searchNames(input.value));
   });
   document.getElementById('return-top')?.addEventListener('click', function () {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   });
 
-  // ── URL params (share-link deep-linking) ────────────────────────────
+  // ── URL params (share-link deep-linking + hero personalisation) ─────
+  // A personal link (?student_name=&ceremony=) lands on a personalised
+  // hero — "Congratulations, X!" plus "Find X in the honours list" —
+  // rather than auto-scrolling straight past it to the roster, so the
+  // personal moment is actually seen, not skipped through. Without a
+  // name, the same link is still useful: it reads generically and takes
+  // you to the inline search box instead of a specific student.
   (function handleParams() {
     var p = new URLSearchParams(location.search);
     var name = p.get('student_name');
-    var cer = p.get('ceremony');
-    if (cer) selectCeremony(cer.toUpperCase());
+    var cer = (p.get('ceremony') || '').toUpperCase();
+
+    if (cer) selectCeremony(cer, { silent: true, noScroll: true });
+
+    var findLink = document.getElementById('hero-find-link');
+    var findName = document.getElementById('hero-find-name');
+
     if (name) {
       track('Shared Link Opened', { type: 'student' });
-      setTimeout(function () {
-        var input = document.getElementById('inputField1');
-        if (input) input.value = name;
-        doSearch(name);
-      }, 500);
+
+      var congrats = document.getElementById('hero-congrats');
+      if (congrats) congrats.textContent = 'Congratulations, ' + name + '!';
+
+      if (findLink && findName) {
+        findName.textContent = name;
+        findLink.addEventListener('click', function (e) {
+          e.preventDefault();
+          jumpToStudent(name, cer);
+        });
+      }
+    } else if (findLink) {
+      findLink.addEventListener('click', function (e) {
+        e.preventDefault();
+        var target = document.getElementById('inputField1');
+        if (!target) return;
+        target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        target.focus();
+      });
     }
   })();
 

@@ -37,9 +37,33 @@ a{color:inherit;text-decoration:none}
 }
 .gg-nav-link:hover{color:#fff}
 .gg-nav-caret{font-size:9px;opacity:0.7}
+
+/* Ceremony Guides dropdown */
+.gg-nav-dropdown{position:relative;}
+.gg-nav-dropdown-toggle{background:none;border:none;font-family:inherit;padding:0;}
+.gg-nav-dropdown-menu{
+  display:none;position:absolute;top:calc(100% + 12px);left:0;
+  background:var(--gg-primary);min-width:320px;
+  box-shadow:0 8px 24px rgba(0,0,0,0.35);z-index:1001;
+  padding:8px 0;max-height:70vh;overflow-y:auto;
+}
+.gg-nav-dropdown.open .gg-nav-dropdown-menu{display:block;}
+.gg-nav-dropdown.open .gg-nav-caret{transform:rotate(180deg);}
+.gg-nav-dropdown-group{
+  font-size:11px;font-weight:700;letter-spacing:0.07em;text-transform:uppercase;
+  color:var(--gg-accent);padding:10px 20px 6px;
+}
+.gg-nav-dropdown-item{
+  display:flex;align-items:baseline;gap:10px;padding:8px 20px;
+  color:#fff;text-decoration:none;font-size:13px;
+}
+.gg-nav-dropdown-item:hover{background:rgba(255,255,255,0.08);}
+.gg-nav-dropdown-item-time{font-weight:700;flex-shrink:0;width:48px;}
+.gg-nav-dropdown-item-label{color:rgba(255,255,255,0.85);}
+
 .gg-nav-right{display:flex;align-items:center;gap:10px;margin-left:auto;flex-shrink:0;}
 .gg-nav-search-label{font-size:14px;color:rgba(255,255,255,0.75);white-space:nowrap;}
-.gg-nav-search-wrap{display:flex;align-items:center;gap:0;}
+.gg-nav-search-wrap{display:flex;align-items:center;gap:0;position:relative;}
 .gg-nav-search-input{
   width:0;overflow:hidden;padding:0;margin:0;
   background:rgba(255,255,255,0.12);
@@ -59,6 +83,48 @@ a{color:inherit;text-decoration:none}
   cursor:pointer;padding:4px;display:flex;align-items:center;
 }
 .gg-nav-search-icon:hover{color:#fff}
+
+/* Hamburger (mobile only) */
+.gg-nav-hamburger{
+  display:none;flex-direction:column;gap:5px;
+  background:none;border:none;cursor:pointer;padding:6px;
+}
+.gg-nav-hamburger span{
+  display:block;width:22px;height:2px;background:#fff;border-radius:2px;
+}
+
+/* Mobile menu overlay */
+.gg-nav-mobile-menu{
+  position:fixed;inset:0;z-index:2000;
+  background:rgba(35,35,51,0.97);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:8px;opacity:0;pointer-events:none;transition:opacity 0.3s ease;
+  overflow-y:auto;padding:80px 24px;
+}
+.gg-nav-mobile-menu.open{opacity:1;pointer-events:auto;}
+.gg-nav-mobile-menu__inner{display:flex;flex-direction:column;align-items:center;gap:14px;text-align:center;width:100%;max-width:420px;}
+.gg-nav-mobile-link{font-size:22px;font-weight:700;color:#fff;padding:6px 0;}
+.gg-nav-mobile-link:hover{color:var(--gg-accent);}
+.gg-nav-mobile-group-label{
+  font-size:12px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;
+  color:var(--gg-accent);margin-top:18px;
+}
+.gg-nav-mobile-menu .gg-nav-dropdown-group{padding:14px 0 4px;text-align:center;}
+.gg-nav-mobile-menu .gg-nav-dropdown-item{justify-content:center;padding:8px 0;}
+.gg-nav-mobile-close{
+  position:absolute;top:14px;right:20px;background:none;border:none;
+  color:#fff;font-size:22px;cursor:pointer;padding:8px;line-height:1;
+}
+
+/* Measured, not guessed: the full desktop nav (wordmark + 4 links +
+   search box) needs ~1090px before it overflows and pushes the search
+   box off-screen — breakpoint set with headroom above that, not an
+   arbitrary "mobile" width. */
+@media (max-width:1120px){
+  .gg-nav-links{display:none;}
+  .gg-nav-hamburger{display:flex;}
+  .gg-nav-search-label{display:none;}
+}
 
 /* Floating bar */
 .gg-floating-bar{
@@ -88,6 +154,11 @@ a{color:inherit;text-decoration:none}
 }
 .gg-hero-content{position:relative;z-index:1;padding:0 44px 56px;}
 .gg-hero-congrats{font-size:19px;font-weight:700;color:#fff;margin-bottom:10px;}
+.gg-hero-find-link{
+  display:inline-block;font-size:14px;font-weight:700;color:var(--gg-accent);
+  margin-bottom:18px;text-decoration:underline;
+}
+.gg-hero-find-link:hover{opacity:0.85;}
 .gg-hero-title-block{border-left:3px solid #fff;padding-left:18px;}
 .gg-hero-title{
   font-size:clamp(60px,8.5vw,92px);font-weight:700;
@@ -149,7 +220,7 @@ a{color:inherit;text-decoration:none}
 .gg-find-heading{font-size:26px;font-weight:700;color:var(--gg-text);margin-bottom:24px;}
 .gg-find-box{background:var(--gg-primary);padding:28px 32px;max-width:700px;}
 .gg-find-label{font-size:14px;font-weight:700;color:#fff;margin-bottom:12px;}
-.gg-find-row{display:flex;gap:0;}
+.gg-find-row{display:flex;gap:0;position:relative;}
 .gg-find-input{flex:1;padding:12px 14px;background:#fff;border:none;font-size:15px;font-family:inherit;outline:none;color:var(--gg-text);}
 .gg-find-input::placeholder{color:#999;}
 .gg-find-btn{
@@ -268,17 +339,40 @@ section.gg-chooser .gg-chooser-prompt{color:rgba(255,255,255,0.55);}
 .gg-course-toggle:hover{background:#f5f5f5;}
 .gg-student-list{display:none;}
 .gg-student-list.open{display:block;}
-.gg-student-name-row{display:flex;align-items:center;padding:8px 0;gap:10px;}
+.gg-student-name-row{display:flex;align-items:center;padding:8px 0;gap:10px;transition:background-color 1.8s ease;}
+.gg-student-name-row.gg-jumped-to{background-color:#fff6a3;transition:background-color 0.15s ease;}
 .gg-student-name-text{font-size:15px;color:var(--gg-text);}
 .gg-share-btn{background:none;border:none;color:#aaa;cursor:pointer;padding:2px;display:flex;align-items:center;flex-shrink:0;}
 .gg-share-btn:hover{color:#555;}
-.gg-found-text-piece{background:#ffff00;}
 
-/* Result pill */
-#result-pill{position:fixed;bottom:20px;right:20px;display:none;align-items:center;gap:6px;z-index:2000;}
-#result-pill.show{display:flex;}
-#rpill-close{width:28px;height:28px;border-radius:50%;background:#dc3545;border:none;color:#fff;cursor:pointer;font-size:13px;display:flex;align-items:center;justify-content:center;}
-#rpill-next{padding:7px 14px;background:#007bff;border:none;border-radius:4px;color:#fff;font-size:13px;font-family:inherit;cursor:pointer;display:flex;align-items:center;gap:6px;}
+/* Search results panel — shared by nav search and the "Find a graduating
+   student" box; operates on window.GRADUATION_DATA.searchIndex, not the
+   DOM, so it works identically offline. */
+.gg-search-panel{
+  display:none;position:absolute;top:calc(100% + 8px);right:0;width:320px;
+  max-width:calc(100vw - 32px);
+  background:#fff;color:var(--gg-text);border-radius:2px;
+  box-shadow:0 10px 30px rgba(0,0,0,0.25);z-index:1500;
+  max-height:360px;overflow-y:auto;
+}
+.gg-search-panel.show{display:block;}
+.gg-search-panel--find{left:0;right:0;width:auto;max-width:480px;}
+.gg-search-panel-note{
+  padding:12px 16px;font-size:13px;color:#777;
+}
+.gg-search-panel-heading{
+  padding:10px 16px 4px;font-size:11px;font-weight:700;letter-spacing:0.07em;
+  text-transform:uppercase;color:#999;
+}
+.gg-search-panel-item{
+  display:block;width:100%;text-align:left;background:none;border:none;
+  padding:10px 16px;cursor:pointer;border-top:1px solid #eee;
+}
+.gg-search-panel-item:first-child{border-top:none;}
+.gg-search-panel-item:hover,
+.gg-search-panel-item.is-active{background:#f5f5f5;}
+.gg-search-panel-item-name{font-size:14px;font-weight:700;color:var(--gg-text);display:block;}
+.gg-search-panel-item-meta{font-size:12px;color:#777;display:block;margin-top:2px;}
 
 /* Return to top */
 .gg-return-top{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--gg-primary);color:#fff;border:none;border-radius:20px;padding:8px 22px;font-size:13px;font-family:inherit;cursor:pointer;z-index:500;}
