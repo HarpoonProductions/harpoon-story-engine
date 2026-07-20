@@ -1,0 +1,399 @@
+'use strict';
+
+const { escHtml, resolveTokenStyle, renderPlausibleScript } = require('../shell/head');
+
+/**
+ * Renders a content.kind === "graduation-guide" document to a full HTML
+ * page. Pure function — same contract as a layout renderer (content, opts)
+ * -> HTML string — but builds its own <head>/<body> shell rather than going
+ * through renderHead/renderNav, which are narrative-section-shaped.
+ *
+ * Ceremony/chooser/names markup is built here, at render time, as static
+ * HTML with data-* hooks; all interactivity (chooser switching, search,
+ * share, deep-linking) is wired client-side by js/graduation-guide-runtime.js
+ * against this static markup, the same division of labour HSE's own
+ * toggle-panels/accordion blocks use with js/runtime.js.
+ *
+ * @param {object} content - validated graduation-guide content object
+ * @param {object} [opts]
+ * @param {string} [opts.basePath] - root-relative base path for S3/CloudFront
+ * @returns {string} full HTML document
+ */
+function renderGraduationGuide(content, opts) {
+  opts = opts || {};
+  const { meta, config, institution, guide, ceremonies, searchIndex } = content;
+  const base = opts.basePath
+    ? '/' + opts.basePath.replace(/^\//, '').replace(/\/$/, '')
+    : '';
+  const asset = (file) => (base ? `${base}/${file}` : file);
+
+  const head = buildHead(meta, config, institution, base, asset);
+  const body = buildBody(institution, guide, ceremonies, asset);
+  const dataScript = buildDataScript({ institution, guide, ceremonies, searchIndex });
+
+  return `<!DOCTYPE html>
+<html lang="en">
+${head}
+<body>
+${body}
+${dataScript}
+<script src="${asset('js/graduation-guide-runtime.js')}"></script>
+</body>
+</html>`;
+}
+
+// ── <head> ──────────────────────────────────────────────────────────────
+
+function buildHead(meta, config, institution, base, asset) {
+  const title = `${escHtml(meta.title)} | ${escHtml(institution.name)}`;
+  const plausibleScript = renderPlausibleScript(config);
+  const tokenSetHtml = resolveTokenStyle(meta.token_set);
+
+  return `<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0,viewport-fit=cover">
+  <meta name="theme-color" content="${escHtml(institution.primaryColor)}">
+  <title>${title}</title>
+  ${plausibleScript}
+
+  <!-- Platform Core token set (fonts/logo lookup only — colours below are this guide's own) -->
+  ${tokenSetHtml}
+
+  <link rel="stylesheet" href="${asset('css/kinds/graduation-guide.css')}">
+  ${buildBrandStyle(institution, asset)}
+</head>`;
+}
+
+function buildBrandStyle(institution, asset) {
+  const fontFaces = (institution.fontFiles || [])
+    .map((f) => `@font-face{font-family:'${escHtml(institution.fontHeading)}';font-weight:${f.weight};font-style:${f.style || 'normal'};font-display:swap;src:url('${escHtml(asset(f.file))}') format('woff2');}`)
+    .join('\n    ');
+
+  return `<style>
+    ${fontFaces}
+    :root{
+      --gg-primary: ${escHtml(institution.primaryColor)};
+      --gg-accent: ${escHtml(institution.accentColor)};
+      --gg-bg: ${escHtml(institution.lightBackground || '#f0f0f0')};
+      --gg-text: ${escHtml(institution.textColor || '#161a1d')};
+      --gg-font-heading: '${escHtml(institution.fontHeading)}','Helvetica Neue',Arial,sans-serif;
+      --gg-font-body: '${escHtml(institution.fontBody)}','Helvetica Neue',Arial,sans-serif;
+    }
+  </style>`;
+}
+
+// ── <body> ──────────────────────────────────────────────────────────────
+
+function buildBody(institution, guide, ceremonies, asset) {
+  return `<nav class="gg-nav">
+  <a class="gg-nav-wordmark" href="#">${escHtml(institution.shortName || institution.name)}</a>
+  <div class="gg-nav-links">
+    <a class="gg-nav-link" href="#">${escHtml(guide.title)}</a>
+    <a class="gg-nav-link" href="#">Ceremony Guides <span class="gg-nav-caret">&#9660;</span></a>
+    <a class="gg-nav-link" href="#">Explore more <span class="gg-nav-caret">&#9660;</span></a>
+    <a class="gg-nav-link" href="#">Memories of ${escHtml(guide.title)}</a>
+  </div>
+  <div class="gg-nav-right">
+    <span class="gg-nav-search-label">Search name:</span>
+    <div class="gg-nav-search-wrap">
+      <input type="text" class="gg-nav-search-input" id="nav-search-input" placeholder="Search name" autocomplete="off">
+      <button class="gg-nav-search-arrow" id="nav-search-submit" aria-label="Go">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+      </button>
+    </div>
+    <button class="gg-nav-search-icon" id="nav-search-toggle" aria-label="Search">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+    </button>
+  </div>
+</nav>
+
+<div class="gg-floating-bar" id="floating-bar">
+  You are viewing <span id="floating-bar-text"></span>
+</div>
+
+<section class="gg-hero" id="hero">
+  <div class="gg-hero-bg"></div>
+  <div class="gg-hero-content">
+    <p class="gg-hero-congrats">Congratulations!</p>
+    <div class="gg-hero-title-block">
+      <h1 class="gg-hero-title">${escHtml(guide.title)}</h1>
+    </div>
+  </div>
+  <button class="gg-hero-pause">&#9646;&#9646; Pause</button>
+</section>
+
+${buildWelcomeSection(guide)}
+${buildAboutSection(guide)}
+
+<section class="gg-find">
+  <h2 class="gg-find-heading">Find a graduating student</h2>
+  <div class="gg-find-box">
+    <div class="gg-find-label">Enter a name</div>
+    <div class="gg-find-row">
+      <input type="text" class="gg-find-input" id="inputField1"
+             placeholder="Search name" autocomplete="off" autocorrect="off"
+             autocapitalize="words" spellcheck="false">
+      <button class="gg-find-btn" id="find-btn">Search</button>
+    </div>
+  </div>
+</section>
+
+<section class="gg-chooser" id="chooser">
+${buildChooserHtml(guide, ceremonies)}
+</section>
+
+<div id="ceremony-sections">
+${buildCeremonySectionsHtml(ceremonies)}
+</div>
+
+<div id="result-pill">
+  <button id="rpill-close" aria-label="Close">&#10005;</button>
+  <button id="rpill-next">
+    <span id="rpill-text">Result 1 of 1</span>
+    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg>
+  </button>
+</div>
+
+<button class="gg-return-top" id="return-top">&#8963; Return to top</button>`;
+}
+
+function buildWelcomeSection(guide) {
+  const signers = (guide.welcomeSigners || [])
+    .map((s) => `<div class="gg-signer">
+        <div class="gg-signer-portrait">&#128100;</div>
+        <div><div class="gg-signer-name">${escHtml(s.name)}</div>
+        <div class="gg-signer-role">${escHtml(s.title)}</div></div>
+      </div>`)
+    .join('\n      ');
+
+  const body = (guide.welcomeText || []).map((p) => `<p>${escHtml(p)}</p>`).join('\n      ');
+
+  return `<section class="gg-welcome">
+  <div class="gg-welcome-left">
+    <div class="gg-welcome-subtitle">${escHtml(guide.welcomeSubtitle || '')}</div>
+    <div class="gg-welcome-heading">A welcome message from</div>
+    <div class="gg-welcome-signers">
+      ${signers}
+    </div>
+    <div class="gg-welcome-rule"></div>
+    <div class="gg-welcome-body">
+      ${body}
+    </div>
+  </div>
+  <div class="gg-welcome-right"><div class="gg-welcome-right-inner">&#127891;</div></div>
+</section>`;
+}
+
+function buildAboutSection(guide) {
+  const about = guide.aboutTheDay || {};
+  const requests = (about.politeRequests || []).map((r) => `<li>${escHtml(r)}</li>`).join('\n      ');
+  const photography = (about.photography || []).map((p) => `<p>${escHtml(p)}</p>`).join('\n      ');
+  const link = about.photographyLink
+    ? `<p>For more information on photography visit <a href="${escHtml(about.photographyLink.href)}">${escHtml(about.photographyLink.text)}</a></p>`
+    : '';
+
+  return `<section class="gg-about">
+  <div class="gg-about-bg"></div>
+  <div class="gg-about-col">
+    <svg class="gg-about-icon" viewBox="0 0 72 72" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="28" cy="44" r="16" stroke="currentColor" stroke-width="2"/>
+      <rect x="20" y="12" width="10" height="10" rx="1" stroke="currentColor" stroke-width="2"/>
+      <path d="M28 28v16" stroke="currentColor" stroke-width="2"/>
+      <path d="M22 62h16" stroke="currentColor" stroke-width="2"/>
+    </svg>
+    <div class="gg-about-col-heading">Polite requests</div>
+    <ul>
+      ${requests}
+    </ul>
+  </div>
+  <div class="gg-about-col">
+    <svg class="gg-about-icon" viewBox="0 0 72 72" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <rect x="10" y="22" width="48" height="34" rx="2" stroke="currentColor" stroke-width="2"/>
+      <circle cx="34" cy="39" r="9" stroke="currentColor" stroke-width="2"/>
+      <circle cx="34" cy="39" r="3.5" stroke="currentColor" stroke-width="2"/>
+      <circle cx="58" cy="12" r="3" stroke="currentColor" stroke-width="2"/>
+      <path d="M52 18l4-4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+    </svg>
+    <div class="gg-about-col-heading">Professional photography</div>
+    ${photography}
+    ${link}
+  </div>
+</section>`;
+}
+
+// ── Chooser ─────────────────────────────────────────────────────────────
+
+function buildChooserHtml(guide, ceremonies) {
+  return (guide.days || [])
+    .map((dayInfo) => {
+      const tiles = ceremonies
+        .filter((c) => c.day === dayInfo.day)
+        .map(
+          (c) => `<button class="gg-chooser-tile${c.active ? ' active' : ''}" data-id="${escHtml(c.ceremonyId)}">
+        <span class="gg-chooser-tile-time">${escHtml(c.ceremonyTime)}</span>
+        <span class="gg-chooser-tile-label">${escHtml(c.ceremonyLabel)}</span>
+        <span class="gg-chooser-tile-caret">&#9660;</span>
+      </button>`
+        )
+        .join('\n      ');
+
+      return `<div class="gg-chooser-day">
+    <h2 class="gg-chooser-day-title">View your ceremony guide for <span>${escHtml(dayInfo.label)}</span></h2>
+    <p class="gg-chooser-prompt">Choose a ceremony:</p>
+    <div class="gg-chooser-grid">
+      ${tiles}
+    </div>
+  </div>`;
+    })
+    .join('\n');
+}
+
+// ── Ceremony sections ──────────────────────────────────────────────────
+
+function buildCeremonySectionsHtml(ceremonies) {
+  return ceremonies.map((cfg) => buildCeremonySection(cfg)).join('\n\n');
+}
+
+function buildCeremonySection(cfg) {
+  const dean = cfg.dean || {};
+  const proc = cfg.processionGroups || [];
+  const order = cfg.orderOfCeremony || [];
+  const awardees = cfg.awardees || [];
+
+  const ptabs = proc
+    .map(
+      (g, i) => `<button class="gg-proc-tab${i === 0 ? ' active' : ''}" data-pi="${i}">
+      <span class="gg-proc-tab-num">${i + 1}</span>
+      <span class="gg-proc-tab-label">${escHtml(g.label)}</span>
+    </button>`
+    )
+    .join('\n    ');
+
+  const pcontent = proc
+    .map(
+      (g, i) => `<div class="gg-proc-content${i === 0 ? ' active' : ''}" data-pc="${i}"><ul>
+      ${g.members.map((m) => `<li>${escHtml(m)}</li>`).join('\n      ')}
+    </ul></div>`
+    )
+    .join('\n  ');
+
+  const orderHtml = order
+    .map((item) => {
+      let html = `<div class="gg-order-item"><div class="gg-order-item-title">${escHtml(item.t)}</div>`;
+      if (item.d) html += `<div class="${item.i ? 'gg-order-item-italic' : 'gg-order-item-plain'}">${escHtml(item.d)}</div>`;
+      if (item.extra) html += `<div class="gg-order-item-plain">${escHtml(item.extra)}</div>`;
+      if (item.jump) html += `<a class="gg-order-jump" href="#names-${escHtml(cfg.ceremonyId)}">&#8595; Jump to names of graduating students</a>`;
+      if (item.bullet) html += `<div class="gg-order-bullet"><div class="gg-order-bullet-sq"></div><div class="gg-order-bullet-text">${escHtml(item.bullet)}</div></div>`;
+      html += '</div>';
+      return html;
+    })
+    .join('\n    ');
+
+  let awardeesHtml = '';
+  if (awardees.length) {
+    const cards = awardees
+      .map(
+        (a) => `<div class="gg-awardee-card">
+        <div class="gg-awardee-photo">&#128100;</div>
+        <div class="gg-awardee-body">
+          <div class="gg-awardee-medal">${escHtml(a.medal)}</div>
+          <div class="gg-awardee-name">${escHtml(a.name)}</div>
+          <div class="gg-awardee-desc">${escHtml(a.desc)}</div>
+          <button class="gg-awardee-bio-btn">View bio for ${escHtml(a.name)}</button>
+        </div>
+      </div>`
+      )
+      .join('\n      ');
+
+    awardeesHtml = `<section class="gg-awardees">
+      <div class="gg-awardees-grid">
+        ${cards}
+      </div>
+      <button class="gg-view-all-btn">View all of this year's awardees</button>
+    </section>
+    <div class="gg-rah-photo">&#127963;</div>
+    <section class="gg-prizes">
+      <h2 class="gg-prizes-heading">Graduate prize winners</h2>
+      <p class="gg-prizes-intro">${escHtml(cfg.prizesIntro)}</p>
+      <button class="gg-prizes-toggle">View or hide graduate prize winners</button>
+    </section>`;
+  }
+
+  const courseGroups = (cfg.courseGroups || [])
+    .map((course, ci) => {
+      const gid = `sl-${cfg.ceremonyId}-${ci}`;
+      const rows = (course.students || [])
+        .map(
+          (name) => `<div class="gg-student-name-row" data-student="${escHtml(name)}" data-ceremony="${escHtml(cfg.ceremonyId)}">
+        <span class="gg-student-name-text">${escHtml(name)}</span>
+        <button class="gg-share-btn" aria-label="Share">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/>
+            <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/>
+            <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>
+          </svg>
+        </button>
+      </div>`
+        )
+        .join('\n      ');
+
+      return `<div class="gg-course-group">
+      <div class="gg-course-group-hdr">
+        <h3 class="gg-course-group-title">${escHtml(course.groupTitle)}</h3>
+        <button class="gg-course-toggle" data-target="${gid}">View or hide</button>
+      </div>
+      <div class="gg-student-list" id="${gid}">
+        ${rows}
+      </div>
+    </div>`;
+    })
+    .join('\n    ');
+
+  const namesHtml = `<section class="gg-names" id="names-${escHtml(cfg.ceremonyId)}">
+    <h2 class="gg-names-heading">Names of graduating students</h2>
+    <p class="gg-names-disclaimer">Please note that this list of names is provided for the information and interest of those attending the ceremony. It represents a list of graduates at the time of publishing, not all of whom are attending the ceremony.</p>
+    ${courseGroups}
+  </section>`;
+
+  return `<div class="gg-ceremony${cfg.active ? ' active' : ''}" id="cer-${escHtml(cfg.ceremonyId)}" data-id="${escHtml(cfg.ceremonyId)}">
+  <section class="gg-cer-header">
+    <h2 class="gg-cer-time-title"><b>${escHtml(cfg.ceremonyTime)}</b> ${escHtml(cfg.ceremonyLabel)}</h2>
+    ${dean.name ? `<div class="gg-dean-grid">
+      <div>
+        <h3 class="gg-dean-h3">Dean's welcome</h3>
+        <p class="gg-dean-intro">${escHtml(dean.intro)}</p>
+        <p class="gg-dean-body">${escHtml(dean.body)}</p>
+        <button class="gg-dean-expand">&#8964;</button>
+      </div>
+      <div class="gg-dean-portrait-col">
+        <div class="gg-dean-photo">&#128100;</div>
+        <div class="gg-dean-name">${escHtml(dean.name)}</div>
+        <div class="gg-dean-role-text">${escHtml(dean.role)}</div>
+      </div>
+    </div>` : ''}
+  </section>
+  ${proc.length ? `<section class="gg-procession">
+    <h2 class="gg-section-h2">Order of procession</h2>
+    <div class="gg-proc-tabs" id="ptabs-${escHtml(cfg.ceremonyId)}">
+      ${ptabs}
+    </div>
+    ${pcontent}
+  </section>` : ''}
+  ${orderHtml ? `<div class="gg-order-ceremony">
+    <h2 class="gg-order-h2">Order of ceremony</h2>
+    ${orderHtml}
+  </div>` : ''}
+  ${awardeesHtml}
+  ${namesHtml}
+</div>`;
+}
+
+// ── Embedded data ──────────────────────────────────────────────────────
+// Offline-critical: baked into the shell at build time, no runtime fetch.
+
+function buildDataScript(payload) {
+  const json = JSON.stringify(payload).replace(/</g, '\\u003c');
+  return `<script>window.GRADUATION_DATA = ${json};</script>`;
+}
+
+module.exports = { renderGraduationGuide };

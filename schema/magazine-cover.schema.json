@@ -1,0 +1,65 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "HSE Magazine Cover",
+  "description": "Front cover for an Edition OS edition — a curated, ordered collection of stories drawn from multiple platforms (Shorthand, WordPress, HSE) presented as a single issue. This is distinct from the per-story `cover` in content.schema.json, which fronts one long-form piece. A magazine cover fronts many.",
+  "type": "object",
+  "required": ["meta", "masthead"],
+  "properties": {
+    "meta": {
+      "type": "object",
+      "description": "Issue-level identity and branding.",
+      "required": ["title"],
+      "properties": {
+        "title": {
+          "type": "string",
+          "description": "Magazine or edition title"
+        },
+        "issue_label": {
+          "type": "string",
+          "description": "Small, quiet issue metadata — date, price, volume/issue number. Rendered as plain corner text, e.g. 'August 1991' or 'Vol. 167 No. 6 · June 1985'."
+        },
+        "accent_color": { "type": "string" },
+        "accent_color_2": { "type": "string" }
+      }
+    },
+    "masthead": {
+      "type": "object",
+      "description": "The nameplate/logotype, rendered large at the top of the cover.",
+      "properties": {
+        "logo_url": {
+          "type": "string",
+          "description": "Wordmark image. Falls back to styled text from meta.title if omitted."
+        }
+      }
+    },
+    "portrait": {
+      "$ref": "#/definitions/image",
+      "description": "Foreground cutout (transparent PNG), anchored to the bottom of the cover, layered above the masthead so a tightly-cropped subject can slightly overlap it — the classic British-magazine convention."
+    },
+    "headline": {
+      "type": "object",
+      "description": "The single lead coverline naming this issue's top story. At most one — the cover should point to one thing, not list everything inside it.",
+      "properties": {
+        "text": { "type": "string" },
+        "href": {
+          "type": "string",
+          "description": "Link to the underlying story — a Shorthand, WordPress, or HSE URL, whichever platform hosts it."
+        }
+      }
+    }
+  },
+  "definitions": {
+    "image": {
+      "type": "object",
+      "description": "Reusable image block",
+      "properties": {
+        "url": { "type": "string" },
+        "alt": { "type": "string" },
+        "focal": {
+          "type": "string",
+          "description": "CSS object-position value, e.g. '50% 20%'."
+        }
+      }
+    }
+  }
+}

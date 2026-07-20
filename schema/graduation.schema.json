@@ -1,0 +1,245 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://harpoon.productions/schema/graduation.schema.json",
+  "title": "HSE graduation-guide content schema",
+  "description": "Content schema for content.kind === \"graduation-guide\" — a distinct render path from the narrative meta/config/cover/sections model in content.schema.json (v1.2), sharing only the meta/config envelope conventions (project_id, token_set, analytics, pwa) so the existing validate/render/deploy pipeline works unchanged. Promoted from the graduation.guide product repo (graduation-guides/schema/graduation.schema.json) — same content model, now hosted and rendered here per docs/graduation-guide-integration.md. Offline-critical fields must be baked into the artefact at build time; connected-optional fields may be lazy-loaded (future work).",
+  "type": "object",
+  "required": ["kind", "meta", "institution", "guide", "ceremonies"],
+  "properties": {
+    "kind": {
+      "const": "graduation-guide",
+      "description": "Selects this render path in renderer/index.js's render(). Absent/other kind values fall through to the narrative sections renderer."
+    },
+    "meta": {
+      "type": "object",
+      "description": "Same envelope shape as content.schema.json's meta — reused so render.js, the Supabase deploy pipeline, and S3/CloudFront paths need zero changes.",
+      "required": ["project_id", "title"],
+      "properties": {
+        "project_id": { "type": "string", "description": "Deploy slug, e.g. \"imperial-2026\". Determines the S3/CloudFront path." },
+        "title": { "type": "string" },
+        "client": { "type": "string" },
+        "date": { "type": "string" },
+        "token_set": { "type": "string", "description": "Registry lookup key (tokens/registry.json) — kept for consistency, but this render path sources its actual colors/fonts from institution.* below, not css/tokens-<id>.css, since a guide's sub-brand can diverge from the institution's corporate token set." },
+        "last_saved": { "type": "string" },
+        "version": { "type": "string" },
+        "og_description": { "type": "string" },
+        "og_image": { "type": "string" }
+      }
+    },
+    "config": {
+      "type": "object",
+      "properties": {
+        "analytics": {
+          "type": "object",
+          "properties": {
+            "plausible_domain": { "type": "string", "description": "Domain registered in Plausible CE, e.g. analytics.har.pn." }
+          }
+        },
+        "pwa": {
+          "type": "object",
+          "description": "Schema present for forward compatibility — not implemented by this render path yet (see docs/graduation-guide-integration.md, deferred).",
+          "properties": {
+            "enabled": { "type": "boolean", "default": false },
+            "theme_color": { "type": "string" },
+            "background_color": { "type": "string" }
+          }
+        }
+      }
+    },
+    "institution": {
+      "type": "object",
+      "description": "Offline-critical. Branding data consumed by the renderer via generated CSS custom properties — never hardcoded in the renderer module itself. Deliberately not sourced from meta.token_set: a guide's real sub-brand (e.g. Imperial's \"Graduation Days\" dark/teal identity) can diverge from the institution's corporate token set.",
+      "required": ["name", "primaryColor", "accentColor", "fontHeading", "fontBody"],
+      "properties": {
+        "name": { "type": "string", "description": "Full institution name." },
+        "shortName": { "type": "string", "description": "Short form for tight UI (e.g. nav wordmark)." },
+        "logo": { "type": "string", "description": "Path or URL to institution logo. Optional." },
+        "primaryColor": { "type": "string", "pattern": "^#[0-9a-fA-F]{6}$" },
+        "accentColor": { "type": "string", "pattern": "^#[0-9a-fA-F]{6}$" },
+        "lightBackground": { "type": "string", "pattern": "^#[0-9a-fA-F]{6}$" },
+        "textColor": { "type": "string", "pattern": "^#[0-9a-fA-F]{6}$" },
+        "fontHeading": { "type": "string" },
+        "fontBody": { "type": "string" },
+        "fontFiles": {
+          "type": "array",
+          "description": "Font binaries to embed in the build artefact, resolved relative to this renderer's output directory.",
+          "items": {
+            "type": "object",
+            "required": ["weight", "file"],
+            "properties": {
+              "weight": { "type": "integer" },
+              "style": { "type": "string", "enum": ["normal", "italic"] },
+              "file": { "type": "string", "description": "Path relative to the deployed artefact's directory (e.g. fonts/imperial-sans-regular-400.woff2)." }
+            }
+          }
+        },
+        "footer": {
+          "type": "object",
+          "description": "Not yet rendered by this renderer — reserved for future use.",
+          "properties": {
+            "address": { "type": "string" },
+            "privacyUrl": { "type": "string" },
+            "copyrightLine": { "type": "string" }
+          }
+        }
+      }
+    },
+    "guide": {
+      "type": "object",
+      "description": "Offline-critical. Guide-level copy shared across all ceremonies.",
+      "required": ["title"],
+      "properties": {
+        "title": { "type": "string" },
+        "subtitle": { "type": "string", "description": "Not yet rendered by this renderer — reserved for future use." },
+        "welcomeSubtitle": { "type": "string" },
+        "welcomeSigners": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["name", "title"],
+            "properties": {
+              "name": { "type": "string" },
+              "title": { "type": "string" },
+              "photo": { "type": "string" }
+            }
+          }
+        },
+        "welcomeText": {
+          "type": "array",
+          "description": "One entry per paragraph.",
+          "items": { "type": "string" }
+        },
+        "aboutTheDay": {
+          "type": "object",
+          "properties": {
+            "politeRequests": { "type": "array", "items": { "type": "string" } },
+            "photography": { "type": "array", "items": { "type": "string" } },
+            "photographyLink": {
+              "type": "object",
+              "properties": { "text": { "type": "string" }, "href": { "type": "string" } }
+            }
+          }
+        },
+        "days": {
+          "type": "array",
+          "description": "Groups ceremonies by calendar day for the chooser section.",
+          "items": {
+            "type": "object",
+            "required": ["label", "day"],
+            "properties": {
+              "label": { "type": "string" },
+              "day": { "type": "integer" }
+            }
+          }
+        }
+      }
+    },
+    "ceremonies": {
+      "type": "array",
+      "description": "Offline-critical.",
+      "items": {
+        "type": "object",
+        "required": ["ceremonyId", "ceremonyTime", "ceremonyLabel", "day", "courseGroups"],
+        "properties": {
+          "ceremonyId": { "type": "string" },
+          "ceremonyTime": { "type": "string" },
+          "ceremonyLabel": { "type": "string" },
+          "day": { "type": "integer" },
+          "active": { "type": "boolean", "description": "Whether this ceremony is selected by default on load." },
+          "dean": {
+            "type": ["object", "null"],
+            "properties": {
+              "name": { "type": "string" },
+              "role": { "type": "string" },
+              "intro": { "type": "string" },
+              "body": { "type": "string" },
+              "photo": { "type": "string" }
+            }
+          },
+          "processionGroups": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": ["label", "members"],
+              "properties": {
+                "label": { "type": "string" },
+                "members": { "type": "array", "items": { "type": "string" } }
+              }
+            }
+          },
+          "orderOfCeremony": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": ["t"],
+              "properties": {
+                "t": { "type": "string", "description": "Item title." },
+                "d": { "type": "string", "description": "Item detail text." },
+                "i": { "type": "boolean", "description": "Render detail in italic." },
+                "extra": { "type": "string" },
+                "jump": { "type": "boolean", "description": "Render a jump-to-names link." },
+                "bullet": { "type": "string" }
+              }
+            }
+          },
+          "awardees": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": ["medal", "name", "desc"],
+              "properties": {
+                "medal": { "type": "string" },
+                "name": { "type": "string" },
+                "desc": { "type": "string" },
+                "photo": { "type": "string" }
+              }
+            }
+          },
+          "prizesIntro": {
+            "type": ["string", "null"],
+            "description": "Ceremony-specific — must not be hardcoded in the shared renderer."
+          },
+          "courseGroups": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": ["groupTitle", "students"],
+              "properties": {
+                "groupTitle": { "type": "string" },
+                "students": { "type": "array", "items": { "type": "string" } },
+                "subGroups": {
+                  "type": "array",
+                  "description": "Optional finer-grained split within a course group (e.g. a suite of MBA programmes). Omit 'students' on the parent group when subGroups is present.",
+                  "items": {
+                    "type": "object",
+                    "required": ["label", "students"],
+                    "properties": {
+                      "label": { "type": "string" },
+                      "students": { "type": "array", "items": { "type": "string" } }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "searchIndex": {
+      "type": "array",
+      "description": "Flat cross-ceremony search index, derived from ceremonies/courseGroups at build time. Never de-duplicate — duplicate names across ceremonies are different people.",
+      "items": {
+        "type": "object",
+        "required": ["name", "course", "ceremonyId", "ceremonyTime", "ceremonyLabel"],
+        "properties": {
+          "name": { "type": "string" },
+          "course": { "type": "string" },
+          "department": { "type": "string" },
+          "ceremonyId": { "type": "string" },
+          "ceremonyTime": { "type": "string" },
+          "ceremonyLabel": { "type": "string" }
+        }
+      }
+    }
+  }
+}

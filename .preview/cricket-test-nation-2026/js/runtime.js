@@ -1358,6 +1358,163 @@
     if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
   });
 
+  // ── Audio player ───────────────────────────────────────────────────
+  (function () {
+    var trigger  = document.getElementById('hse-audio-trigger');
+    var player   = document.getElementById('hse-audio-player');
+    var audio    = document.getElementById('hse-audio');
+    if (!trigger || !player || !audio) return;
+
+    var playBtn   = document.getElementById('hse-audio-play');
+    var scrub     = document.getElementById('hse-audio-scrub');
+    var timeEl    = document.getElementById('hse-audio-time');
+    var durEl     = document.getElementById('hse-audio-duration');
+    var closeBtn  = document.getElementById('hse-audio-close');
+    var speedBtns = player.querySelectorAll('.hse-audio__speed');
+    var nav       = document.getElementById('hse-nav');
+
+    // Keep --hse-nav-h in sync so the panel slides from the right place
+    function syncNavHeight() {
+      if (nav) document.documentElement.style.setProperty('--hse-nav-h', nav.offsetHeight + 'px');
+    }
+    syncNavHeight();
+    window.addEventListener('resize', syncNavHeight);
+    // Re-sync after nav transitions (logo shrinks on scroll)
+    nav && nav.addEventListener('transitionend', syncNavHeight);
+
+    function fmt(s) {
+      if (!isFinite(s)) return '–:––';
+      var m = Math.floor(s / 60);
+      var sec = Math.floor(s % 60);
+      return m + ':' + (sec < 10 ? '0' : '') + sec;
+    }
+
+    var playSvg  = '<svg aria-hidden="true" focusable="false" width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>';
+    var pauseSvg = '<svg aria-hidden="true" focusable="false" width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>';
+
+    function updatePlayBtn() {
+      var playing = !audio.paused;
+      playBtn.setAttribute('aria-label', playing ? 'Pause' : 'Play');
+      playBtn.innerHTML = playing ? pauseSvg : playSvg;
+    }
+
+    function openPlayer() {
+      syncNavHeight();
+      player.hidden = false;
+      // Allow hidden→visible transition to paint before animating
+      requestAnimationFrame(function () {
+        player.classList.add('is-open');
+      });
+      trigger.setAttribute('aria-expanded', 'true');
+    }
+
+    function closePlayer() {
+      player.classList.remove('is-open');
+      audio.pause();
+      updatePlayBtn();
+      trigger.setAttribute('aria-expanded', 'false');
+      player.addEventListener('transitionend', function hide() {
+        player.hidden = true;
+        player.removeEventListener('transitionend', hide);
+      });
+    }
+
+    trigger.addEventListener('click', function () {
+      if (player.hidden || !player.classList.contains('is-open')) {
+        openPlayer();
+        if (audio.readyState >= 2) audio.play();
+      } else {
+        closePlayer();
+      }
+    });
+
+    playBtn.addEventListener('click', function () {
+      if (audio.paused) { audio.play(); } else { audio.pause(); }
+    });
+
+    audio.addEventListener('play',  updatePlayBtn);
+    audio.addEventListener('pause', updatePlayBtn);
+    audio.addEventListener('ended', function () {
+      audio.currentTime = 0;
+      updatePlayBtn();
+    });
+
+    audio.addEventListener('loadedmetadata', function () {
+      scrub.max = audio.duration;
+      durEl.textContent = fmt(audio.duration);
+    });
+
+    audio.addEventListener('timeupdate', function () {
+      if (!scrub._dragging) {
+        scrub.value = audio.currentTime;
+        timeEl.textContent = fmt(audio.currentTime);
+      }
+    });
+
+    scrub.addEventListener('mousedown',  function () { scrub._dragging = true; });
+    scrub.addEventListener('touchstart', function () { scrub._dragging = true; }, { passive: true });
+    scrub.addEventListener('input',      function () { timeEl.textContent = fmt(+scrub.value); });
+    scrub.addEventListener('change',     function () {
+      audio.currentTime = +scrub.value;
+      scrub._dragging = false;
+    });
+
+    speedBtns.forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        audio.playbackRate = parseFloat(btn.dataset.speed);
+        speedBtns.forEach(function (b) {
+          b.classList.remove('is-active');
+          b.setAttribute('aria-pressed', 'false');
+        });
+        btn.classList.add('is-active');
+        btn.setAttribute('aria-pressed', 'true');
+      });
+    });
+
+    closeBtn.addEventListener('click', closePlayer);
+
+    // ── Analytics ────────────────────────────────────────────────────
+    // Safe wrapper — no-ops if Plausible isn't loaded (preview, editor)
+    function track(event, props) {
+      if (typeof window.plausible === 'function') {
+        window.plausible(event, props ? { props: props } : undefined);
+      }
+    }
+
+    // Fire once on first play
+    var played = false;
+    audio.addEventListener('play', function () {
+      if (!played) { track('Audio Play'); played = true; }
+    });
+
+    // 50% and completion milestones
+    var tracked50 = false, trackedComplete = false;
+    audio.addEventListener('timeupdate', function () {
+      if (!audio.duration) return;
+      var pct = audio.currentTime / audio.duration;
+      if (!tracked50 && pct >= 0.5) {
+        track('Audio 50%');
+        tracked50 = true;
+      }
+    });
+    audio.addEventListener('ended', function () {
+      if (!trackedComplete) { track('Audio Complete'); trackedComplete = true; }
+      audio.currentTime = 0;
+      updatePlayBtn();
+    });
+  })();
+
+  // ── PDF download tracking ──────────────────────────────────────────
+  (function () {
+    var pdfLink = document.querySelector('.hse-nav__pdf-link');
+    if (!pdfLink) return;
+    pdfLink.addEventListener('click', function () {
+      if (typeof window.plausible === 'function') {
+        window.plausible('PDF Download');
+      }
+    });
+  })();
+
   // Report which section is nearest the top as the user scrolls
   (function() {
     var sections = Array.from(document.querySelectorAll('.hse-section[id]'));

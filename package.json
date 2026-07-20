@@ -5,6 +5,7 @@
   "main": "main.js",
   "scripts": {
     "render": "node render.js",
+    "render-magazine-cover": "node render-magazine-cover.js",
     "test": "node test.js",
     "editor": "node editor.js",
     "electron": "electron .",

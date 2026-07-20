@@ -16,6 +16,8 @@ function renderCover(cover) {
       ? renderImageBg(cover.hero_image)
       : '';
 
+  const portrait = renderPortrait(cover.portrait);
+
   const kicker = cover.kicker
     ? `<p class="hse-cover__kicker hse-reveal">${escHtml(cover.kicker)}</p>`
     : '';
@@ -37,6 +39,7 @@ function renderCover(cover) {
   ${bg}
   <div class="hse-cover__grain"></div>
   <div class="hse-cover__gradient"></div>
+  ${portrait}
   <div class="hse-cover__content">
     ${kicker}
     ${headline}
@@ -78,6 +81,17 @@ function renderImageBg(image) {
     fetchpriority="high"
     decoding="async"
     aria-hidden="true"${focalStyle}>`;
+}
+
+function renderPortrait(portrait) {
+  if (!portrait || !portrait.url) return '';
+  const focalStyle = portrait.focal
+    ? ` style="object-position: ${escHtml(portrait.focal)}"`
+    : '';
+  return `<img class="hse-cover__portrait"
+    src="${escHtml(portrait.url)}"
+    alt="${escHtml(portrait.alt || '')}"
+    decoding="async"${focalStyle}>`;
 }
 
 function renderHeadline(cover) {

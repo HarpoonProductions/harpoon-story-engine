@@ -26,6 +26,7 @@ const { renderTwoColumn }       = require("./layouts/two-column");
 const { renderCoverLayout }     = require("./layouts/cover");
 const { renderPrint }           = require("./print-renderer");
 const { renderPdf }             = require("./pdf-renderer");
+const { renderGraduationGuide } = require("./kinds/graduation-guide");
 
 /**
  * Top-level render function.
@@ -39,7 +40,6 @@ const { renderPdf }             = require("./pdf-renderer");
  * @returns {string[]} Array of absolute paths to written files
  */
 function render(content, outputDir, options) {
-  const { meta, config, cover, sections } = content;
   const opts = options || {};
 
   // Copy CSS to output directory
@@ -49,7 +49,19 @@ function render(content, outputDir, options) {
   // Pass options.basePath = '' for local preview (relative paths)
   const basePath = opts.hasOwnProperty("basePath")
     ? opts.basePath
-    : meta.project_id || "";
+    : content.meta.project_id || "";
+
+  // Graduation guides are a separate render path — different document
+  // shape (institution/guide/ceremonies/searchIndex, not cover/sections),
+  // no print/PDF tracks (narrative-shaped, not applicable here).
+  if (content.kind === "graduation-guide") {
+    const html = renderGraduationGuide(content, { basePath });
+    const outPath = path.join(outputDir, "index.html");
+    fs.writeFileSync(outPath, html, "utf8");
+    return [outPath];
+  }
+
+  const { meta, config, cover, sections } = content;
 
   // Resolve logo URL from registry (meta.logo_url takes precedence per story)
   const registryPath = path.join(__dirname, '../tokens/registry.json');

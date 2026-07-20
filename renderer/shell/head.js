@@ -3,6 +3,39 @@ const fs   = require('fs');
 const path = require('path');
 
 /**
+ * Reads the Platform Core token-set CSS file for a given token_set id and
+ * wraps it in a <style> block, ready to inline into <head>. Shared by the
+ * narrative renderHead() below and by other content kinds (e.g. the
+ * graduation-guide renderer) that need the same token-set resolution
+ * without pulling in renderHead's narrative-specific markup.
+ *
+ * @param {string} tokenSetId - meta.token_set, e.g. 'imperial'
+ * @returns {string} '<style>...</style>' or '' if no matching file exists
+ */
+function resolveTokenStyle(tokenSetId) {
+  const id = tokenSetId || 'default';
+  const tokenSetPath = path.join(__dirname, '../../css', 'tokens-' + id + '.css');
+  const tokenSetCss = fs.existsSync(tokenSetPath)
+    ? fs.readFileSync(tokenSetPath, 'utf8')
+    : '';
+  return tokenSetCss ? '<style>\n' + tokenSetCss + '\n</style>' : '';
+}
+
+/**
+ * Builds the Plausible analytics <script> tag for a content.config object,
+ * or '' if no domain is configured. Shared by renderHead() and other
+ * content kinds so the script host is only ever hardcoded in one place.
+ *
+ * @param {object} config - content.config
+ * @returns {string}
+ */
+function renderPlausibleScript(config) {
+  return config?.analytics?.plausible_domain
+    ? `<script defer data-domain="${config.analytics.plausible_domain}" src="https://analytics.har.pn/js/script.js"></script>`
+    : '';
+}
+
+/**
  * Renders the <head> block for a Story Engine page.
  * Injects per-project CSS custom property overrides from meta.
  *
@@ -21,11 +54,7 @@ function renderHead(meta, config, title, basePath, staging, heroImageUrl) {
   const accentColor2 = meta.accent_color_2 || '#C9A84C';
 
   // Load Platform Core token set
-  const tokenSetId   = meta.token_set || 'default';
-  const tokenSetPath = path.join(__dirname, '../../css', 'tokens-' + tokenSetId + '.css');
-  const tokenSetCss  = fs.existsSync(tokenSetPath)
-    ? fs.readFileSync(tokenSetPath, 'utf8')
-    : '';
+  const tokenSetId  = meta.token_set || 'default';
 
   // Resolve Google Fonts URL — registry entry takes precedence over hardcoded default
   const registryPath  = path.join(__dirname, '../../tokens/registry.json');
@@ -51,9 +80,7 @@ function renderHead(meta, config, title, basePath, staging, heroImageUrl) {
     ? '<meta name="robots" content="noindex, nofollow">'
     : '';
 
-  const plausibleScript = config?.analytics?.plausible_domain
-    ? `<script defer data-domain="${config.analytics.plausible_domain}" src="https://analytics.harpoonproductions.com/js/script.js"></script>`
-    : '';
+  const plausibleScript = renderPlausibleScript(config);
 
   const pwaThemeColor = config?.pwa?.enabled && config.pwa.theme_color
     ? `<meta name="theme-color" content="${config.pwa.theme_color}">`
@@ -75,9 +102,7 @@ function renderHead(meta, config, title, basePath, staging, heroImageUrl) {
       `  <link href="${withSwap(googleFontsUrl)}" rel="stylesheet">`
     : useDefaultFonts ? defaultFontsLink : '';
 
-  const tokenSetHtml = tokenSetCss
-    ? '<style>\n' + tokenSetCss + '\n</style>'
-    : '';
+  const tokenSetHtml = resolveTokenStyle(tokenSetId);
 
   // OG / social tags
   const ogTitle       = escHtml(meta.title || '');
@@ -177,4 +202,4 @@ function escHtml(str) {
     .replace(/"/g, '&quot;');
 }
 
-module.exports = { renderHead, escHtml };
+module.exports = { renderHead, escHtml, resolveTokenStyle, renderPlausibleScript };

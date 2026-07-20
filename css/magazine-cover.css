@@ -1,0 +1,114 @@
+/*
+ * Harpoon Story Engine — Magazine Cover
+ * css/magazine-cover.css
+ *
+ * The front door for an Edition OS edition. Unlike the story cover
+ * (css/cover.css), which is a full-bleed photo/video background behind
+ * scroll-triggered text, a magazine cover is a flat-ground composition:
+ * masthead, one dominant portrait, one headline, quiet issue metadata.
+ * Reference points: Vanity Fair, Esquire, People, National Geographic,
+ * Time — restraint and one strong image beat clutter.
+ */
+
+#hse-magazine-cover {
+  position: relative;
+  height: 100vh;
+  min-height: 640px;
+  overflow: hidden;
+  background: var(--hse-warm);
+  color: var(--hse-ink);
+  font-family: var(--hse-font-body);
+}
+
+/* ── Masthead ───────────────────────────────────────────────────── */
+
+.hse-mc__masthead-text,
+.hse-mc__masthead-logo {
+  position: absolute;
+  top: clamp(1.5rem, 4vh, 3rem);
+  left: 0;
+  right: 0;
+  z-index: 1;
+  text-align: center;
+}
+
+.hse-mc__masthead-text {
+  font-family: var(--hse-font-display);
+  font-weight: var(--hse-font-weight-bold);
+  font-size: clamp(2.5rem, 9vw, 5.5rem);
+  letter-spacing: -0.01em;
+  line-height: 1;
+  color: var(--hse-accent);
+  margin: 0;
+  padding: 0 var(--hse-page-pad);
+}
+
+.hse-mc__masthead-logo {
+  height: clamp(50px, 8vh, 90px);
+  width: auto;
+  max-width: 80%;
+  margin: 0 auto;
+  object-fit: contain;
+}
+
+/* ── Portrait (foreground cutout) ──────────────────────────────────
+ * z-index above the masthead so a tightly-cropped subject can rise up
+ * and slightly overlap the nameplate — the British-magazine convention.
+ * How much overlap happens is a production decision (the crop), not a
+ * rendering one — the Engine just stacks the layers correctly.
+ */
+
+.hse-mc__portrait {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: bottom center;
+  pointer-events: none;
+}
+
+/* ── Foot (headline + issue metadata) ──────────────────────────────
+ * Always above the portrait — a coverline should never be obscured by
+ * the image it's pointing away from.
+ */
+
+.hse-mc__foot {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 3;
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0 var(--hse-page-pad) clamp(1.25rem, 4vh, 2.5rem);
+}
+
+.hse-mc__headline {
+  font-family: var(--hse-font-display);
+  font-style: italic;
+  font-size: clamp(1.15rem, 3vw, 1.75rem);
+  color: var(--hse-ink);
+  text-decoration: none;
+  border-bottom: 1px solid transparent;
+  transition: border-color var(--hse-duration-fast, 0.15s);
+  max-width: 70%;
+}
+
+a.hse-mc__headline:hover {
+  border-color: currentColor;
+}
+
+.hse-mc__issue-meta {
+  font-family: var(--hse-font-mono);
+  font-size: var(--hse-font-size-micro);
+  letter-spacing: var(--hse-tracking-md);
+  text-transform: uppercase;
+  color: var(--hse-ink);
+  opacity: 0.55;
+  white-space: nowrap;
+  margin: 0 0 0.3rem;
+}

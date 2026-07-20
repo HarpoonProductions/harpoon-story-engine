@@ -185,6 +185,10 @@
         "hero_video": {
           "$ref": "#/definitions/video"
         },
+        "portrait": {
+          "$ref": "#/definitions/image",
+          "description": "Foreground cutout (transparent PNG) layered above the background and masthead, anchored to the bottom of the cover. Crop tight enough that the subject rises up to slightly overlap the nav logo."
+        },
         "interstitial_image": {
           "$ref": "#/definitions/image"
         },
