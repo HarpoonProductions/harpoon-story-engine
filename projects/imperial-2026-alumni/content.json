@@ -1,0 +1,164 @@
+{
+  "meta": {
+    "project_id": "imperial-2026-alumni",
+    "title": "Alumni Community",
+    "language": "en",
+    "client": "Imperial College London",
+    "event": "Graduation Days 2026",
+    "token_set": "imperial",
+    "og_description": "Welcome to Imperial's global alumni community — 274,000 graduates strong. Here's where to start."
+  },
+  "cover": {
+    "kicker": "Graduation Days 2026",
+    "headline": "Welcome to the ",
+    "headline_em": "alumni community",
+    "body": "The knowledge you've gained, the friendships you've built and the challenges you've overcome will stay with you long after you leave campus. You're joining a network of over 274,000 Imperial alumni around the world.",
+    "colophon": "A welcome from Nicole Kempton, Director of Alumni Engagement — Imperial College London"
+  },
+  "sections": [
+    {
+      "id": "stay-in-touch",
+      "num": 1,
+      "title": "So, where do you start?",
+      "nav_label": "Stay in touch",
+      "intro": "Stay in touch. Update your contact details so Imperial can keep you connected to the alumni community — and remember, you'll also need to complete the Graduate Outcomes Survey.",
+      "onward_links": [
+        { "label": "Update your contact details", "href": "https://www.imperial.ac.uk/alumni/" }
+      ]
+    },
+    {
+      "id": "imperial-shop",
+      "num": 2,
+      "title": "Imperial shop",
+      "nav_label": "Shop",
+      "intro": "Take home a piece of your graduation with official Imperial merchandise, from academic keepsakes to everyday wear.",
+      "onward_links": [
+        { "label": "Shop Imperial", "href": "https://www.shopimperial.org" }
+      ]
+    },
+    {
+      "id": "alumni-benefits",
+      "num": 3,
+      "title": "Explore your alumni benefits",
+      "nav_label": "Benefits",
+      "accordion_items": [
+        {
+          "id": "lifelong-learning",
+          "title": "Lifelong learning",
+          "body": "Support for further study, mentoring and career development — your learning doesn't stop at graduation."
+        },
+        {
+          "id": "connections",
+          "title": "Connections",
+          "body": "Networks, mentoring and local alumni communities, in London and around the world."
+        },
+        {
+          "id": "perks",
+          "title": "Perks",
+          "body": "Discounts, library access and continued use of Students' Union facilities."
+        }
+      ],
+      "onward_links": [
+        { "label": "Discover your alumni benefits", "href": "https://www.imperial.ac.uk/alumni/benefits/" }
+      ]
+    },
+    {
+      "id": "three-things",
+      "num": 4,
+      "title": "Three things in three minutes",
+      "nav_label": "Get involved",
+      "cards": [
+        {
+          "id": "share-photos",
+          "tag": "1 minute",
+          "title": "Share your graduation photos",
+          "body": "Post your favourite moment from the day and tag @ImperialCollege.",
+          "link": { "label": "Open Instagram", "href": "https://www.instagram.com/imperialcollege/" }
+        },
+        {
+          "id": "join-linkedin",
+          "tag": "1 minute",
+          "title": "Join the LinkedIn alumni group",
+          "body": "Connect with fellow graduates building careers across every industry.",
+          "link": { "label": "Join the group", "href": "https://www.linkedin.com/school/imperial-college-london/" }
+        },
+        {
+          "id": "follow-facebook",
+          "tag": "1 minute",
+          "title": "Follow the alumni Facebook page",
+          "body": "Keep up with reunions, events and news from the Imperial community.",
+          "link": { "label": "Follow on Facebook", "href": "https://www.facebook.com/alumni.imperialcollegelondon" }
+        }
+      ]
+    },
+    {
+      "id": "alumni-quote",
+      "num": 5,
+      "title": "",
+      "nav_exclude": true,
+      "pull_quote": {
+        "text": "It's our willingness to make a positive contribution to the world and always question the boundaries of what's possible that distinguishes us as a community.",
+        "attribution": "Omer Ali, MEng Design Engineering 2020"
+      }
+    },
+    {
+      "id": "meet-your-fellow-alumni",
+      "num": 6,
+      "title": "Meet your fellow alumni",
+      "nav_label": "Fellow alumni",
+      "intro": "A handful of the 274,000+ graduates who've walked this same path.",
+      "cards": [
+        { "id": "monique-frize", "tag": "1970", "title": "Professor Monique Frize", "body": "Pioneering electrical engineer and ambassador for women in STEM, whose work transformed the safety of hospital equipment." },
+        { "id": "alistair-kilgour", "tag": "1981", "title": "Alistair Kilgour", "body": "Angel investor who founded Parkwalk Advisors, the largest EIS fund in the UK, investing £500 million in world-leading university spinouts." },
+        { "id": "maggie-aderin-pocock", "tag": "1993", "title": "Dame Maggie Aderin-Pocock", "body": "Space scientist, business founder and BBC presenter, who helped develop instruments for the James Webb Space Telescope." },
+        { "id": "tony-shen", "tag": "2007", "title": "Tony Shen", "body": "One of the youngest Fellows of the Royal Aeronautical Society, dedicated to sustainability and gender balance in STEM." },
+        { "id": "filipe-pereira", "tag": "2009", "title": "Professor Filipe Pereira", "body": "A pioneering expert in molecular medicine, celebrated for transformative work in cellular reprogramming and cancer immunotherapy." },
+        { "id": "christopher-hopper", "tag": "2011", "title": "Christopher Hopper", "body": "CEO and co-founder of Aurora Solar, building AI-powered software for solar panel installations." },
+        { "id": "phebe-vayanos", "tag": "2012", "title": "Professor Phebe Vayanos", "body": "Training the next generation in trustworthy AI, and helping public service organisations make fairer decisions." },
+        { "id": "lucy-jung", "tag": "2017", "title": "Lucy (Soo Min) Jung", "body": "Design entrepreneur and founder of Charco Neurotech, transforming the lives of people with Parkinson's disease." },
+        { "id": "shiladitya-ghosh", "tag": "2022", "title": "Dr Shiladitya Ghosh", "body": "Climate tech expert, COO and co-founder of Mission Zero, building solutions to remove carbon dioxide from the atmosphere." },
+        { "id": "you", "tag": "2026", "title": "You!", "body": "Discover more about the varied careers and achievements of our alumni community.", "link": { "label": "Explore alumni stories", "href": "https://www.imperial.ac.uk/alumni/" } }
+      ]
+    },
+    {
+      "id": "support-the-next-generation",
+      "num": 7,
+      "title": "Support the next generation of students",
+      "nav_label": "Give back",
+      "pull_quote": {
+        "text": "Your donation doesn't just provide financial aid, it gives students the freedom to fully engage with their studies, pursue their passions and connect with new people at events.",
+        "attribution": "Sean, Undergraduate student"
+      },
+      "stat_block": [
+        { "value": "3,500", "label": "donors supported students last year" },
+        { "value": "£5", "label": "provides a week's groceries for 9 students" }
+      ],
+      "onward_links": [
+        { "label": "Give today", "href": "https://www.imperial.ac.uk/alumni/giving/" }
+      ]
+    },
+    {
+      "id": "backed-by-alumni",
+      "num": 8,
+      "title": "",
+      "nav_exclude": true,
+      "pull_quote": {
+        "text": "Thanks to the generosity of alumni, I was awarded the PhD President's Scholarship, which was a real honour. It gave me the backing I needed to succeed in my studies and explore how AI technology can make a positive difference in the world.",
+        "attribution": "Eduardo, PhD Civil and Environmental Engineering 2024"
+      }
+    },
+    {
+      "id": "explore-more",
+      "num": 9,
+      "title": "Keep exploring",
+      "nav_label": "Explore more",
+      "nav_exclude": true,
+      "intro": "There's more to Graduation Days 2026 than one page can hold.",
+      "onward_links": [
+        { "label": "← Back to Graduation Days 2026", "href": "../imperial-2026/" },
+        { "label": "About graduation and Imperial", "href": "../imperial-2026-about/" },
+        { "label": "Meet this year's awardees", "href": "../imperial-2026-awardees/" }
+      ]
+    }
+  ]
+}

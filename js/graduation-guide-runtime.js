@@ -58,27 +58,41 @@
     tile.addEventListener('click', function () { selectCeremony(tile.dataset.id); });
   });
 
-  // ── Ceremony Guides nav dropdown (desktop) ──────────────────────────
-  var dropdown = document.getElementById('ceremony-guides-dropdown');
-  var dropdownToggle = document.getElementById('ceremony-guides-toggle');
+  // ── Nav dropdowns (desktop) — generic over every .gg-nav-dropdown, so
+  // Ceremony Guides and Explore more share one click-handling pass
+  // instead of each wiring up its own open/close/outside-click logic ──
+  var navDropdowns = document.querySelectorAll('.gg-nav-dropdown');
 
-  function closeDropdown() {
-    if (!dropdown) return;
-    dropdown.classList.remove('open');
-    if (dropdownToggle) dropdownToggle.setAttribute('aria-expanded', 'false');
+  function closeDropdown(except) {
+    navDropdowns.forEach(function (d) {
+      if (d === except) return;
+      d.classList.remove('open');
+      var toggle = d.querySelector('.gg-nav-dropdown-toggle');
+      if (toggle) toggle.setAttribute('aria-expanded', 'false');
+    });
   }
 
-  if (dropdown && dropdownToggle) {
-    dropdownToggle.addEventListener('click', function (e) {
+  navDropdowns.forEach(function (dropdown) {
+    var toggle = dropdown.querySelector('.gg-nav-dropdown-toggle');
+    if (!toggle) return;
+    toggle.addEventListener('click', function (e) {
       e.stopPropagation();
       var opening = !dropdown.classList.contains('open');
+      closeDropdown(opening ? dropdown : null);
       dropdown.classList.toggle('open', opening);
-      dropdownToggle.setAttribute('aria-expanded', String(opening));
+      toggle.setAttribute('aria-expanded', String(opening));
     });
-    document.addEventListener('click', function (e) {
-      if (!dropdown.contains(e.target)) closeDropdown();
+  });
+
+  document.addEventListener('click', function (e) {
+    navDropdowns.forEach(function (d) {
+      if (!d.contains(e.target)) {
+        d.classList.remove('open');
+        var toggle = d.querySelector('.gg-nav-dropdown-toggle');
+        if (toggle) toggle.setAttribute('aria-expanded', 'false');
+      }
     });
-  }
+  });
 
   // ── Mobile hamburger menu ───────────────────────────────────────────
   var hamburger = document.getElementById('gg-nav-hamburger');
@@ -425,6 +439,17 @@
         findLink.addEventListener('click', function (e) {
           e.preventDefault();
           jumpToStudent(name, cer);
+        });
+      }
+
+      // iOS install nudge, tied to this moment specifically — someone
+      // who just landed on their own personalised page is a better
+      // candidate to keep it than a cold visit to the homepage.
+      // No-ops entirely if HarpoonPWA isn't present (config.pwa.enabled
+      // false) or if the visitor isn't on iOS / already has it installed.
+      if (window.HarpoonPWA) {
+        window.HarpoonPWA.maybeShowIOSInstallBanner({
+          message: 'Keep ' + name + '’s ceremony details handy — install this guide',
         });
       }
     } else if (findLink) {

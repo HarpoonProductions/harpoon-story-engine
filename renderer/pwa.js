@@ -50,7 +50,8 @@ function buildPwaHeadTags(opts) {
         navigator.serviceWorker.register('${opts.asset('sw.js')}').catch(function () {});
       });
     }
-  </script>`;
+  </script>
+  <script src="${opts.asset('ios-install-banner.js')}"></script>`;
 }
 
 // ── Icon generation ──────────────────────────────────────────────────
@@ -145,6 +146,12 @@ function buildServiceWorker(precacheUrls, cacheVersion) {
  */
 async function writePwaFiles(outputDir, opts) {
   const written = [];
+
+  const bannerSrc = path.join(TEMPLATE_DIR, 'ios-install-banner.js');
+  const bannerDest = path.join(outputDir, 'ios-install-banner.js');
+  fs.copyFileSync(bannerSrc, bannerDest);
+  written.push(bannerDest);
+
   let icons;
   let precacheIconUrls = [];
 

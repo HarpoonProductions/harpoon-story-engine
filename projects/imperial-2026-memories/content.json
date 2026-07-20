@@ -1,0 +1,60 @@
+{
+  "meta": {
+    "project_id": "imperial-2026-memories",
+    "title": "Memories of Graduation Days 2026",
+    "language": "en",
+    "client": "Imperial College London",
+    "event": "Graduation Days 2026",
+    "token_set": "imperial",
+    "og_description": "Order your official graduation photos, share the day on social media, and revisit the moments from Graduation Days 2026."
+  },
+  "cover": {
+    "kicker": "Graduation Days 2026",
+    "headline": "Memories of ",
+    "headline_em": "Graduation Days 2026",
+    "body": "The gowns, the stage, the people who came to celebrate with you — here's how to hold on to the day.",
+    "colophon": "Imperial College London — Graduation Days 2026"
+  },
+  "sections": [
+    {
+      "id": "graduation-photos",
+      "num": 1,
+      "title": "Graduation photos",
+      "nav_label": "Photos",
+      "intro": "Official photography from your ceremony is available through the Event Photography Online Order Service. If you've lost your reference number, contact the photographer directly and they'll help you track down your order.",
+      "onward_links": [
+        { "label": "Order your photos (tempest-events.co.uk)", "href": "https://www.tempest-events.co.uk" },
+        { "label": "Email: graduation-photographs@htempest.co.uk", "href": "mailto:graduation-photographs@htempest.co.uk" }
+      ]
+    },
+    {
+      "id": "share-your-day",
+      "num": 2,
+      "title": "Share your day",
+      "nav_label": "Share your day",
+      "intro": "Share your favourite photos from the day on social media and tag @ImperialCollege — we'll be building a gallery of the day to look back on."
+    },
+    {
+      "id": "gallery",
+      "num": 3,
+      "title": "Gallery",
+      "nav_label": "Gallery",
+      "intro": "The photo gallery from Graduation Days 2026 will appear here once official ceremony photography is available.",
+      "custom_css": ".hse-section-intro { opacity: 0.7; font-style: italic; }"
+    },
+    {
+      "id": "explore-more",
+      "num": 4,
+      "title": "Keep exploring",
+      "nav_label": "Explore more",
+      "nav_exclude": true,
+      "intro": "There's more to Graduation Days 2026 than one page can hold.",
+      "onward_links": [
+        { "label": "← Back to Graduation Days 2026", "href": "../imperial-2026/" },
+        { "label": "About graduation and Imperial", "href": "../imperial-2026-about/" },
+        { "label": "Meet this year's awardees", "href": "../imperial-2026-awardees/" },
+        { "label": "Join the alumni community", "href": "../imperial-2026-alumni/" }
+      ]
+    }
+  ]
+}

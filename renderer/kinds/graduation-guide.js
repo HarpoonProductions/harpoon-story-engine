@@ -105,6 +105,38 @@ function buildCeremonyDropdown(guide, ceremonies) {
   </div>`;
 }
 
+// ── "Explore more" nav dropdown ────────────────────────────────────────
+// Links to the satellite story-kind pages that make up the rest of the
+// guide "cluster" (see BRIEF.md / project memory, 2026-07-20: a graduation
+// guide is this hub page plus zero or more ordinary HSE story pages).
+// Each satellite is its own HSE project, deployed as a sibling S3 path
+// (stories.har.pn/<slug>/), so links are relative — no basePath threading
+// needed here, same as the ceremony ?query links above.
+
+function buildExploreDropdown() {
+  return `<div class="gg-nav-dropdown" id="explore-more-dropdown">
+    <button class="gg-nav-link gg-nav-dropdown-toggle" id="explore-more-toggle" aria-haspopup="true" aria-expanded="false">
+      Explore more <span class="gg-nav-caret">&#9660;</span>
+    </button>
+    <div class="gg-nav-dropdown-menu" role="menu" aria-label="Explore more">
+      ${buildExploreLinks()}
+    </div>
+  </div>`;
+}
+
+function buildExploreLinks() {
+  const links = [
+    { label: 'About graduation and Imperial', href: '../imperial-2026-about/' },
+    { label: 'Awardees', href: '../imperial-2026-awardees/' },
+    { label: 'Alumni community', href: '../imperial-2026-alumni/' },
+  ];
+  return links
+    .map((l) => `<a class="gg-nav-dropdown-item" href="${escHtml(l.href)}" role="menuitem">
+        <span class="gg-nav-dropdown-item-label">${escHtml(l.label)}</span>
+      </a>`)
+    .join('\n      ');
+}
+
 // Shared between the desktop dropdown above and the mobile menu below —
 // same [data-ceremony-link] markup either way, so the runtime's single
 // click-handling pass (js/graduation-guide-runtime.js) covers both.
@@ -146,8 +178,9 @@ function buildMobileMenu(guide, ceremonies) {
     <a class="gg-nav-mobile-link" href="#">${escHtml(guide.title)}</a>
     <div class="gg-nav-mobile-group-label">Ceremony Guides</div>
     ${buildCeremonyLinks(guide, ceremonies)}
-    <a class="gg-nav-mobile-link" href="#">Explore more</a>
-    <a class="gg-nav-mobile-link" href="#">Memories of ${escHtml(guide.title)}</a>
+    <div class="gg-nav-mobile-group-label">Explore more</div>
+    ${buildExploreLinks()}
+    <a class="gg-nav-mobile-link" href="../imperial-2026-memories/">Memories of ${escHtml(guide.title)}</a>
   </div>
 </div>`;
 }
@@ -160,8 +193,8 @@ function buildBody(institution, guide, ceremonies, asset) {
   <div class="gg-nav-links">
     <a class="gg-nav-link" href="#">${escHtml(guide.title)}</a>
     ${buildCeremonyDropdown(guide, ceremonies)}
-    <a class="gg-nav-link" href="#">Explore more <span class="gg-nav-caret">&#9660;</span></a>
-    <a class="gg-nav-link" href="#">Memories of ${escHtml(guide.title)}</a>
+    ${buildExploreDropdown()}
+    <a class="gg-nav-link" href="../imperial-2026-memories/">Memories of ${escHtml(guide.title)}</a>
   </div>
   <div class="gg-nav-right">
     <span class="gg-nav-search-label">Search name:</span>

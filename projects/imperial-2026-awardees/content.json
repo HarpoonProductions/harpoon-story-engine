@@ -1,0 +1,172 @@
+{
+  "meta": {
+    "project_id": "imperial-2026-awardees",
+    "title": "Awardees",
+    "language": "en",
+    "client": "Imperial College London",
+    "event": "Graduation Days 2026",
+    "token_set": "imperial",
+    "og_description": "The honorary graduates, medallists and student award winners recognised at Imperial's Graduation Days 2026."
+  },
+  "cover": {
+    "kicker": "Graduation Days 2026",
+    "headline": "This year's ",
+    "headline_em": "awardees",
+    "body": "Each year, alongside the graduating class, Imperial recognises honorary graduates, staff, students and research teams whose work has shaped the College and the wider world. Meet 2026's award winners.",
+    "colophon": "Imperial College London — Graduation Days 2026"
+  },
+  "sections": [
+    {
+      "id": "honorary-degree",
+      "num": 1,
+      "title": "Honorary Degree",
+      "nav_label": "Honorary Degree",
+      "accordion_items": [
+        {
+          "id": "annette-doherty",
+          "title": "Dr Annette Doherty OBE HonFBPhS FRSC",
+          "body": "President of the Royal Society of Chemistry. Dr Doherty trained in chemistry at Imperial and went on to spend more than 35 years in the pharmaceutical sector at Warner-Lambert, Pfizer and GlaxoSmithKline, contributing to the development and launch of over 30 medicines. She has held leadership roles at the Medical Research Council, the ABPI, Innovate UK and within the NHS, and is an Honorary Fellow of both the Royal Society of Chemistry and the British Pharmacological Society. She was awarded an OBE in 2009."
+        },
+        {
+          "id": "antoine-petit",
+          "title": "Professor Antoine Petit",
+          "body": "Chairman and Chief Executive Officer of the Centre National de la Recherche Scientifique (CNRS). A computer scientist with a 20-year academic career, Professor Petit has championed open, globally collaborative science and driven bilateral research partnerships that have led to the launch of several Imperial research centres spanning engineering, mathematics, computing and cancer treatment. He is a Chevalier de la Légion d'Honneur and Commandeur de l'Ordre National du Mérite."
+        }
+      ]
+    },
+    {
+      "id": "imperial-college-medal",
+      "num": 2,
+      "title": "Imperial College Medal",
+      "nav_label": "College Medal",
+      "accordion_items": [
+        {
+          "id": "marina-botto",
+          "title": "Professor Marina Botto",
+          "body": "Head of the Department of Immunology and Inflammation and Director of Bioservices at Imperial College London. Professor Botto has championed transparency and accountability in animal research and led major public engagement initiatives, including leadership of the CREST Academy. Under her direction, Imperial became the first UK university to achieve AAALAC accreditation and has three times been recognised as a Leader in Openness."
+        },
+        {
+          "id": "paul-brown",
+          "title": "Paul Brown MBE",
+          "body": "Head of Technical Operations in the Department of Physics at Imperial College London. In service since 1990, Paul has led mechanical and instrumentation support across the department for nearly four decades. He received an MBE in 2017 for services to Higher Education and, in 2021, became an Honorary Fellow of the Institute of Physics — a rare honour for a non-physicist. He is also known for school visits promoting technical careers and his support for The Blackett Lab Family."
+        },
+        {
+          "id": "leila-guerra",
+          "title": "Leila Guerra",
+          "body": "Associate Vice President (Education) at the London School of Economics and Political Science. Previously Associate Provost at Imperial and Vice Dean at Imperial Business School, Leila has also held roles at Singapore Management University, London Business School and IE Business School. She specialises in lifelong learning, executive education and digital innovation in online programmes, and serves on the boards of Politecnico di Milano and EGADE Mexico."
+        },
+        {
+          "id": "tony-lawrence",
+          "title": "Dr Tony Lawrence",
+          "body": "Former Chief Financial Officer at Imperial College London. Dr Lawrence completed a PhD in Physics at Imperial before roles at Shell and HM Treasury, then returned to Imperial in 2011 as the College's finance custodian for over 15 years. He has twice served as interim Chief Operating Officer and is Co-Executive Sponsor of the Able@Imperial staff network."
+        },
+        {
+          "id": "omar-matar",
+          "title": "Professor Omar Matar Freng",
+          "body": "Head of the Department of Chemical Engineering at Imperial College London. Across nearly 30 years at Imperial, Professor Matar has led major grants and industrial research contracts in multiphase fluid dynamics simulation, with a strong focus on sustainability, machine learning and virtual reality. He co-founded the spin-outs Quaisr and 2D Nano, led the refurbishment of the department's Carbon Capture Pilot Plant, and is a Fellow of the Royal Academy of Engineering, the Institution of Chemical Engineers, and the American Physical Society."
+        }
+      ]
+    },
+    {
+      "id": "impact-medal",
+      "num": 3,
+      "title": "President's Medal for Excellence in Impact",
+      "nav_label": "Impact",
+      "accordion_items": [
+        {
+          "id": "azalea-raad",
+          "title": "Dr Azalea Raad",
+          "body": "Reader (Associate Professor) in Programming Languages in the Department of Computing at Imperial College London. Dr Raad's research connects hardware and software verification, in collaboration with Intel, NVIDIA, Meta, Bloomberg and ARM — tools built on her work are used by thousands of engineers every day. She co-directs the UK Research Institute on Verified, Trustworthy Software Systems, co-founded Soteria Tools, and has delivered more than 20 invited keynotes, alongside EDI leadership through mentoring in the Veritas Lab."
+        }
+      ]
+    },
+    {
+      "id": "societal-engagement-medal",
+      "num": 4,
+      "title": "President's Medal for Excellence in Societal Engagement",
+      "nav_label": "Societal Engagement",
+      "accordion_items": [
+        {
+          "id": "simon-foster",
+          "title": "Dr Simon Foster",
+          "body": "Outreach Manager for the Faculty of Natural Sciences at Imperial College London. Dr Foster specialises in space outreach and promoting STEM opportunities, leading the CREST Academy, partnering with the European Space Education Resource Office, and organising National Mars Week for five consecutive years. He also nurtures Imperial's network of Societal Engagement Champions and Practitioners."
+        },
+        {
+          "id": "stephanie-powell",
+          "title": "Stephanie Powell",
+          "body": "Community Collaboration Lead in the Undergraduate Primary Care Education Unit in the School of Public Health at Imperial College London. Stephanie takes an asset-based approach to community engagement, developing curriculum and transforming partnerships to build meaningful, long-term collaborations that support equitable, person-centred care education."
+        }
+      ]
+    },
+    {
+      "id": "early-career-medal",
+      "num": 5,
+      "title": "President's Medal for Outstanding Early Career Researcher",
+      "nav_label": "Early Career",
+      "accordion_items": [
+        {
+          "id": "richard-van-arkel",
+          "title": "Dr Richard van Arkel",
+          "body": "Associate Professor in the Department of Mechanical Engineering at Imperial College London. Dr van Arkel's research into bioelectronic implants and joint ligament function has already reached thousands of patients, supported by research contracts with major orthopaedic manufacturers. He is one of only six engineers ever admitted to an exclusive ACL research society, and has driven both UKRI grant success and initiatives supporting women's career advancement in his field."
+        }
+      ]
+    },
+    {
+      "id": "research-team-medal",
+      "num": 6,
+      "title": "President's Medal for Outstanding Research Team",
+      "nav_label": "Research Team",
+      "accordion_items": [
+        {
+          "id": "trust-team",
+          "title": "Transmission And Reflection Ultrasound Tomography (TRUST)",
+          "body": "Based in the Department of Earth Science and Engineering, the TRUST team has overturned long-standing assumptions in medical imaging, proving that ultrasound can image the adult brain — something long thought impossible. With over £12 million in funding from the Wellcome Trust, UKRI, Horizon Europe and ARIA, the team's work has produced top-tier publications and two spin-out companies in under ten years, in pursuit of affordable, portable medical imaging for resource-limited settings."
+        }
+      ]
+    },
+    {
+      "id": "research-support-medal",
+      "num": 7,
+      "title": "President's Medal for Research Support Excellence",
+      "nav_label": "Research Support",
+      "accordion_items": [
+        {
+          "id": "cato-team",
+          "title": "Clinical Academic Training Office (CATO)",
+          "body": "Based in the Faculty of Medicine, CATO is a pan-professional hub for clinical academic training, running masterclasses, courses and tailored mentoring for healthcare professionals pursuing academic careers — with a particular focus on supporting women in science. Its approach has been recognised as a National Institute for Health and Care Research exemplar and replicated nationally."
+        }
+      ]
+    },
+    {
+      "id": "student-award",
+      "num": 8,
+      "title": "Student Award for Outstanding Achievement",
+      "nav_label": "Student Award",
+      "accordion_items": [
+        {
+          "id": "enqiang-chang",
+          "title": "Dr Enqiang Chang",
+          "body": "Research Postgraduate in the Department of Surgery and Cancer at Imperial College London. During the COVID-19 pandemic, Dr Chang worked on the front line in clinical roles and helped develop intubation protocols. His humanitarian work spans the International Red Cross and Médecins Sans Frontières in Ethiopia, alongside public CPR training initiatives closer to home."
+        },
+        {
+          "id": "nan-fletcher-lloyd",
+          "title": "Dr Nan Fletcher-Lloyd",
+          "body": "Postdoctoral Research Associate in the Department of Brain Sciences at Imperial College London. In 2020, Dr Fletcher-Lloyd co-founded Imperial College Us Too, addressing sexual harassment and violence on campus, running a sexual misconduct survey with the Students' Union and consent education campaigns. She has also contributed to the Early Career Researcher Institute's diversity module and spoken at UK Dementia Research Institute symposiums, earning a departmental Public Engagement award in 2022."
+        }
+      ]
+    },
+    {
+      "id": "explore-more",
+      "num": 9,
+      "title": "Keep exploring",
+      "nav_label": "Explore more",
+      "nav_exclude": true,
+      "intro": "There's more to Graduation Days 2026 than one page can hold.",
+      "onward_links": [
+        { "label": "← Back to Graduation Days 2026", "href": "../imperial-2026/" },
+        { "label": "About graduation and Imperial", "href": "../imperial-2026-about/" },
+        { "label": "Join the alumni community", "href": "../imperial-2026-alumni/" }
+      ]
+    }
+  ]
+}

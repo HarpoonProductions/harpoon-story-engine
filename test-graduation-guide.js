@@ -72,7 +72,7 @@ try {
 // No print/PDF tracks for this kind (narrative-only) — but PWA is
 // enabled for this project, so expect index.html + manifest.json + sw.js
 // + 2 generated icon PNGs.
-assert('Rendered index.html + manifest.json + sw.js + 2 icons (PWA enabled)', files.length === 5);
+assert('Rendered index.html + manifest.json + sw.js + ios-install-banner.js + 2 icons (PWA enabled)', files.length === 6);
 
 const html = fs.readFileSync(files.find((f) => f.endsWith('index.html')), 'utf8');
 
@@ -107,6 +107,11 @@ assert('searchIndex has one entry per graduate', content.searchIndex.length === 
 
 assertContains('Manifest link present in <head>', html, 'rel="manifest"');
 assertContains('Service worker registration script present', html, "navigator.serviceWorker.register");
+assertContains('iOS install banner script linked', html, 'ios-install-banner.js');
+
+const runtimeJs = fs.readFileSync(path.join(__dirname, 'js', 'graduation-guide-runtime.js'), 'utf8');
+assertContains('Personalised hero calls the iOS install banner', runtimeJs, 'maybeShowIOSInstallBanner');
+assertContains('iOS banner call is guarded (no-ops if HarpoonPWA absent)', runtimeJs, 'window.HarpoonPWA');
 
 const outDir = path.dirname(files.find((f) => f.endsWith('index.html')));
 
@@ -132,6 +137,15 @@ assertAbsent('Service worker has no leftover precache placeholder', swJs, '__PRE
 assertContains('Service worker precaches the page itself first', swJs, '"index.html"');
 assertContains('Service worker precaches the manifest', swJs, '"manifest.json"');
 assertContains('Service worker precaches the runtime JS', swJs, 'graduation-guide-runtime.js');
+assertContains('Service worker precaches the iOS install banner', swJs, 'ios-install-banner.js');
+
+const bannerPath = path.join(outDir, 'ios-install-banner.js');
+assert('ios-install-banner.js was written to the output dir', fs.existsSync(bannerPath));
+if (fs.existsSync(bannerPath)) {
+  const bannerJs = fs.readFileSync(bannerPath, 'utf8');
+  assertContains('Banner exposes HarpoonPWA.maybeShowIOSInstallBanner', bannerJs, 'maybeShowIOSInstallBanner');
+  assertContains('Banner checks navigator.standalone (skip if already installed)', bannerJs, 'navigator.standalone');
+}
 
 for (const size of ['192', '512']) {
   const iconPath = path.join(outDir, 'icons', `icon-${size}.png`);

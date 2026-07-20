@@ -1,0 +1,131 @@
+{
+  "meta": {
+    "project_id": "imperial-2026-about",
+    "title": "About Graduation and Imperial",
+    "language": "en",
+    "client": "Imperial College London",
+    "event": "Graduation Days 2026",
+    "token_set": "imperial",
+    "og_description": "The traditions behind Imperial's graduation ceremonies, a welcome from the Royal Albert Hall, and a year of highlights from across the College."
+  },
+  "cover": {
+    "kicker": "Graduation Days 2026",
+    "headline": "About graduation and ",
+    "headline_em": "Imperial",
+    "body": "Imperial has held its graduation ceremonies at the Royal Albert Hall for more than 60 years. Here's the story behind the traditions you'll see on the day, a welcome from our hosts, and a look back at the year Imperial's graduates are joining.",
+    "colophon": "Imperial College London — Graduation Days 2026"
+  },
+  "sections": [
+    {
+      "id": "graduation-traditions",
+      "num": 1,
+      "title": "Graduation traditions",
+      "nav_label": "Traditions",
+      "intro": "Three traditions you'll see woven through every ceremony at the Royal Albert Hall.",
+      "accordion_items": [
+        {
+          "id": "imperial-mace",
+          "title": "The Imperial Mace",
+          "body": "Carried at the head of the academic procession, the Mace is hand-forged and gold-plated, its stem twisted into the shape of a DNA spiral in tribute to Imperial's scientific heritage. It was made in 2009 by the Goldsmiths' Company, whose hallmark is inscribed on the shaft, and it leads every procession as a symbol of the College's authority to confer degrees."
+        },
+        {
+          "id": "imperial-mascots",
+          "title": "The Imperial Mascots",
+          "body": "Imperial's best-known mascot is Jezebel, a 1916 Dennis N fire engine gifted to the College by the Royal Air Force in 1959. She's been fought over, hidden, and paraded through students' union tradition ever since, and remains a fixture of College life outside the ceremony itself."
+        },
+        {
+          "id": "academic-dress",
+          "title": "Academic dress",
+          "body": "Academic gowns trace back to the everyday clothing of medieval scholars and clergy, and the colours worn today still signal faculty and degree. Imperial's gowns carry purple in tribute to Sir William Henry Perkin, the Imperial-linked chemist who invented mauveine — the world's first synthetic dye — in 1856.\n\nFirst-degree gowns are black with a white and purple lining. From there, the collar marks the faculty: grey for Engineering, red for Medicine, yellow for Natural Sciences, pink for the Business School, and purple with a white stripe for Centre programmes. Purple gowns, in various forms, are reserved for PhD and DSc graduates."
+        }
+      ]
+    },
+    {
+      "id": "welcome-from-the-hall",
+      "num": 2,
+      "title": "A welcome from the Royal Albert Hall",
+      "nav_label": "Welcome",
+      "pull_quote": {
+        "text": "We're proud to welcome Imperial's graduates to the Hall, continuing a partnership that stretches back more than 60 years. The Royal Albert Hall has hosted the nation's biggest moments for over 150 years, and every year we're delighted to add Imperial's graduation ceremonies to that history — run, like everything we do, in support of the Hall's charitable purpose.",
+        "attribution": "James Ainscough OBE, Chief Executive, Royal Albert Hall"
+      }
+    },
+    {
+      "id": "brief-history",
+      "num": 3,
+      "title": "A brief history of Imperial",
+      "nav_label": "History",
+      "intro": "Imperial College London was founded in 1907, bringing together three existing colleges under a single mission: to be useful. That founding purpose still shows up in the College's record — from the discovery of penicillin to breakthroughs in holography, fibre optics, and the integration of medicine with engineering and science that defines Imperial today."
+    },
+    {
+      "id": "highlights-2025-26",
+      "num": 4,
+      "title": "2025–26 highlights",
+      "nav_label": "This year",
+      "intro": "A year of milestones from across the College — the backdrop to the graduating class of 2026.",
+      "cards": [
+        {
+          "id": "queens-tower",
+          "tag": "21 April 2026",
+          "title": "The Queen's Tower reopens",
+          "body": "A major stonemasonry restoration and a replacement copper dome bring Imperial's best-known landmark back into full public view."
+        },
+        {
+          "id": "grapht-works",
+          "tag": "Enterprise",
+          "title": "Grapht Works launches",
+          "body": "28 industrial-scale manufacturing units open, giving Imperial researchers and spinouts room to build and test at real-world scale."
+        },
+        {
+          "id": "qs-rankings",
+          "tag": "Rankings",
+          "title": "Named a top European university",
+          "body": "Imperial's QS World University Rankings result places it among the very top universities in Europe."
+        },
+        {
+          "id": "ai-stethoscopes",
+          "tag": "Health",
+          "title": "AI-enabled stethoscopes trialled by the NHS",
+          "body": "Clinical trial results point to faster, earlier detection of heart and lung conditions in NHS settings."
+        },
+        {
+          "id": "year-of-quantum",
+          "tag": "Research",
+          "title": "A year of quantum breakthroughs",
+          "body": "2025 research from Imperial's physicists is recognised as part of a landmark year for quantum science."
+        },
+        {
+          "id": "base-experiment",
+          "tag": "Physics",
+          "title": "Recognition for the BASE experiment at CERN",
+          "body": "Imperial physicists' work on antimatter at CERN's BASE experiment earns international recognition."
+        },
+        {
+          "id": "business-school-mba",
+          "tag": "Business School",
+          "title": "Global Online MBA ranked first in the world",
+          "body": "Imperial Business School's Global Online MBA tops its category, the latest in a run of strong rankings results."
+        },
+        {
+          "id": "cdl-london",
+          "tag": "Entrepreneurship",
+          "title": "CDL-London welcomes its next cohort",
+          "body": "The Rio Tinto-backed entrepreneurship programme continues to back Imperial founders building deep-tech ventures."
+        }
+      ]
+    },
+    {
+      "id": "explore-more",
+      "num": 5,
+      "title": "Keep exploring",
+      "nav_label": "Explore more",
+      "nav_exclude": true,
+      "intro": "There's more to Graduation Days 2026 than one page can hold.",
+      "onward_links": [
+        { "label": "← Back to Graduation Days 2026", "href": "../imperial-2026/" },
+        { "label": "Meet this year's awardees", "href": "../imperial-2026-awardees/" },
+        { "label": "Join the alumni community", "href": "../imperial-2026-alumni/" }
+      ]
+    }
+  ]
+}
