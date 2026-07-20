@@ -45,7 +45,14 @@ jobs:
           cache: "npm"
 
       - name: Install dependencies
-        run: npm ci --omit=optional
+        # sharp (used by renderer/pwa.js for icon generation) ships its
+        # native binary per-platform via optionalDependencies — omitting
+        # optional deps entirely skips the linux-x64 binary this runner
+        # actually needs, not just the darwin ones it doesn't. npm still
+        # correctly skips truly platform-restricted optional packages
+        # (e.g. dmg-license, darwin-only) on its own via package.json's
+        # os/cpu fields, so this doesn't reintroduce that problem.
+        run: npm ci --include=optional
 
       - name: Run test suite
         run: node test.js
