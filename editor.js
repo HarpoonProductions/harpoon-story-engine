@@ -46,6 +46,7 @@ const S3_BUCKET = process.env.S3_BUCKET || "";
 const AWS_REGION =
   process.env.AWS_REGION || process.env.AWS_DEFAULT_REGION || "eu-west-2";
 const { render, renderSection } = require("./renderer/index");
+const { resolveGroup } = require("./renderer/groups");
 
 const app = express();
 const PORT = 3001;
@@ -539,6 +540,19 @@ app.get("/api/tokens", (req, res) => {
 app.get("/api/schema", (req, res) => {
   try {
     res.json(JSON.parse(fs.readFileSync(SCHEMA_FILE, "utf8")));
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Live membership for the editor's "Other members of this group" panel —
+// same resolver the renderer itself uses (renderer/groups.js), so what
+// you see here is exactly what a render would pick up. ?exclude= omits
+// the project currently being edited (it's not "another member" of itself).
+app.get("/api/groups/:groupId", async (req, res) => {
+  try {
+    const members = await resolveGroup(req.params.groupId, req.query.exclude || null);
+    res.json({ members });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

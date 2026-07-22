@@ -333,6 +333,36 @@
                 margin-top: 0.2rem;
                 line-height: 1.4;
             }
+            .group-members-list {
+                border: 1px solid var(--rule);
+                border-radius: 1px;
+                background: var(--bg);
+            }
+            .group-members-item {
+                display: flex;
+                align-items: baseline;
+                justify-content: space-between;
+                gap: 0.5rem;
+                padding: 0.4rem 0.55rem;
+                font-size: 0.75rem;
+            }
+            .group-members-item + .group-members-item {
+                border-top: 1px solid var(--rule);
+            }
+            .group-members-item__id {
+                font-family: var(--font-mono);
+                font-size: 0.66rem;
+                color: var(--ink-3);
+            }
+            .group-members-empty,
+            .group-members-error {
+                padding: 0.5rem 0.55rem;
+                font-size: 0.7rem;
+                color: var(--ink-3);
+            }
+            .group-members-error {
+                color: #b3261e;
+            }
             .form-toggle-row {
                 display: flex;
                 align-items: center;
@@ -1255,6 +1285,53 @@
                                     <option value="fade-in">Fade in</option>
                                 </select>
                                 <p class="form-hint">Entrance animation for all headings throughout the story</p>
+                            </div>
+
+                            <p class="form-section-title">Group</p>
+                            <div class="form-group">
+                                <label class="form-label" for="meta-group-id"
+                                    >Group ID</label
+                                ><input
+                                    class="form-input"
+                                    id="meta-group-id"
+                                    data-path="meta.group_id"
+                                    placeholder="e.g. imperial-2026-graduation-days"
+                                />
+                                <p class="form-hint">
+                                    Links this project to any other HSE project sharing the same id — their nav can then link to each other automatically. Leave blank if this story stands alone.
+                                </p>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label" for="meta-group-label"
+                                    >Group label</label
+                                ><input
+                                    class="form-input"
+                                    id="meta-group-label"
+                                    data-path="meta.group_label"
+                                    placeholder="Leave blank to use the publication title"
+                                />
+                                <p class="form-hint">
+                                    How this project is labelled when it appears in another group member's nav.
+                                </p>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label" for="meta-group-role"
+                                    >Group role</label
+                                ><input
+                                    class="form-input"
+                                    id="meta-group-role"
+                                    data-path="meta.group_role"
+                                    placeholder="e.g. hub, top-nav"
+                                />
+                                <p class="form-hint">
+                                    Free-form tag — meaning is entirely up to whichever kind reads it (e.g. the graduation-guide kind treats "hub" and "top-nav" specially). Leave blank for an ordinary member.
+                                </p>
+                            </div>
+                            <div class="form-group" id="group-members-group" hidden>
+                                <label class="form-label">Other members of this group</label>
+                                <div id="group-members-list" class="group-members-list">
+                                    <p class="form-hint">Loading…</p>
+                                </div>
                             </div>
 
                             <p class="form-section-title">Social sharing</p>
@@ -2374,6 +2451,7 @@
                 wireInputs();
                 renderSectionList();
                 setupGraduationGuideTab();
+                wireGroupMembers();
 
                 // Silently render on load so the preview always matches the
                 // current content (another editor may have changed it since
@@ -2777,6 +2855,73 @@
                         scheduleAutosave();
                     });
                 });
+            }
+
+            // ── Group members panel ─────────────────────────────────────────────
+            // Queries the same resolver the renderer itself uses (renderer/groups.js
+            // via /api/groups/:groupId), so what shows here is exactly what a real
+            // render would pick up — catches a typo'd group_id immediately instead
+            // of it silently excluding this project at deploy time.
+
+            async function refreshGroupMembers() {
+                const groupId = (content.meta.group_id || "").trim();
+                const section = document.getElementById("group-members-group");
+                const list = document.getElementById("group-members-list");
+
+                if (!groupId) {
+                    section.hidden = true;
+                    return;
+                }
+                section.hidden = false;
+                list.replaceChildren();
+                const loading = document.createElement("p");
+                loading.className = "form-hint";
+                loading.textContent = "Loading…";
+                list.appendChild(loading);
+
+                let members;
+                try {
+                    const res = await fetch(
+                        `/api/groups/${encodeURIComponent(groupId)}?exclude=${encodeURIComponent(content.meta.project_id || "")}`,
+                    );
+                    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                    ({ members } = await res.json());
+                } catch (err) {
+                    list.replaceChildren();
+                    const errEl = document.createElement("p");
+                    errEl.className = "group-members-error";
+                    errEl.textContent = `Couldn't check group membership: ${err.message}`;
+                    list.appendChild(errEl);
+                    return;
+                }
+
+                list.replaceChildren();
+                if (!members.length) {
+                    const empty = document.createElement("p");
+                    empty.className = "group-members-empty";
+                    empty.textContent =
+                        "No other project has this group_id yet — this one will be the first member.";
+                    list.appendChild(empty);
+                    return;
+                }
+                members.forEach((m) => {
+                    const item = document.createElement("div");
+                    item.className = "group-members-item";
+                    const label = document.createElement("span");
+                    label.textContent = m.label;
+                    const id = document.createElement("span");
+                    id.className = "group-members-item__id";
+                    id.textContent = m.project_id;
+                    item.append(label, id);
+                    list.appendChild(item);
+                });
+            }
+
+            function wireGroupMembers() {
+                refreshGroupMembers();
+                document
+                    .getElementById("meta-group-id")
+                    .addEventListener("blur", refreshGroupMembers);
             }
 
             // ── Graduation guide tab (content.kind === "graduation-guide") ─────
