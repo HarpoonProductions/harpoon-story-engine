@@ -16,6 +16,13 @@
  * so offline/local rendering (tests, `node render.js` without a .env)
  * still works — group data just reflects whatever's on disk instead of
  * whatever's live, which is the correct offline behaviour, not a bug.
+ *
+ * Queries Supabase via raw REST fetch, not the @supabase/supabase-js
+ * client — that client initialises a realtime/WebSocket connection at
+ * construction time, which throws on the Node 20 CI runner (no native
+ * WebSocket support until Node 22). fetch-content.js already works
+ * around the same constraint the same way; this follows that pattern
+ * rather than reintroducing the problem via db.js's client-based helpers.
  */
 
 const fs = require('fs');
@@ -47,7 +54,29 @@ async function resolveGroup(groupId, selfProjectId) {
 }
 
 async function resolveFromSupabase(groupId) {
-  return db.getProjectsByGroupId(groupId);
+  const params = new URLSearchParams({
+    select: 'project_id,content',
+    'content->meta->>group_id': `eq.${groupId}`,
+  });
+  const url = `${process.env.SUPABASE_URL}/rest/v1/story_engine_projects?${params.toString()}`;
+
+  const res = await fetch(url, {
+    headers: {
+      apikey: process.env.SUPABASE_ANON_KEY,
+      Authorization: `Bearer ${process.env.SUPABASE_ANON_KEY}`,
+      Accept: 'application/json',
+    },
+  });
+
+  if (!res.ok) {
+    throw new Error(`resolveGroup: Supabase API error ${res.status}: ${await res.text()}`);
+  }
+
+  const rows = await res.json();
+  return rows.map((row) => ({
+    project_id: row.project_id,
+    meta: row.content?.meta || {},
+  }));
 }
 
 function resolveFromFilesystem(groupId) {
