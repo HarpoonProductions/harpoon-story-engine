@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "title": "Harpoon Story Engine \u2014 Content Schema v1.3",
+  "title": "Harpoon Story Engine \u2014 Content Schema v1.4",
   "description": "Single JSON file driving all page generation. One file per project.",
   "type": "object",
   "required": [
@@ -86,6 +86,18 @@
         "og_image": {
           "type": "string",
           "description": "Social sharing image URL (og:image). Falls back to cover hero image if blank."
+        },
+        "group_id": {
+          "type": "string",
+          "description": "Links this project to any other HSE project (any kind) sharing the same id, resolved at render time via renderer/groups.js. Tier 2 (HSE) capability, not specific to any one product — how the group is rendered is entirely up to the consuming kind (e.g. a section with group_nav:true below for narrative stories, or the graduation-guide kind's own nav dropdown)."
+        },
+        "group_label": {
+          "type": "string",
+          "description": "Display label used when this project appears in another group member's nav. Falls back to meta.title if unset — same override pattern as section.nav_label."
+        },
+        "group_role": {
+          "type": "string",
+          "description": "Free-form tag a consuming kind can use to vary how this member is presented in group nav (e.g. graduation-guide.js treats 'hub' and 'top-nav' specially). Not interpreted by the resolver itself."
         }
       }
     },
@@ -841,7 +853,13 @@
           "type": "array",
           "items": {
             "$ref": "#/definitions/button"
-          }
+          },
+          "description": "Manually-authored links. Ignored in favour of resolved group data when group_nav is true on the same section."
+        },
+        "group_nav": {
+          "type": "boolean",
+          "default": false,
+          "description": "If true, this section's onward_links are generated at render time from meta.group_id's other members (see renderer/groups.js) instead of being hand-authored — one field, no per-project link maintenance."
         },
         "blocks": {
           "type": "array",

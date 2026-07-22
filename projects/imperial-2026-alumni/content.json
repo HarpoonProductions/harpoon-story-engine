@@ -6,7 +6,9 @@
     "client": "Imperial College London",
     "event": "Graduation Days 2026",
     "token_set": "graduation-days",
-    "og_description": "Welcome to Imperial's global alumni community — 274,000 graduates strong. Here's where to start."
+    "og_description": "Welcome to Imperial's global alumni community — 274,000 graduates strong. Here's where to start.",
+    "group_id": "imperial-2026-graduation-days",
+    "group_label": "Alumni community"
   },
   "cover": {
     "kicker": "Graduation Days 2026",
@@ -154,11 +156,7 @@
       "nav_label": "Explore more",
       "nav_exclude": true,
       "intro": "There's more to Graduation Days 2026 than one page can hold.",
-      "onward_links": [
-        { "label": "← Back to Graduation Days 2026", "href": "../imperial-2026/" },
-        { "label": "About graduation and Imperial", "href": "../imperial-2026-about/" },
-        { "label": "Meet this year's awardees", "href": "../imperial-2026-awardees/" }
-      ]
+      "group_nav": true
     }
   ]
 }

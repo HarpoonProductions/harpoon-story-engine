@@ -4,7 +4,10 @@
     "project_id": "imperial-2026",
     "title": "Graduation Days 2026",
     "client": "Imperial College London",
-    "token_set": "imperial"
+    "token_set": "imperial",
+    "group_id": "imperial-2026-graduation-days",
+    "group_role": "hub",
+    "group_label": "← Back to Graduation Days 2026"
   },
   "config": {
     "analytics": {

@@ -55,6 +55,25 @@ async function listProjects() {
   }));
 }
 
+/**
+ * All projects sharing a meta.group_id — the read side of the group
+ * mechanism (see renderer/groups.js for how this gets turned into
+ * per-kind nav data). Basename-agnostic: works for any content kind.
+ */
+async function getProjectsByGroupId(groupId) {
+  const db = getClient();
+  const { data, error } = await db
+    .from(TABLE)
+    .select("project_id, content")
+    .eq("content->meta->>group_id", groupId);
+
+  if (error) throw new Error(error.message);
+  return data.map((row) => ({
+    project_id: row.project_id,
+    meta: row.content?.meta || {},
+  }));
+}
+
 async function getProject(projectId) {
   const db = getClient();
   const { data, error } = await db
@@ -177,6 +196,7 @@ module.exports = {
   isConfigured,
   listProjects,
   getProject,
+  getProjectsByGroupId,
   saveProject,
   createProject,
   deleteProject,

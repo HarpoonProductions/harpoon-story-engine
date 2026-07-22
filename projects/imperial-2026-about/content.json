@@ -6,7 +6,9 @@
     "client": "Imperial College London",
     "event": "Graduation Days 2026",
     "token_set": "graduation-days",
-    "og_description": "The traditions behind Imperial's graduation ceremonies, a welcome from the Royal Albert Hall, and a year of highlights from across the College."
+    "og_description": "The traditions behind Imperial's graduation ceremonies, a welcome from the Royal Albert Hall, and a year of highlights from across the College.",
+    "group_id": "imperial-2026-graduation-days",
+    "group_label": "About graduation and Imperial"
   },
   "cover": {
     "kicker": "Graduation Days 2026",
@@ -121,11 +123,7 @@
       "nav_label": "Explore more",
       "nav_exclude": true,
       "intro": "There's more to Graduation Days 2026 than one page can hold.",
-      "onward_links": [
-        { "label": "← Back to Graduation Days 2026", "href": "../imperial-2026/" },
-        { "label": "Meet this year's awardees", "href": "../imperial-2026-awardees/" },
-        { "label": "Join the alumni community", "href": "../imperial-2026-alumni/" }
-      ]
+      "group_nav": true
     }
   ]
 }

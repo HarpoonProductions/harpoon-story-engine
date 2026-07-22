@@ -23,7 +23,10 @@
         "last_saved": { "type": "string" },
         "version": { "type": "string" },
         "og_description": { "type": "string" },
-        "og_image": { "type": "string" }
+        "og_image": { "type": "string" },
+        "group_id": { "type": "string", "description": "Same Tier 2 group mechanism as content.schema.json — links this hub page to its satellite story pages, resolved at render time via renderer/groups.js." },
+        "group_label": { "type": "string", "description": "Display label used when this project appears in another group member's nav. Falls back to meta.title if unset." },
+        "group_role": { "type": "string", "description": "Free-form tag this kind's own renderer interprets (e.g. 'hub') — not interpreted by the resolver itself." }
       }
     },
     "config": {

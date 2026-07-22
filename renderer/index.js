@@ -28,6 +28,7 @@ const { renderPrint }           = require("./print-renderer");
 const { renderPdf }             = require("./pdf-renderer");
 const { renderGraduationGuide } = require("./kinds/graduation-guide");
 const { isEnabled: isPwaEnabled, writePwaFiles } = require("./pwa");
+const { resolveGroup } = require("./groups");
 
 /**
  * Top-level render function.
@@ -62,7 +63,8 @@ async function render(content, outputDir, options) {
   // shape (institution/guide/ceremonies/searchIndex, not cover/sections),
   // no print/PDF tracks (narrative-shaped, not applicable here).
   if (content.kind === "graduation-guide") {
-    const html = renderGraduationGuide(content, { basePath });
+    const groupMembers = await resolveGroup(content.meta.group_id, content.meta.project_id);
+    const html = renderGraduationGuide(content, { basePath, groupMembers });
     const outPath = path.join(outputDir, "index.html");
     fs.writeFileSync(outPath, html, "utf8");
     const written = [outPath];
@@ -89,6 +91,22 @@ async function render(content, outputDir, options) {
   }
 
   const { meta, config, cover, sections } = content;
+
+  // Sections with group_nav:true get their onward_links generated from
+  // meta.group_id's other members instead of hand-authored — reuses the
+  // existing onward_links rendering/styling in layouts/default.js as-is,
+  // just swapping the data source.
+  if (meta.group_id) {
+    const groupMembers = await resolveGroup(meta.group_id, meta.project_id);
+    sections.forEach((section) => {
+      if (section.group_nav) {
+        section.onward_links = groupMembers.map((m) => ({
+          label: m.label,
+          href: `../${m.project_id}/`,
+        }));
+      }
+    });
+  }
 
   // Resolve logo URL from registry (meta.logo_url takes precedence per story)
   const registryPath = path.join(__dirname, '../tokens/registry.json');

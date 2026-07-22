@@ -18,18 +18,22 @@ const { buildPwaHeadTags } = require('../pwa');
  * @param {object} content - validated graduation-guide content object
  * @param {object} [opts]
  * @param {string} [opts.basePath] - root-relative base path for S3/CloudFront
+ * @param {Array}  [opts.groupMembers] - resolved via renderer/groups.js from meta.group_id,
+ *   siblings only (this project already excluded). Drives the "Explore more" dropdown
+ *   and the standalone top-nav link(s) — see buildExploreLinks().
  * @returns {string} full HTML document
  */
 function renderGraduationGuide(content, opts) {
   opts = opts || {};
   const { meta, config, institution, guide, ceremonies, searchIndex } = content;
+  const groupMembers = opts.groupMembers || [];
   const base = opts.basePath
     ? '/' + opts.basePath.replace(/^\//, '').replace(/\/$/, '')
     : '';
   const asset = (file) => (base ? `${base}/${file}` : file);
 
   const head = buildHead(meta, config, institution, base, asset);
-  const body = buildBody(institution, guide, ceremonies, asset);
+  const body = buildBody(institution, guide, ceremonies, asset, groupMembers);
   const dataScript = buildDataScript({ institution, guide, ceremonies, searchIndex });
 
   return `<!DOCTYPE html>
@@ -109,32 +113,43 @@ function buildCeremonyDropdown(guide, ceremonies) {
 // Links to the satellite story-kind pages that make up the rest of the
 // guide "cluster" (see BRIEF.md / project memory, 2026-07-20: a graduation
 // guide is this hub page plus zero or more ordinary HSE story pages).
+// Membership and labels come from meta.group_id, resolved by
+// renderer/groups.js and passed in as groupMembers — not hardcoded here.
 // Each satellite is its own HSE project, deployed as a sibling S3 path
 // (stories.har.pn/<slug>/), so links are relative — no basePath threading
 // needed here, same as the ceremony ?query links above.
+//
+// group_role: 'top-nav' on a member (e.g. the Memories page) means it
+// gets its own top-level nav link instead of a dropdown item — this
+// kind's own convention, not something the group mechanism itself knows
+// or cares about.
 
-function buildExploreDropdown() {
+function buildExploreDropdown(groupMembers) {
+  const dropdownMembers = groupMembers.filter((m) => m.role !== 'top-nav');
+  if (!dropdownMembers.length) return '';
   return `<div class="gg-nav-dropdown" id="explore-more-dropdown">
     <button class="gg-nav-link gg-nav-dropdown-toggle" id="explore-more-toggle" aria-haspopup="true" aria-expanded="false">
       Explore more <span class="gg-nav-caret">&#9660;</span>
     </button>
     <div class="gg-nav-dropdown-menu" role="menu" aria-label="Explore more">
-      ${buildExploreLinks()}
+      ${buildExploreLinks(dropdownMembers)}
     </div>
   </div>`;
 }
 
-function buildExploreLinks() {
-  const links = [
-    { label: 'About graduation and Imperial', href: '../imperial-2026-about/' },
-    { label: 'Awardees', href: '../imperial-2026-awardees/' },
-    { label: 'Alumni community', href: '../imperial-2026-alumni/' },
-  ];
-  return links
-    .map((l) => `<a class="gg-nav-dropdown-item" href="${escHtml(l.href)}" role="menuitem">
-        <span class="gg-nav-dropdown-item-label">${escHtml(l.label)}</span>
+function buildExploreLinks(members) {
+  return members
+    .map((m) => `<a class="gg-nav-dropdown-item" href="../${escHtml(m.project_id)}/" role="menuitem">
+        <span class="gg-nav-dropdown-item-label">${escHtml(m.label)}</span>
       </a>`)
     .join('\n      ');
+}
+
+function buildTopNavLinks(groupMembers, linkClass) {
+  return groupMembers
+    .filter((m) => m.role === 'top-nav')
+    .map((m) => `<a class="${linkClass}" href="../${escHtml(m.project_id)}/">${escHtml(m.label)}</a>`)
+    .join('\n    ');
 }
 
 // Shared between the desktop dropdown above and the mobile menu below —
@@ -171,30 +186,31 @@ function buildCeremonyLinks(guide, ceremonies) {
 // hse-nav__mobile-menu pattern in renderer/shell/nav.js — same division
 // of a hamburger-triggered overlay, just gg-* namespaced) ─────────────
 
-function buildMobileMenu(guide, ceremonies) {
+function buildMobileMenu(guide, ceremonies, groupMembers) {
+  const dropdownMembers = groupMembers.filter((m) => m.role !== 'top-nav');
   return `<div class="gg-nav-mobile-menu" id="gg-nav-mobile-menu" aria-hidden="true">
   <button class="gg-nav-mobile-close" id="gg-nav-mobile-close" aria-label="Close menu">&#10005;</button>
   <div class="gg-nav-mobile-menu__inner">
     <a class="gg-nav-mobile-link" href="#">${escHtml(guide.title)}</a>
     <div class="gg-nav-mobile-group-label">Ceremony Guides</div>
     ${buildCeremonyLinks(guide, ceremonies)}
-    <div class="gg-nav-mobile-group-label">Explore more</div>
-    ${buildExploreLinks()}
-    <a class="gg-nav-mobile-link" href="../imperial-2026-memories/">Memories of ${escHtml(guide.title)}</a>
+    ${dropdownMembers.length ? `<div class="gg-nav-mobile-group-label">Explore more</div>
+    ${buildExploreLinks(dropdownMembers)}` : ''}
+    ${buildTopNavLinks(groupMembers, 'gg-nav-mobile-link')}
   </div>
 </div>`;
 }
 
 // ── <body> ──────────────────────────────────────────────────────────────
 
-function buildBody(institution, guide, ceremonies, asset) {
+function buildBody(institution, guide, ceremonies, asset, groupMembers) {
   return `<nav class="gg-nav">
   <a class="gg-nav-wordmark" href="#">${escHtml(institution.shortName || institution.name)}</a>
   <div class="gg-nav-links">
     <a class="gg-nav-link" href="#">${escHtml(guide.title)}</a>
     ${buildCeremonyDropdown(guide, ceremonies)}
-    ${buildExploreDropdown()}
-    <a class="gg-nav-link" href="../imperial-2026-memories/">Memories of ${escHtml(guide.title)}</a>
+    ${buildExploreDropdown(groupMembers)}
+    ${buildTopNavLinks(groupMembers, 'gg-nav-link')}
   </div>
   <div class="gg-nav-right">
     <span class="gg-nav-search-label">Search name:</span>
@@ -213,7 +229,7 @@ function buildBody(institution, guide, ceremonies, asset) {
     </button>
   </div>
 </nav>
-${buildMobileMenu(guide, ceremonies)}
+${buildMobileMenu(guide, ceremonies, groupMembers)}
 
 <div class="gg-floating-bar" id="floating-bar">
   <span class="gg-floating-bar-label">You are viewing</span>
