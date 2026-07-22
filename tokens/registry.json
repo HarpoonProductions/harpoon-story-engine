@@ -13,6 +13,12 @@
       "fonts": "ImperialText (Imperial CDN), Georgia fallback"
     },
     {
+      "id": "graduation-days",
+      "label": "Imperial Graduation Days",
+      "description": "Graduation Days sub-brand — dark surface, teal accent, Imperial Sans. Used by graduation.guide's satellite story pages to match the graduation-guide hub's own look.",
+      "fonts": "Imperial Sans (vendored woff2)"
+    },
+    {
       "id": "uksi",
       "label": "UK Sport",
       "description": "UK Sport brand token set",

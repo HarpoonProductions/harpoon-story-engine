@@ -1,0 +1,75 @@
+/*
+ * ════════════════════════════════════════════════════════════════════
+ *  Harpoon Platform — Client Token Set: Imperial Graduation Days
+ *  css/tokens-graduation-days.css
+ *
+ *  Not Imperial's general corporate identity (see css/tokens-imperial.css
+ *  for that) — this is the Graduation Days sub-brand used specifically
+ *  for the graduation.guide product: dark navy-grey, teal accent,
+ *  Imperial Sans. Deliberately divergent from Imperial's official navy/
+ *  light-blue tokens (see project memory, 2026-07-20 — "colors and fonts
+ *  stay as per-guide institution.* overrides... that divergence is
+ *  deliberate, not a bug").
+ *
+ *  Used by the graduation-guide-kind hub page's own bespoke CSS
+ *  (css/kinds/graduation-guide.css, --gg-* variables) and, via this
+ *  token set, by the ordinary story-kind satellite pages that make up
+ *  the rest of the guide "cluster" (About, Awardees, Alumni, Memories)
+ *  — so a visitor moving between the hub and a satellite page sees one
+ *  consistent visual identity, not two different products.
+ *
+ *  Key brand values:
+ *    Dark surface: #232333  (background)
+ *    Teal accent:  #40E0CF  (primary — links, CTAs, highlights)
+ *    Warm white:   #ffffff  (body text on the dark surface)
+ *    Typeface:     Imperial Sans (licensed, vendored as woff2 — same
+ *                  files the graduation-guide kind embeds)
+ *
+ *  This file contains overrides only. Base tokens not listed here
+ *  remain at their platform defaults defined in css/tokens.css.
+ * ════════════════════════════════════════════════════════════════════
+ */
+
+@font-face {
+  font-family: 'Imperial Sans';
+  font-weight: 300;
+  font-style: normal;
+  font-display: swap;
+  src: url('css/fonts/imperial-sans-light-300.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Imperial Sans';
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+  src: url('css/fonts/imperial-sans-regular-400.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Imperial Sans';
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+  src: url('css/fonts/imperial-sans-bold-700.woff2') format('woff2');
+}
+
+:root {
+  /* ── Accent colours ── */
+  --hse-accent:   #40E0CF;   /* Graduation Days teal */
+  --hse-accent-2: #2fb8a8;   /* darker teal — secondary accent */
+
+  /* ── Neutral palette ── */
+  --hse-ink:    #232333;   /* Graduation Days dark surface — page background */
+  --hse-ink-2:  #2d2d42;
+  --hse-ink-3:  #45455c;
+  --hse-warm:   #ffffff;   /* body text on the dark surface */
+  --hse-warm-2: #d8d8e0;
+  --hse-warm-3: #9c9cae;
+
+  --hse-ink-rgb:  35, 35, 51;
+  --hse-warm-rgb: 255, 255, 255;
+
+  /* ── Fonts ── */
+  --hse-font-display: 'Imperial Sans', 'Helvetica Neue', Arial, sans-serif;
+  --hse-font-body:    'Imperial Sans', 'Helvetica Neue', Arial, sans-serif;
+  --hse-font-mono:    'Courier New', Courier, monospace;
+}
