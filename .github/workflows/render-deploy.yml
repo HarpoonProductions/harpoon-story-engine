@@ -10,6 +10,7 @@ on:
       - "renderer/**"
       - "css/**"
       - "js/**"
+      - ".github/workflows/**"
   create:
   workflow_dispatch:
     inputs:
@@ -37,6 +38,11 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          # Full history — the scope-detection step below diffs
+          # github.event.before against github.sha, which can be
+          # arbitrarily far back if several commits land in one push.
+          fetch-depth: 0
 
       - name: Set up Node.js
         uses: actions/setup-node@v4
@@ -57,23 +63,97 @@ jobs:
       - name: Run test suite
         run: node test.js
 
+      # Decides how much of the catalog a push should touch. A push that
+      # only edits projects/<id>/content.json files can only affect those
+      # specific projects, so it deploys just them. A push touching any
+      # shared code (renderer/css/js/schema) could affect an unknown
+      # number of projects in ways a file-path diff can't determine —
+      # those runs stop after tests pass, and a deploy (staging or
+      # production, scoped to whichever projects make sense) is a
+      # deliberate manual workflow_dispatch instead. workflow_dispatch's
+      # own explicit inputs (project / blank-for-all) are unaffected —
+      # this only changes what an automatic push does by itself.
+      - name: Determine deploy scope
+        id: scope
+        run: |
+          set -e
+
+          if [ -n "${{ github.event.inputs.project }}" ]; then
+            echo "mode=single" >> "$GITHUB_OUTPUT"
+            echo "project=${{ github.event.inputs.project }}" >> "$GITHUB_OUTPUT"
+            echo "Scope: single project (manual) — ${{ github.event.inputs.project }}"
+            exit 0
+          fi
+
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "mode=all" >> "$GITHUB_OUTPUT"
+            echo "Scope: all projects (manual, no project specified)"
+            exit 0
+          fi
+
+          if [ "${{ github.event_name }}" != "push" ]; then
+            # e.g. a 'create' event (new branch/tag) — no diff to scope by
+            echo "mode=all" >> "$GITHUB_OUTPUT"
+            echo "Scope: all projects (${{ github.event_name }} event)"
+            exit 0
+          fi
+
+          BEFORE="${{ github.event.before }}"
+          ZERO_SHA="0000000000000000000000000000000000000000"
+
+          if [ "$BEFORE" = "$ZERO_SHA" ] || ! CHANGED=$(git diff --name-only "$BEFORE" "${{ github.sha }}" 2>/dev/null); then
+            # New branch, or the diff genuinely failed for some reason —
+            # fail open (deploy everything) rather than silently deploy
+            # nothing.
+            echo "mode=all" >> "$GITHUB_OUTPUT"
+            echo "Scope: all projects (no usable diff — failing open)"
+            exit 0
+          fi
+
+          echo "Changed files:"
+          echo "$CHANGED"
+
+          NON_PROJECT_CHANGES=$(echo "$CHANGED" | grep -v '^projects/' || true)
+
+          if [ -n "$CHANGED" ] && [ -z "$NON_PROJECT_CHANGES" ]; then
+            PROJECT_IDS=$(echo "$CHANGED" | grep '^projects/' | cut -d/ -f2 | sort -u | tr '\n' ' ')
+            echo "mode=projects" >> "$GITHUB_OUTPUT"
+            echo "projects=$PROJECT_IDS" >> "$GITHUB_OUTPUT"
+            echo "Scope: content-only push — $PROJECT_IDS"
+          else
+            echo "mode=none" >> "$GITHUB_OUTPUT"
+            echo "Scope: shared code changed — tests only, no deploy"
+          fi
+
       - name: Render projects
+        if: steps.scope.outputs.mode != 'none'
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
         run: |
           set -e
 
+          MODE="${{ steps.scope.outputs.mode }}"
           TARGET="${{ github.event.inputs.target || 'production' }}"
-          INPUT_PROJECT="${{ github.event.inputs.project }}"
-
           BASE_PREFIX=$([ "$TARGET" = "staging" ] && echo "staging/" || echo "")
 
-          if [ -n "$INPUT_PROJECT" ]; then
-            echo "Fetching from Supabase: $INPUT_PROJECT"
-            node fetch-content.js "$INPUT_PROJECT"
-            echo "Rendering: $INPUT_PROJECT (target: $TARGET)"
-            node render.js "projects/${INPUT_PROJECT}/content.json" --out "dist/${INPUT_PROJECT}" --base "${BASE_PREFIX}${INPUT_PROJECT}"
+          render_one() {
+            local PROJECT_ID="$1"
+            echo "Fetching: $PROJECT_ID"
+            node fetch-content.js "$PROJECT_ID"
+            echo "Rendering: $PROJECT_ID (target: $TARGET)"
+            node render.js "projects/${PROJECT_ID}/content.json" --out "dist/${PROJECT_ID}" --base "${BASE_PREFIX}${PROJECT_ID}"
+          }
+
+          if [ "$MODE" = "single" ]; then
+            render_one "${{ steps.scope.outputs.project }}"
+
+          elif [ "$MODE" = "projects" ]; then
+            echo "Rendering scoped project(s): ${{ steps.scope.outputs.projects }}"
+            for PROJECT_ID in ${{ steps.scope.outputs.projects }}; do
+              render_one "$PROJECT_ID"
+            done
+
           else
             echo "No project specified — fetching all from Supabase"
             PROJECT_IDS=$(curl -s "${SUPABASE_URL}/rest/v1/story_engine_projects?select=project_id" \
@@ -81,18 +161,21 @@ jobs:
               -H "Authorization: Bearer ${SUPABASE_ANON_KEY}" \
               | node -e "const c=[]; process.stdin.on('data',d=>c.push(d)); process.stdin.on('end',()=>{ const rows=JSON.parse(Buffer.concat(c).toString()); console.log(rows.map(r=>r.project_id).join(' ')); });")
             echo "Projects: $PROJECT_IDS"
-            RENDERED=0
             for PROJECT_ID in $PROJECT_IDS; do
-              echo "Fetching: $PROJECT_ID"
-              node fetch-content.js "$PROJECT_ID"
-              echo "Rendering: $PROJECT_ID"
-              node render.js "projects/${PROJECT_ID}/content.json" --out "dist/${PROJECT_ID}" --base "${BASE_PREFIX}${PROJECT_ID}"
-              RENDERED=$((RENDERED + 1))
+              render_one "$PROJECT_ID"
             done
-            echo "Rendered $RENDERED project(s)"
           fi
 
+      - name: No deploy — shared code change
+        if: steps.scope.outputs.mode == 'none'
+        run: |
+          echo "## Harpoon Story Engine — tests passed, nothing deployed" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "This push touched shared code (renderer/css/js/schema), not just project content, so it wasn't auto-deployed." >> $GITHUB_STEP_SUMMARY
+          echo "Trigger **Render and Deploy** manually (workflow_dispatch) once you've reviewed it — leave \"project\" blank to deploy everything, or name a project to deploy just that one." >> $GITHUB_STEP_SUMMARY
+
       - name: Install Puppeteer system dependencies
+        if: steps.scope.outputs.mode != 'none'
         run: |
           sudo apt-get update -q
           sudo apt-get install -y -q \
@@ -102,9 +185,11 @@ jobs:
             libxdamage1 libxrandr2 libxfixes3
 
       - name: Install Python dependencies
+        if: steps.scope.outputs.mode != 'none'
         run: pip install -r requirements.txt --quiet
 
       - name: Generate PDFs
+        if: steps.scope.outputs.mode != 'none'
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
@@ -141,6 +226,7 @@ jobs:
           echo "Generated $GENERATED PDF(s)"
 
       - name: Configure AWS credentials
+        if: steps.scope.outputs.mode != 'none'
         uses: aws-actions/configure-aws-credentials@v4
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
@@ -148,6 +234,7 @@ jobs:
           aws-region: ${{ secrets.AWS_REGION }}
 
       - name: Sync to S3
+        if: steps.scope.outputs.mode != 'none'
         run: |
           set -e
 
@@ -213,6 +300,7 @@ jobs:
           done
 
       - name: Generate audio
+        if: steps.scope.outputs.mode != 'none'
         run: |
           set -e
           INPUT_PROJECT="${{ github.event.inputs.project }}"
@@ -261,12 +349,14 @@ jobs:
           echo "Generated $GENERATED audio file(s)"
 
       - name: Invalidate CloudFront cache
+        if: steps.scope.outputs.mode != 'none'
         run: |
           aws cloudfront create-invalidation \
             --distribution-id ${{ secrets.CLOUDFRONT_DISTRIBUTION_ID }} \
             --paths "/*"
 
       - name: Deployment summary
+        if: steps.scope.outputs.mode != 'none'
         run: |
           TARGET="${{ github.event.inputs.target || 'production' }}"
           DELIVERY="${{ secrets.DELIVERY_DOMAIN }}"
