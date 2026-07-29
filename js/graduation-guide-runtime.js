@@ -463,17 +463,6 @@
           jumpToStudent(name, cer);
         });
       }
-
-      // iOS install nudge, tied to this moment specifically — someone
-      // who just landed on their own personalised page is a better
-      // candidate to keep it than a cold visit to the homepage.
-      // No-ops entirely if HarpoonPWA isn't present (config.pwa.enabled
-      // false) or if the visitor isn't on iOS / already has it installed.
-      if (window.HarpoonPWA) {
-        window.HarpoonPWA.maybeShowIOSInstallBanner({
-          message: 'Keep ' + name + '’s ceremony details handy — install this guide',
-        });
-      }
     } else if (findLink) {
       findLink.addEventListener('click', function (e) {
         e.preventDefault();
@@ -481,6 +470,18 @@
         if (!target) return;
         target.scrollIntoView({ behavior: 'smooth', block: 'center' });
         target.focus();
+      });
+    }
+
+    // iOS install nudge — every visit, not just a personalised share
+    // link landing; the message just personalises further when it can.
+    // No-ops entirely if HarpoonPWA isn't present (config.pwa.enabled
+    // false) or if the visitor isn't on iOS / already has it installed.
+    if (window.HarpoonPWA) {
+      window.HarpoonPWA.maybeShowIOSInstallBanner({
+        message: name
+          ? 'Keep ' + name + '’s ceremony details handy — install this guide'
+          : 'Install this guide for quick, offline access on the day',
       });
     }
   })();
