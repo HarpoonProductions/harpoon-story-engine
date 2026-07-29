@@ -5,8 +5,18 @@
  * no JS way to trigger "Add to Home Screen" (true across every iOS
  * browser, not just Safari — they're all WebKit under Apple's rules).
  * The only thing a site can do is tell the user how, manually. This is
- * that: a small, self-contained, dismissible banner. Injects its own
- * styles — no separate CSS file to vendor or link.
+ * that: a full-screen, blurred-backdrop takeover — deliberately hard to
+ * miss or scroll past, not a small toast. Injects its own styles — no
+ * separate CSS file to vendor or link.
+ *
+ * There's also no completion event — iOS never tells a page that the
+ * user actually finished "Add to Home Screen" (they leave Safari for the
+ * share sheet and may or may not come back to this same tab). So "until
+ * installed" isn't something this can detect live: the overlay stays up
+ * until the visitor dismisses it. What genuinely does resolve on its own
+ * is any *future* visit — once actually installed, isStandalone() below
+ * is true and this never shows again, launched from the home screen icon
+ * or reopened in Safari.
  *
  * Generic — not graduation-guide or any-product-specific. A consuming
  * page decides WHEN to call maybeShowIOSInstallBanner() (immediately,
@@ -54,18 +64,27 @@
     var style = document.createElement('style');
     style.id = STYLE_ID;
     style.textContent =
-      '.hse-ios-install-banner{position:fixed;left:12px;right:12px;bottom:12px;' +
-      'bottom:calc(12px + env(safe-area-inset-bottom));z-index:3000;' +
-      'background:#1a1a1a;color:#fff;border-radius:10px;padding:12px 14px;' +
-      'display:flex;align-items:center;gap:10px;box-shadow:0 6px 24px rgba(0,0,0,0.3);' +
+      // Full-screen backdrop — blurs and blocks interaction with
+      // everything behind it until the card is dismissed.
+      '.hse-ios-install-overlay{position:fixed;inset:0;z-index:3000;' +
+      'display:flex;align-items:center;justify-content:center;' +
+      'padding:24px;padding:calc(24px + env(safe-area-inset-top)) 24px calc(24px + env(safe-area-inset-bottom));' +
+      'background:rgba(10,10,10,0.65);' +
+      '-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);' +
+      'opacity:0;transition:opacity 0.3s ease;}' +
+      '.hse-ios-install-overlay.is-visible{opacity:1;}' +
+      // Centred card — the actual message.
+      '.hse-ios-install-banner{position:relative;width:100%;max-width:480px;' +
+      'background:#1a1a1a;color:#fff;border-radius:22px;padding:44px 30px;' +
+      'text-align:center;box-shadow:0 24px 64px rgba(0,0,0,0.5);' +
       'font-family:-apple-system,BlinkMacSystemFont,"Helvetica Neue",Arial,sans-serif;' +
-      'font-size:13px;line-height:1.4;opacity:0;transform:translateY(12px);' +
-      'transition:opacity 0.25s ease,transform 0.25s ease;}' +
-      '.hse-ios-install-banner.is-visible{opacity:1;transform:translateY(0);}' +
-      '.hse-ios-install-banner__text{flex:1;}' +
-      '.hse-ios-install-banner__share-icon{vertical-align:-3px;margin:0 1px;}' +
-      '.hse-ios-install-banner__close{background:none;border:none;color:rgba(255,255,255,0.7);' +
-      'font-size:15px;cursor:pointer;padding:4px;flex-shrink:0;line-height:1;}' +
+      'transform:scale(0.92);transition:transform 0.3s ease;}' +
+      '.hse-ios-install-overlay.is-visible .hse-ios-install-banner{transform:scale(1);}' +
+      '.hse-ios-install-banner__text{font-size:36px;line-height:1.25;font-weight:700;}' +
+      '.hse-ios-install-banner__share-icon{vertical-align:-6px;margin:0 4px;}' +
+      '.hse-ios-install-banner__close{position:absolute;top:10px;right:10px;' +
+      'background:none;border:none;color:rgba(255,255,255,0.65);' +
+      'font-size:24px;cursor:pointer;padding:10px;line-height:1;}' +
       '.hse-ios-install-banner__close:hover{color:#fff;}';
     document.head.appendChild(style);
   }
@@ -74,29 +93,39 @@
     opts = opts || {};
     if (!isIos() || isStandalone()) return;
     if (wasDismissedRecently(opts.snoozeDays || 7)) return;
-    if (document.querySelector('.hse-ios-install-banner')) return; // already showing
+    if (document.querySelector('.hse-ios-install-overlay')) return; // already showing
 
     injectStyles();
 
-    var banner = document.createElement('div');
-    banner.className = 'hse-ios-install-banner';
-    banner.setAttribute('role', 'status');
-    banner.innerHTML =
-      '<span class="hse-ios-install-banner__text">' +
+    var overlay = document.createElement('div');
+    overlay.className = 'hse-ios-install-overlay';
+    overlay.setAttribute('role', 'dialog');
+    overlay.setAttribute('aria-modal', 'true');
+    overlay.innerHTML =
+      '<div class="hse-ios-install-banner">' +
+      '<button type="button" class="hse-ios-install-banner__close" aria-label="Dismiss">&#10005;</button>' +
+      '<p class="hse-ios-install-banner__text">' +
       (opts.message || 'Install this on your phone') +
-      ' — tap <svg class="hse-ios-install-banner__share-icon" viewBox="0 0 24 24" width="15" height="15" ' +
+      ' — tap <svg class="hse-ios-install-banner__share-icon" viewBox="0 0 24 24" width="30" height="30" ' +
       'fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" ' +
       'aria-label="Share"><path d="M12 2v13M8 6l4-4 4 4M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7"/></svg>' +
-      ' then "Add to Home Screen"</span>' +
-      '<button type="button" class="hse-ios-install-banner__close" aria-label="Dismiss">&#10005;</button>';
+      ' then "Add to Home Screen"</p>' +
+      '</div>';
 
-    document.body.appendChild(banner);
-    requestAnimationFrame(function () { banner.classList.add('is-visible'); });
+    document.body.appendChild(overlay);
 
-    banner.querySelector('.hse-ios-install-banner__close').addEventListener('click', function () {
-      banner.classList.remove('is-visible');
+    var previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+
+    requestAnimationFrame(function () { overlay.classList.add('is-visible'); });
+
+    var closeBtn = overlay.querySelector('.hse-ios-install-banner__close');
+    closeBtn.focus();
+    closeBtn.addEventListener('click', function () {
+      overlay.classList.remove('is-visible');
       remember();
-      setTimeout(function () { banner.remove(); }, 300);
+      document.body.style.overflow = previousOverflow;
+      setTimeout(function () { overlay.remove(); }, 300);
     });
   }
 
