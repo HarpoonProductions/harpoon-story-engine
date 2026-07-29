@@ -3459,19 +3459,35 @@
                 );
 
                 try {
-                    const res = await fetch(
-                        `/api/project/${projectId}/deploy`,
-                        {
-                            method: "POST",
-                            headers: { "Content-Type": "application/json" },
-                            body: JSON.stringify({ target }),
-                        },
-                    );
-                    const data = await res.json();
+                    let data = await requestDeploy(target, {});
+
+                    // This project's title/group_label/group_role/group_id
+                    // changed since its last deploy — those are exactly the
+                    // fields sibling group members baked into their own nav
+                    // at THEIR last deploy, so they're now stale. Nothing
+                    // was deployed yet; ask before doing either.
+                    if (data.needsConfirmation) {
+                        const list = data.siblings
+                            .map((s) => `  • ${s.title}`)
+                            .join("\n");
+                        const alsoRepublish = confirm(
+                            `This changes ${data.changedFields.join(", ")} — ${data.siblings.length} other page(s) in this group show that info and will be out of date until they're redeployed too:\n\n${list}\n\nRedeploy them now as well?\n\n(Cancel still ${isProduction ? "publishes" : "stages"} just this page.)`,
+                        );
+                        data = await requestDeploy(target, {
+                            confirmed: true,
+                            includeSiblings: alsoRepublish,
+                        });
+                    }
 
                     if (data.ok) {
                         const verb = isProduction ? "Published" : "Staged";
-                        const msg = `✓ ${verb} — content saved to repo, deploying now. Ready in ~2 minutes at <a href="${data.url}" target="_blank">${data.url}</a>`;
+                        let msg = `✓ ${verb} — content saved to repo, deploying now. Ready in ~2 minutes at <a href="${data.url}" target="_blank">${data.url}</a>`;
+                        if (data.deployedSiblings && data.deployedSiblings.length) {
+                            msg += `<br>+ ${data.deployedSiblings.length} sibling page(s): ${data.deployedSiblings.join(", ")}`;
+                        }
+                        if (data.failedSiblings && data.failedSiblings.length) {
+                            msg += `<br>✗ Failed to redeploy: ${data.failedSiblings.join(", ")}`;
+                        }
                         showToast(msg, false, 10000);
                     } else {
                         showToast(
@@ -3486,6 +3502,15 @@
                     stageBtn.disabled = false;
                     publishBtn.disabled = false;
                 }
+            }
+
+            async function requestDeploy(target, extra) {
+                const res = await fetch(`/api/project/${projectId}/deploy`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ target, ...extra }),
+                });
+                return res.json();
             }
 
             // ── Toast notification ────────────────────────────────────────────

@@ -936,9 +936,53 @@ app.post("/api/project/:id/extract-frames", (req, res) => {
 // Triggers the render-deploy workflow with a project ID and target.
 // Requires GITHUB_TOKEN and GITHUB_REPO in environment.
 
+// A project's group nav (see renderer/groups.js) is baked into every
+// *other* group member's HTML at THEIR own last render — not fetched live
+// by the browser. So changing one of these fields makes siblings' already-
+// deployed nav stale until they're redeployed too; changing anything else
+// about a project (ordinary content) doesn't. meta._groupNavDeployedAs is
+// a snapshot of these fields as of this project's last successful deploy
+// dispatch, used to tell the difference.
+const GROUP_NAV_FIELDS = ["title", "group_label", "group_role", "group_id"];
+
+function groupNavSnapshot(meta) {
+  const snap = {};
+  GROUP_NAV_FIELDS.forEach((f) => { snap[f] = meta[f] || null; });
+  return snap;
+}
+
+function groupNavChangedFields(meta) {
+  const current = groupNavSnapshot(meta);
+  const last = meta._groupNavDeployedAs || null;
+  if (!last) return GROUP_NAV_FIELDS.filter((f) => current[f]); // never deployed before — only flag fields actually set
+  return GROUP_NAV_FIELDS.filter((f) => current[f] !== last[f]);
+}
+
+async function dispatchDeploy(projectId, target, githubToken, githubRepo) {
+  const response = await fetch(
+    `https://api.github.com/repos/${githubRepo}/actions/workflows/render-deploy.yml/dispatches`,
+    {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${githubToken}`,
+        Accept: "application/vnd.github+json",
+        "Content-Type": "application/json",
+        "X-GitHub-Api-Version": "2022-11-28",
+      },
+      body: JSON.stringify({ ref: "main", inputs: { project: projectId, target } }),
+    },
+  );
+  if (response.status !== 204) {
+    const text = await response.text();
+    throw new Error(`GitHub API returned ${response.status}: ${text}`);
+  }
+}
+
 app.post("/api/project/:id/deploy", async (req, res) => {
   const projectId = req.params.id;
   const target = req.body.target || "production"; // 'staging' or 'production'
+  const confirmed = !!req.body.confirmed;
+  const includeSiblings = !!req.body.includeSiblings;
   const githubToken = process.env.GITHUB_TOKEN || "";
   const githubRepo =
     process.env.GITHUB_REPO || "HarpoonProductions/harpoon-story-engine";
@@ -950,46 +994,65 @@ app.post("/api/project/:id/deploy", async (req, res) => {
   }
 
   try {
-    // ── Trigger the workflow ─────────────────────────────────────
-    // Content is read directly from Supabase by the Action —
-    // no git commit needed.
-    const response = await fetch(
-      `https://api.github.com/repos/${githubRepo}/actions/workflows/render-deploy.yml/dispatches`,
-      {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${githubToken}`,
-          Accept: "application/vnd.github+json",
-          "Content-Type": "application/json",
-          "X-GitHub-Api-Version": "2022-11-28",
-        },
-        body: JSON.stringify({
-          ref: "main",
-          inputs: {
-            project: projectId,
-            target,
-          },
-        }),
-      },
-    );
-
-    if (response.status === 204) {
-      // 204 No Content = workflow triggered successfully
-      const deliveryDomain = process.env.DELIVERY_DOMAIN || "";
-      const url =
-        target === "staging"
-          ? `https://${deliveryDomain}/staging/${projectId}/`
-          : `https://${deliveryDomain}/${projectId}/`;
-
-      console.log(`✓  Deploy triggered: ${projectId} → ${target} (${url})`);
-      res.json({ ok: true, target, url, projectId });
+    let content = null;
+    if (db.isConfigured()) {
+      content = await db.getProject(projectId).catch(() => null);
     } else {
-      const text = await response.text();
-      console.error(`Deploy error ${response.status}:`, text);
-      res.status(response.status).json({
-        error: `GitHub API returned ${response.status}: ${text}`,
-      });
+      const contentPath = path.join(PROJECTS_DIR, projectId, "content.json");
+      if (fs.existsSync(contentPath)) content = JSON.parse(fs.readFileSync(contentPath, "utf8"));
     }
+
+    const isGrouped = content?.meta?.group_id;
+
+    // ── Staleness check — only for grouped projects, only once, before
+    // anything is actually dispatched ───────────────────────────────
+    if (isGrouped && !confirmed) {
+      const changedFields = groupNavChangedFields(content.meta);
+      if (changedFields.length) {
+        const siblings = await resolveGroup(content.meta.group_id, projectId);
+        if (siblings.length) {
+          return res.json({
+            needsConfirmation: true,
+            changedFields,
+            siblings: siblings.map((s) => ({ project_id: s.project_id, title: s.title })),
+          });
+        }
+      }
+    }
+
+    // ── Trigger the workflow(s) ─────────────────────────────────────
+    // Content is read directly from Supabase by the Action — no git
+    // commit needed.
+    const siblingIds = includeSiblings && isGrouped
+      ? (await resolveGroup(content.meta.group_id, projectId)).map((s) => s.project_id)
+      : [];
+
+    await dispatchDeploy(projectId, target, githubToken, githubRepo);
+    const siblingResults = await Promise.allSettled(
+      siblingIds.map((id) => dispatchDeploy(id, target, githubToken, githubRepo)),
+    );
+    const deployedSiblings = siblingIds.filter((_, i) => siblingResults[i].status === "fulfilled");
+    const failedSiblings = siblingIds.filter((_, i) => siblingResults[i].status === "rejected");
+
+    const deliveryDomain = process.env.DELIVERY_DOMAIN || "";
+    const url =
+      target === "staging"
+        ? `https://${deliveryDomain}/staging/${projectId}/`
+        : `https://${deliveryDomain}/${projectId}/`;
+
+    console.log(`✓  Deploy triggered: ${projectId} → ${target} (${url})`);
+    if (deployedSiblings.length) console.log(`   + siblings: ${deployedSiblings.join(", ")}`);
+    if (failedSiblings.length) console.error(`   ✗ sibling dispatch failed: ${failedSiblings.join(", ")}`);
+
+    // Snapshot this project's own nav-relevant fields now that a deploy
+    // reflecting them has been dispatched — future deploys compare against
+    // this to decide whether to ask again.
+    if (isGrouped) {
+      content.meta._groupNavDeployedAs = groupNavSnapshot(content.meta);
+      if (db.isConfigured()) await db.saveProject(projectId, content).catch(() => {});
+    }
+
+    res.json({ ok: true, target, url, projectId, deployedSiblings, failedSiblings });
   } catch (err) {
     console.error("Deploy error:", err.message);
     res.status(500).json({ error: err.message });

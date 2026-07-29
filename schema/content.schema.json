@@ -98,6 +98,10 @@
         "group_role": {
           "type": "string",
           "description": "Free-form tag a consuming kind can use to vary how this member is presented in group nav (e.g. graduation-guide.js treats 'hub' and 'top-nav' specially). Not interpreted by the resolver itself."
+        },
+        "_groupNavDeployedAs": {
+          "type": "object",
+          "description": "System-managed, not user-editable. Snapshot of {title, group_label, group_role, group_id} as of this project's last successful deploy dispatch — editor.js compares against it to detect when a change would make sibling group members' already-deployed nav stale, and offer to redeploy them too."
         }
       }
     },
