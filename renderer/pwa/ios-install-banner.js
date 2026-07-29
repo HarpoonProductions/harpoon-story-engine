@@ -119,14 +119,25 @@
 
     requestAnimationFrame(function () { overlay.classList.add('is-visible'); });
 
-    var closeBtn = overlay.querySelector('.hse-ios-install-banner__close');
-    closeBtn.focus();
-    closeBtn.addEventListener('click', function () {
+    var autoDismissTimer = null;
+    function hide() {
+      clearTimeout(autoDismissTimer);
       overlay.classList.remove('is-visible');
       remember();
       document.body.style.overflow = previousOverflow;
       setTimeout(function () { overlay.remove(); }, 300);
-    });
+    }
+
+    var closeBtn = overlay.querySelector('.hse-ios-install-banner__close');
+    closeBtn.focus();
+    closeBtn.addEventListener('click', hide);
+
+    // Auto-dismiss rather than block indefinitely — someone who doesn't
+    // know what to do with it has read it (or not) well within this, and
+    // shouldn't be stuck behind a blurred page for longer than that.
+    // 0 (or any falsy value) disables this and requires an explicit tap.
+    var autoDismissMs = opts.autoDismissMs === 0 ? 0 : (opts.autoDismissMs || 12000);
+    if (autoDismissMs) autoDismissTimer = setTimeout(hide, autoDismissMs);
   }
 
   global.HarpoonPWA = global.HarpoonPWA || {};
