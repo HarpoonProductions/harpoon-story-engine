@@ -29,6 +29,7 @@ const { renderPdf }             = require("./pdf-renderer");
 const { renderGraduationGuide } = require("./kinds/graduation-guide");
 const { isEnabled: isPwaEnabled, writePwaFiles } = require("./pwa");
 const { resolveGroup } = require("./groups");
+const { buildGroupNav } = require("./shell/group-nav");
 
 /**
  * Top-level render function.
@@ -92,12 +93,16 @@ async function render(content, outputDir, options) {
 
   const { meta, config, cover, sections } = content;
 
-  // Sections with group_nav:true get their onward_links generated from
-  // meta.group_id's other members instead of hand-authored — reuses the
-  // existing onward_links rendering/styling in layouts/default.js as-is,
-  // just swapping the data source.
+  // Resolved once, used two ways below: sections with group_nav:true get
+  // their onward_links generated from it (reuses the existing onward_links
+  // rendering/styling in layouts/default.js as-is, just swapping the data
+  // source), and buildPage() uses it to render a persistent .gg-nav-styled
+  // bar in place of the plain narrative nav — see renderer/shell/group-nav.js.
+  const groupMembers = meta.group_id
+    ? await resolveGroup(meta.group_id, meta.project_id)
+    : [];
+
   if (meta.group_id) {
-    const groupMembers = await resolveGroup(meta.group_id, meta.project_id);
     sections.forEach((section) => {
       if (section.group_nav) {
         section.onward_links = groupMembers.map((m) => ({
@@ -118,7 +123,7 @@ async function render(content, outputDir, options) {
   const registryLogoUrl = registryEntry?.logo_url || null;
 
   // Build the single-page HTML document
-  const html = buildPage(meta, config, cover, sections, basePath, registryLogoUrl);
+  const html = buildPage(meta, config, cover, sections, basePath, registryLogoUrl, groupMembers);
 
   const outPath = path.join(outputDir, "index.html");
   fs.writeFileSync(outPath, html, "utf8");
@@ -171,10 +176,11 @@ function pwaCacheVersion(meta) {
 
 // ── Page assembly ─────────────────────────────────────────────────
 
-function buildPage(meta, config, cover, sections, basePath, registryLogoUrl) {
+function buildPage(meta, config, cover, sections, basePath, registryLogoUrl, groupMembers) {
   const base = basePath
     ? "/" + basePath.replace(/^\//, "").replace(/\/$/, "")
     : "";
+  const asset = (file) => (base ? `${base}/${file}` : file);
 
   // If a section with layout "cover" exists, use it; otherwise fall back to
   // the legacy top-level cover object so existing stories keep working.
@@ -182,8 +188,32 @@ function buildPage(meta, config, cover, sections, basePath, registryLogoUrl) {
   const coverData    = coverSection || cover || {};
 
   const heroImageUrl = coverData.hero_image?.url || coverData.hero_video?.poster || null;
-  const head = renderHead(meta, config, null, basePath, false, heroImageUrl);
-  const nav = renderNav(meta, sections, registryLogoUrl, base);
+  let head = renderHead(meta, config, null, basePath, false, heroImageUrl);
+
+  // A project with meta.group_id gets the graduation-guide kind's own
+  // .gg-nav bar instead of the plain narrative nav, so it looks identical
+  // to the group's hub page — see renderer/shell/group-nav.js. The CSS/JS
+  // it needs are already present in every project's output regardless of
+  // kind (copyCss below does a wholesale css/ and js/ copy); only linking
+  // them is conditional.
+  const hasGroupNav = meta.group_id && groupMembers;
+  const nav = hasGroupNav
+    ? buildGroupNav({ pageTitle: meta.title, sections, groupMembers })
+    : renderNav(meta, sections, registryLogoUrl, base);
+
+  if (hasGroupNav) {
+    head = head.replace(
+      "</head>",
+      // defer, not a plain <script src>: this tag lives in <head>, and
+      // the nav markup it queries for (.gg-nav-dropdown etc.) doesn't
+      // exist in the DOM until <body> is parsed. Matches how every other
+      // script this renderer puts in <head> is already loaded (see
+      // renderer/shell/head.js) — the graduation-guide kind's own copy of
+      // this same file gets away with a plain <script> only because it
+      // places the tag at the very end of <body> instead.
+      `  <link rel="stylesheet" href="${asset('css/kinds/graduation-guide.css')}">\n  <script defer src="${asset('js/graduation-guide-runtime.js')}"></script>\n</head>`,
+    );
+  }
 
   // Legacy cover rendered before <main>; section-based cover renders inside it
   const legacyCoverHtml = coverSection ? "" : renderCover(cover || {});

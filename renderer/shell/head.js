@@ -51,8 +51,14 @@ function renderHead(meta, config, title, basePath, staging, heroImageUrl) {
     ? `${title} — ${meta.title}`
     : meta.title;
 
-  const accentColor  = meta.accent_color  || '#1A3F6F';
-  const accentColor2 = meta.accent_color_2 || '#C9A84C';
+  // No fallback to a hardcoded default here: this value gets injected as
+  // an inline override at the very end of <head>, after the token_set's
+  // own <style> block — so falling back to a default would silently clobber
+  // a custom token set's own --hse-accent whenever a project uses one
+  // without also duplicating its accent as meta.accent_color. Only override
+  // when the project actually asked to.
+  const accentColor  = meta.accent_color;
+  const accentColor2 = meta.accent_color_2;
 
   // Load Platform Core token set
   const tokenSetId  = meta.token_set || 'default';
@@ -83,7 +89,7 @@ function renderHead(meta, config, title, basePath, staging, heroImageUrl) {
 
   const plausibleScript = renderPlausibleScript(config);
 
-  const themeColorMeta = `<meta name="theme-color" content="${config?.pwa?.theme_color || accentColor}">`;
+  const themeColorMeta = `<meta name="theme-color" content="${config?.pwa?.theme_color || accentColor || '#1A3F6F'}">`;
 
   const pwaTags = buildPwaHeadTags({
     enabled: !!config?.pwa?.enabled,
@@ -185,13 +191,13 @@ function renderHead(meta, config, title, basePath, staging, heroImageUrl) {
   <meta name="hse-supabase-url" content="${process.env.SUPABASE_URL || ''}">
   <meta name="hse-supabase-anon-key" content="${process.env.SUPABASE_ANON_KEY || ''}">
 
-  <!-- Per-project brand tokens -->
+  ${(accentColor || accentColor2) ? `<!-- Per-project brand tokens -->
   <style>
     :root {
-      --hse-accent:   ${accentColor};
-      --hse-accent-2: ${accentColor2};
+      ${accentColor  ? `--hse-accent:   ${accentColor};`  : ''}
+      ${accentColor2 ? `--hse-accent-2: ${accentColor2};` : ''}
     }
-  </style>
+  </style>` : ''}
 </head>`;
 }
 

@@ -18,49 +18,15 @@
 (function () {
   'use strict';
 
-  var data = window.GRADUATION_DATA;
-  if (!data) { console.error('GRADUATION_DATA not found'); return; }
-
-  var ceremonies = data.ceremonies || [];
-  var activeCer = (ceremonies.find(function (c) { return c.active; }) || ceremonies[0] || {}).ceremonyId;
-
-  // ── Plausible wrapper — no-ops if Plausible isn't loaded (preview) ──
-  function track(event, props) {
-    if (typeof window.plausible === 'function') {
-      window.plausible(event, props ? { props: props } : undefined);
-    }
-  }
-
-  // ── Ceremony selection ──────────────────────────────────────────────
-  function selectCeremony(id, opts) {
-    opts = opts || {};
-    activeCer = id;
-    document.querySelectorAll('.gg-chooser-tile').forEach(function (t) {
-      t.classList.toggle('active', t.dataset.id === id);
-    });
-    document.querySelectorAll('.gg-ceremony').forEach(function (s) {
-      s.classList.toggle('active', s.dataset.id === id);
-    });
-    var c = ceremonies.find(function (c) { return c.ceremonyId === id; });
-    if (c) {
-      var textEl = document.getElementById('floating-bar-text');
-      if (textEl) textEl.textContent = c.ceremonyLabel;
-      if (!opts.silent) track('Ceremony Viewed', { ceremonyId: c.ceremonyId, ceremonyLabel: c.ceremonyLabel });
-    }
-    var sec = document.getElementById('cer-' + id);
-    if (sec && !opts.noScroll) {
-      var top = sec.getBoundingClientRect().top + window.pageYOffset - 86;
-      window.scrollTo({ top: Math.max(0, top), behavior: 'smooth' });
-    }
-  }
-
-  document.querySelectorAll('.gg-chooser-tile').forEach(function (tile) {
-    tile.addEventListener('click', function () { selectCeremony(tile.dataset.id); });
-  });
-
   // ── Nav dropdowns (desktop) — generic over every .gg-nav-dropdown, so
-  // Ceremony Guides and Explore more share one click-handling pass
-  // instead of each wiring up its own open/close/outside-click logic ──
+  // Ceremony Guides / Explore more / On this page share one click-handling
+  // pass instead of each wiring up its own open/close/outside-click logic.
+  // Deliberately ABOVE the GRADUATION_DATA check below: this part of the
+  // file (plus the mobile hamburger menu just after it) is the generic
+  // .gg-nav interaction layer, reused as-is by narrative story pages that
+  // belong to a meta.group_id cluster (see renderer/shell/group-nav.js) —
+  // those pages have no GRADUATION_DATA at all, but still need a working
+  // dropdown and hamburger menu.
   var navDropdowns = document.querySelectorAll('.gg-nav-dropdown');
 
   function closeDropdown(except) {
@@ -121,6 +87,58 @@
     if (e.key === 'Escape') { closeDropdown(); closeMobileMenu(); }
   });
 
+  // Any mobile-menu link closes the menu on click (ceremony links below
+  // get their own additional handling; this covers every other link kind
+  // — group/explore/on-this-page links, none of which need special JS).
+  if (mobileMenu) {
+    mobileMenu.querySelectorAll('a:not([data-ceremony-link])').forEach(function (a) {
+      a.addEventListener('click', closeMobileMenu);
+    });
+  }
+
+  // ── Everything below here needs the graduation-guide kind's own
+  // embedded data (ceremonies, search index) — narrative group-nav pages
+  // stop here, having already got a working nav out of the code above.
+  var data = window.GRADUATION_DATA;
+  if (!data) return;
+
+  var ceremonies = data.ceremonies || [];
+  var activeCer = (ceremonies.find(function (c) { return c.active; }) || ceremonies[0] || {}).ceremonyId;
+
+  // ── Plausible wrapper — no-ops if Plausible isn't loaded (preview) ──
+  function track(event, props) {
+    if (typeof window.plausible === 'function') {
+      window.plausible(event, props ? { props: props } : undefined);
+    }
+  }
+
+  // ── Ceremony selection ──────────────────────────────────────────────
+  function selectCeremony(id, opts) {
+    opts = opts || {};
+    activeCer = id;
+    document.querySelectorAll('.gg-chooser-tile').forEach(function (t) {
+      t.classList.toggle('active', t.dataset.id === id);
+    });
+    document.querySelectorAll('.gg-ceremony').forEach(function (s) {
+      s.classList.toggle('active', s.dataset.id === id);
+    });
+    var c = ceremonies.find(function (c) { return c.ceremonyId === id; });
+    if (c) {
+      var textEl = document.getElementById('floating-bar-text');
+      if (textEl) textEl.textContent = c.ceremonyLabel;
+      if (!opts.silent) track('Ceremony Viewed', { ceremonyId: c.ceremonyId, ceremonyLabel: c.ceremonyLabel });
+    }
+    var sec = document.getElementById('cer-' + id);
+    if (sec && !opts.noScroll) {
+      var top = sec.getBoundingClientRect().top + window.pageYOffset - 86;
+      window.scrollTo({ top: Math.max(0, top), behavior: 'smooth' });
+    }
+  }
+
+  document.querySelectorAll('.gg-chooser-tile').forEach(function (tile) {
+    tile.addEventListener('click', function () { selectCeremony(tile.dataset.id); });
+  });
+
   // ── Ceremony links — shared by the desktop dropdown and the mobile
   // menu (both render the same [data-ceremony-link] markup). On this
   // page, the target ceremony is already in the DOM — jump to it
@@ -140,13 +158,6 @@
       }
     });
   });
-
-  // Any other mobile-menu link (non-ceremony) also closes the menu on click
-  if (mobileMenu) {
-    mobileMenu.querySelectorAll('a:not([data-ceremony-link])').forEach(function (a) {
-      a.addEventListener('click', closeMobileMenu);
-    });
-  }
 
   // ── Floating bar ─────────────────────────────────────────────────────
   // Visible only while scrolled within the active ceremony's own section —

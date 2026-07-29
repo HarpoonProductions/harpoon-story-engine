@@ -2,6 +2,7 @@
 
 const { escHtml, resolveTokenStyle, renderPlausibleScript } = require('../shell/head');
 const { buildPwaHeadTags } = require('../pwa');
+const { buildDropdown, buildDropdownItems, buildTopNavLinks } = require('../shell/group-nav');
 
 /**
  * Renders a content.kind === "graduation-guide" document to a full HTML
@@ -124,32 +125,17 @@ function buildCeremonyDropdown(guide, ceremonies) {
 // kind's own convention, not something the group mechanism itself knows
 // or cares about.
 
+function exploreDropdownMembers(groupMembers) {
+  return groupMembers.filter((m) => m.role !== 'top-nav' && m.role !== 'hub');
+}
+
 function buildExploreDropdown(groupMembers) {
-  const dropdownMembers = groupMembers.filter((m) => m.role !== 'top-nav');
-  if (!dropdownMembers.length) return '';
-  return `<div class="gg-nav-dropdown" id="explore-more-dropdown">
-    <button class="gg-nav-link gg-nav-dropdown-toggle" id="explore-more-toggle" aria-haspopup="true" aria-expanded="false">
-      Explore more <span class="gg-nav-caret">&#9660;</span>
-    </button>
-    <div class="gg-nav-dropdown-menu" role="menu" aria-label="Explore more">
-      ${buildExploreLinks(dropdownMembers)}
-    </div>
-  </div>`;
+  const items = exploreDropdownMembers(groupMembers).map((m) => ({ href: `../${m.project_id}/`, label: m.label }));
+  return buildDropdown({ id: 'explore-more', label: 'Explore more', items });
 }
 
 function buildExploreLinks(members) {
-  return members
-    .map((m) => `<a class="gg-nav-dropdown-item" href="../${escHtml(m.project_id)}/" role="menuitem">
-        <span class="gg-nav-dropdown-item-label">${escHtml(m.label)}</span>
-      </a>`)
-    .join('\n      ');
-}
-
-function buildTopNavLinks(groupMembers, linkClass) {
-  return groupMembers
-    .filter((m) => m.role === 'top-nav')
-    .map((m) => `<a class="${linkClass}" href="../${escHtml(m.project_id)}/">${escHtml(m.label)}</a>`)
-    .join('\n    ');
+  return buildDropdownItems(members.map((m) => ({ href: `../${m.project_id}/`, label: m.label })));
 }
 
 // Shared between the desktop dropdown above and the mobile menu below —
@@ -187,7 +173,7 @@ function buildCeremonyLinks(guide, ceremonies) {
 // of a hamburger-triggered overlay, just gg-* namespaced) ─────────────
 
 function buildMobileMenu(guide, ceremonies, groupMembers) {
-  const dropdownMembers = groupMembers.filter((m) => m.role !== 'top-nav');
+  const dropdownMembers = exploreDropdownMembers(groupMembers);
   return `<div class="gg-nav-mobile-menu" id="gg-nav-mobile-menu" aria-hidden="true">
   <button class="gg-nav-mobile-close" id="gg-nav-mobile-close" aria-label="Close menu">&#10005;</button>
   <div class="gg-nav-mobile-menu__inner">

@@ -72,4 +72,20 @@
   --hse-font-display: 'Imperial Sans', 'Helvetica Neue', Arial, sans-serif;
   --hse-font-body:    'Imperial Sans', 'Helvetica Neue', Arial, sans-serif;
   --hse-font-mono:    'Courier New', Courier, monospace;
+
+  /* ── --gg-* aliases ──────────────────────────────────────────────
+     css/kinds/graduation-guide.css (the hub's own nav/hero styling) reads
+     --gg-* custom properties, normally set per-guide from content.institution.*
+     (see renderer/kinds/graduation-guide.js's buildBrandStyle). Ordinary
+     narrative pages have no institution object at all, so any page using
+     this token set gets the same values here instead — one source of
+     truth, so a satellite page's renderer/shell/group-nav.js bar (which
+     reuses that same CSS) matches the hub exactly without needing its
+     own institution data plumbed through. */
+  --gg-primary:      var(--hse-ink);
+  --gg-accent:       var(--hse-accent);
+  --gg-bg:           var(--hse-ink);
+  --gg-text:         var(--hse-warm);
+  --gg-font-heading: var(--hse-font-display);
+  --gg-font-body:    var(--hse-font-body);
 }
