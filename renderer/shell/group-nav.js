@@ -76,29 +76,26 @@ function buildTopNavLinks(groupMembers, linkClass) {
  * to a group — only called when meta.group_id is set; renderer/shell/nav.js
  * covers every other narrative page as before.
  *
+ * Deliberately shows only cross-story navigation — no in-page section
+ * jump-links. A page's own section count/labels vary story to story (4
+ * here, 8 there), so including them made the nav bar a different shape on
+ * every page; every group member now renders the same nav structure
+ * (wordmark, own title, Explore more, any top-nav members), full stop.
+ *
  * @param {object} opts
  * @param {string} opts.pageTitle - this page's own meta.title
- * @param {Array}  opts.sections - this page's own content.sections, for the "On this page" dropdown
  * @param {Array}  opts.groupMembers - resolved via renderer/groups.js, this project already excluded
  * @returns {string} nav + mobile menu HTML
  */
 function buildGroupNav(opts) {
-  const { pageTitle, sections, groupMembers } = opts;
+  const { pageTitle, groupMembers } = opts;
   const hub = findHub(groupMembers);
-  const pageSections = (sections || []).filter((s) => !s.nav_exclude);
 
-  const onThisPageItems = pageSections.map((s) => ({
-    href: `#${s.id}`,
-    label: s.nav_label || s.title || s.id,
-  }));
   const exploreItems = dropdownMembers(groupMembers).map((m) => ({
     href: `../${m.project_id}/`,
     label: m.label,
   }));
 
-  const onThisPage = pageSections.length > 1
-    ? buildDropdown({ id: 'on-this-page', label: 'On this page', items: onThisPageItems })
-    : '';
   const explore = buildDropdown({ id: 'explore-more', label: 'Explore more', items: exploreItems });
   const topLinks = buildTopNavLinks(groupMembers, 'gg-nav-link');
   const topLinksMobile = buildTopNavLinks(groupMembers, 'gg-nav-mobile-link');
@@ -110,7 +107,6 @@ function buildGroupNav(opts) {
   <a class="gg-nav-wordmark" href="${wordmarkHref}">${wordmarkLabel}</a>
   <div class="gg-nav-links">
     <a class="gg-nav-link" href="#hse-cover">${escHtml(pageTitle)}</a>
-    ${onThisPage}
     ${explore}
     ${topLinks}
   </div>
@@ -125,8 +121,6 @@ function buildGroupNav(opts) {
   <button class="gg-nav-mobile-close" id="gg-nav-mobile-close" aria-label="Close menu">&#10005;</button>
   <div class="gg-nav-mobile-menu__inner">
     <a class="gg-nav-mobile-link" href="#hse-cover">${escHtml(pageTitle)}</a>
-    ${pageSections.length > 1 ? `<div class="gg-nav-mobile-group-label">On this page</div>
-    ${buildDropdownItems(onThisPageItems)}` : ''}
     ${exploreItems.length ? `<div class="gg-nav-mobile-group-label">Explore more</div>
     ${buildDropdownItems(exploreItems)}` : ''}
     ${topLinksMobile}

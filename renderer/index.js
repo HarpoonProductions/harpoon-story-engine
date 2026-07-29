@@ -198,7 +198,7 @@ function buildPage(meta, config, cover, sections, basePath, registryLogoUrl, gro
   // them is conditional.
   const hasGroupNav = meta.group_id && groupMembers;
   const nav = hasGroupNav
-    ? buildGroupNav({ pageTitle: meta.title, sections, groupMembers })
+    ? buildGroupNav({ pageTitle: meta.title, groupMembers })
     : renderNav(meta, sections, registryLogoUrl, base);
 
   if (hasGroupNav) {
