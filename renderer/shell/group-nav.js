@@ -170,6 +170,17 @@ function buildGroupNav(opts) {
     ? buildCeremonyLinks(hub.guideDays, hub.ceremonies, ceremonyBase)
     : '';
 
+  // Satellite pages have no searchIndex of their own (that's a big,
+  // hub-only embedded dataset — duplicating it onto every narrative page
+  // in the cluster just to search from there isn't worth the weight), so
+  // this links straight to the hub's own live search box rather than
+  // reimplementing search here. Still real inline search, just one hop
+  // away — not present at all was the actual complaint.
+  const searchHref = hub ? `${ceremonyBase}#find-student` : '#';
+  const searchLink = hub ? `<a class="gg-nav-search-icon" href="${searchHref}" aria-label="Find a graduating student">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+    </a>` : '';
+
   const nav = `<nav class="gg-nav" id="group-nav">
   <a class="gg-nav-wordmark" href="${wordmarkHref}">${wordmarkInner}</a>
   <div class="gg-nav-links">
@@ -178,6 +189,7 @@ function buildGroupNav(opts) {
     ${topLinks}
   </div>
   <div class="gg-nav-right">
+    ${searchLink}
     <button class="gg-nav-hamburger" id="gg-nav-hamburger" aria-label="Open menu" aria-expanded="false">
       <span></span><span></span><span></span>
     </button>
@@ -192,6 +204,7 @@ function buildGroupNav(opts) {
     ${exploreItems.length ? `<div class="gg-nav-mobile-group-label">Explore more</div>
     ${buildDropdownItems(exploreItems)}` : ''}
     ${topLinksMobile}
+    ${hub ? `<a class="gg-nav-mobile-link" href="${searchHref}">Find a graduating student</a>` : ''}
     <a class="gg-nav-mobile-link" href="${wordmarkHref}">${wordmarkLabel}</a>
   </div>
 </div>`;

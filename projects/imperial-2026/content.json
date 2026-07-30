@@ -27,6 +27,7 @@
     "textColor": "#161a1d",
     "fontHeading": "Imperial Sans",
     "fontBody": "Imperial Sans",
+    "bodyFontSize": "16px",
     "fontFiles": [
       {
         "weight": 300,

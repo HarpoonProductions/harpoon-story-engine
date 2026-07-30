@@ -94,6 +94,7 @@ function buildBrandStyle(institution, asset) {
       --gg-text: ${escHtml(institution.textColor || '#161a1d')};
       --gg-font-heading: '${escHtml(institution.fontHeading)}','Helvetica Neue',Arial,sans-serif;
       --gg-font-body: '${escHtml(institution.fontBody)}','Helvetica Neue',Arial,sans-serif;
+      --gg-body-font-size: ${escHtml(institution.bodyFontSize || '15px')};
     }
   </style>`;
 }

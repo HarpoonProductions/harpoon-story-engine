@@ -64,6 +64,7 @@
         "textColor": { "type": "string", "pattern": "^#[0-9a-fA-F]{6}$" },
         "fontHeading": { "type": "string" },
         "fontBody": { "type": "string" },
+        "bodyFontSize": { "type": "string", "description": "CSS font-size for the main reading copy (welcome message, about-the-day text, dean's welcome) — e.g. '16px'. Defaults to '15px' when absent. Everything else (nav, labels, headings, student list) keeps its own fixed size." },
         "fontFiles": {
           "type": "array",
           "description": "Font binaries to embed in the build artefact, resolved relative to this renderer's output directory.",
