@@ -277,6 +277,7 @@ jobs:
             aws s3 sync "$DIR" "s3://${S3_PATH}" \
               --exclude "*" \
               --include "*.js" \
+              --exclude "sw.js" \
               --content-type "application/javascript" \
               --cache-control "public, max-age=86400"
 
@@ -286,6 +287,18 @@ jobs:
               --exclude "*.js" \
               --exclude "*.pdf" \
               --cache-control "public, max-age=86400"
+
+            # sw.js — must-revalidate so browsers pick up a new precache list
+            # promptly after a deploy, instead of riding out the generic JS
+            # max-age=86400 (which would leave returning visitors on a stale
+            # service worker, and therefore a stale cached shell, for up to a
+            # day even though CloudFront itself was invalidated immediately).
+            if [ -f "${DIR}sw.js" ]; then
+              aws s3 cp "${DIR}sw.js" "s3://${S3_PATH}sw.js" \
+                --content-type "application/javascript" \
+                --cache-control "public, max-age=0, must-revalidate"
+              echo "✓ sw.js uploaded (no-cache): s3://${S3_PATH}sw.js"
+            fi
 
             # PDFs — explicit content-type, no-cache so clients always get the latest
             if [ -f "${DIR}story.pdf" ]; then
