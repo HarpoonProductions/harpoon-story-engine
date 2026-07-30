@@ -101,10 +101,13 @@ function buildGroupNav(opts) {
   const topLinksMobile = buildTopNavLinks(groupMembers, 'gg-nav-mobile-link');
 
   const wordmarkHref = hub ? `../${escHtml(hub.project_id)}/` : '#';
-  const wordmarkLabel = escHtml(hub ? hub.title : pageTitle);
+  const wordmarkLabel = escHtml(hub ? (hub.institutionName || hub.title) : pageTitle);
+  const wordmarkInner = hub && hub.logo
+    ? `<img class="gg-nav-logo" src="../${escHtml(hub.project_id)}/${escHtml(hub.logo)}" alt="${wordmarkLabel}">`
+    : wordmarkLabel;
 
   const nav = `<nav class="gg-nav" id="group-nav">
-  <a class="gg-nav-wordmark" href="${wordmarkHref}">${wordmarkLabel}</a>
+  <a class="gg-nav-wordmark" href="${wordmarkHref}">${wordmarkInner}</a>
   <div class="gg-nav-links">
     <a class="gg-nav-link" href="#hse-cover">${escHtml(pageTitle)}</a>
     ${explore}

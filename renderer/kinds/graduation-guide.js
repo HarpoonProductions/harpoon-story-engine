@@ -185,7 +185,6 @@ function buildMobileMenu(guide, ceremonies, groupMembers) {
   return `<div class="gg-nav-mobile-menu" id="gg-nav-mobile-menu" aria-hidden="true">
   <button class="gg-nav-mobile-close" id="gg-nav-mobile-close" aria-label="Close menu">&#10005;</button>
   <div class="gg-nav-mobile-menu__inner">
-    <a class="gg-nav-mobile-link" href="#">${escHtml(guide.title)}</a>
     <div class="gg-nav-mobile-group-label">Ceremony Guides</div>
     ${buildCeremonyLinks(guide, ceremonies)}
     ${dropdownMembers.length ? `<div class="gg-nav-mobile-group-label">Explore more</div>
@@ -197,11 +196,18 @@ function buildMobileMenu(guide, ceremonies, groupMembers) {
 
 // ── <body> ──────────────────────────────────────────────────────────────
 
+function buildWordmark(institution, asset) {
+  const label = institution.shortName || institution.name;
+  const inner = institution.logo
+    ? `<img class="gg-nav-logo" src="${escHtml(asset(institution.logo))}" alt="${escHtml(label)}">`
+    : escHtml(label);
+  return `<a class="gg-nav-wordmark" href="./">${inner}</a>`;
+}
+
 function buildBody(institution, guide, ceremonies, asset, groupMembers) {
   return `<nav class="gg-nav">
-  <a class="gg-nav-wordmark" href="#">${escHtml(institution.shortName || institution.name)}</a>
+  ${buildWordmark(institution, asset)}
   <div class="gg-nav-links">
-    <a class="gg-nav-link" href="#">${escHtml(guide.title)}</a>
     ${buildCeremonyDropdown(guide, ceremonies)}
     ${buildExploreDropdown(groupMembers)}
     ${buildTopNavLinks(groupMembers, 'gg-nav-link')}

@@ -34,7 +34,7 @@ const PROJECTS_DIR = path.join(__dirname, '..', 'projects');
 /**
  * @param {string} groupId
  * @param {string} selfProjectId - excluded from the returned list
- * @returns {Promise<Array<{project_id: string, title: string, label: string, role: string}>>}
+ * @returns {Promise<Array<{project_id: string, title: string, label: string, role: string, logo: ?string, institutionName: ?string}>>}
  */
 async function resolveGroup(groupId, selfProjectId) {
   if (!groupId) return [];
@@ -50,6 +50,12 @@ async function resolveGroup(groupId, selfProjectId) {
       title: r.meta.title || r.project_id,
       label: r.meta.group_label || r.meta.title || r.project_id,
       role: r.meta.group_role || '',
+      // Only ever set on a 'hub'-role member of the graduation-guide kind
+      // (institution is that kind's own top-level key, not part of meta) —
+      // carried through so a satellite narrative page's own nav can match
+      // the hub's real branding instead of falling back to plain text.
+      logo: r.institution?.logo || null,
+      institutionName: r.institution?.name || null,
     }));
 }
 
@@ -76,6 +82,7 @@ async function resolveFromSupabase(groupId) {
   return rows.map((row) => ({
     project_id: row.project_id,
     meta: row.content?.meta || {},
+    institution: row.content?.institution || null,
   }));
 }
 
@@ -88,7 +95,11 @@ function resolveFromFilesystem(groupId) {
       const contentPath = path.join(PROJECTS_DIR, name, 'content.json');
       try {
         const content = JSON.parse(fs.readFileSync(contentPath, 'utf8'));
-        return { project_id: content.meta?.project_id || name, meta: content.meta || {} };
+        return {
+          project_id: content.meta?.project_id || name,
+          meta: content.meta || {},
+          institution: content.institution || null,
+        };
       } catch {
         return null;
       }
