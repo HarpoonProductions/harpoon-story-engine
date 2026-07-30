@@ -26,16 +26,24 @@ const { buildDropdown, buildDropdownItems, buildTopNavLinks } = require('../shel
  */
 function renderGraduationGuide(content, opts) {
   opts = opts || {};
-  const { meta, config, institution, guide, ceremonies, searchIndex } = content;
+  const { meta, config, institution, guide, ceremonies, searchIndex, studentPhotos } = content;
   const groupMembers = opts.groupMembers || [];
   const base = opts.basePath
     ? '/' + opts.basePath.replace(/^\//, '').replace(/\/$/, '')
     : '';
   const asset = (file) => (base ? `${base}/${file}` : file);
 
+  // Resolved through asset() here, at render time, so the client-side
+  // lookup in js/graduation-guide-runtime.js never needs to know about
+  // basePath itself — same treatment institution.icons already gets.
+  const resolvedStudentPhotos = {};
+  Object.keys(studentPhotos || {}).forEach((key) => {
+    resolvedStudentPhotos[key] = asset(studentPhotos[key]);
+  });
+
   const head = buildHead(meta, config, institution, base, asset);
   const body = buildBody(institution, guide, ceremonies, asset, groupMembers);
-  const dataScript = buildDataScript({ institution, guide, ceremonies, searchIndex });
+  const dataScript = buildDataScript({ institution, guide, ceremonies, searchIndex, studentPhotos: resolvedStudentPhotos });
 
   return `<!DOCTYPE html>
 <html lang="en">
@@ -225,6 +233,9 @@ ${buildMobileMenu(guide, ceremonies, groupMembers)}
 <section class="gg-hero" id="hero">
   <div class="gg-hero-bg"></div>
   <div class="gg-hero-content">
+    <div class="gg-hero-photo" id="hero-photo" hidden>
+      <img id="hero-photo-img" src="" alt="">
+    </div>
     <p class="gg-hero-congrats" id="hero-congrats">Congratulations!</p>
     <a class="gg-hero-find-link" id="hero-find-link" href="#find-student">Find <span id="hero-find-name">a student&#39;s name</span> in the honours list &#8594;</a>
     <div class="gg-hero-title-block">

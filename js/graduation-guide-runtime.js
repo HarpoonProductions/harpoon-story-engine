@@ -463,6 +463,23 @@
           jumpToStudent(name, cer);
         });
       }
+
+      // Interim photo lookup — see project memory "personalised-photo-share".
+      // No real upload endpoint yet; a photo shows here only if one was
+      // committed to projects/<id>/photos/ and referenced in
+      // meta.studentPhotos (keyed the same way as searchIndex treats
+      // duplicate names: name + ceremony, not name alone).
+      var photos = data.studentPhotos || {};
+      var photoUrl = photos[name + '|' + cer];
+      if (photoUrl) {
+        var photoEl = document.getElementById('hero-photo');
+        var photoImg = document.getElementById('hero-photo-img');
+        if (photoEl && photoImg) {
+          photoImg.src = photoUrl;
+          photoImg.alt = name + '’s photo';
+          photoEl.hidden = false;
+        }
+      }
     } else if (findLink) {
       findLink.addEventListener('click', function (e) {
         e.preventDefault();

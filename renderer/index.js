@@ -51,6 +51,7 @@ async function render(content, outputDir, options) {
 
   // Copy CSS to output directory
   copyCss(outputDir);
+  copyPhotos(outputDir, content.meta.project_id);
 
   // basePath: root-relative for S3/CloudFront deployment (default)
   // Pass options.basePath = '' for local preview (relative paths)
@@ -524,6 +525,20 @@ function copyCss(outputDir) {
   const jsSource = path.join(__dirname, "../js");
   const jsDest = path.join(outputDir, "js");
   copyDirRecursive(jsSource, jsDest);
+}
+
+// Per-project, not platform-wide like copyCss above — a project's own
+// projects/<id>/photos/ (student-uploaded-style images, committed to git
+// for now in lieu of a real upload endpoint — see project memory
+// "personalised-photo-share") copies into that project's own output only,
+// never leaking into any other project's build. No-ops when the project
+// has no photos/ directory, which is every project except the ones using
+// this feature.
+function copyPhotos(outputDir, projectId) {
+  if (!projectId) return;
+  const photosSource = path.join(__dirname, "../projects", projectId, "photos");
+  if (!fs.existsSync(photosSource)) return;
+  copyDirRecursive(photosSource, path.join(outputDir, "photos"));
 }
 
 function copyDirRecursive(src, dest) {

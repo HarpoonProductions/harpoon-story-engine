@@ -257,6 +257,11 @@
           "ceremonyLabel": { "type": "string" }
         }
       }
+    },
+    "studentPhotos": {
+      "type": "object",
+      "description": "Interim, pre-upload-endpoint mechanism (see project memory \"personalised-photo-share\") — a personalised-hero photo for a student, keyed by 'Name|CeremonyId' (matches how searchIndex treats duplicate names as distinct people). Value is a path relative to this project's own output root, e.g. 'photos/philippa-dunn.jpg', copied at render time from this project's own projects/<id>/photos/ directory (renderer/index.js's copyPhotos) — not yet backed by a real upload flow; a photo lands here by being committed to that folder.",
+      "additionalProperties": { "type": "string" }
     }
   }
 }
