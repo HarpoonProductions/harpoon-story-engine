@@ -95,11 +95,11 @@ async function render(content, outputDir, options) {
 
   const { meta, config, cover, sections } = content;
 
-  // Resolved once, used two ways below: sections with group_nav:true get
-  // their onward_links generated from it (reuses the existing onward_links
-  // rendering/styling in layouts/default.js as-is, just swapping the data
-  // source), and buildPage() uses it to render a persistent .gg-nav-styled
-  // bar in place of the plain narrative nav — see renderer/shell/group-nav.js.
+  // Resolved once: sections with group_nav:true get their onward_links
+  // generated from it (reuses the existing onward_links rendering/styling
+  // in layouts/default.js as-is, just swapping the data source) — self
+  // correctly excluded there, an onward-links list linking to its own page
+  // would be pointless.
   const groupMembers = meta.group_id
     ? await resolveGroup(meta.group_id, meta.project_id)
     : [];
@@ -115,6 +115,27 @@ async function render(content, outputDir, options) {
     });
   }
 
+  // Separately: buildPage()'s .gg-nav-styled bar (see
+  // renderer/shell/group-nav.js) wants this project's own entry included,
+  // not excluded — the whole point is that every page in the cluster
+  // renders the identical nav, self included, rather than links shifting
+  // around depending which page you're currently on. Re-sorted the same
+  // way resolveGroup() itself sorts (by project_id) so the result lands in
+  // the same order the hub's own nav would show, regardless of which
+  // member is "self" here.
+  const navGroupMembers = meta.group_id
+    ? [...groupMembers, {
+        project_id: meta.project_id,
+        title: meta.title,
+        label: meta.group_label || meta.title || meta.project_id,
+        role: meta.group_role || '',
+        logo: null,
+        institutionName: null,
+        guideDays: null,
+        ceremonies: [],
+      }].sort((a, b) => a.project_id.localeCompare(b.project_id))
+    : groupMembers;
+
   // Resolve logo URL from registry (meta.logo_url takes precedence per story)
   const registryPath = path.join(__dirname, '../tokens/registry.json');
   const registry = fs.existsSync(registryPath)
@@ -125,7 +146,7 @@ async function render(content, outputDir, options) {
   const registryLogoUrl = registryEntry?.logo_url || null;
 
   // Build the single-page HTML document
-  const html = buildPage(meta, config, cover, sections, basePath, registryLogoUrl, groupMembers);
+  const html = buildPage(meta, config, cover, sections, basePath, registryLogoUrl, navGroupMembers);
 
   const outPath = path.join(outputDir, "index.html");
   fs.writeFileSync(outPath, html, "utf8");
@@ -200,7 +221,7 @@ function buildPage(meta, config, cover, sections, basePath, registryLogoUrl, gro
   // them is conditional.
   const hasGroupNav = meta.group_id && groupMembers;
   const nav = hasGroupNav
-    ? buildGroupNav({ pageTitle: meta.title, groupMembers })
+    ? buildGroupNav({ groupMembers })
     : renderNav(meta, sections, registryLogoUrl, base);
 
   if (hasGroupNav) {

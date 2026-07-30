@@ -72,23 +72,81 @@ function buildTopNavLinks(groupMembers, linkClass) {
 }
 
 /**
+ * Ceremony Guides dropdown — originally graduation-guide.js's own, moved
+ * here so a group-linked satellite page can render the identical dropdown
+ * (see buildGroupNav below), not just a link back to the hub. Real anchor
+ * links, not a stub: on the hub page itself (baseHref=''),
+ * js/graduation-guide-runtime.js intercepts clicks and calls
+ * selectCeremony() directly instead of relying on native anchor scroll
+ * (inactive ceremonies are display:none, so a plain #anchor jump wouldn't
+ * actually show one); elsewhere (baseHref points at the hub), there's no
+ * #cer-X element on the current page to intercept for, so the href just
+ * navigates there and handleParams() deep-links to it on load.
+ *
+ * @param {?Array<{label: string, day: number}>} guideDays
+ * @param {?Array<{ceremonyId: string, ceremonyTime: string, ceremonyLabel: string, day: number}>} ceremonies
+ * @param {string} [baseHref] - '' on the hub's own page; '../<hub-id>/' on a satellite
+ */
+function buildCeremonyLinks(guideDays, ceremonies, baseHref) {
+  baseHref = baseHref || '';
+  const dayLabel = (day) => {
+    const d = (guideDays || []).find((d) => d.day === day);
+    return d ? d.label : `Day ${day}`;
+  };
+
+  const groups = {};
+  (ceremonies || []).forEach((c) => {
+    (groups[c.day] = groups[c.day] || []).push(c);
+  });
+
+  return Object.keys(groups)
+    .sort((a, b) => a - b)
+    .map((day) => {
+      const rows = groups[day]
+        .map(
+          (c) => `<a class="gg-nav-dropdown-item" data-ceremony-link="${escHtml(c.ceremonyId)}" href="${escHtml(baseHref)}?ceremony=${escHtml(c.ceremonyId)}#cer-${escHtml(c.ceremonyId)}" role="menuitem">
+        <span class="gg-nav-dropdown-item-time">${escHtml(c.ceremonyTime)}</span>
+        <span class="gg-nav-dropdown-item-label">${escHtml(c.ceremonyLabel)}</span>
+      </a>`
+        )
+        .join('\n      ');
+      return `<div class="gg-nav-dropdown-group">${escHtml(dayLabel(Number(day)))}</div>\n      ${rows}`;
+    })
+    .join('\n      ');
+}
+
+function buildCeremonyDropdown(guideDays, ceremonies, baseHref) {
+  if (!ceremonies || !ceremonies.length) return '';
+  return `<div class="gg-nav-dropdown" id="ceremony-guides-dropdown">
+    <button class="gg-nav-link gg-nav-dropdown-toggle" id="ceremony-guides-toggle" aria-haspopup="true" aria-expanded="false">
+      Ceremony Guides <span class="gg-nav-caret">&#9660;</span>
+    </button>
+    <div class="gg-nav-dropdown-menu" role="menu" aria-label="Ceremony Guides">
+      ${buildCeremonyLinks(guideDays, ceremonies, baseHref)}
+    </div>
+  </div>`;
+}
+
+/**
  * Full nav bar + mobile menu for an ordinary narrative story that belongs
  * to a group — only called when meta.group_id is set; renderer/shell/nav.js
  * covers every other narrative page as before.
  *
- * Deliberately shows only cross-story navigation — no in-page section
- * jump-links. A page's own section count/labels vary story to story (4
- * here, 8 there), so including them made the nav bar a different shape on
- * every page; every group member now renders the same nav structure
- * (wordmark, own title, Explore more, any top-nav members), full stop.
+ * Deliberately renders the exact same nav structure and item order as the
+ * hub's own — wordmark, Ceremony Guides, Explore more, any top-nav members
+ * — on every page in the cluster, this page included (the caller passes a
+ * groupMembers list with this project's own entry added back in and
+ * re-sorted, see renderer/index.js; someone clicking around the guide
+ * should never see links appear, disappear, or reorder as the nav itself
+ * relocates them from page to page).
  *
  * @param {object} opts
- * @param {string} opts.pageTitle - this page's own meta.title
- * @param {Array}  opts.groupMembers - resolved via renderer/groups.js, this project already excluded
+ * @param {Array}  opts.groupMembers - resolved via renderer/groups.js, self-inclusive (not
+ *   excluded like a plain resolveGroup() call — see renderer/index.js)
  * @returns {string} nav + mobile menu HTML
  */
 function buildGroupNav(opts) {
-  const { pageTitle, groupMembers } = opts;
+  const { groupMembers } = opts;
   const hub = findHub(groupMembers);
 
   const exploreItems = dropdownMembers(groupMembers).map((m) => ({
@@ -101,15 +159,21 @@ function buildGroupNav(opts) {
   const topLinksMobile = buildTopNavLinks(groupMembers, 'gg-nav-mobile-link');
 
   const wordmarkHref = hub ? `../${escHtml(hub.project_id)}/` : '#';
-  const wordmarkLabel = escHtml(hub ? (hub.institutionName || hub.title) : pageTitle);
+  const wordmarkLabel = escHtml(hub ? (hub.institutionName || hub.title) : '');
   const wordmarkInner = hub && hub.logo
     ? `<img class="gg-nav-logo" src="../${escHtml(hub.project_id)}/${escHtml(hub.logo)}" alt="${wordmarkLabel}">`
     : wordmarkLabel;
 
+  const ceremonyBase = hub ? `../${escHtml(hub.project_id)}/` : '';
+  const ceremonyDropdown = hub ? buildCeremonyDropdown(hub.guideDays, hub.ceremonies, ceremonyBase) : '';
+  const ceremonyLinksMobile = hub && hub.ceremonies && hub.ceremonies.length
+    ? buildCeremonyLinks(hub.guideDays, hub.ceremonies, ceremonyBase)
+    : '';
+
   const nav = `<nav class="gg-nav" id="group-nav">
   <a class="gg-nav-wordmark" href="${wordmarkHref}">${wordmarkInner}</a>
   <div class="gg-nav-links">
-    <a class="gg-nav-link" href="#hse-cover">${escHtml(pageTitle)}</a>
+    ${ceremonyDropdown}
     ${explore}
     ${topLinks}
   </div>
@@ -123,7 +187,8 @@ function buildGroupNav(opts) {
   const mobileMenu = `<div class="gg-nav-mobile-menu" id="gg-nav-mobile-menu" aria-hidden="true">
   <button class="gg-nav-mobile-close" id="gg-nav-mobile-close" aria-label="Close menu">&#10005;</button>
   <div class="gg-nav-mobile-menu__inner">
-    <a class="gg-nav-mobile-link" href="#hse-cover">${escHtml(pageTitle)}</a>
+    ${ceremonyLinksMobile ? `<div class="gg-nav-mobile-group-label">Ceremony Guides</div>
+    ${ceremonyLinksMobile}` : ''}
     ${exploreItems.length ? `<div class="gg-nav-mobile-group-label">Explore more</div>
     ${buildDropdownItems(exploreItems)}` : ''}
     ${topLinksMobile}
@@ -134,4 +199,12 @@ function buildGroupNav(opts) {
   return nav + '\n' + mobileMenu;
 }
 
-module.exports = { findHub, buildDropdown, buildDropdownItems, buildTopNavLinks, buildGroupNav };
+module.exports = {
+  findHub,
+  buildDropdown,
+  buildDropdownItems,
+  buildTopNavLinks,
+  buildCeremonyDropdown,
+  buildCeremonyLinks,
+  buildGroupNav,
+};

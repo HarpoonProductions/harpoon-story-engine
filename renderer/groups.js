@@ -34,7 +34,7 @@ const PROJECTS_DIR = path.join(__dirname, '..', 'projects');
 /**
  * @param {string} groupId
  * @param {string} selfProjectId - excluded from the returned list
- * @returns {Promise<Array<{project_id: string, title: string, label: string, role: string, logo: ?string, institutionName: ?string}>>}
+ * @returns {Promise<Array<{project_id: string, title: string, label: string, role: string, logo: ?string, institutionName: ?string, guideDays: ?Array, ceremonies: Array}>>}
  */
 async function resolveGroup(groupId, selfProjectId) {
   if (!groupId) return [];
@@ -43,7 +43,14 @@ async function resolveGroup(groupId, selfProjectId) {
     ? await resolveFromSupabase(groupId)
     : resolveFromFilesystem(groupId);
 
+  // Sorted by project_id before self-exclusion, not after — so a caller
+  // that re-adds its own entry (to render an identical nav on every page
+  // in the cluster, self included) and re-sorts the same way always lands
+  // in the same order the hub itself would show, regardless of which
+  // member is "self" for this particular render.
   return rows
+    .slice()
+    .sort((a, b) => a.project_id.localeCompare(b.project_id))
     .filter((r) => r.project_id !== selfProjectId)
     .map((r) => ({
       project_id: r.project_id,
@@ -51,11 +58,21 @@ async function resolveGroup(groupId, selfProjectId) {
       label: r.meta.group_label || r.meta.title || r.project_id,
       role: r.meta.group_role || '',
       // Only ever set on a 'hub'-role member of the graduation-guide kind
-      // (institution is that kind's own top-level key, not part of meta) —
-      // carried through so a satellite narrative page's own nav can match
-      // the hub's real branding instead of falling back to plain text.
+      // (institution/guide/ceremonies are that kind's own top-level keys,
+      // not part of meta) — carried through so a satellite narrative
+      // page's own nav can match the hub's real branding and offer the
+      // same "Ceremony Guides" dropdown, not just a "back to hub" link.
       logo: r.institution?.logo || null,
       institutionName: r.institution?.name || null,
+      guideDays: r.guide?.days || null,
+      // Slim projection — a hub's ceremonies array also carries every
+      // course group's full student roster, which no nav dropdown needs.
+      ceremonies: (r.ceremonies || []).map((c) => ({
+        ceremonyId: c.ceremonyId,
+        ceremonyTime: c.ceremonyTime,
+        ceremonyLabel: c.ceremonyLabel,
+        day: c.day,
+      })),
     }));
 }
 
@@ -83,6 +100,8 @@ async function resolveFromSupabase(groupId) {
     project_id: row.project_id,
     meta: row.content?.meta || {},
     institution: row.content?.institution || null,
+    guide: row.content?.guide || null,
+    ceremonies: row.content?.ceremonies || null,
   }));
 }
 
@@ -99,6 +118,8 @@ function resolveFromFilesystem(groupId) {
           project_id: content.meta?.project_id || name,
           meta: content.meta || {},
           institution: content.institution || null,
+          guide: content.guide || null,
+          ceremonies: content.ceremonies || null,
         };
       } catch {
         return null;

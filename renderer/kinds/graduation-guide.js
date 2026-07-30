@@ -2,7 +2,7 @@
 
 const { escHtml, resolveTokenStyle, renderPlausibleScript } = require('../shell/head');
 const { buildPwaHeadTags } = require('../pwa');
-const { buildDropdown, buildDropdownItems, buildTopNavLinks } = require('../shell/group-nav');
+const { buildDropdown, buildDropdownItems, buildTopNavLinks, buildCeremonyDropdown, buildCeremonyLinks } = require('../shell/group-nav');
 
 /**
  * Renders a content.kind === "graduation-guide" document to a full HTML
@@ -98,26 +98,6 @@ function buildBrandStyle(institution, asset) {
   </style>`;
 }
 
-// ── Ceremony Guides nav dropdown ──────────────────────────────────────────
-// Real anchor links, not a stub. On the main listing page (this page),
-// js/graduation-guide-runtime.js intercepts clicks and calls
-// selectCeremony() directly instead of relying on native anchor scroll
-// (inactive ceremonies are display:none, so a plain #anchor jump wouldn't
-// actually show one). The bare ?ceremony=C1 URL still works unintercepted
-// — e.g. from a future satellite page that isn't the main listing — since
-// handleParams() already deep-links to it on load.
-
-function buildCeremonyDropdown(guide, ceremonies) {
-  return `<div class="gg-nav-dropdown" id="ceremony-guides-dropdown">
-    <button class="gg-nav-link gg-nav-dropdown-toggle" id="ceremony-guides-toggle" aria-haspopup="true" aria-expanded="false">
-      Ceremony Guides <span class="gg-nav-caret">&#9660;</span>
-    </button>
-    <div class="gg-nav-dropdown-menu" role="menu" aria-label="Ceremony Guides">
-      ${buildCeremonyLinks(guide, ceremonies)}
-    </div>
-  </div>`;
-}
-
 // ── "Explore more" nav dropdown ────────────────────────────────────────
 // Links to the satellite story-kind pages that make up the rest of the
 // guide "cluster" (see BRIEF.md / project memory, 2026-07-20: a graduation
@@ -146,36 +126,6 @@ function buildExploreLinks(members) {
   return buildDropdownItems(members.map((m) => ({ href: `../${m.project_id}/`, label: m.label })));
 }
 
-// Shared between the desktop dropdown above and the mobile menu below —
-// same [data-ceremony-link] markup either way, so the runtime's single
-// click-handling pass (js/graduation-guide-runtime.js) covers both.
-function buildCeremonyLinks(guide, ceremonies) {
-  const dayLabel = (day) => {
-    const d = (guide.days || []).find((d) => d.day === day);
-    return d ? d.label : `Day ${day}`;
-  };
-
-  const groups = {};
-  ceremonies.forEach((c) => {
-    (groups[c.day] = groups[c.day] || []).push(c);
-  });
-
-  return Object.keys(groups)
-    .sort((a, b) => a - b)
-    .map((day) => {
-      const rows = groups[day]
-        .map(
-          (c) => `<a class="gg-nav-dropdown-item" data-ceremony-link="${escHtml(c.ceremonyId)}" href="?ceremony=${escHtml(c.ceremonyId)}#cer-${escHtml(c.ceremonyId)}" role="menuitem">
-        <span class="gg-nav-dropdown-item-time">${escHtml(c.ceremonyTime)}</span>
-        <span class="gg-nav-dropdown-item-label">${escHtml(c.ceremonyLabel)}</span>
-      </a>`
-        )
-        .join('\n      ');
-      return `<div class="gg-nav-dropdown-group">${escHtml(dayLabel(Number(day)))}</div>\n      ${rows}`;
-    })
-    .join('\n      ');
-}
-
 // ── Mobile menu (full-screen overlay, mirrors the narrative renderer's
 // hse-nav__mobile-menu pattern in renderer/shell/nav.js — same division
 // of a hamburger-triggered overlay, just gg-* namespaced) ─────────────
@@ -186,7 +136,7 @@ function buildMobileMenu(guide, ceremonies, groupMembers) {
   <button class="gg-nav-mobile-close" id="gg-nav-mobile-close" aria-label="Close menu">&#10005;</button>
   <div class="gg-nav-mobile-menu__inner">
     <div class="gg-nav-mobile-group-label">Ceremony Guides</div>
-    ${buildCeremonyLinks(guide, ceremonies)}
+    ${buildCeremonyLinks(guide.days, ceremonies, '')}
     ${dropdownMembers.length ? `<div class="gg-nav-mobile-group-label">Explore more</div>
     ${buildExploreLinks(dropdownMembers)}` : ''}
     ${buildTopNavLinks(groupMembers, 'gg-nav-mobile-link')}
@@ -208,7 +158,7 @@ function buildBody(institution, guide, ceremonies, asset, groupMembers) {
   return `<nav class="gg-nav">
   ${buildWordmark(institution, asset)}
   <div class="gg-nav-links">
-    ${buildCeremonyDropdown(guide, ceremonies)}
+    ${buildCeremonyDropdown(guide.days, ceremonies, '')}
     ${buildExploreDropdown(groupMembers)}
     ${buildTopNavLinks(groupMembers, 'gg-nav-link')}
   </div>
