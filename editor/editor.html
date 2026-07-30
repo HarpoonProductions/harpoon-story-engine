@@ -2319,10 +2319,52 @@
                             </div>
                             <div class="form-group">
                                 <label class="form-label" for="gg-welcome-signers">Signers</label>
-                                <textarea class="form-textarea" id="gg-welcome-signers" rows="4" placeholder="Professor Hugh Brady | President&#10;Mr Vindi Banga | Chair of Council"></textarea>
-                                <p class="form-hint">One per line, format: Name | Title. Saved as guide.welcomeSigners[].</p>
+                                <textarea class="form-textarea" id="gg-welcome-signers" rows="4" placeholder="Professor Hugh Brady | President | photos/brady.jpg&#10;Mr Vindi Banga | Chair of Council"></textarea>
+                                <p class="form-hint">One per line, format: Name | Title | Photo URL (optional). Saved as guide.welcomeSigners[].</p>
                             </div>
-                            <p class="form-hint" style="margin-top:1.5rem">Ceremony content (dean's welcome, procession, order of ceremony, awardees) and the student roster are not editable here — see docs/graduation-guide-integration.md for the data pipeline.</p>
+                            <div class="form-group">
+                                <label class="form-label" for="gg-welcome-image-url">Welcome section image</label>
+                                <input class="form-input" id="gg-welcome-image-url" data-path="guide.welcomeImage.url" placeholder="https://… or photos/welcome.jpg" />
+                                <p class="form-hint">Fills the panel to the right of the welcome message. Leave blank to keep the default graphic.</p>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label" for="gg-welcome-image-alt">Welcome image alt text</label>
+                                <input class="form-input" id="gg-welcome-image-alt" data-path="guide.welcomeImage.alt" placeholder="Describe the image" />
+                            </div>
+
+                            <p class="form-section-title">Hero video <span style="font-weight:300;text-transform:none;letter-spacing:0">(overrides the default background)</span></p>
+                            <div class="form-group">
+                                <label class="form-label" for="gg-hero-video-url">Video URL (MP4)</label>
+                                <input class="form-input" id="gg-hero-video-url" data-path="guide.heroVideo.url" placeholder="https://…/video.mp4" />
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label" for="gg-hero-video-poster">Poster image URL</label>
+                                <input class="form-input" id="gg-hero-video-poster" data-path="guide.heroVideo.poster" placeholder="Shown before video loads" />
+                            </div>
+
+                            <p class="form-section-title">About-the-day background</p>
+                            <div class="form-group">
+                                <label class="form-label" for="gg-about-bg-url">Background image URL</label>
+                                <input class="form-input" id="gg-about-bg-url" data-path="guide.aboutTheDay.backgroundImage.url" placeholder="https://… or photos/about.jpg" />
+                                <p class="form-hint">Sits behind the "Polite requests" / "Professional photography" section, under a dark overlay so the text stays legible.</p>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label" for="gg-about-bg-alt">Background image alt text</label>
+                                <input class="form-input" id="gg-about-bg-alt" data-path="guide.aboutTheDay.backgroundImage.alt" placeholder="Describe the image" />
+                            </div>
+
+                            <p class="form-section-title">Venue photo</p>
+                            <div class="form-group">
+                                <label class="form-label" for="gg-venue-photo-url">Venue photo URL</label>
+                                <input class="form-input" id="gg-venue-photo-url" data-path="guide.venuePhoto.url" placeholder="https://… or photos/venue.jpg" />
+                                <p class="form-hint">Shown between the awardees grid and the prize winners section.</p>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label" for="gg-venue-photo-alt">Venue photo alt text</label>
+                                <input class="form-input" id="gg-venue-photo-alt" data-path="guide.venuePhoto.alt" placeholder="Describe the venue" />
+                            </div>
+
+                            <p class="form-hint" style="margin-top:1.5rem">Photo/video URLs can be a full https:// link or, for an asset committed to this project's own photos/ folder, a relative path like photos/example.jpg. Per-ceremony content (dean's welcome + photo, procession, order of ceremony, awardee photos, recording links) and the student roster are not editable here — see docs/graduation-guide-integration.md for the data pipeline.</p>
                         </div>
                         <!-- Status tab -->
                         <div
@@ -2953,7 +2995,7 @@
 
                 const signersEl = document.getElementById("gg-welcome-signers");
                 signersEl.value = (content.guide.welcomeSigners || [])
-                    .map((s) => `${s.name} | ${s.title}`)
+                    .map((s) => [s.name, s.title, s.photo].filter((v) => v !== undefined && v !== "").join(" | "))
                     .join("\n");
                 signersEl.addEventListener("input", () => {
                     content.guide.welcomeSigners = signersEl.value
@@ -2961,8 +3003,10 @@
                         .map((line) => line.trim())
                         .filter(Boolean)
                         .map((line) => {
-                            const [name, title] = line.split("|").map((s) => s.trim());
-                            return { name: name || "", title: title || "" };
+                            const [name, title, photo] = line.split("|").map((s) => s.trim());
+                            const signer = { name: name || "", title: title || "" };
+                            if (photo) signer.photo = photo;
+                            return signer;
                         });
                     scheduleAutosave();
                 });

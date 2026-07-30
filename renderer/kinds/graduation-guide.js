@@ -236,15 +236,26 @@ ${buildCeremonySectionsHtml(ceremonies, guide, asset)}
 // project is a zero-visual-change no-op until real assets are actually
 // set. See project memory "hse-graduation-guide-media".
 
+// Editor UI for these fields (see editor/editor.html's Guide tab) is a
+// plain URL text input, same as the narrative kind's cover.hero_image —
+// the natural thing to paste there is a full https:// CDN URL, not a
+// project-relative path. Only resolve through asset() (which assumes a
+// relative path and prefixes basePath) when the value genuinely looks
+// relative; an absolute URL passes through untouched, exactly like the
+// narrative kind's render-cover.js already treats cover.hero_image.url.
+function resolveMediaUrl(pathOrUrl, asset) {
+  return /^(https?:)?\/\//i.test(pathOrUrl) ? pathOrUrl : asset(pathOrUrl);
+}
+
 function renderPersonPhoto(photoPath, asset, altName) {
   if (!photoPath) return '&#128100;';
-  return `<img src="${escHtml(asset(photoPath))}" alt="${escHtml(altName || '')}">`;
+  return `<img src="${escHtml(resolveMediaUrl(photoPath, asset))}" alt="${escHtml(altName || '')}">`;
 }
 
 function renderBackgroundImage(image, asset) {
   if (!image || !image.url) return '';
   const focalStyle = image.focal ? ` style="object-position:${escHtml(image.focal)}"` : '';
-  return `<img src="${escHtml(asset(image.url))}" alt="${escHtml(image.alt || '')}"${focalStyle}>`;
+  return `<img src="${escHtml(resolveMediaUrl(image.url, asset))}" alt="${escHtml(image.alt || '')}"${focalStyle}>`;
 }
 
 // Same background-video treatment as the narrative kind's cover
@@ -252,12 +263,12 @@ function renderBackgroundImage(image, asset) {
 // overlay (.gg-hero-bg::after) so hero text stays legible either way.
 function buildHeroVideo(heroVideo, asset) {
   if (!heroVideo || !heroVideo.url) return '';
-  const poster = heroVideo.poster ? ` poster="${escHtml(asset(heroVideo.poster))}"` : '';
+  const poster = heroVideo.poster ? ` poster="${escHtml(resolveMediaUrl(heroVideo.poster, asset))}"` : '';
   const autoplay = heroVideo.autoplay !== false ? ' autoplay' : '';
   const loop = heroVideo.loop !== false ? ' loop' : '';
   const muted = heroVideo.muted !== false ? ' muted' : '';
   return `<video class="gg-hero-bg-video"${autoplay}${muted}${loop} playsinline${poster}>
-    <source src="${escHtml(asset(heroVideo.url))}" type="video/mp4">
+    <source src="${escHtml(resolveMediaUrl(heroVideo.url, asset))}" type="video/mp4">
   </video>`;
 }
 

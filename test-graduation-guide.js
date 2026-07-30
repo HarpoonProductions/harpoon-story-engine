@@ -173,7 +173,11 @@ const mediaContent = JSON.parse(JSON.stringify(content));
 mediaContent.guide.heroVideo = { url: 'videos/hero-test.mp4', poster: 'photos/hero-poster-test.jpg' };
 mediaContent.guide.welcomeImage = { url: 'photos/welcome-test.jpg', alt: 'Test welcome image' };
 mediaContent.guide.welcomeSigners[0].photo = 'photos/signer-test.jpg';
-mediaContent.guide.venuePhoto = { url: 'photos/venue-test.jpg', alt: 'Test venue photo' };
+// Absolute URL, deliberately not a relative photos/ path — proves
+// resolveMediaUrl() passes it through untouched instead of mangling it
+// with the basePath prefix asset() would otherwise add (the editor's
+// Guide tab UI is a plain URL input, so this is the realistic case).
+mediaContent.guide.venuePhoto = { url: 'https://cdn.example.com/venue-test.jpg', alt: 'Test venue photo' };
 mediaContent.guide.aboutTheDay = mediaContent.guide.aboutTheDay || {};
 mediaContent.guide.aboutTheDay.backgroundImage = { url: 'photos/about-test.jpg', alt: 'Test about background' };
 mediaContent.ceremonies[0].dean = mediaContent.ceremonies[0].dean || {};
@@ -198,7 +202,18 @@ assertContains('Hero video renders with resolved source', mediaHtml, '<source sr
 assertContains('Hero video uses the resolved poster', mediaHtml, 'poster="photos/hero-poster-test.jpg"');
 assertContains('Welcome section image renders', mediaHtml, 'src="photos/welcome-test.jpg"');
 assertContains('Signer photo renders in place of the placeholder icon', mediaHtml, 'src="photos/signer-test.jpg"');
-assertContains('Venue photo renders', mediaHtml, 'src="photos/venue-test.jpg"');
+assertContains('Venue photo (absolute URL) renders', mediaHtml, 'src="https://cdn.example.com/venue-test.jpg"');
+
+// A non-empty basePath is where this actually matters — the local-preview
+// render above uses basePath:'' (asset() is a no-op there regardless), so
+// it wouldn't have caught asset() wrongly prefixing an absolute URL. This
+// mirrors a real production render (node render.js ... --base imperial-2026).
+const mediaBaseOutDir = path.join(__dirname, 'output', 'test', 'imperial-2026-media-base');
+const mediaBaseFiles = await render(mediaContent, mediaBaseOutDir, { basePath: 'imperial-2026' });
+const mediaBaseHtml = fs.readFileSync(mediaBaseFiles.find((f) => f.endsWith('index.html')), 'utf8');
+assertContains('With a real basePath, a relative photo path is still prefixed', mediaBaseHtml, 'src="/imperial-2026/photos/signer-test.jpg"');
+assertContains('With a real basePath, an absolute venue photo URL is untouched', mediaBaseHtml, 'src="https://cdn.example.com/venue-test.jpg"');
+assertAbsent('Absolute venue photo URL is never prefixed with the basePath', mediaBaseHtml, 'src="/imperial-2026/https');
 assertContains('About-section background image renders', mediaHtml, 'src="photos/about-test.jpg"');
 assertContains('Dean photo renders in place of the placeholder icon', mediaHtml, 'src="photos/dean-test.jpg"');
 assertContains('Awardee photo renders in place of the placeholder icon', mediaHtml, 'src="photos/awardee-test.jpg"');
