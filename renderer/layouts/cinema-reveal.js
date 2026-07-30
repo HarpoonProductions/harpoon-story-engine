@@ -1,16 +1,6 @@
 'use strict';
 
-const { escHtml } = require('../shell/head');
-
-function parseVideoUrl(url) {
-  if (!url) return null;
-  const yt = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([a-zA-Z0-9_-]{11})/);
-  if (yt) return { type: 'youtube', embedUrl: `https://www.youtube.com/embed/${yt[1]}?playsinline=1&rel=0` };
-  const vimeo = url.match(/vimeo\.com\/(\d+)/);
-  if (vimeo) return { type: 'vimeo', embedUrl: `https://player.vimeo.com/video/${vimeo[1]}?playsinline=1` };
-  if (/\.(mp4|webm|mov)(\?|$)/i.test(url)) return { type: 'mp4', embedUrl: url };
-  return { type: 'iframe', embedUrl: url };
-}
+const { escHtml, parseVideoUrl } = require('../shell/head');
 
 function renderCinemaReveal(section) {
   const cinema  = section.cinema || {};

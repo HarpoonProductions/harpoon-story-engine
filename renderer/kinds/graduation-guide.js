@@ -1,6 +1,6 @@
 'use strict';
 
-const { escHtml, resolveTokenStyle, renderPlausibleScript } = require('../shell/head');
+const { escHtml, resolveTokenStyle, renderPlausibleScript, parseVideoUrl } = require('../shell/head');
 const { buildPwaHeadTags } = require('../pwa');
 const { buildDropdown, buildDropdownItems, buildTopNavLinks, buildCeremonyDropdown, buildCeremonyLinks } = require('../shell/group-nav');
 
@@ -187,7 +187,7 @@ ${buildMobileMenu(guide, ceremonies, groupMembers)}
 </div>
 
 <section class="gg-hero" id="hero">
-  <div class="gg-hero-bg"></div>
+  <div class="gg-hero-bg">${buildHeroVideo(guide.heroVideo, asset)}</div>
   <div class="gg-hero-content">
     <div class="gg-hero-photo" id="hero-photo" hidden>
       <img id="hero-photo-img" src="" alt="">
@@ -201,8 +201,8 @@ ${buildMobileMenu(guide, ceremonies, groupMembers)}
   <button class="gg-hero-pause">&#9646;&#9646; Pause</button>
 </section>
 
-${buildWelcomeSection(guide)}
-${buildAboutSection(guide)}
+${buildWelcomeSection(guide, asset)}
+${buildAboutSection(guide, asset)}
 
 <section class="gg-find" id="find-student">
   <h2 class="gg-find-heading">Find a graduating student</h2>
@@ -223,22 +223,67 @@ ${buildChooserHtml(guide, ceremonies)}
 </section>
 
 <div id="ceremony-sections">
-${buildCeremonySectionsHtml(ceremonies)}
+${buildCeremonySectionsHtml(ceremonies, guide, asset)}
 </div>
 
 <button class="gg-return-top" id="return-top">&#8963; Return to top</button>`;
 }
 
-function buildWelcomeSection(guide) {
+// ── Media helpers ────────────────────────────────────────────────────────
+// All optional, all absent by default — every call site below falls back
+// to the pre-existing placeholder markup (emoji icon / CSS gradient) when
+// no photo/video/image is supplied, so adding these schema fields to a
+// project is a zero-visual-change no-op until real assets are actually
+// set. See project memory "hse-graduation-guide-media".
+
+function renderPersonPhoto(photoPath, asset, altName) {
+  if (!photoPath) return '&#128100;';
+  return `<img src="${escHtml(asset(photoPath))}" alt="${escHtml(altName || '')}">`;
+}
+
+function renderBackgroundImage(image, asset) {
+  if (!image || !image.url) return '';
+  const focalStyle = image.focal ? ` style="object-position:${escHtml(image.focal)}"` : '';
+  return `<img src="${escHtml(asset(image.url))}" alt="${escHtml(image.alt || '')}"${focalStyle}>`;
+}
+
+// Same background-video treatment as the narrative kind's cover
+// (renderer/render-cover.js) — video layered under the existing gradient
+// overlay (.gg-hero-bg::after) so hero text stays legible either way.
+function buildHeroVideo(heroVideo, asset) {
+  if (!heroVideo || !heroVideo.url) return '';
+  const poster = heroVideo.poster ? ` poster="${escHtml(asset(heroVideo.poster))}"` : '';
+  const autoplay = heroVideo.autoplay !== false ? ' autoplay' : '';
+  const loop = heroVideo.loop !== false ? ' loop' : '';
+  const muted = heroVideo.muted !== false ? ' muted' : '';
+  return `<video class="gg-hero-bg-video"${autoplay}${muted}${loop} playsinline${poster}>
+    <source src="${escHtml(asset(heroVideo.url))}" type="video/mp4">
+  </video>`;
+}
+
+function buildCeremonyRecording(cfg, asset) {
+  const video = parseVideoUrl(cfg.recordingUrl);
+  if (!video) return '';
+  const media = video.type === 'mp4'
+    ? `<video class="gg-recording-media" src="${escHtml(video.embedUrl)}" controls playsinline></video>`
+    : `<iframe class="gg-recording-media" src="${escHtml(video.embedUrl)}" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen title="${escHtml(cfg.ceremonyLabel)} recording"></iframe>`;
+  return `<section class="gg-recording">
+    <h2 class="gg-section-h2">Ceremony recording</h2>
+    <div class="gg-recording-frame">${media}</div>
+  </section>`;
+}
+
+function buildWelcomeSection(guide, asset) {
   const signers = (guide.welcomeSigners || [])
     .map((s) => `<div class="gg-signer">
-        <div class="gg-signer-portrait">&#128100;</div>
+        <div class="gg-signer-portrait">${renderPersonPhoto(s.photo, asset, s.name)}</div>
         <div><div class="gg-signer-name">${escHtml(s.name)}</div>
         <div class="gg-signer-role">${escHtml(s.title)}</div></div>
       </div>`)
     .join('\n      ');
 
   const body = (guide.welcomeText || []).map((p) => `<p>${escHtml(p)}</p>`).join('\n      ');
+  const welcomeImg = renderBackgroundImage(guide.welcomeImage, asset);
 
   return `<section class="gg-welcome">
   <div class="gg-welcome-left">
@@ -252,20 +297,21 @@ function buildWelcomeSection(guide) {
       ${body}
     </div>
   </div>
-  <div class="gg-welcome-right"><div class="gg-welcome-right-inner">&#127891;</div></div>
+  <div class="gg-welcome-right">${welcomeImg || '<div class="gg-welcome-right-inner">&#127891;</div>'}</div>
 </section>`;
 }
 
-function buildAboutSection(guide) {
+function buildAboutSection(guide, asset) {
   const about = guide.aboutTheDay || {};
   const requests = (about.politeRequests || []).map((r) => `<li>${escHtml(r)}</li>`).join('\n      ');
   const photography = (about.photography || []).map((p) => `<p>${escHtml(p)}</p>`).join('\n      ');
   const link = about.photographyLink
     ? `<p>For more information on photography visit <a href="${escHtml(about.photographyLink.href)}">${escHtml(about.photographyLink.text)}</a></p>`
     : '';
+  const aboutBg = renderBackgroundImage(about.backgroundImage, asset);
 
   return `<section class="gg-about">
-  <div class="gg-about-bg"></div>
+  <div class="gg-about-bg">${aboutBg}</div>
   <div class="gg-about-col">
     <svg class="gg-about-icon" viewBox="0 0 72 72" fill="none" xmlns="http://www.w3.org/2000/svg">
       <circle cx="28" cy="44" r="16" stroke="currentColor" stroke-width="2"/>
@@ -322,11 +368,11 @@ function buildChooserHtml(guide, ceremonies) {
 
 // ── Ceremony sections ──────────────────────────────────────────────────
 
-function buildCeremonySectionsHtml(ceremonies) {
-  return ceremonies.map((cfg) => buildCeremonySection(cfg)).join('\n\n');
+function buildCeremonySectionsHtml(ceremonies, guide, asset) {
+  return ceremonies.map((cfg) => buildCeremonySection(cfg, guide, asset)).join('\n\n');
 }
 
-function buildCeremonySection(cfg) {
+function buildCeremonySection(cfg, guide, asset) {
   const dean = cfg.dean || {};
   const proc = cfg.processionGroups || [];
   const order = cfg.orderOfCeremony || [];
@@ -366,7 +412,7 @@ function buildCeremonySection(cfg) {
     const cards = awardees
       .map(
         (a) => `<div class="gg-awardee-card">
-        <div class="gg-awardee-photo">&#128100;</div>
+        <div class="gg-awardee-photo">${renderPersonPhoto(a.photo, asset, a.name)}</div>
         <div class="gg-awardee-body">
           <div class="gg-awardee-medal">${escHtml(a.medal)}</div>
           <div class="gg-awardee-name">${escHtml(a.name)}</div>
@@ -383,7 +429,7 @@ function buildCeremonySection(cfg) {
       </div>
       <button class="gg-view-all-btn">View all of this year's awardees</button>
     </section>
-    <div class="gg-rah-photo">&#127963;</div>
+    <div class="gg-rah-photo">${renderBackgroundImage(guide.venuePhoto, asset) || '&#127963;'}</div>
     <section class="gg-prizes">
       <h2 class="gg-prizes-heading">Graduate prize winners</h2>
       <p class="gg-prizes-intro">${escHtml(cfg.prizesIntro)}</p>
@@ -438,12 +484,13 @@ function buildCeremonySection(cfg) {
         <button class="gg-dean-expand">&#8964;</button>
       </div>
       <div class="gg-dean-portrait-col">
-        <div class="gg-dean-photo">&#128100;</div>
+        <div class="gg-dean-photo">${renderPersonPhoto(dean.photo, asset, dean.name)}</div>
         <div class="gg-dean-name">${escHtml(dean.name)}</div>
         <div class="gg-dean-role-text">${escHtml(dean.role)}</div>
       </div>
     </div>` : ''}
   </section>
+  ${buildCeremonyRecording(cfg, asset)}
   ${proc.length ? `<section class="gg-procession">
     <h2 class="gg-section-h2">Order of procession</h2>
     <div class="gg-proc-tabs" id="ptabs-${escHtml(cfg.ceremonyId)}">

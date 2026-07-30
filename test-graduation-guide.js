@@ -159,6 +159,58 @@ for (const size of ['192', '512']) {
   }
 }
 
+// ── Homepage media (hero video, signer/dean/awardee photos, background
+// images, ceremony recordings) — all optional, absent from imperial-2026's
+// real content today (no real assets exist yet). Rendered here against a
+// cloned content object with synthetic test values, not the real project
+// data, so this proves the new render branches work without fabricating
+// photos of real named people or committing placeholder media as if it
+// were real Imperial content. See project memory
+// "hse-graduation-guide-media".
+console.log('\n── Homepage media (synthetic fixture) ──────────────────────');
+
+const mediaContent = JSON.parse(JSON.stringify(content));
+mediaContent.guide.heroVideo = { url: 'videos/hero-test.mp4', poster: 'photos/hero-poster-test.jpg' };
+mediaContent.guide.welcomeImage = { url: 'photos/welcome-test.jpg', alt: 'Test welcome image' };
+mediaContent.guide.welcomeSigners[0].photo = 'photos/signer-test.jpg';
+mediaContent.guide.venuePhoto = { url: 'photos/venue-test.jpg', alt: 'Test venue photo' };
+mediaContent.guide.aboutTheDay = mediaContent.guide.aboutTheDay || {};
+mediaContent.guide.aboutTheDay.backgroundImage = { url: 'photos/about-test.jpg', alt: 'Test about background' };
+mediaContent.ceremonies[0].dean = mediaContent.ceremonies[0].dean || {};
+mediaContent.ceremonies[0].dean.photo = 'photos/dean-test.jpg';
+mediaContent.ceremonies[0].recordingUrl = 'https://www.youtube.com/watch?v=abcDEFghi12';
+mediaContent.ceremonies[0].awardees = [
+  { medal: 'Test Medal', name: 'Test Awardee', desc: 'Synthetic fixture entry, not real data.', photo: 'photos/awardee-test.jpg' },
+];
+
+const mediaOutDir = path.join(__dirname, 'output', 'test', 'imperial-2026-media');
+let mediaFiles;
+try {
+  mediaFiles = await render(mediaContent, mediaOutDir, { basePath: '' });
+} catch (err) {
+  console.error(`  ✗ Media-fixture render threw: ${err.message}`);
+  console.error(err.stack);
+  process.exit(1);
+}
+const mediaHtml = fs.readFileSync(mediaFiles.find((f) => f.endsWith('index.html')), 'utf8');
+
+assertContains('Hero video renders with resolved source', mediaHtml, '<source src="videos/hero-test.mp4" type="video/mp4">');
+assertContains('Hero video uses the resolved poster', mediaHtml, 'poster="photos/hero-poster-test.jpg"');
+assertContains('Welcome section image renders', mediaHtml, 'src="photos/welcome-test.jpg"');
+assertContains('Signer photo renders in place of the placeholder icon', mediaHtml, 'src="photos/signer-test.jpg"');
+assertContains('Venue photo renders', mediaHtml, 'src="photos/venue-test.jpg"');
+assertContains('About-section background image renders', mediaHtml, 'src="photos/about-test.jpg"');
+assertContains('Dean photo renders in place of the placeholder icon', mediaHtml, 'src="photos/dean-test.jpg"');
+assertContains('Awardee photo renders in place of the placeholder icon', mediaHtml, 'src="photos/awardee-test.jpg"');
+assertContains('Ceremony recording renders as a YouTube embed', mediaHtml, 'https://www.youtube.com/embed/abcDEFghi12');
+assertContains('Ceremony recording section has a heading', mediaHtml, 'Ceremony recording');
+
+// Fallback check — the *first* (real, untouched) render above had none of
+// these fields set, so it should still show every placeholder unchanged.
+assertContains('No-photo fallback: signer placeholder icon unchanged', html, '&#128100;');
+assertContains('No-photo fallback: dean placeholder icon unchanged', html, '&#128100;');
+assertAbsent('No-recording fallback: no recording section rendered', html, 'gg-recording');
+
 console.log(`\n${passed} passed, ${failed} failed\n`);
 process.exit(failed > 0 ? 1 : 0);
 

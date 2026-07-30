@@ -213,4 +213,20 @@ function escHtml(str) {
     .replace(/"/g, '&quot;');
 }
 
-module.exports = { renderHead, escHtml, resolveTokenStyle, renderPlausibleScript };
+/**
+ * Parses a YouTube/Vimeo/direct-file video URL into an embeddable form.
+ * Shared between the narrative kind's cinema-reveal layout and the
+ * graduation-guide kind's ceremony recordings — one URL-sniffing
+ * implementation, not two.
+ */
+function parseVideoUrl(url) {
+  if (!url) return null;
+  const yt = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([a-zA-Z0-9_-]{11})/);
+  if (yt) return { type: 'youtube', embedUrl: `https://www.youtube.com/embed/${yt[1]}?playsinline=1&rel=0` };
+  const vimeo = url.match(/vimeo\.com\/(\d+)/);
+  if (vimeo) return { type: 'vimeo', embedUrl: `https://player.vimeo.com/video/${vimeo[1]}?playsinline=1` };
+  if (/\.(mp4|webm|mov)(\?|$)/i.test(url)) return { type: 'mp4', embedUrl: url };
+  return { type: 'iframe', embedUrl: url };
+}
+
+module.exports = { renderHead, escHtml, resolveTokenStyle, renderPlausibleScript, parseVideoUrl };

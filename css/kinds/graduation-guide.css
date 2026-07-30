@@ -154,6 +154,7 @@ a{color:inherit;text-decoration:none}
   content:'';position:absolute;inset:0;
   background:linear-gradient(to top,rgba(0,0,0,0.35) 0%,transparent 60%);
 }
+.gg-hero-bg-video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;}
 .gg-hero-content{position:relative;z-index:1;padding:0 44px 56px;}
 .gg-hero-photo{
   width:96px;height:96px;border-radius:50%;overflow:hidden;
@@ -191,7 +192,9 @@ a{color:inherit;text-decoration:none}
 .gg-signer-portrait{
   width:60px;height:60px;background:#3a3a52;border-radius:2px;
   flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:26px;
+  overflow:hidden;
 }
+.gg-signer-portrait img{width:100%;height:100%;object-fit:cover;display:block;}
 .gg-signer-name{font-size:15px;font-weight:700;color:var(--gg-accent);}
 .gg-signer-role{font-size:13px;color:rgba(255,255,255,0.6);}
 .gg-welcome-rule{width:200px;height:1px;background:rgba(255,255,255,0.18);margin:4px 0 28px;}
@@ -204,14 +207,19 @@ a{color:inherit;text-decoration:none}
     linear-gradient(135deg,#1a2535 0%,#283040 100%);
   display:flex;align-items:center;justify-content:center;font-size:100px;opacity:0.25;
 }
+.gg-welcome-right img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;}
 
 /* About */
 .gg-about{position:relative;overflow:hidden;min-height:420px;display:grid;grid-template-columns:1fr 1fr;}
 @media(max-width:700px){.gg-about{grid-template-columns:1fr}}
 .gg-about-bg{
   position:absolute;inset:0;
-  background:linear-gradient(rgba(25,25,40,0.82),rgba(25,25,40,0.82)),
-    radial-gradient(ellipse 100% 100% at 50% 50%,#2a3a50 0%,#1a1a2e 100%);
+  background:radial-gradient(ellipse 100% 100% at 50% 50%,#2a3a50 0%,#1a1a2e 100%);
+}
+.gg-about-bg img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;}
+.gg-about-bg::after{
+  content:'';position:absolute;inset:0;
+  background:linear-gradient(rgba(25,25,40,0.82),rgba(25,25,40,0.82));
 }
 .gg-about-col{position:relative;z-index:1;padding:52px 48px;color:#fff;}
 .gg-about-col+.gg-about-col{border-left:1px solid rgba(255,255,255,0.12);}
@@ -274,7 +282,8 @@ section.gg-chooser .gg-chooser-prompt{color:rgba(255,255,255,0.55);}
 .gg-dean-body{font-size:15px;color:var(--gg-text);line-height:1.75;}
 .gg-dean-expand{background:none;border:none;font-size:22px;cursor:pointer;color:var(--gg-text);margin-top:10px;display:block;}
 .gg-dean-portrait-col{text-align:left;flex-shrink:0;}
-.gg-dean-photo{width:290px;height:330px;background:#d0d0d0;display:flex;align-items:center;justify-content:center;font-size:90px;margin-bottom:10px;}
+.gg-dean-photo{width:290px;height:330px;background:#d0d0d0;display:flex;align-items:center;justify-content:center;font-size:90px;margin-bottom:10px;overflow:hidden;}
+.gg-dean-photo img{width:100%;height:100%;object-fit:cover;display:block;}
 .gg-dean-name{font-size:15px;font-weight:700;color:var(--gg-text);}
 .gg-dean-role-text{font-size:13px;color:#555;}
 
@@ -316,11 +325,18 @@ section.gg-chooser .gg-chooser-prompt{color:rgba(255,255,255,0.55);}
 .gg-order-bullet-sq{width:8px;height:8px;background:var(--gg-accent);flex-shrink:0;}
 .gg-order-bullet-text{font-size:14px;color:rgba(255,255,255,0.85);}
 
+/* Ceremony recording — absent by default (guide.ceremonies[].recordingUrl),
+   added by the institution after the event; renders nothing until then. */
+.gg-recording{padding:48px 48px 0;max-width:1080px;}
+.gg-recording-frame{position:relative;aspect-ratio:16/9;background:#000;}
+.gg-recording-media{position:absolute;inset:0;width:100%;height:100%;border:none;display:block;}
+
 /* Awardees */
 .gg-awardees{background:var(--gg-bg);padding:48px;}
 .gg-awardees-grid{display:flex;flex-wrap:wrap;gap:0;margin-bottom:24px;}
 .gg-awardee-card{background:var(--gg-primary);width:280px;flex-shrink:0;}
-.gg-awardee-photo{width:100%;height:280px;background:#3a3a52;display:flex;align-items:center;justify-content:center;font-size:80px;}
+.gg-awardee-photo{width:100%;height:280px;background:#3a3a52;display:flex;align-items:center;justify-content:center;font-size:80px;overflow:hidden;}
+.gg-awardee-photo img{width:100%;height:100%;object-fit:cover;display:block;}
 .gg-awardee-body{padding:18px 18px 20px;text-align:center;}
 .gg-awardee-medal{font-size:11px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:#fff;margin-bottom:6px;}
 .gg-awardee-name{font-size:15px;color:rgba(255,255,255,0.8);margin-bottom:10px;}
@@ -328,6 +344,7 @@ section.gg-chooser .gg-chooser-prompt{color:rgba(255,255,255,0.55);}
 .gg-awardee-bio-btn{padding:8px 20px;background:#fff;border:none;color:var(--gg-text);font-size:13px;font-family:inherit;cursor:pointer;}
 .gg-view-all-btn{display:inline-block;padding:10px 20px;background:var(--gg-primary);border:none;color:#fff;font-size:14px;font-family:inherit;cursor:pointer;}
 .gg-rah-photo{width:100%;height:500px;background:linear-gradient(135deg,#1a0a0a 0%,#3d1010 40%,#1a1a2e 100%);display:flex;align-items:center;justify-content:center;font-size:80px;overflow:hidden;}
+.gg-rah-photo img{width:100%;height:100%;object-fit:cover;display:block;}
 
 /* Prizes */
 .gg-prizes{background:var(--gg-bg);padding:48px;}

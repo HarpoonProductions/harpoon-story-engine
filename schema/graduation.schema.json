@@ -109,6 +109,17 @@
         "title": { "type": "string" },
         "subtitle": { "type": "string", "description": "Not yet rendered by this renderer — reserved for future use." },
         "welcomeSubtitle": { "type": "string" },
+        "heroVideo": {
+          "type": "object",
+          "description": "Optional hero background video, same shape as content.schema.json's cover.hero_video (autoplay/loop/muted should all be true for ambient use). Overrides the default gradient background when present; absent by default, no visual change until one is supplied.",
+          "properties": {
+            "url": { "type": "string", "description": "URL of the video file (MP4 preferred)." },
+            "poster": { "type": "string", "description": "Fallback image shown before the video loads." },
+            "autoplay": { "type": "boolean", "default": true },
+            "loop": { "type": "boolean", "default": true },
+            "muted": { "type": "boolean", "default": true }
+          }
+        },
         "welcomeSigners": {
           "type": "array",
           "items": {
@@ -117,9 +128,14 @@
             "properties": {
               "name": { "type": "string" },
               "title": { "type": "string" },
-              "photo": { "type": "string" }
+              "photo": { "type": "string", "description": "Path relative to this project's own output root (see projects/<id>/photos/), resolved via asset() at render time — same mechanism as studentPhotos. Renders the existing placeholder icon when absent." }
             }
           }
+        },
+        "welcomeImage": {
+          "type": "object",
+          "description": "Optional photo for the welcome section's right-hand panel, replacing the placeholder gradient. Absent by default.",
+          "properties": { "url": { "type": "string" }, "alt": { "type": "string" }, "focal": { "type": "string" } }
         },
         "welcomeText": {
           "type": "array",
@@ -134,8 +150,18 @@
             "photographyLink": {
               "type": "object",
               "properties": { "text": { "type": "string" }, "href": { "type": "string" } }
+            },
+            "backgroundImage": {
+              "type": "object",
+              "description": "Optional photo behind the 'About the day' section, under the existing dark gradient overlay so the text stays legible. Absent by default.",
+              "properties": { "url": { "type": "string" }, "alt": { "type": "string" }, "focal": { "type": "string" } }
             }
           }
+        },
+        "venuePhoto": {
+          "type": "object",
+          "description": "Optional venue photo (e.g. the ceremony hall) shown between the awardees grid and the prize winners section, replacing the placeholder gradient. Absent by default.",
+          "properties": { "url": { "type": "string" }, "alt": { "type": "string" }, "focal": { "type": "string" } }
         },
         "days": {
           "type": "array",
@@ -163,6 +189,10 @@
           "ceremonyLabel": { "type": "string" },
           "day": { "type": "integer" },
           "active": { "type": "boolean", "description": "Whether this ceremony is selected by default on load." },
+          "recordingUrl": {
+            "type": "string",
+            "description": "YouTube/Vimeo/mp4 URL for this ceremony's recording, added by the institution after the event — typically absent at first publish, filled in later. Renders nothing when absent."
+          },
           "dean": {
             "type": ["object", "null"],
             "properties": {
