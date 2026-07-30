@@ -456,14 +456,6 @@
       var congrats = document.getElementById('hero-congrats');
       if (congrats) congrats.textContent = 'Congratulations, ' + name + '!';
 
-      if (findLink && findName) {
-        findName.textContent = name;
-        findLink.addEventListener('click', function (e) {
-          e.preventDefault();
-          jumpToStudent(name, cer);
-        });
-      }
-
       // Interim photo lookup — see project memory "personalised-photo-share".
       // No real upload endpoint yet; a photo shows here only if one was
       // committed to projects/<id>/photos/ and referenced in
@@ -479,6 +471,16 @@
           photoImg.alt = name + '’s photo';
           photoEl.hidden = false;
         }
+      }
+
+      if (findLink && findName) {
+        // With a photo already showing "who", the link can say "them"
+        // instead of repeating a (possibly long) full name a second time.
+        findName.textContent = photoUrl ? 'them' : name;
+        findLink.addEventListener('click', function (e) {
+          e.preventDefault();
+          jumpToStudent(name, cer);
+        });
       }
     } else if (findLink) {
       findLink.addEventListener('click', function (e) {
