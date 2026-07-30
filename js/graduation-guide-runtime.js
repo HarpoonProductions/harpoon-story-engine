@@ -497,10 +497,16 @@
     // No-ops entirely if HarpoonPWA isn't present (config.pwa.enabled
     // false) or if the visitor isn't on iOS / already has it installed.
     if (window.HarpoonPWA) {
+      var institution = data.institution || {};
       window.HarpoonPWA.maybeShowIOSInstallBanner({
         message: name
           ? 'Keep ' + name + '’s ceremony details handy — install this guide'
           : 'Install this guide for quick, offline access on the day',
+        // Someone is being asked to install something before they know
+        // it's from a legitimate source — show who it's actually from.
+        logo: institution.logo || null,
+        logoAlt: institution.name || '',
+        title: guide.title || '',
       });
     }
   })();

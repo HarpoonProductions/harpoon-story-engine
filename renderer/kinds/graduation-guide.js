@@ -43,7 +43,13 @@ function renderGraduationGuide(content, opts) {
 
   const head = buildHead(meta, config, institution, base, asset);
   const body = buildBody(institution, guide, ceremonies, asset, groupMembers);
-  const dataScript = buildDataScript({ institution, guide, ceremonies, searchIndex, studentPhotos: resolvedStudentPhotos });
+  // institution.logo is otherwise passed through unresolved (server-side
+  // rendering already resolves it directly via buildWordmark) — resolved
+  // here too so the client-side iOS install banner (which needs an
+  // absolute-enough URL, not a bare relative path) can use it without
+  // needing to know about basePath itself. Same treatment as studentPhotos.
+  const resolvedInstitution = { ...institution, logo: institution.logo ? resolveMediaUrl(institution.logo, asset) : institution.logo };
+  const dataScript = buildDataScript({ institution: resolvedInstitution, guide, ceremonies, searchIndex, studentPhotos: resolvedStudentPhotos });
 
   return `<!DOCTYPE html>
 <html lang="en">

@@ -20,17 +20,33 @@
  *
  * Generic — not graduation-guide or any-product-specific. A consuming
  * page decides WHEN to call maybeShowIOSInstallBanner() (immediately,
- * after some engagement signal, tied to a personalised moment, etc.);
- * this module only handles whether it's appropriate to show at all
- * (iOS, not already installed, not recently dismissed) and the UI itself.
+ * after some engagement signal, tied to a personalised moment, etc.) and
+ * MAY pass its own logo/title for brand trust (someone is being asked to
+ * install something before they know it's legitimate); this module only
+ * handles whether it's appropriate to show at all (iOS, not already
+ * installed, not recently dismissed) and the UI itself. logo/title/steps
+ * are all optional — a consumer that passes none still gets a working,
+ * generic banner.
  *
- * Usage: HarpoonPWA.maybeShowIOSInstallBanner({ message, snoozeDays })
+ * The three-step instructions default to current iOS Safari (verified
+ * against a real device, 2026-07-30 — Apple has changed this wording/UI
+ * before and will again, so if a future iOS version moves the "Add to
+ * Home Screen" entry point, update the default `steps` array here, not
+ * per-consumer).
+ *
+ * Usage: HarpoonPWA.maybeShowIOSInstallBanner({ message, logo, logoAlt, title, steps, snoozeDays, autoDismissMs })
  */
 (function (global) {
   'use strict';
 
   var STYLE_ID = 'hse-ios-install-banner-style';
   var STORAGE_KEY = 'hse-ios-install-dismissed';
+
+  var DEFAULT_STEPS = [
+    'Tap <strong>&bull;&bull;&bull;</strong> in the toolbar',
+    'Tap <strong>Share</strong> <svg class="hse-ios-install-banner__share-icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2v13M8 6l4-4 4 4M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7"/></svg>',
+    'Choose <strong>&ldquo;Add to Home Screen&rdquo;</strong>',
+  ];
 
   function isIos() {
     // iPadOS 13+ reports as "MacIntel" in the UA — touch points is the
@@ -74,14 +90,30 @@
       'opacity:0;transition:opacity 0.3s ease;}' +
       '.hse-ios-install-overlay.is-visible{opacity:1;}' +
       // Centred card — the actual message.
-      '.hse-ios-install-banner{position:relative;width:100%;max-width:480px;' +
-      'background:#1a1a1a;color:#fff;border-radius:22px;padding:44px 30px;' +
+      '.hse-ios-install-banner{position:relative;width:100%;max-width:420px;' +
+      'background:#1a1a1a;color:#fff;border-radius:22px;padding:36px 28px;' +
       'text-align:center;box-shadow:0 24px 64px rgba(0,0,0,0.5);' +
       'font-family:-apple-system,BlinkMacSystemFont,"Helvetica Neue",Arial,sans-serif;' +
       'transform:scale(0.92);transition:transform 0.3s ease;}' +
       '.hse-ios-install-overlay.is-visible .hse-ios-install-banner{transform:scale(1);}' +
-      '.hse-ios-install-banner__text{font-size:36px;line-height:1.25;font-weight:700;}' +
-      '.hse-ios-install-banner__share-icon{vertical-align:-6px;margin:0 4px;}' +
+      // Brand trust — shown before anything else asks for an install
+      // action, so it reads as coming from a real institution/product,
+      // not an unknown page. Both optional; a consumer that skips them
+      // just gets the message straight away.
+      '.hse-ios-install-banner__logo{display:block;max-width:120px;max-height:40px;' +
+      'width:auto;height:auto;margin:0 auto 12px;}' +
+      '.hse-ios-install-banner__title{font-size:13px;font-weight:700;letter-spacing:0.06em;' +
+      'text-transform:uppercase;color:rgba(255,255,255,0.6);margin-bottom:18px;}' +
+      '.hse-ios-install-banner__message{font-size:21px;line-height:1.3;font-weight:700;margin-bottom:22px;}' +
+      '.hse-ios-install-banner__steps{text-align:left;display:inline-block;' +
+      'font-size:15px;line-height:1.5;margin:0;padding:0;list-style:none;counter-reset:hse-step;}' +
+      '.hse-ios-install-banner__steps li{position:relative;padding-left:28px;margin-bottom:10px;' +
+      'counter-increment:hse-step;}' +
+      '.hse-ios-install-banner__steps li:last-child{margin-bottom:0;}' +
+      '.hse-ios-install-banner__steps li::before{content:counter(hse-step);position:absolute;left:0;top:1px;' +
+      'width:18px;height:18px;border-radius:50%;background:rgba(255,255,255,0.16);' +
+      'font-size:11px;font-weight:700;line-height:18px;text-align:center;}' +
+      '.hse-ios-install-banner__share-icon{vertical-align:-3px;margin:0 1px;}' +
       '.hse-ios-install-banner__close{position:absolute;top:10px;right:10px;' +
       'background:none;border:none;color:rgba(255,255,255,0.65);' +
       'font-size:24px;cursor:pointer;padding:10px;line-height:1;}' +
@@ -97,6 +129,17 @@
 
     injectStyles();
 
+    var logoHtml = opts.logo
+      ? '<img class="hse-ios-install-banner__logo" src="' + opts.logo + '" alt="' + (opts.logoAlt || opts.title || '') + '">'
+      : '';
+    var titleHtml = opts.title
+      ? '<p class="hse-ios-install-banner__title">' + opts.title + '</p>'
+      : '';
+    var steps = opts.steps || DEFAULT_STEPS;
+    var stepsHtml = '<ol class="hse-ios-install-banner__steps">' +
+      steps.map(function (s) { return '<li>' + s + '</li>'; }).join('') +
+      '</ol>';
+
     var overlay = document.createElement('div');
     overlay.className = 'hse-ios-install-overlay';
     overlay.setAttribute('role', 'dialog');
@@ -104,12 +147,9 @@
     overlay.innerHTML =
       '<div class="hse-ios-install-banner">' +
       '<button type="button" class="hse-ios-install-banner__close" aria-label="Dismiss">&#10005;</button>' +
-      '<p class="hse-ios-install-banner__text">' +
-      (opts.message || 'Install this on your phone') +
-      ' — tap <svg class="hse-ios-install-banner__share-icon" viewBox="0 0 24 24" width="30" height="30" ' +
-      'fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" ' +
-      'aria-label="Share"><path d="M12 2v13M8 6l4-4 4 4M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7"/></svg>' +
-      ' then "Add to Home Screen"</p>' +
+      logoHtml + titleHtml +
+      '<p class="hse-ios-install-banner__message">' + (opts.message || 'Install this on your phone') + '</p>' +
+      stepsHtml +
       '</div>';
 
     document.body.appendChild(overlay);
@@ -135,8 +175,11 @@
     // Auto-dismiss rather than block indefinitely — someone who doesn't
     // know what to do with it has read it (or not) well within this, and
     // shouldn't be stuck behind a blurred page for longer than that.
+    // 20s (up from an earlier 12s) — real device testing showed 12s
+    // wasn't enough time to read three steps, realise what's being
+    // asked, and act, not just skim the first line.
     // 0 (or any falsy value) disables this and requires an explicit tap.
-    var autoDismissMs = opts.autoDismissMs === 0 ? 0 : (opts.autoDismissMs || 12000);
+    var autoDismissMs = opts.autoDismissMs === 0 ? 0 : (opts.autoDismissMs || 20000);
     if (autoDismissMs) autoDismissTimer = setTimeout(hide, autoDismissMs);
   }
 
