@@ -348,8 +348,18 @@
       item.addEventListener('click', function () {
         jumpToStudent(item.dataset.resultName, item.dataset.resultCeremony);
         panel.classList.remove('show');
+        closeNavSearch();
       });
     });
+  }
+
+  // Only meaningful for the nav search box (the always-visible "Find a
+  // graduating student" page box has no open/closed drawer state) — a
+  // harmless no-op when called from that one, since #nav-search-input
+  // just won't have .open set in that flow.
+  function closeNavSearch() {
+    var navInput = document.getElementById('nav-search-input');
+    if (navInput) navInput.classList.remove('open');
   }
 
   function cssEscape(s) {
@@ -399,8 +409,10 @@
         var top = results.exact[0] || results.fuzzy[0];
         if (top) jumpToStudent(top.name, top.ceremonyId);
         panel.classList.remove('show');
+        closeNavSearch();
       } else if (e.key === 'Escape') {
         panel.classList.remove('show');
+        closeNavSearch();
       }
     });
 

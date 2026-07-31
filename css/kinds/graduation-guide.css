@@ -135,6 +135,36 @@ a{color:inherit;text-decoration:none}
   .gg-nav-links{display:none;}
   .gg-nav-hamburger{display:flex;}
   .gg-nav-search-label{display:none;}
+
+  /* Below this width there just isn't room for the desktop pattern
+     (an input overlaying leftward from the search icon) without it
+     colliding with the logo — at ~390px wide there's only room for
+     the icon itself, not a further 180px of input on top of it. A
+     full-width drawer directly under the fixed nav sidesteps that
+     entirely: the input is never competing for horizontal space with
+     anything else, at any screen width down to the smallest phone.
+     font-size:16px isn't a style choice here — anything smaller makes
+     iOS Safari auto-zoom the whole page on focus, which is what was
+     actually behind the "sideways drift" report, not a layout bug. */
+  .gg-nav-search-wrap{position:static;}
+  .gg-nav-search-input{
+    position:fixed;top:-52px;left:0;right:0;
+    width:auto;height:52px;padding:0 20px;margin:0;
+    background:var(--gg-primary);
+    border:none;border-bottom:1px solid rgba(255,255,255,0.15);
+    font-size:16px;
+    transition:top 0.22s ease;
+    z-index:1001;
+  }
+  .gg-nav-search-input.open{top:50px;width:auto;padding:0 20px;}
+  .gg-nav-search-arrow{display:none;}
+  /* #nav-search-panel specifically — not the shared .gg-search-panel
+     class, which the page-body "Find a graduating student" box also
+     uses and must keep its own inline (non-drawer) positioning. */
+  #nav-search-panel{
+    position:fixed;top:102px;left:0;right:0;width:100%;max-width:100%;
+    border-radius:0;max-height:calc(100vh - 102px);
+  }
 }
 
 /* Floating bar */
