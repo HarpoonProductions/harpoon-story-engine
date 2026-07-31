@@ -42,7 +42,7 @@ function renderGraduationGuide(content, opts) {
   });
 
   const head = buildHead(meta, config, institution, base, asset);
-  const body = buildBody(institution, guide, ceremonies, asset, groupMembers);
+  const body = buildBody(institution, guide, ceremonies, asset, groupMembers, config);
   // institution.logo is otherwise passed through unresolved (server-side
   // rendering already resolves it directly via buildWordmark) — resolved
   // here too so the client-side iOS install banner (which needs an
@@ -57,7 +57,7 @@ ${head}
 <body>
 ${body}
 ${dataScript}
-<script src="${asset('js/graduation-guide-runtime.js')}"></script>
+<script defer src="${asset('js/graduation-guide-runtime.js')}"></script>
 </body>
 </html>`;
 }
@@ -69,6 +69,14 @@ function buildHead(meta, config, institution, base, asset) {
   const plausibleScript = renderPlausibleScript(config);
   const tokenSetHtml = resolveTokenStyle(meta.token_set);
   const pwaTags = buildPwaHeadTags({ enabled: !!config?.pwa?.enabled, asset });
+  // Vendored locally (js/vendor/), same same-origin/offline-safe mechanism
+  // the narrative kind already uses — not a CDN dependency. Only emitted
+  // when a project actually opts into scrollHero, so every other project
+  // pays zero extra payload for a capability it doesn't use.
+  const scrollHeroScripts = config?.scrollHero?.enabled
+    ? `<script defer src="${asset('js/vendor/gsap.min.js')}"></script>
+  <script defer src="${asset('js/vendor/ScrollTrigger.min.js')}"></script>`
+    : '';
 
   return `<head>
   <meta charset="UTF-8">
@@ -77,6 +85,7 @@ function buildHead(meta, config, institution, base, asset) {
   <title>${title}</title>
   ${plausibleScript}
   ${pwaTags}
+  ${scrollHeroScripts}
 
   <!-- Platform Core token set (fonts/logo lookup only — colours below are this guide's own) -->
   ${tokenSetHtml}
@@ -161,7 +170,8 @@ function buildWordmark(institution, asset) {
   return `<a class="gg-nav-wordmark" href="./">${inner}</a>`;
 }
 
-function buildBody(institution, guide, ceremonies, asset, groupMembers) {
+function buildBody(institution, guide, ceremonies, asset, groupMembers, config) {
+  const scrollHeroEnabled = !!config?.scrollHero?.enabled;
   return `<nav class="gg-nav">
   ${buildWordmark(institution, asset)}
   <div class="gg-nav-links">
@@ -193,22 +203,7 @@ ${buildMobileMenu(guide, ceremonies, groupMembers)}
   <span id="floating-bar-text"></span>
 </div>
 
-<section class="gg-hero" id="hero">
-  <div class="gg-hero-bg">${buildHeroVideo(guide.heroVideo, asset)}</div>
-  <div class="gg-hero-content">
-    <div class="gg-hero-photo" id="hero-photo" hidden>
-      <img id="hero-photo-img" src="" alt="">
-    </div>
-    <p class="gg-hero-congrats" id="hero-congrats">Congratulations!</p>
-    <a class="gg-hero-find-link" id="hero-find-link" href="#find-student">Find <span id="hero-find-name">a student&#39;s name</span> in the honours list &#8594;</a>
-    <div class="gg-hero-title-block">
-      <h1 class="gg-hero-title">${escHtml(guide.title)}</h1>
-    </div>
-  </div>
-  <button class="gg-hero-pause">&#9646;&#9646; Pause</button>
-</section>
-
-${buildWelcomeSection(guide, asset)}
+${scrollHeroEnabled ? buildScrollHero(institution, guide, asset) : buildStaticHero(guide, asset) + buildWelcomeSection(guide, asset)}
 ${buildAboutSection(guide, asset)}
 
 <section class="gg-find" id="find-student">
@@ -268,13 +263,16 @@ function renderBackgroundImage(image, asset) {
 // Same background-video treatment as the narrative kind's cover
 // (renderer/render-cover.js) — video layered under the existing gradient
 // overlay (.gg-hero-bg::after) so hero text stays legible either way.
+// id="hero-video" is always present when a video exists (harmless if
+// unused) — js/graduation-guide-runtime.js's pause button wiring needs a
+// stable hook in both the static and scroll-hero markup variants below.
 function buildHeroVideo(heroVideo, asset) {
   if (!heroVideo || !heroVideo.url) return '';
   const poster = heroVideo.poster ? ` poster="${escHtml(resolveMediaUrl(heroVideo.poster, asset))}"` : '';
   const autoplay = heroVideo.autoplay !== false ? ' autoplay' : '';
   const loop = heroVideo.loop !== false ? ' loop' : '';
   const muted = heroVideo.muted !== false ? ' muted' : '';
-  return `<video class="gg-hero-bg-video"${autoplay}${muted}${loop} playsinline${poster}>
+  return `<video class="gg-hero-bg-video" id="hero-video"${autoplay}${muted}${loop} playsinline${poster}>
     <source src="${escHtml(resolveMediaUrl(heroVideo.url, asset))}" type="video/mp4">
   </video>`;
 }
@@ -291,7 +289,10 @@ function buildCeremonyRecording(cfg, asset) {
   </section>`;
 }
 
-function buildWelcomeSection(guide, asset) {
+// Shared by the legacy two-column welcome section and the scroll-hero's
+// pinned welcome block below — same signers/subtitle/body markup either
+// way, just a different wrapper/background around it.
+function buildWelcomeTextContent(guide, asset) {
   const signers = (guide.welcomeSigners || [])
     .map((s) => `<div class="gg-signer">
         <div class="gg-signer-portrait">${renderPersonPhoto(s.photo, asset, s.name)}</div>
@@ -301,11 +302,8 @@ function buildWelcomeSection(guide, asset) {
     .join('\n      ');
 
   const body = (guide.welcomeText || []).map((p) => `<p>${escHtml(p)}</p>`).join('\n      ');
-  const welcomeImg = renderBackgroundImage(guide.welcomeImage, asset);
 
-  return `<section class="gg-welcome">
-  <div class="gg-welcome-left">
-    <div class="gg-welcome-subtitle">${escHtml(guide.welcomeSubtitle || '')}</div>
+  return `<div class="gg-welcome-subtitle">${escHtml(guide.welcomeSubtitle || '')}</div>
     <div class="gg-welcome-heading">A welcome message from</div>
     <div class="gg-welcome-signers">
       ${signers}
@@ -313,10 +311,78 @@ function buildWelcomeSection(guide, asset) {
     <div class="gg-welcome-rule"></div>
     <div class="gg-welcome-body">
       ${body}
-    </div>
+    </div>`;
+}
+
+function buildWelcomeSection(guide, asset) {
+  const welcomeImg = renderBackgroundImage(guide.welcomeImage, asset);
+
+  return `<section class="gg-welcome">
+  <div class="gg-welcome-left">
+    ${buildWelcomeTextContent(guide, asset)}
   </div>
   <div class="gg-welcome-right">${welcomeImg || '<div class="gg-welcome-right-inner">&#127891;</div>'}</div>
 </section>`;
+}
+
+// ── Hero: two variants ─────────────────────────────────────────────────
+// Default (buildStaticHero) is exactly what every graduation-guide project
+// has always rendered — a fixed-height hero, welcome section immediately
+// below it as its own separate block. Opt-in only (buildScrollHero) is
+// the scroll-driven version: hero + welcome merge into one pinned stage
+// (video sticks via CSS position:sticky — same technique the narrative
+// kind's panoramic-scroll layout already uses — no JS needed for the
+// pin/release itself), with a --gg-primary panel wiping in behind the
+// welcome text as it scrolls into view (GSAP ScrollTrigger, scrubbed to
+// scroll position — same technique the narrative kind's split-reveal
+// layout already uses). See project memory
+// "hse-graduation-guide-scroll-hero".
+
+function buildStaticHero(guide, asset) {
+  return `<section class="gg-hero" id="hero">
+  <div class="gg-hero-bg">${buildHeroVideo(guide.heroVideo, asset)}</div>
+  <div class="gg-hero-content">
+    <div class="gg-hero-photo" id="hero-photo" hidden>
+      <img id="hero-photo-img" src="" alt="">
+    </div>
+    <p class="gg-hero-congrats" id="hero-congrats">Congratulations!</p>
+    <a class="gg-hero-find-link" id="hero-find-link" href="#find-student">Find <span id="hero-find-name">a student&#39;s name</span> in the honours list &#8594;</a>
+    <div class="gg-hero-title-block">
+      <h1 class="gg-hero-title">${escHtml(guide.title)}</h1>
+    </div>
+  </div>
+  ${buildHeroPauseButton(guide.heroVideo)}
+</section>`;
+}
+
+function buildHeroPauseButton(heroVideo) {
+  if (!heroVideo || !heroVideo.url) return '';
+  return `<button class="gg-hero-pause" id="hero-pause-btn" aria-label="Pause background video" aria-pressed="false">&#9646;&#9646; Pause</button>`;
+}
+
+function buildScrollHero(institution, guide, asset) {
+  return `<div class="gg-scroll-hero" id="scroll-hero">
+  <div class="gg-scroll-hero-sticky">
+    <div class="gg-hero-bg">${buildHeroVideo(guide.heroVideo, asset)}</div>
+    <div class="gg-scroll-wipe-panel" id="scroll-wipe-panel"></div>
+    ${buildHeroPauseButton(guide.heroVideo)}
+  </div>
+  <div class="gg-scroll-hero-content">
+    <div class="gg-scroll-hero-block" id="scroll-hero-entrance">
+      <div class="gg-hero-photo" id="hero-photo" hidden>
+        <img id="hero-photo-img" src="" alt="">
+      </div>
+      <p class="gg-hero-congrats" id="hero-congrats">Congratulations!</p>
+      <a class="gg-hero-find-link" id="hero-find-link" href="#find-student">Find <span id="hero-find-name">a student&#39;s name</span> in the honours list &#8594;</a>
+      <div class="gg-hero-title-block">
+        <h1 class="gg-hero-title">${escHtml(guide.title)}</h1>
+      </div>
+    </div>
+    <div class="gg-scroll-welcome-block" id="scroll-welcome-trigger">
+      ${buildWelcomeTextContent(guide, asset)}
+    </div>
+  </div>
+</div>`;
 }
 
 function buildAboutSection(guide, asset) {

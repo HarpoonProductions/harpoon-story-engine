@@ -226,6 +226,47 @@ assertContains('No-photo fallback: signer placeholder icon unchanged', html, '&#
 assertContains('No-photo fallback: dean placeholder icon unchanged', html, '&#128100;');
 assertAbsent('No-recording fallback: no recording section rendered', html, 'gg-recording');
 
+// Default (real, untouched) render has config.scrollHero unset — confirms
+// the opt-in flag actually gates everything: no GSAP payload, no pinned
+// markup, for every project that hasn't turned this on.
+assertAbsent('scrollHero off by default: no GSAP script tag', html, 'gsap.min.js');
+assertAbsent('scrollHero off by default: no ScrollTrigger script tag', html, 'ScrollTrigger.min.js');
+assertAbsent('scrollHero off by default: no pinned hero markup', html, 'id="scroll-hero"');
+assertContains('scrollHero off by default: static hero still renders', html, 'class="gg-hero" id="hero"');
+
+// ── Scroll hero (config.scrollHero.enabled) ─────────────────────────
+console.log('\n── Scroll hero (synthetic fixture) ─────────────────────────');
+
+const scrollHeroContent = JSON.parse(JSON.stringify(content));
+scrollHeroContent.config = scrollHeroContent.config || {};
+scrollHeroContent.config.scrollHero = { enabled: true };
+scrollHeroContent.guide.heroVideo = { url: 'videos/hero-test.mp4' };
+
+const scrollHeroOutDir = path.join(__dirname, 'output', 'test', 'imperial-2026-scroll-hero');
+const scrollHeroFiles = await render(scrollHeroContent, scrollHeroOutDir, { basePath: '' });
+const scrollHeroHtml = fs.readFileSync(scrollHeroFiles.find((f) => f.endsWith('index.html')), 'utf8');
+
+assertContains('GSAP script tag present when enabled', scrollHeroHtml, 'js/vendor/gsap.min.js');
+assertContains('ScrollTrigger script tag present when enabled', scrollHeroHtml, 'js/vendor/ScrollTrigger.min.js');
+assertContains('Pinned hero wrapper renders', scrollHeroHtml, 'id="scroll-hero"');
+assertContains('Sticky video/panel layer renders', scrollHeroHtml, 'gg-scroll-hero-sticky');
+assertContains('Wipe panel renders', scrollHeroHtml, 'id="scroll-wipe-panel"');
+assertContains('Entrance block renders', scrollHeroHtml, 'id="scroll-hero-entrance"');
+assertContains('Welcome scroll-trigger renders', scrollHeroHtml, 'id="scroll-welcome-trigger"');
+assertContains('Welcome signers still render inside the pinned block', scrollHeroHtml, 'gg-signer-name');
+assertAbsent('Static hero section not also rendered', scrollHeroHtml, 'class="gg-hero" id="hero"');
+assertAbsent('Legacy two-column welcome section not also rendered', scrollHeroHtml, 'class="gg-welcome"');
+assertContains('Hero video renders inside the pinned sticky layer', scrollHeroHtml, 'id="hero-video"');
+assertContains('Pause button renders when a hero video is present', scrollHeroHtml, 'id="hero-pause-btn"');
+
+// No video → no pause button, in *either* hero variant (nothing to pause).
+const noVideoContent = JSON.parse(JSON.stringify(scrollHeroContent));
+delete noVideoContent.guide.heroVideo;
+const noVideoOutDir = path.join(__dirname, 'output', 'test', 'imperial-2026-scroll-hero-no-video');
+const noVideoFiles = await render(noVideoContent, noVideoOutDir, { basePath: '' });
+const noVideoHtml = fs.readFileSync(noVideoFiles.find((f) => f.endsWith('index.html')), 'utf8');
+assertAbsent('No pause button when there is no hero video', noVideoHtml, 'gg-hero-pause');
+
 console.log(`\n${passed} passed, ${failed} failed\n`);
 process.exit(failed > 0 ? 1 : 0);
 

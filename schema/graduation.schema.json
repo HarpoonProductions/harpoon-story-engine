@@ -47,6 +47,13 @@
             "theme_color": { "type": "string", "description": "Overrides institution.primaryColor for the manifest/theme-color meta, if set." },
             "background_color": { "type": "string", "description": "Overrides institution.lightBackground for the manifest splash background, if set." }
           }
+        },
+        "scrollHero": {
+          "type": "object",
+          "description": "Opt-in scroll-driven hero: the hero video pins in place (CSS position:sticky) while the hero title and the welcome-message text scroll up over it, with a --gg-primary panel wiping in behind the welcome text as it settles into view. Off by default — every project keeps today's static hero + separate welcome section unless this is explicitly enabled. Pulls in vendored GSAP + ScrollTrigger (js/vendor/, same offline-safe mechanism the narrative kind already uses) only when enabled, so projects that don't opt in pay zero extra payload.",
+          "properties": {
+            "enabled": { "type": "boolean", "default": false }
+          }
         }
       }
     },

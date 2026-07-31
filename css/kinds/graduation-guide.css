@@ -248,6 +248,78 @@ a{color:inherit;text-decoration:none}
 }
 .gg-welcome-right img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;}
 
+/* Scroll hero — opt-in (config.scrollHero.enabled) replacement for
+   .gg-hero + .gg-welcome above, both of which stay exactly as-is and
+   keep serving every project that doesn't opt in. The pin/release
+   itself needs zero JS: .gg-scroll-hero-sticky is a plain CSS
+   position:sticky child of a taller, ordinary-flow parent — it reads
+   as "fixed" for as long as .gg-scroll-hero-content (pulled up on top
+   of it via the negative margin below) is taller than 100vh, then
+   naturally scrolls away with the rest of the page once that content
+   runs out — same technique css/layouts/panoramic-scroll.css already
+   uses. The wipe panel's width is driven by --wipe-progress (0–1), set
+   from a plain scroll-position calculation, not a GSAP ScrollTrigger —
+   see js/graduation-guide-runtime.js's setupScrollHero() for why
+   (ScrollTrigger's own start/end measurement gets confused by the
+   negative-margin overlap this needs, so this reads the real, current
+   getBoundingClientRect() on scroll instead of trusting a cached
+   pixel range calculated once up front). */
+.gg-scroll-hero{position:relative;}
+.gg-scroll-hero-sticky{
+  position:sticky;top:0;height:100vh;min-height:560px;
+  overflow:hidden;z-index:0;
+}
+.gg-scroll-hero-content{
+  position:relative;z-index:1;margin-top:-100vh;
+  /* The wrapper's own (invisible) box spans the full pinned area too —
+     pointer-events:none here is what actually lets clicks reach the
+     pause button underneath; the pointer-events:none on its two
+     children below is necessary but not sufficient on its own, since
+     an ancestor box with the default `auto` still captures hits even
+     when painted with nothing. */
+  pointer-events:none;
+}
+.gg-scroll-hero-block{
+  min-height:100vh;display:flex;flex-direction:column;
+  justify-content:flex-end;padding:0 44px 56px;
+  /* Rest state JS animates from — "fade in from the right" on load.
+     Same accepted tradeoff as the narrative kind's own .hse-cover__*
+     entrance elements (js/runtime.js's setupCoverEntrance): content is
+     invisible until JS runs. setupScrollHero() explicitly snaps this
+     back to opacity:1 for prefers-reduced-motion. */
+  opacity:0;transform:translateX(40px);
+  /* This box's own flex rect spans the full pinned video area (same
+     stacking-context problem as .gg-scroll-welcome-block below), which
+     would otherwise swallow clicks meant for the pause button — let
+     clicks pass through the empty flex space and only accept them on
+     the actual children (title, find-link). */
+  pointer-events:none;
+}
+.gg-scroll-hero-block>*{pointer-events:auto;}
+.gg-scroll-welcome-block{
+  position:relative;z-index:2;min-height:100vh;max-width:50%;
+  display:flex;flex-direction:column;justify-content:center;
+  padding:60px 48px;color:#fff;
+  /* This block's own box overlaps the pinned video (incl. its pause
+     button) for the whole time it's scrolling into view, even before
+     the wipe panel paints behind it — pointer-events:none stops it
+     eating clicks meant for the video controls beneath. It has no
+     interactive content of its own (plain text/signers), so this is
+     safe. */
+  pointer-events:none;
+}
+@media(max-width:800px){
+  .gg-scroll-welcome-block{max-width:100%;}
+}
+.gg-scroll-wipe-panel{
+  position:absolute;inset:0;right:auto;z-index:1;
+  width:calc(var(--wipe-progress,0) * 50%);
+  background:var(--gg-primary);
+}
+@media(max-width:800px){
+  .gg-scroll-wipe-panel{width:calc(var(--wipe-progress,0) * 100%);}
+}
+
 /* About */
 .gg-about{position:relative;overflow:hidden;min-height:420px;display:grid;grid-template-columns:1fr 1fr;}
 @media(max-width:700px){.gg-about{grid-template-columns:1fr}}

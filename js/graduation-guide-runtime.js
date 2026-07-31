@@ -518,7 +518,7 @@
         // it's from a legitimate source — show who it's actually from.
         logo: institution.logo || null,
         logoAlt: institution.name || '',
-        title: guide.title || '',
+        title: data.guide.title || '',
       });
     }
   })();
@@ -530,6 +530,106 @@
       elapsed += 30;
       track('Heartbeat', { minutes: String(elapsed / 60) });
     }, 30000);
+  })();
+
+  // ── Hero video pause control ─────────────────────────────────────────
+  // WCAG 2.2.2: auto-playing video needs a pause mechanism — the button
+  // has always been in the markup (both hero variants below) but nothing
+  // ever wired it up. Applies regardless of config.scrollHero — the
+  // default static hero has exactly the same autoplaying-video-needs-a-
+  // pause-control obligation as the scroll-hero variant does.
+  function setupHeroVideoPause() {
+    var video = document.getElementById('hero-video');
+    var btn = document.getElementById('hero-pause-btn');
+    if (!video || !btn) return;
+
+    function setPausedState(paused) {
+      btn.setAttribute('aria-pressed', paused ? 'true' : 'false');
+      btn.setAttribute('aria-label', paused ? 'Play background video' : 'Pause background video');
+      btn.innerHTML = paused ? '&#9654; Play' : '&#9646;&#9646; Pause';
+    }
+
+    btn.addEventListener('click', function () {
+      if (video.paused) { video.play(); setPausedState(false); }
+      else { video.pause(); setPausedState(true); }
+    });
+
+    if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      video.pause();
+      setPausedState(true);
+    }
+  }
+  setupHeroVideoPause();
+
+  // ── Scroll hero (config.scrollHero.enabled) ──────────────────────────
+  // No-ops entirely — including never touching GRADUATION_DATA or
+  // anything else — when the opt-in markup isn't present (the default,
+  // every project except ones that have explicitly turned this on) or
+  // when GSAP/ScrollTrigger didn't load (buildPwaHeadTags-equivalent
+  // guard: renderer/kinds/graduation-guide.js only emits those <script>
+  // tags when config.scrollHero.enabled, so their absence here means
+  // this project genuinely didn't opt in — not a load failure to retry).
+  // See project memory "hse-graduation-guide-scroll-hero".
+  (function setupScrollHero() {
+    var root = document.getElementById('scroll-hero');
+    if (!root || !window.gsap) return;
+
+    var entrance = document.getElementById('scroll-hero-entrance');
+    var panel = document.getElementById('scroll-wipe-panel');
+    var reducedMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    if (reducedMotion) {
+      // Snap straight to the end state — fully revealed, panel fully
+      // wiped — rather than animating, same treatment js/runtime.js
+      // gives .hse-reveal/.hse-cover__* elements.
+      if (entrance) { entrance.style.opacity = '1'; entrance.style.transform = 'none'; }
+      if (panel) panel.style.setProperty('--wipe-progress', '1');
+      return;
+    }
+
+    if (entrance) {
+      gsap.to(entrance, { opacity: 1, x: 0, duration: 0.9, ease: 'power2.out', delay: 0.3 });
+    }
+
+    // Deliberately NOT a GSAP ScrollTrigger for this part — tried that
+    // first, and it measured its own start/end scroll positions wrong
+    // (producing nonsensical, sometimes negative pixel ranges), because
+    // .gg-scroll-hero-content's margin-top:-100vh (needed to make the
+    // sticky-video-behind-scrolling-text illusion work at all — see the
+    // CSS) throws off ScrollTrigger's assumption that an element's
+    // rendered position matches its document-flow offset. Plain
+    // getBoundingClientRect() on every scroll tick doesn't care about
+    // that gap — it just reports where the element actually is right
+    // now — so this reads correctly regardless. wipeStart/wipeEnd are
+    // computed from the real rendered hero-block height, not a guessed
+    // constant, so this still lands right whatever the welcome copy's
+    // actual length is.
+    if (!panel) return;
+    var heroHeight = entrance ? entrance.offsetHeight : window.innerHeight;
+    var totalHeight = root.offsetHeight;
+    var heroFraction = totalHeight > 0 ? heroHeight / totalHeight : 0;
+    var wipeStart = Math.min(0.95, heroFraction);
+    var wipeEnd = Math.min(1, wipeStart + 0.18);
+
+    var ticking = false;
+    function updateWipe() {
+      ticking = false;
+      var rect = root.getBoundingClientRect();
+      var scrollableDistance = Math.max(1, root.offsetHeight - window.innerHeight);
+      var raw = Math.min(1, Math.max(0, -rect.top / scrollableDistance));
+      var p = raw <= wipeStart
+        ? 0
+        : raw >= wipeEnd
+          ? 1
+          : (raw - wipeStart) / (wipeEnd - wipeStart);
+      panel.style.setProperty('--wipe-progress', p);
+    }
+    window.addEventListener('scroll', function () {
+      if (ticking) return;
+      ticking = true;
+      requestAnimationFrame(updateWipe);
+    }, { passive: true });
+    updateWipe();
   })();
 
   // ── Init ─────────────────────────────────────────────────────────────
