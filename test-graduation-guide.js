@@ -170,6 +170,12 @@ for (const size of ['192', '512']) {
 console.log('\n── Homepage media (synthetic fixture) ──────────────────────');
 
 const mediaContent = JSON.parse(JSON.stringify(content));
+// Tests the legacy two-column welcome+image layout specifically, so this
+// must stay off regardless of imperial-2026's own current config.scrollHero
+// setting (production has it on — see the dedicated scroll-hero fixture
+// below for that path instead).
+mediaContent.config = mediaContent.config || {};
+mediaContent.config.scrollHero = { enabled: false };
 mediaContent.guide.heroVideo = { url: 'videos/hero-test.mp4', poster: 'photos/hero-poster-test.jpg' };
 mediaContent.guide.welcomeImage = { url: 'photos/welcome-test.jpg', alt: 'Test welcome image' };
 mediaContent.guide.welcomeSigners[0].photo = 'photos/signer-test.jpg';
@@ -226,13 +232,22 @@ assertContains('No-photo fallback: signer placeholder icon unchanged', html, '&#
 assertContains('No-photo fallback: dean placeholder icon unchanged', html, '&#128100;');
 assertAbsent('No-recording fallback: no recording section rendered', html, 'gg-recording');
 
-// Default (real, untouched) render has config.scrollHero unset — confirms
-// the opt-in flag actually gates everything: no GSAP payload, no pinned
-// markup, for every project that hasn't turned this on.
-assertAbsent('scrollHero off by default: no GSAP script tag', html, 'gsap.min.js');
-assertAbsent('scrollHero off by default: no ScrollTrigger script tag', html, 'ScrollTrigger.min.js');
-assertAbsent('scrollHero off by default: no pinned hero markup', html, 'id="scroll-hero"');
-assertContains('scrollHero off by default: static hero still renders', html, 'class="gg-hero" id="hero"');
+// Explicit fixture with scrollHero off — confirms the opt-in flag actually
+// gates everything: no GSAP payload, no pinned markup, for every project
+// that hasn't turned this on. Deliberately its own clone rather than the
+// shared `html` above: imperial-2026 itself has scrollHero.enabled:true in
+// production now, so this can't lean on that fixture "happening" to be off.
+const scrollHeroOffContent = JSON.parse(JSON.stringify(content));
+scrollHeroOffContent.config = scrollHeroOffContent.config || {};
+scrollHeroOffContent.config.scrollHero = { enabled: false };
+const scrollHeroOffOutDir = path.join(__dirname, 'output', 'test', 'imperial-2026-scroll-hero-off');
+const scrollHeroOffFiles = await render(scrollHeroOffContent, scrollHeroOffOutDir, { basePath: '' });
+const scrollHeroOffHtml = fs.readFileSync(scrollHeroOffFiles.find((f) => f.endsWith('index.html')), 'utf8');
+
+assertAbsent('scrollHero off by default: no GSAP script tag', scrollHeroOffHtml, 'gsap.min.js');
+assertAbsent('scrollHero off by default: no ScrollTrigger script tag', scrollHeroOffHtml, 'ScrollTrigger.min.js');
+assertAbsent('scrollHero off by default: no pinned hero markup', scrollHeroOffHtml, 'id="scroll-hero"');
+assertContains('scrollHero off by default: static hero still renders', scrollHeroOffHtml, 'class="gg-hero" id="hero"');
 
 // ── Scroll hero (config.scrollHero.enabled) ─────────────────────────
 console.log('\n── Scroll hero (synthetic fixture) ─────────────────────────');

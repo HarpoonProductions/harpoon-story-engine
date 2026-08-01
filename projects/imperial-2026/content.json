@@ -15,6 +15,9 @@
     },
     "pwa": {
       "enabled": true
+    },
+    "scrollHero": {
+      "enabled": true
     }
   },
   "institution": {
@@ -48,6 +51,10 @@
   },
   "guide": {
     "title": "Graduation Days 2026",
+    "heroVideo": {
+      "url": "https://harpn.s3-eu-west-2.amazonaws.com/imperial/graduation-guide-media/homepageoptionv3-1280x720.mp4",
+      "poster": "https://harpn.s3-eu-west-2.amazonaws.com/imperial/graduation-guide-media/Screenshot%202026-07-31%20at%206.37.15%E2%80%AFPM.png-hpn2560.jpg"
+    },
     "welcomeSubtitle": "Celebrating your success",
     "welcomeSigners": [
       {
