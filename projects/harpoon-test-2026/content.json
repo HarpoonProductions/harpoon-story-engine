@@ -1,0 +1,83 @@
+{
+  "kind": "graduation-guide",
+  "meta": {
+    "project_id": "harpoon-test-2026",
+    "title": "Test Graduation Guide",
+    "client": "Harpoon Productions (internal testing)"
+  },
+  "config": {
+    "pwa": {
+      "enabled": true
+    }
+  },
+  "institution": {
+    "name": "Test University",
+    "shortName": "Test Uni",
+    "primaryColor": "#1a2a3a",
+    "accentColor": "#f2a900",
+    "lightBackground": "#f0f0f0",
+    "textColor": "#161a1d",
+    "fontHeading": "Arial, Helvetica, sans-serif",
+    "fontBody": "Arial, Helvetica, sans-serif",
+    "bodyFontSize": "16px"
+  },
+  "guide": {
+    "title": "Test Graduation Guide",
+    "welcomeSubtitle": "Internal testing only",
+    "welcomeSigners": [
+      { "name": "Giles Wilson", "title": "Harpoon Productions" }
+    ],
+    "welcomeText": [
+      "This is an internal test project used to verify the personalised photo upload feature end-to-end — it is not a real graduation guide and isn't linked from anywhere public.",
+      "If you've been sent a link to this page, you've been asked to help test uploading, cropping, sharing, and removing a photo. Thank you!"
+    ],
+    "aboutTheDay": {
+      "politeRequests": [
+        "This is a test page — nothing here is real."
+      ]
+    }
+  },
+  "ceremonies": [
+    {
+      "ceremonyId": "C1",
+      "ceremonyTime": "10:00",
+      "ceremonyLabel": "Test Ceremony",
+      "day": 1,
+      "active": true,
+      "dean": {
+        "name": "Test Dean",
+        "role": "Test Faculty",
+        "intro": "Congratulations to everyone taking part in this test.",
+        "body": "This is placeholder content for internal testing of the personalised photo upload feature."
+      },
+      "processionGroups": [],
+      "orderOfCeremony": [],
+      "awardees": [],
+      "prizesIntro": null,
+      "courseGroups": [
+        {
+          "groupTitle": "Test Group",
+          "students": [
+            "Giles Wilson",
+            "Rachel Bartlett",
+            "Susannah Evans",
+            "Amy Brown",
+            "Fenton Chambers",
+            "Madeleine Wilson",
+            "Maura Wilson"
+          ]
+        }
+      ]
+    }
+  ],
+  "studentPhotos": {},
+  "searchIndex": [
+    { "name": "Giles Wilson", "course": "Test Group", "department": "Test Degree", "ceremonyId": "C1", "ceremonyTime": "10:00", "ceremonyLabel": "Test Ceremony" },
+    { "name": "Rachel Bartlett", "course": "Test Group", "department": "Test Degree", "ceremonyId": "C1", "ceremonyTime": "10:00", "ceremonyLabel": "Test Ceremony" },
+    { "name": "Susannah Evans", "course": "Test Group", "department": "Test Degree", "ceremonyId": "C1", "ceremonyTime": "10:00", "ceremonyLabel": "Test Ceremony" },
+    { "name": "Amy Brown", "course": "Test Group", "department": "Test Degree", "ceremonyId": "C1", "ceremonyTime": "10:00", "ceremonyLabel": "Test Ceremony" },
+    { "name": "Fenton Chambers", "course": "Test Group", "department": "Test Degree", "ceremonyId": "C1", "ceremonyTime": "10:00", "ceremonyLabel": "Test Ceremony" },
+    { "name": "Madeleine Wilson", "course": "Test Group", "department": "Test Degree", "ceremonyId": "C1", "ceremonyTime": "10:00", "ceremonyLabel": "Test Ceremony" },
+    { "name": "Maura Wilson", "course": "Test Group", "department": "Test Degree", "ceremonyId": "C1", "ceremonyTime": "10:00", "ceremonyLabel": "Test Ceremony" }
+  ]
+}
