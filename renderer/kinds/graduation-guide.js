@@ -214,7 +214,9 @@ ${buildAboutSection(guide, asset)}
       <input type="text" class="gg-find-input" id="inputField1"
              placeholder="Search name" autocomplete="off" autocorrect="off"
              autocapitalize="words" spellcheck="false">
-      <button class="gg-find-btn" id="find-btn">Search</button>
+      <button class="gg-find-btn" id="find-btn" aria-label="Search">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+      </button>
       <div class="gg-search-panel gg-search-panel--find" id="find-search-panel" role="listbox" hidden></div>
     </div>
   </div>

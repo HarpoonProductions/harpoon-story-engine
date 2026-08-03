@@ -7,7 +7,15 @@
  */
 
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-html{scroll-behavior:smooth}
+html{
+  scroll-behavior:smooth;
+  /* The fixed nav's real on-screen height, safe-area-adjusted — shared
+     so every other fixed/offset element (drawer, floating bar, hero
+     top padding) that needs to sit "just below the nav" references
+     this instead of each hardcoding a plain 50px that quietly breaks
+     on a notched device where the nav is visually taller. */
+  --gg-nav-height:calc(50px + env(safe-area-inset-top, 0px));
+}
 body{
   font-family:var(--gg-font-body);
   font-weight:400;font-size:16px;line-height:1.5;
@@ -19,9 +27,19 @@ a{color:inherit;text-decoration:none}
 
 /* Nav */
 .gg-nav{
-  position:fixed;top:0;left:0;right:0;height:50px;
+  position:fixed;top:0;left:0;right:0;
+  /* --gg-nav-height includes the safe-area inset (border-box) so the
+     50px of actual nav content always sits below the notch/Dynamic
+     Island, rather than partly behind it — on a notched iPhone this was
+     pushing real content (incl. the logo) up under the status bar,
+     which is what real-device testing reported as the drawer "obscuring
+     half the logo": the drawer's own top offset assumed a plain 50px
+     nav that wasn't actually where the nav visually ended on that
+     device. */
+  height:var(--gg-nav-height);
+  padding-top:env(safe-area-inset-top, 0px);
   background:var(--gg-primary);display:flex;align-items:center;
-  padding:0 24px;z-index:1000;gap:0;
+  padding-left:24px;padding-right:24px;z-index:1000;gap:0;
 }
 .gg-nav-wordmark{
   font-family:var(--gg-font-heading);font-weight:700;
@@ -156,20 +174,20 @@ a{color:inherit;text-decoration:none}
     transition:top 0.22s ease;
     z-index:1001;
   }
-  .gg-nav-search-input.open{top:50px;width:auto;padding:0 20px;}
+  .gg-nav-search-input.open{top:var(--gg-nav-height);width:auto;padding:0 20px;}
   .gg-nav-search-arrow{display:none;}
   /* #nav-search-panel specifically — not the shared .gg-search-panel
      class, which the page-body "Find a graduating student" box also
      uses and must keep its own inline (non-drawer) positioning. */
   #nav-search-panel{
-    position:fixed;top:102px;left:0;right:0;width:100%;max-width:100%;
-    border-radius:0;max-height:calc(100vh - 102px);
+    position:fixed;top:calc(var(--gg-nav-height) + 52px);left:0;right:0;width:100%;max-width:100%;
+    border-radius:0;max-height:calc(100vh - var(--gg-nav-height) - 52px);
   }
 }
 
 /* Floating bar */
 .gg-floating-bar{
-  position:fixed;top:50px;left:0;right:0;height:36px;
+  position:fixed;top:var(--gg-nav-height);left:0;right:0;height:36px;
   background:var(--gg-accent);color:#1a2a20;font-size:14px;
   display:flex;align-items:center;gap:6px;padding:0 24px;
   z-index:900;opacity:0;visibility:hidden;
@@ -179,7 +197,7 @@ a{color:inherit;text-decoration:none}
 
 /* Hero */
 .gg-hero{
-  height:100vh;min-height:560px;padding-top:50px;
+  height:100vh;min-height:560px;padding-top:var(--gg-nav-height);
   position:relative;overflow:hidden;display:flex;align-items:flex-end;
 }
 .gg-hero-bg{
@@ -351,9 +369,9 @@ a{color:inherit;text-decoration:none}
 .gg-find-input{flex:1;padding:12px 14px;background:#fff;border:none;font-size:15px;font-family:inherit;outline:none;color:var(--gg-text);}
 .gg-find-input::placeholder{color:#999;}
 .gg-find-btn{
-  padding:12px 24px;background:var(--gg-primary);border:2px solid #fff;
-  color:#fff;font-size:14px;font-weight:700;font-family:inherit;
-  cursor:pointer;white-space:nowrap;flex-shrink:0;transition:background 0.15s;
+  padding:0 18px;background:var(--gg-primary);border:2px solid #fff;
+  color:#fff;font-family:inherit;display:flex;align-items:center;justify-content:center;
+  cursor:pointer;flex-shrink:0;transition:background 0.15s;
 }
 .gg-find-btn:hover{background:rgba(255,255,255,0.1);}
 

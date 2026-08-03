@@ -358,8 +358,7 @@
   // harmless no-op when called from that one, since #nav-search-input
   // just won't have .open set in that flow.
   function closeNavSearch() {
-    var navInput = document.getElementById('nav-search-input');
-    if (navInput) navInput.classList.remove('open');
+    setNavSearchOpen(false);
   }
 
   function cssEscape(s) {
@@ -424,14 +423,44 @@
   wireSearchBox('nav-search-input', 'nav-search-panel');
   wireSearchBox('inputField1', 'find-search-panel');
 
-  document.getElementById('nav-search-toggle')?.addEventListener('click', function () {
+  var SEARCH_ICON = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>';
+  var CLOSE_ICON = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>';
+  var navSearchToggle = document.getElementById('nav-search-toggle');
+
+  // On mobile, the drawer's the only visual state change — the toggle
+  // button itself stays put in the same spot regardless, so it doubles
+  // as the close control. Without swapping its icon there was nothing
+  // telling anyone that tapping it again dismisses the drawer — feedback
+  // from real testing: "no way to dismiss".
+  function setNavSearchOpen(open) {
     var inp = document.getElementById('nav-search-input');
-    inp.classList.toggle('open');
-    if (inp.classList.contains('open')) {
+    if (!inp) return;
+    inp.classList.toggle('open', open);
+    if (navSearchToggle) {
+      navSearchToggle.innerHTML = open ? CLOSE_ICON : SEARCH_ICON;
+      navSearchToggle.setAttribute('aria-label', open ? 'Close search' : 'Search');
+    }
+    if (open) {
       inp.focus();
     } else {
       document.getElementById('nav-search-panel')?.classList.remove('show');
     }
+  }
+
+  navSearchToggle?.addEventListener('click', function () {
+    setNavSearchOpen(!document.getElementById('nav-search-input')?.classList.contains('open'));
+  });
+
+  // Tapping anywhere else on the page — the other natural "never mind"
+  // gesture, alongside Escape (wireSearchBox) and re-tapping the toggle
+  // — also closes the drawer, not just its results panel.
+  document.addEventListener('click', function (e) {
+    var inp = document.getElementById('nav-search-input');
+    if (!inp || !inp.classList.contains('open')) return;
+    if (e.target === inp || e.target === navSearchToggle || navSearchToggle?.contains(e.target)) return;
+    var panel = document.getElementById('nav-search-panel');
+    if (panel && panel.contains(e.target)) return;
+    setNavSearchOpen(false);
   });
   document.getElementById('nav-search-submit')?.addEventListener('click', function () {
     var input = document.getElementById('nav-search-input');
@@ -692,11 +721,15 @@
       });
     }
 
-    // iOS install nudge — every visit, not just a personalised share
-    // link landing; the message just personalises further when it can.
-    // No-ops entirely if HarpoonPWA isn't present (config.pwa.enabled
+    // iOS install nudge — every visit EXCEPT a student's own first landing
+    // on their edit link, where it competes with the actual thing they're
+    // there to do (add their photo) before they've done it — feedback
+    // from real testing: it "feels too early" at that exact moment. Still
+    // shows for view-only visits (family/friends) and, implicitly, on any
+    // later visit back to the same edit link once the photo's already
+    // added. No-ops entirely if HarpoonPWA isn't present (config.pwa.enabled
     // false) or if the visitor isn't on iOS / already has it installed.
-    if (window.HarpoonPWA) {
+    if (window.HarpoonPWA && !editToken) {
       var institution = data.institution || {};
       window.HarpoonPWA.maybeShowIOSInstallBanner({
         message: name
