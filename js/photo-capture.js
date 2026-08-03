@@ -40,6 +40,7 @@
   // Overridable for local/dev testing without touching the render
   // pipeline — production pages get the real deployed service.
   var UPLOAD_ENDPOINT = global.HARPOON_PHOTO_UPLOAD_ENDPOINT || 'https://harpoon-photo-upload.onrender.com/upload';
+  var DELETE_ENDPOINT = global.HARPOON_PHOTO_DELETE_ENDPOINT || 'https://harpoon-photo-upload.onrender.com/delete';
 
   function injectStyles() {
     if (document.getElementById(STYLE_ID)) return;
@@ -91,8 +92,16 @@
       'background:rgba(255,255,255,0.06);color:#fff;font-size:18px;line-height:1;cursor:pointer;}' +
       '.hpc-zoom-btn:hover,.hpc-zoom-btn:focus-visible{background:rgba(255,255,255,0.16);}' +
       '.hpc-hint{font-size:12px;color:rgba(255,255,255,0.55);text-align:center;margin-bottom:16px;}' +
-      '.hpc-consent{font-size:12px;line-height:1.5;color:rgba(255,255,255,0.65);margin-bottom:18px;}' +
+      '.hpc-consent{font-size:12px;line-height:1.5;color:rgba(255,255,255,0.65);margin-bottom:10px;}' +
       '.hpc-consent a{color:#40E0CF;}' +
+      '.hpc-terms{font-size:12px;color:rgba(255,255,255,0.55);margin-bottom:18px;}' +
+      '.hpc-terms summary{cursor:pointer;color:rgba(255,255,255,0.75);}' +
+      '.hpc-terms summary:hover,.hpc-terms summary:focus-visible{color:#fff;}' +
+      '.hpc-terms p{margin-top:8px;line-height:1.5;}' +
+      '.hpc-terms a{color:#40E0CF;}' +
+      '.hpc-btn-danger{background:rgba(220,60,60,0.16);border-color:rgba(220,60,60,0.5);color:#ff9d9d;}' +
+      '.hpc-btn-danger:hover,.hpc-btn-danger:focus-visible{background:rgba(220,60,60,0.28);}' +
+      '.hpc-remove-link{color:rgba(255,255,255,0.55);}' +
       '.hpc-error{background:rgba(220,60,60,0.18);border:1px solid rgba(220,60,60,0.4);' +
       'border-radius:8px;padding:10px 12px;font-size:13px;margin-bottom:14px;}' +
       '.hpc-success-photo{width:120px;height:120px;border-radius:50%;overflow:hidden;margin:0 auto 16px;' +
@@ -148,6 +157,21 @@
     return function untrap() { container.removeEventListener('keydown', onKeydown); };
   }
 
+  // Shared between init() (wiring the trigger's own load/error listeners)
+  // and the delete flow in openModal() (which clears photoImg.src
+  // directly via removeAttribute — that fires neither a 'load' nor an
+  // 'error' event, so the trigger label needs an explicit refresh call,
+  // not just event listeners).
+  function refreshPhotoTrigger(photoImg) {
+    var trigger = photoImg.parentElement && photoImg.parentElement.querySelector('.hpc-trigger');
+    if (!trigger) return;
+    var hasPhoto = !!photoImg.src && !photoImg.dataset.errored;
+    trigger.innerHTML = hasPhoto
+      ? svgCamera() + '<span>Change</span>'
+      : svgCamera() + '<span>Add your<br>photo</span>';
+    trigger.setAttribute('aria-label', hasPhoto ? 'Change your photo' : 'Add your photo');
+  }
+
   function init(opts) {
     opts = opts || {};
     var photoEl = document.getElementById('hero-photo');
@@ -160,17 +184,10 @@
     var trigger = document.createElement('button');
     trigger.type = 'button';
     trigger.className = 'hpc-trigger';
-    function refreshTriggerLabel() {
-      var hasPhoto = !!photoImg.src && !photoImg.dataset.errored;
-      trigger.innerHTML = hasPhoto
-        ? svgCamera() + '<span>Change</span>'
-        : svgCamera() + '<span>Add your<br>photo</span>';
-      trigger.setAttribute('aria-label', hasPhoto ? 'Change your photo' : 'Add your photo');
-    }
-    photoImg.addEventListener('load', function () { photoImg.dataset.errored = ''; refreshTriggerLabel(); });
-    photoImg.addEventListener('error', function () { photoImg.dataset.errored = '1'; refreshTriggerLabel(); });
-    refreshTriggerLabel();
+    photoImg.addEventListener('load', function () { photoImg.dataset.errored = ''; refreshPhotoTrigger(photoImg); });
+    photoImg.addEventListener('error', function () { photoImg.dataset.errored = '1'; refreshPhotoTrigger(photoImg); });
     photoEl.appendChild(trigger);
+    refreshPhotoTrigger(photoImg);
 
     trigger.addEventListener('click', function () { openModal(opts, photoImg); });
   }
@@ -208,14 +225,25 @@
 
     renderChooseStep();
 
+    function hasExistingPhoto() {
+      return !!photoImg.src && !photoImg.dataset.errored;
+    }
+
     function renderChooseStep() {
+      var removeBtnHtml = hasExistingPhoto()
+        ? '<button type="button" class="hpc-btn-text hpc-remove-link" id="hpc-remove">Remove my photo</button>'
+        : '';
       dialog.innerHTML =
         '<button type="button" class="hpc-close" aria-label="Close">&#10005;</button>' +
         '<p id="hpc-title" class="hpc-title">Add your photo</p>' +
-        '<p class="hpc-consent">Your photo will appear on your graduation guide and any link you share from it. ' +
-        'To have it removed at any time, email <a href="mailto:photo-abuse@harpoon.productions">photo-abuse@harpoon.productions</a>.</p>' +
+        '<p class="hpc-consent">Your photo will appear on your graduation guide and any link you share from it.</p>' +
+        '<details class="hpc-terms"><summary>Terms &amp; removing your photo</summary>' +
+        '<p>You can remove your photo at any time using the "Remove my photo" option in this menu. ' +
+        'For any other questions, contact <a href="mailto:photo-abuse@harpoon.productions">photo-abuse@harpoon.productions</a>.</p>' +
+        '</details>' +
         '<button type="button" class="hpc-btn hpc-btn-primary" id="hpc-camera">Take a photo</button>' +
         '<button type="button" class="hpc-btn" id="hpc-library">Choose from library</button>' +
+        removeBtnHtml +
         '<input type="file" accept="image/*" capture="user" class="hpc-visually-hidden" id="hpc-file-camera" tabindex="-1" aria-hidden="true">' +
         '<input type="file" accept="image/*" class="hpc-visually-hidden" id="hpc-file-library" tabindex="-1" aria-hidden="true">';
       wireCloseButton();
@@ -227,7 +255,71 @@
       fileCamera.addEventListener('change', handleFileChosen);
       fileLibrary.addEventListener('change', handleFileChosen);
 
+      var removeBtn = dialog.querySelector('#hpc-remove');
+      if (removeBtn) removeBtn.addEventListener('click', renderConfirmRemoveStep);
+
       dialog.querySelector('#hpc-camera').focus();
+    }
+
+    function renderConfirmRemoveStep() {
+      dialog.innerHTML =
+        '<button type="button" class="hpc-close" aria-label="Close">&#10005;</button>' +
+        '<p id="hpc-title" class="hpc-title">Remove your photo?</p>' +
+        '<p class="hpc-consent">This removes your photo from your guide and any link you’ve already shared. This can’t be undone.</p>' +
+        '<button type="button" class="hpc-btn hpc-btn-danger" id="hpc-confirm-remove">Remove my photo</button>' +
+        '<button type="button" class="hpc-btn-text" id="hpc-cancel-remove">Cancel</button>';
+      wireCloseButton();
+      dialog.querySelector('#hpc-cancel-remove').addEventListener('click', renderChooseStep);
+      dialog.querySelector('#hpc-confirm-remove').addEventListener('click', doRemove);
+      dialog.querySelector('#hpc-cancel-remove').focus();
+    }
+
+    function doRemove() {
+      dialog.innerHTML =
+        '<p id="hpc-title" class="hpc-title">Removing&hellip;</p>' +
+        '<p class="hpc-hint" role="status">Please wait.</p>';
+
+      var body = new URLSearchParams({
+        projectId: opts.projectId || '',
+        studentName: opts.studentName || '',
+        ceremonyId: opts.ceremonyId || '',
+        editToken: opts.editToken || '',
+      });
+
+      fetch(DELETE_ENDPOINT, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: body.toString(),
+      })
+        .then(function (res) {
+          return res.json().then(function (data) { return { status: res.status, data: data }; });
+        })
+        .then(function (result) {
+          if (result.status !== 200 || !result.data || !result.data.ok) {
+            var message = (result.data && result.data.error) || 'Could not remove your photo — please try again.';
+            renderErrorStep(message, renderChooseStep);
+            return;
+          }
+          photoImg.onerror = null;
+          photoImg.removeAttribute('src');
+          photoImg.dataset.errored = '1';
+          refreshPhotoTrigger(photoImg);
+          // The "About this photo" badge (js/graduation-guide-runtime.js)
+          // only makes sense while a photo is actually showing — remove
+          // it along with the photo rather than leave it pointing at
+          // nothing.
+          var infoBadge = photoImg.parentElement && photoImg.parentElement.parentElement &&
+            photoImg.parentElement.parentElement.querySelector('.gg-photo-info-badge');
+          var infoPopover = photoImg.parentElement && photoImg.parentElement.parentElement &&
+            photoImg.parentElement.parentElement.querySelector('.gg-photo-info-popover');
+          if (infoBadge) infoBadge.remove();
+          if (infoPopover) infoPopover.remove();
+          if (typeof opts.onRemoved === 'function') opts.onRemoved();
+          close();
+        })
+        .catch(function () {
+          renderErrorStep('Could not reach the upload service — check your connection and try again.', renderChooseStep);
+        });
     }
 
     function handleFileChosen(e) {

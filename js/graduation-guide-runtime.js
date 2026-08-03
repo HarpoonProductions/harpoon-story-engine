@@ -497,16 +497,26 @@
   // crop), which would clip anything placed inside that pokes outside the
   // circle. Wrapping it once, here, keeps that untouched.
   function showPhotoInfoBadge(photoEl) {
-    if (!photoEl || photoEl.querySelector('.gg-photo-info-badge')) return;
+    if (!photoEl) return;
+    // The badge lives as a SIBLING of photoEl inside the wrap (not a
+    // descendant of photoEl itself — it can't be, photoEl has
+    // overflow:hidden), so the dedup check has to look there too, not
+    // inside photoEl. Re-uploads re-fire this via photoImg.onload, so
+    // without this check correctly finding an existing badge, each
+    // re-upload would stack another one.
+    var existingWrap = photoEl.parentElement;
+    var alreadyWrapped = existingWrap && existingWrap.classList && existingWrap.classList.contains('gg-photo-info-wrap');
+    if (alreadyWrapped && existingWrap.querySelector('.gg-photo-info-badge')) return;
+
     injectPhotoInfoStyles();
 
-    var wrap = photoEl.parentElement;
-    if (!wrap || !wrap.classList || !wrap.classList.contains('gg-photo-info-wrap')) {
-      wrap = document.createElement('span');
-      wrap.className = 'gg-photo-info-wrap';
-      photoEl.parentNode.insertBefore(wrap, photoEl);
-      wrap.appendChild(photoEl);
-    }
+    var wrap = alreadyWrapped ? existingWrap : (function () {
+      var w = document.createElement('span');
+      w.className = 'gg-photo-info-wrap';
+      photoEl.parentNode.insertBefore(w, photoEl);
+      w.appendChild(photoEl);
+      return w;
+    })();
 
     var badge = document.createElement('button');
     badge.type = 'button';
@@ -657,6 +667,9 @@
                 photoEl.hidden = false;
               }
               if (findName) findName.textContent = 'them';
+            },
+            onRemoved: function () {
+              if (findName) findName.textContent = name;
             },
           });
         };
