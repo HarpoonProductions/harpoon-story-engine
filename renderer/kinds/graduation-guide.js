@@ -49,7 +49,7 @@ function renderGraduationGuide(content, opts) {
   // absolute-enough URL, not a bare relative path) can use it without
   // needing to know about basePath itself. Same treatment as studentPhotos.
   const resolvedInstitution = { ...institution, logo: institution.logo ? resolveMediaUrl(institution.logo, asset) : institution.logo };
-  const dataScript = buildDataScript({ institution: resolvedInstitution, guide, ceremonies, searchIndex, studentPhotos: resolvedStudentPhotos });
+  const dataScript = buildDataScript({ projectId: meta.project_id, institution: resolvedInstitution, guide, ceremonies, searchIndex, studentPhotos: resolvedStudentPhotos });
 
   return `<!DOCTYPE html>
 <html lang="en">

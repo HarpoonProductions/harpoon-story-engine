@@ -452,10 +452,22 @@
   // personal moment is actually seen, not skipped through. Without a
   // name, the same link is still useful: it reads generically and takes
   // you to the inline search box instead of a specific student.
+  // Every uploaded photo lives on this fixed domain regardless of which
+  // host is currently serving the page (local preview, staging path
+  // prefix, production) — it's the one real S3/CloudFront-backed origin,
+  // matching DELIVERY_DOMAIN in the deploy pipeline and harpoon-photo-
+  // upload's own config. Deliberately not derived from location.* — a
+  // relative path would resolve under e.g. /staging/<id>/, but uploads
+  // always write to the bare <id>/ key since there's no "staging photo"
+  // concept for a real uploaded student photo.
+  var PHOTO_UPLOAD_DOMAIN = 'stories.har.pn';
+
   (function handleParams() {
     var p = new URLSearchParams(location.search);
     var name = p.get('student_name');
     var cer = (p.get('ceremony') || '').toUpperCase();
+    var viewToken = p.get('token');
+    var editToken = p.get('edit');
 
     if (cer) selectCeremony(cer, { silent: true, noScroll: true });
 
@@ -468,31 +480,111 @@
       var congrats = document.getElementById('hero-congrats');
       if (congrats) congrats.textContent = 'Congratulations, ' + name + '!';
 
-      // Interim photo lookup — see project memory "personalised-photo-share".
-      // No real upload endpoint yet; a photo shows here only if one was
-      // committed to projects/<id>/photos/ and referenced in
-      // meta.studentPhotos (keyed the same way as searchIndex treats
-      // duplicate names: name + ceremony, not name alone).
-      var photos = data.studentPhotos || {};
-      var photoUrl = photos[name + '|' + cer];
-      if (photoUrl) {
-        var photoEl = document.getElementById('hero-photo');
-        var photoImg = document.getElementById('hero-photo-img');
-        if (photoEl && photoImg) {
-          photoImg.src = photoUrl;
+      var photoEl = document.getElementById('hero-photo');
+      var photoImg = document.getElementById('hero-photo-img');
+      // Legacy/committed-at-build-time lookup — see project memory
+      // "personalised-photo-share". Kept as the fallback for photos that
+      // predate the upload endpoint (keyed the same way searchIndex
+      // treats duplicate names: name + ceremony, not name alone).
+      var legacyPhotoUrl = (data.studentPhotos || {})[name + '|' + cer];
+      var photoShown = false;
+
+      if (photoEl && photoImg) {
+        if (viewToken && data.projectId) {
+          // Deterministic, no live "does a photo exist" check — try
+          // loading it and fall back on 404. The upload response itself
+          // (see js/photo-capture.js) sets src directly after a successful
+          // upload instead of re-probing this, so the uploader's own
+          // immediate view never depends on this fallback chain at all.
+          var uploadedUrl = 'https://' + PHOTO_UPLOAD_DOMAIN + '/' + data.projectId + '/photos/uploaded/' + viewToken + '.jpg';
+          photoImg.onerror = function () {
+            photoImg.onerror = null;
+            if (legacyPhotoUrl) {
+              photoImg.src = legacyPhotoUrl; // still triggers onload below
+            } else if (editToken) {
+              // No photo yet, but this visitor can add one — keep the
+              // circle visible so js/photo-capture.js's upload trigger
+              // (overlaid on this same element) still shows. Clear src so
+              // a broken-image glyph doesn't show through the overlay.
+              photoImg.removeAttribute('src');
+              if (findName) findName.textContent = name;
+            } else {
+              photoEl.hidden = true;
+              if (findName) findName.textContent = name;
+            }
+          };
+          // Only claim "them" once a photo has actually, successfully
+          // loaded — not optimistically the moment the request starts
+          // (the deterministic URL 404s for the very common case: a
+          // student who hasn't uploaded yet).
+          photoImg.onload = function () {
+            if (findName) findName.textContent = 'them';
+          };
+          photoImg.src = uploadedUrl;
           photoImg.alt = name + '’s photo';
           photoEl.hidden = false;
+          photoShown = true;
+        } else if (legacyPhotoUrl) {
+          photoImg.src = legacyPhotoUrl;
+          photoImg.alt = name + '’s photo';
+          photoEl.hidden = false;
+          photoShown = true;
         }
       }
 
       if (findLink && findName) {
         // With a photo already showing "who", the link can say "them"
         // instead of repeating a (possibly long) full name a second time.
-        findName.textContent = photoUrl ? 'them' : name;
+        // For the token path this starts as `name` and is upgraded to
+        // "them" on the photo's onload above, once it's actually visible
+        // — not assumed just because a lookup was attempted.
+        findName.textContent = (photoShown && !viewToken) ? 'them' : name;
         findLink.addEventListener('click', function (e) {
           e.preventDefault();
           jumpToStudent(name, cer);
         });
+      }
+
+      // Upload UI only ever shows because `edit` is present in the URL —
+      // never validated client-side (meaningless in public JS); the real
+      // check happens server-side, at the moment of the actual upload
+      // POST, in harpoon-photo-upload. A guessed/tampered edit link just
+      // fails there with a clear error, never silently here.
+      //
+      // js/photo-capture.js is deferred-loaded, not part of this file's
+      // own <script> tag, so the vastly more common view-only visit never
+      // pays for it — copied into every project's output the same
+      // wholesale way this file itself is (renderer/index.js's copyDirRecursive
+      // over the whole js/ directory), so a plain relative path resolves
+      // correctly under any basePath without this file needing to know it.
+      if (editToken) {
+        var initCapture = function () {
+          window.HarpoonPhotoCapture.init({
+            projectId: data.projectId,
+            studentName: name,
+            ceremonyId: cer,
+            editToken: editToken,
+            viewToken: viewToken,
+            shareUrl: viewToken ? location.href.split('?')[0] + '?student_name=' + encodeURIComponent(name) + '&ceremony=' + encodeURIComponent(cer) + '&token=' + encodeURIComponent(viewToken) : null,
+            onUploaded: function (url) {
+              if (photoEl && photoImg) {
+                photoImg.onerror = null;
+                photoImg.src = url;
+                photoImg.alt = name + '’s photo';
+                photoEl.hidden = false;
+              }
+              if (findName) findName.textContent = 'them';
+            },
+          });
+        };
+        if (window.HarpoonPhotoCapture) {
+          initCapture();
+        } else {
+          var captureScript = document.createElement('script');
+          captureScript.src = 'js/photo-capture.js';
+          captureScript.onload = initCapture;
+          document.head.appendChild(captureScript);
+        }
       }
     } else if (findLink) {
       findLink.addEventListener('click', function (e) {
