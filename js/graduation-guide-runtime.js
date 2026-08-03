@@ -462,6 +462,87 @@
   // concept for a real uploaded student photo.
   var PHOTO_UPLOAD_DOMAIN = 'stories.har.pn';
 
+  // ── "About this photo" info badge ────────────────────────────────────
+  // Shown next to ANY personalised photo that actually displays — both
+  // the student's own edit-token view and every view-only visitor
+  // (family/friends never load js/photo-capture.js at all, so this can't
+  // live there; it has to be here, in the always-loaded runtime). A
+  // lightweight, always-available reporting channel given the upload
+  // flow is deliberately self-service with no active moderation queue —
+  // see project memory "personalised-photo-share" for the open policy
+  // question that gap is standing in for until Imperial weighs in.
+  var PHOTO_INFO_STYLE_ID = 'gg-photo-info-style';
+  function injectPhotoInfoStyles() {
+    if (document.getElementById(PHOTO_INFO_STYLE_ID)) return;
+    var style = document.createElement('style');
+    style.id = PHOTO_INFO_STYLE_ID;
+    style.textContent =
+      '.gg-photo-info-wrap{position:relative;display:inline-block;}' +
+      '.gg-photo-info-badge{position:absolute;right:-2px;bottom:-2px;width:22px;height:22px;' +
+      'border-radius:50%;border:2px solid #fff;background:#2563eb;color:#fff;' +
+      'font-size:13px;font-weight:700;line-height:1;cursor:pointer;padding:0;' +
+      'display:flex;align-items:center;justify-content:center;z-index:2;' +
+      'font-family:inherit;box-shadow:0 2px 6px rgba(0,0,0,0.35);}' +
+      '.gg-photo-info-badge:hover,.gg-photo-info-badge:focus-visible{background:#1d4ed8;}' +
+      '.gg-photo-info-popover{position:absolute;bottom:calc(100% + 8px);right:-8px;width:220px;' +
+      'background:#1a1a1a;color:#fff;border-radius:10px;padding:12px 14px;font-size:12px;' +
+      'line-height:1.5;box-shadow:0 8px 24px rgba(0,0,0,0.4);z-index:3;display:none;}' +
+      '.gg-photo-info-popover.is-open{display:block;}' +
+      '.gg-photo-info-popover a{color:#40E0CF;}';
+    document.head.appendChild(style);
+  }
+
+  // Deliberately its own small circular badge on top of #hero-photo, not
+  // inside it — that element has overflow:hidden (its own circular photo
+  // crop), which would clip anything placed inside that pokes outside the
+  // circle. Wrapping it once, here, keeps that untouched.
+  function showPhotoInfoBadge(photoEl) {
+    if (!photoEl || photoEl.querySelector('.gg-photo-info-badge')) return;
+    injectPhotoInfoStyles();
+
+    var wrap = photoEl.parentElement;
+    if (!wrap || !wrap.classList || !wrap.classList.contains('gg-photo-info-wrap')) {
+      wrap = document.createElement('span');
+      wrap.className = 'gg-photo-info-wrap';
+      photoEl.parentNode.insertBefore(wrap, photoEl);
+      wrap.appendChild(photoEl);
+    }
+
+    var badge = document.createElement('button');
+    badge.type = 'button';
+    badge.className = 'gg-photo-info-badge';
+    badge.textContent = '?';
+    badge.setAttribute('aria-label', 'About this photo');
+    badge.setAttribute('aria-expanded', 'false');
+
+    var popover = document.createElement('div');
+    popover.className = 'gg-photo-info-popover';
+    popover.setAttribute('role', 'note');
+    popover.innerHTML = 'This photo was uploaded by a user of this site. If you believe there has been malpractice, ' +
+      'please email <a href="mailto:photo-abuse@harpoon.productions">photo-abuse@harpoon.productions</a>.';
+
+    function close() {
+      popover.classList.remove('is-open');
+      badge.setAttribute('aria-expanded', 'false');
+    }
+    function toggle(e) {
+      e.stopPropagation();
+      var opening = !popover.classList.contains('is-open');
+      popover.classList.toggle('is-open', opening);
+      badge.setAttribute('aria-expanded', String(opening));
+    }
+    badge.addEventListener('click', toggle);
+    document.addEventListener('click', function (e) {
+      if (!wrap.contains(e.target)) close();
+    });
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape') close();
+    });
+
+    wrap.appendChild(badge);
+    wrap.appendChild(popover);
+  }
+
   (function handleParams() {
     var p = new URLSearchParams(location.search);
     var name = p.get('student_name');
@@ -519,12 +600,14 @@
           // student who hasn't uploaded yet).
           photoImg.onload = function () {
             if (findName) findName.textContent = 'them';
+            showPhotoInfoBadge(photoEl);
           };
           photoImg.src = uploadedUrl;
           photoImg.alt = name + '’s photo';
           photoEl.hidden = false;
           photoShown = true;
         } else if (legacyPhotoUrl) {
+          showPhotoInfoBadge(photoEl);
           photoImg.src = legacyPhotoUrl;
           photoImg.alt = name + '’s photo';
           photoEl.hidden = false;

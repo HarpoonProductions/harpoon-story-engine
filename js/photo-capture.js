@@ -91,6 +91,8 @@
       'background:rgba(255,255,255,0.06);color:#fff;font-size:18px;line-height:1;cursor:pointer;}' +
       '.hpc-zoom-btn:hover,.hpc-zoom-btn:focus-visible{background:rgba(255,255,255,0.16);}' +
       '.hpc-hint{font-size:12px;color:rgba(255,255,255,0.55);text-align:center;margin-bottom:16px;}' +
+      '.hpc-consent{font-size:12px;line-height:1.5;color:rgba(255,255,255,0.65);margin-bottom:18px;}' +
+      '.hpc-consent a{color:#40E0CF;}' +
       '.hpc-error{background:rgba(220,60,60,0.18);border:1px solid rgba(220,60,60,0.4);' +
       'border-radius:8px;padding:10px 12px;font-size:13px;margin-bottom:14px;}' +
       '.hpc-success-photo{width:120px;height:120px;border-radius:50%;overflow:hidden;margin:0 auto 16px;' +
@@ -210,6 +212,8 @@
       dialog.innerHTML =
         '<button type="button" class="hpc-close" aria-label="Close">&#10005;</button>' +
         '<p id="hpc-title" class="hpc-title">Add your photo</p>' +
+        '<p class="hpc-consent">Your photo will appear on your graduation guide and any link you share from it. ' +
+        'To have it removed at any time, email <a href="mailto:photo-abuse@harpoon.productions">photo-abuse@harpoon.productions</a>.</p>' +
         '<button type="button" class="hpc-btn hpc-btn-primary" id="hpc-camera">Take a photo</button>' +
         '<button type="button" class="hpc-btn" id="hpc-library">Choose from library</button>' +
         '<input type="file" accept="image/*" capture="user" class="hpc-visually-hidden" id="hpc-file-camera" tabindex="-1" aria-hidden="true">' +
