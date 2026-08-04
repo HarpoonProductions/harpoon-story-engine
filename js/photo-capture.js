@@ -520,7 +520,12 @@
             });
             return;
           }
-          renderSuccessStep(result.data.url);
+          // Cache-bust: this session's own <img> may already have this
+          // exact URL as its src (re-upload replacing an existing photo),
+          // and browsers treat re-assigning an unchanged src as a no-op —
+          // no request fires, so the old photo just sits there. A unique
+          // query string forces a real fetch of what was just uploaded.
+          renderSuccessStep(result.data.url + '?v=' + Date.now());
         })
         .catch(function (err) {
           clearTimeout(slowHintTimer);
