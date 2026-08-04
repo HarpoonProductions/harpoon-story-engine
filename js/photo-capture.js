@@ -55,6 +55,18 @@
       'font-size:10px;font-weight:700;line-height:1.2;text-align:center;}' +
       '.hpc-trigger:hover,.hpc-trigger:focus-visible{background:rgba(10,10,10,0.6);}' +
       '.hpc-trigger svg{width:22px;height:22px;}' +
+      // Once a real photo is set, drop the full-circle darkened overlay
+      // (it obscures the photo itself, which is the whole point of having
+      // uploaded one) in favour of a small corner edit badge — same
+      // pattern as most avatar-edit UIs.
+      '.hpc-trigger.hpc-has-photo{inset:auto;bottom:0;right:0;width:30px;height:30px;' +
+      'background:rgba(10,10,10,0.65);border:2px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,0.35);}' +
+      '.hpc-trigger.hpc-has-photo:hover,.hpc-trigger.hpc-has-photo:focus-visible{background:rgba(10,10,10,0.85);}' +
+      '.hpc-trigger.hpc-has-photo svg{width:15px;height:15px;}' +
+      '.hpc-spinner{width:30px;height:30px;margin:2px auto 16px;border-radius:50%;' +
+      'border:3px solid rgba(255,255,255,0.2);border-top-color:#40E0CF;' +
+      'animation:hpc-spin 0.8s linear infinite;}' +
+      '@keyframes hpc-spin{to{transform:rotate(360deg);}}' +
 
       '.hpc-overlay{position:fixed;inset:0;z-index:3100;display:flex;' +
       'align-items:center;justify-content:center;padding:20px;' +
@@ -166,8 +178,9 @@
     var trigger = photoImg.parentElement && photoImg.parentElement.querySelector('.hpc-trigger');
     if (!trigger) return;
     var hasPhoto = !!photoImg.src && !photoImg.dataset.errored;
+    trigger.classList.toggle('hpc-has-photo', hasPhoto);
     trigger.innerHTML = hasPhoto
-      ? svgCamera() + '<span>Change</span>'
+      ? svgCamera()
       : svgCamera() + '<span>Add your<br>photo</span>';
     trigger.setAttribute('aria-label', hasPhoto ? 'Change your photo' : 'Add your photo');
   }
@@ -467,6 +480,13 @@
 
     function uploadBlob(blob) {
       renderUploadingStep();
+      // The upload service can be slow to answer its very first request of
+      // the day (host spins back up from idle) — without this, a genuinely
+      // slow-but-working upload looks identical to a stuck one.
+      var slowHintTimer = setTimeout(function () {
+        var hint = document.getElementById('hpc-uploading-hint');
+        if (hint) hint.textContent = 'Still working — this can take a little longer than usual.';
+      }, 6000);
 
       var form = new FormData();
       form.append('projectId', opts.projectId || '');
@@ -480,6 +500,7 @@
           return res.json().then(function (data) { return { status: res.status, data: data }; });
         })
         .then(function (result) {
+          clearTimeout(slowHintTimer);
           if (result.status !== 200 || !result.data || !result.data.ok) {
             var message = (result.data && result.data.error) || 'Upload failed — please try again.';
             // Temporary: surfaces exactly what this device actually sent,
@@ -502,6 +523,7 @@
           renderSuccessStep(result.data.url);
         })
         .catch(function (err) {
+          clearTimeout(slowHintTimer);
           renderErrorStep('Could not reach the upload service — check your connection and try again.', renderChooseStep, {
             endpoint: UPLOAD_ENDPOINT,
             fetchError: err && err.message,
@@ -512,7 +534,8 @@
     function renderUploadingStep() {
       dialog.innerHTML =
         '<p id="hpc-title" class="hpc-title">Uploading&hellip;</p>' +
-        '<p class="hpc-hint" role="status">Please wait while your photo uploads.</p>';
+        '<div class="hpc-spinner" aria-hidden="true"></div>' +
+        '<p class="hpc-hint" role="status" id="hpc-uploading-hint">Please wait while your photo uploads.</p>';
     }
 
     function renderErrorStep(message, retryRender, detail) {
