@@ -598,16 +598,36 @@
     var cer = (p.get('ceremony') || '').toUpperCase();
     var viewToken = p.get('token');
     var editToken = p.get('edit');
+    var editTokenFromUrl = !!editToken;
 
-    // Strip `edit` from the visible address bar the moment it's captured.
-    // It's already saved above, so nothing downstream needs to re-read the
-    // URL — but the URL itself is exactly what a phone's native share
-    // sheet / copy-link / bookmark hands out, and most people reach for
-    // that instead of the in-app "Share with family & friends" button.
-    // Re-clicking the original emailed link still works every time (that
-    // link is untouched); this only cleans the live tab so a reflexive
-    // native share can't leak a standing edit capability to family.
-    if (editToken && window.history && window.history.replaceState) {
+    // Persist edit access to this device rather than only the URL, so a
+    // reload / bookmark / return visit tomorrow doesn't require digging
+    // the original email back out. localStorage never travels with a
+    // share, copy, or bookmark the way the URL does, so this is strictly
+    // more private than leaving the token sitting in the address bar —
+    // only something reading this device's own storage would see it.
+    var editStorageKey = 'hpc:edit:' + encodeURIComponent(data.projectId || '') + ':' +
+      encodeURIComponent(name || '') + ':' + encodeURIComponent(cer || '');
+    if (editTokenFromUrl) {
+      try { localStorage.setItem(editStorageKey, editToken); } catch (e) { /* private mode etc — edit just won't persist */ }
+    } else {
+      try {
+        var savedEditToken = localStorage.getItem(editStorageKey);
+        if (savedEditToken) editToken = savedEditToken;
+      } catch (e) { /* localStorage unavailable — no persisted edit access */ }
+    }
+
+    // Strip `edit` from the visible address bar the moment it's captured
+    // (only relevant if it actually arrived via the URL — a token
+    // restored from localStorage was never in the address bar to begin
+    // with). It's already saved above, so nothing downstream needs to
+    // re-read the URL — but the URL itself is exactly what a phone's
+    // native share sheet / copy-link / bookmark hands out, and most
+    // people reach for that instead of the in-app "Share with family &
+    // friends" button. Re-clicking the original emailed link still works
+    // every time (that link is untouched); this only cleans the live tab
+    // so a reflexive native share can't leak edit access.
+    if (editTokenFromUrl && window.history && window.history.replaceState) {
       p.delete('edit');
       var cleanSearch = p.toString();
       history.replaceState(null, '', location.pathname + (cleanSearch ? '?' + cleanSearch : '') + location.hash);
