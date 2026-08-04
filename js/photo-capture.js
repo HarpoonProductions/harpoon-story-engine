@@ -482,13 +482,30 @@
         .then(function (result) {
           if (result.status !== 200 || !result.data || !result.data.ok) {
             var message = (result.data && result.data.error) || 'Upload failed — please try again.';
-            renderErrorStep(message, renderChooseStep);
+            // Temporary: surfaces exactly what this device actually sent,
+            // so a failure can be diagnosed from a screenshot alone —
+            // real-world testing hit a case (same "invalid or expired
+            // edit link" error, on a confirmed-fresh device/cache) that
+            // couldn't be reproduced remotely despite the exact same
+            // token validating correctly server-side. Remove once that's
+            // root-caused.
+            renderErrorStep(message, renderChooseStep, {
+              endpoint: UPLOAD_ENDPOINT,
+              projectId: opts.projectId,
+              studentName: opts.studentName,
+              ceremonyId: opts.ceremonyId,
+              editToken: opts.editToken,
+              status: result.status,
+            });
             return;
           }
           renderSuccessStep(result.data.url);
         })
-        .catch(function () {
-          renderErrorStep('Could not reach the upload service — check your connection and try again.', renderChooseStep);
+        .catch(function (err) {
+          renderErrorStep('Could not reach the upload service — check your connection and try again.', renderChooseStep, {
+            endpoint: UPLOAD_ENDPOINT,
+            fetchError: err && err.message,
+          });
         });
     }
 
@@ -498,11 +515,19 @@
         '<p class="hpc-hint" role="status">Please wait while your photo uploads.</p>';
     }
 
-    function renderErrorStep(message, retryRender) {
+    function renderErrorStep(message, retryRender, detail) {
+      var detailHtml = '';
+      if (detail) {
+        var lines = Object.keys(detail)
+          .filter(function (k) { return detail[k] !== undefined && detail[k] !== null; })
+          .map(function (k) { return escapeHtml(k) + ': ' + escapeHtml(String(detail[k])); });
+        detailHtml = '<p class="hpc-hint" style="text-align:left;word-break:break-all;">' + lines.join('<br>') + '</p>';
+      }
       dialog.innerHTML =
         '<button type="button" class="hpc-close" aria-label="Close">&#10005;</button>' +
         '<p id="hpc-title" class="hpc-title">Something went wrong</p>' +
         '<p class="hpc-error" role="alert">' + escapeHtml(message) + '</p>' +
+        detailHtml +
         '<button type="button" class="hpc-btn hpc-btn-primary" id="hpc-try-again">Try again</button>';
       wireCloseButton();
       dialog.querySelector('#hpc-try-again').addEventListener('click', retryRender);

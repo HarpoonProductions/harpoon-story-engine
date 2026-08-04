@@ -380,10 +380,18 @@
     setTimeout(function () { row.classList.remove('gg-jumped-to'); }, 2000);
   }
 
-  function wireSearchBox(inputId, panelId) {
+  function wireSearchBox(inputId, panelId, triggerIds) {
     var input = document.getElementById(inputId);
     var panel = document.getElementById(panelId);
     if (!input || !panel) return;
+    // The button(s) that (re)populate this same panel — tapping one isn't
+    // "clicking away", it's asking for the same results again. Without
+    // this exemption, the outside-click handler below fires right after
+    // the button's own click handler on the same tap and immediately
+    // hides whatever the button just showed. Real-testing feedback: "the
+    // results close and there's no way to retrigger them but to type
+    // again".
+    var triggers = (triggerIds || []).map(function (id) { return document.getElementById(id); }).filter(Boolean);
 
     var timer = null;
     var lastTracked = '';
@@ -416,12 +424,14 @@
     });
 
     document.addEventListener('click', function (e) {
-      if (e.target !== input && !panel.contains(e.target)) panel.classList.remove('show');
+      if (e.target === input || panel.contains(e.target)) return;
+      if (triggers.some(function (t) { return e.target === t || t.contains(e.target); })) return;
+      panel.classList.remove('show');
     });
   }
 
-  wireSearchBox('nav-search-input', 'nav-search-panel');
-  wireSearchBox('inputField1', 'find-search-panel');
+  wireSearchBox('nav-search-input', 'nav-search-panel', ['nav-search-toggle', 'nav-search-submit']);
+  wireSearchBox('inputField1', 'find-search-panel', ['find-btn']);
 
   var SEARCH_ICON = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>';
   var CLOSE_ICON = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>';

@@ -165,8 +165,31 @@ a{color:inherit;text-decoration:none}
      iOS Safari auto-zoom the whole page on focus, which is what was
      actually behind the "sideways drift" report, not a layout bug. */
   .gg-nav-search-wrap{position:static;}
+  /* position:absolute, not fixed — deliberately anchored to .gg-nav's
+     OWN rendered box (the nearest positioned ancestor once
+     .gg-nav-search-wrap above is static) rather than a separately
+     computed pixel offset. --gg-nav-height (used elsewhere on this page
+     for the same "sits just below the nav" need) tries to predict the
+     nav's real on-screen height via env(safe-area-inset-top), but real
+     testing on Chrome iOS still showed the drawer sitting too high,
+     covering part of the logo — that prediction can drift from
+     whatever a given mobile browser's own chrome/dynamic-toolbar
+     behaviour actually renders. top:100% has no such prediction to get
+     wrong: whatever height .gg-nav actually ends up, this sits exactly
+     at its bottom edge, always. */
   .gg-nav-search-input{
-    position:fixed;top:-52px;left:0;right:0;
+    position:absolute;top:-52px;left:0;right:0;
+    /* transform:none overrides the desktop-scope rule's
+       translateY(-50%) (that one vertically centers the input within
+       the nav row) — this media query resets every OTHER property that
+       rule sets, but never explicitly reset transform, so it kept
+       silently shifting the whole drawer up by half its own height
+       (~26px) on top of whatever `top` says. This is very likely the
+       real cause of what real-device testing reported as the drawer
+       "obscuring half the logo" — it was covering roughly the top half
+       of the nav bar, not sitting too high due to any notch/safe-area
+       miscalculation as first suspected. */
+    transform:none;
     width:auto;height:52px;padding:0 20px;margin:0;
     background:var(--gg-primary);
     border:none;border-bottom:1px solid rgba(255,255,255,0.15);
@@ -174,14 +197,17 @@ a{color:inherit;text-decoration:none}
     transition:top 0.22s ease;
     z-index:1001;
   }
-  .gg-nav-search-input.open{top:var(--gg-nav-height);width:auto;padding:0 20px;}
+  .gg-nav-search-input.open{top:100%;width:auto;padding:0 20px;}
   .gg-nav-search-arrow{display:none;}
   /* #nav-search-panel specifically — not the shared .gg-search-panel
      class, which the page-body "Find a graduating student" box also
-     uses and must keep its own inline (non-drawer) positioning. */
+     uses and must keep its own inline (non-drawer) positioning. Same
+     top:100%-relative-to-.gg-nav reasoning as .gg-nav-search-input
+     above — the +52px is the drawer's own height, still a real fixed
+     value since that one's actually set by this same stylesheet. */
   #nav-search-panel{
-    position:fixed;top:calc(var(--gg-nav-height) + 52px);left:0;right:0;width:100%;max-width:100%;
-    border-radius:0;max-height:calc(100vh - var(--gg-nav-height) - 52px);
+    position:absolute;top:calc(100% + 52px);left:0;right:0;width:100%;max-width:100%;
+    border-radius:0;max-height:calc(100vh - 100% - 52px);
   }
 }
 
