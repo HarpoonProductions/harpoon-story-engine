@@ -599,6 +599,20 @@
     var viewToken = p.get('token');
     var editToken = p.get('edit');
 
+    // Strip `edit` from the visible address bar the moment it's captured.
+    // It's already saved above, so nothing downstream needs to re-read the
+    // URL — but the URL itself is exactly what a phone's native share
+    // sheet / copy-link / bookmark hands out, and most people reach for
+    // that instead of the in-app "Share with family & friends" button.
+    // Re-clicking the original emailed link still works every time (that
+    // link is untouched); this only cleans the live tab so a reflexive
+    // native share can't leak a standing edit capability to family.
+    if (editToken && window.history && window.history.replaceState) {
+      p.delete('edit');
+      var cleanSearch = p.toString();
+      history.replaceState(null, '', location.pathname + (cleanSearch ? '?' + cleanSearch : '') + location.hash);
+    }
+
     if (cer) selectCeremony(cer, { silent: true, noScroll: true });
 
     var findLink = document.getElementById('hero-find-link');
