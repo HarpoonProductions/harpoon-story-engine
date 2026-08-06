@@ -393,7 +393,8 @@
         });
       });
 
-      el.querySelector('.hse-sticky__cancel-btn').addEventListener('click', function () {
+      el.querySelector('.hse-sticky__cancel-btn').addEventListener('click', function (e) {
+        e.stopPropagation();
         layer.removeChild(el);
       });
 
