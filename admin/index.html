@@ -1,0 +1,821 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Review Dashboard — Harpoon</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:       #0f0f0f;
+      --surface:  #1a1a1a;
+      --border:   rgba(255,255,255,0.08);
+      --text:     #e8e8e8;
+      --muted:    rgba(255,255,255,0.4);
+      --accent:   #D4A017;
+      --green:    #3A9E6B;
+      --red:      #C94A3A;
+      --radius:   8px;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      font-size: 14px;
+      min-height: 100vh;
+    }
+
+    /* ── Auth / setup overlays ─────────────────────────────────── */
+
+    .overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.85);
+      backdrop-filter: blur(8px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 100;
+    }
+
+    .overlay__box {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 2rem;
+      width: min(400px, 92vw);
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+
+    .overlay__logo {
+      font-size: 1.1rem;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      color: var(--accent);
+      margin-bottom: 0.25rem;
+    }
+
+    .overlay__heading {
+      font-size: 1.1rem;
+      font-weight: 700;
+    }
+
+    .overlay__sub {
+      font-size: 0.8rem;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+
+    .overlay__input {
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 6px;
+      color: var(--text);
+      font-size: 0.9rem;
+      padding: 0.55rem 0.75rem;
+      outline: none;
+      transition: border-color 0.15s;
+    }
+
+    .overlay__input:focus { border-color: rgba(255,255,255,0.35); }
+
+    .overlay__error {
+      font-size: 0.78rem;
+      color: #e57373;
+    }
+
+    .overlay__btn {
+      background: var(--accent);
+      color: #111;
+      border: none;
+      border-radius: 6px;
+      font-size: 0.9rem;
+      font-weight: 700;
+      padding: 0.6rem 1rem;
+      cursor: pointer;
+      transition: filter 0.15s;
+    }
+
+    .overlay__btn:hover { filter: brightness(1.1); }
+
+    .overlay__small {
+      font-size: 0.75rem;
+      color: var(--muted);
+      text-align: center;
+    }
+
+    .overlay__small a {
+      color: var(--muted);
+      text-underline-offset: 2px;
+    }
+
+    /* ── App shell ─────────────────────────────────────────────── */
+
+    #app { display: none; }
+    #app.is-ready { display: block; }
+
+    header {
+      position: sticky;
+      top: 0;
+      background: rgba(15,15,15,0.95);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+      padding: 0 1.5rem;
+      height: 52px;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      z-index: 10;
+    }
+
+    .header__logo {
+      font-size: 0.9rem;
+      font-weight: 800;
+      letter-spacing: -0.01em;
+      color: var(--accent);
+      flex-shrink: 0;
+    }
+
+    .header__title {
+      font-size: 0.85rem;
+      color: var(--muted);
+    }
+
+    .header__spacer { flex: 1; }
+
+    .header__filter {
+      display: flex;
+      gap: 0.35rem;
+    }
+
+    .filter-btn {
+      background: none;
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      color: var(--muted);
+      font-size: 0.72rem;
+      font-weight: 600;
+      padding: 0.25rem 0.65rem;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .filter-btn.is-active,
+    .filter-btn:hover {
+      background: rgba(255,255,255,0.08);
+      border-color: rgba(255,255,255,0.2);
+      color: var(--text);
+    }
+
+    .header__refresh {
+      background: none;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--muted);
+      font-size: 0.72rem;
+      padding: 0.25rem 0.6rem;
+      cursor: pointer;
+      transition: all 0.15s;
+      flex-shrink: 0;
+    }
+
+    .header__refresh:hover {
+      background: rgba(255,255,255,0.06);
+      color: var(--text);
+    }
+
+    /* ── Main layout ───────────────────────────────────────────── */
+
+    main {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 1.5rem 1.5rem 4rem;
+    }
+
+    .summary-bar {
+      display: flex;
+      gap: 1.25rem;
+      margin-bottom: 1.5rem;
+      flex-wrap: wrap;
+    }
+
+    .stat {
+      display: flex;
+      flex-direction: column;
+      gap: 0.15rem;
+    }
+
+    .stat__value {
+      font-size: 1.6rem;
+      font-weight: 800;
+      line-height: 1;
+      letter-spacing: -0.02em;
+    }
+
+    .stat__label {
+      font-size: 0.7rem;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+
+    /* ── Project cards ─────────────────────────────────────────── */
+
+    .project-list {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    .project-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+    }
+
+    .project-card__header {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 0.85rem 1rem;
+      cursor: pointer;
+      user-select: none;
+      transition: background 0.12s;
+    }
+
+    .project-card__header:hover { background: rgba(255,255,255,0.03); }
+
+    .project-card__name {
+      font-weight: 700;
+      font-size: 0.9rem;
+      flex: 1;
+    }
+
+    .project-card__meta {
+      font-size: 0.75rem;
+      color: var(--muted);
+    }
+
+    .badge {
+      font-size: 0.65rem;
+      font-weight: 700;
+      padding: 0.2rem 0.5rem;
+      border-radius: 20px;
+      flex-shrink: 0;
+    }
+
+    .badge--open     { background: rgba(212,160,23,0.18); color: var(--accent); }
+    .badge--resolved { background: rgba(58,158,107,0.15); color: var(--green); }
+    .badge--replies  { background: rgba(255,255,255,0.07); color: var(--muted); }
+
+    .chevron {
+      color: var(--muted);
+      font-size: 0.65rem;
+      transition: transform 0.2s;
+      flex-shrink: 0;
+    }
+
+    .project-card.is-open .chevron { transform: rotate(180deg); }
+
+    .project-card__body {
+      display: none;
+      border-top: 1px solid var(--border);
+    }
+
+    .project-card.is-open .project-card__body { display: block; }
+
+    /* ── Annotation rows ───────────────────────────────────────── */
+
+    .ann-row {
+      padding: 0.75rem 1rem;
+      border-bottom: 1px solid var(--border);
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 0.5rem;
+    }
+
+    .ann-row:last-child { border-bottom: none; }
+
+    .ann-row--resolved { opacity: 0.45; }
+
+    .ann-row__left { min-width: 0; }
+
+    .ann-row__author {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      margin-bottom: 0.3rem;
+    }
+
+    .ann-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    .ann-row__name {
+      font-size: 0.7rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: var(--muted);
+    }
+
+    .ann-row__time {
+      font-size: 0.68rem;
+      color: rgba(255,255,255,0.25);
+      margin-left: auto;
+    }
+
+    .ann-row__note {
+      font-size: 0.82rem;
+      line-height: 1.5;
+      color: var(--text);
+      word-break: break-word;
+      white-space: pre-wrap;
+    }
+
+    /* replies */
+    .ann-replies {
+      margin-top: 0.5rem;
+      padding-left: 1rem;
+      border-left: 2px solid rgba(255,255,255,0.07);
+      display: flex;
+      flex-direction: column;
+      gap: 0.4rem;
+    }
+
+    .ann-reply__author {
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
+      margin-bottom: 0.15rem;
+    }
+
+    .ann-reply__name {
+      font-size: 0.65rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: var(--muted);
+    }
+
+    .ann-reply__note {
+      font-size: 0.78rem;
+      line-height: 1.45;
+      color: rgba(255,255,255,0.7);
+      word-break: break-word;
+    }
+
+    /* actions */
+    .ann-row__actions {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 0.3rem;
+      flex-shrink: 0;
+    }
+
+    .act-btn {
+      background: none;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      font-size: 0.65rem;
+      font-weight: 600;
+      padding: 0.2rem 0.45rem;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: all 0.12s;
+    }
+
+    .act-btn--resolve { color: var(--green); }
+    .act-btn--resolve:hover { background: rgba(58,158,107,0.15); border-color: var(--green); }
+
+    .act-btn--delete { color: var(--red); }
+    .act-btn--delete:hover { background: rgba(201,74,58,0.15); border-color: var(--red); }
+
+    .act-btn--story { color: var(--muted); }
+    .act-btn--story:hover { color: var(--text); background: rgba(255,255,255,0.06); }
+
+    /* ── Loading / empty states ────────────────────────────────── */
+
+    .state-msg {
+      text-align: center;
+      color: var(--muted);
+      padding: 3rem 1rem;
+      font-size: 0.85rem;
+    }
+
+    .spinner {
+      display: inline-block;
+      width: 18px;
+      height: 18px;
+      border: 2px solid rgba(255,255,255,0.12);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      vertical-align: middle;
+      margin-right: 0.5rem;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── Responsive ────────────────────────────────────────────── */
+
+    @media (max-width: 600px) {
+      .summary-bar { gap: 0.85rem; }
+      .header__filter { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ── Password overlay ───────────────────────────────────────────── -->
+<div class="overlay" id="overlay-password">
+  <div class="overlay__box">
+    <div class="overlay__logo">Harpoon</div>
+    <p class="overlay__heading">Review Dashboard</p>
+    <p class="overlay__sub">Enter the review password to access the producer view.</p>
+    <input class="overlay__input" id="pw-input" type="password" placeholder="Password" autocomplete="current-password">
+    <p class="overlay__error" id="pw-error" style="display:none">Incorrect password — try again.</p>
+    <button class="overlay__btn" id="pw-btn">Continue</button>
+  </div>
+</div>
+
+<!-- ── Setup overlay (first run only) ────────────────────────────── -->
+<div class="overlay" id="overlay-setup" style="display:none">
+  <div class="overlay__box">
+    <div class="overlay__logo">Harpoon</div>
+    <p class="overlay__heading">Connect to Supabase</p>
+    <p class="overlay__sub">Enter your Supabase project URL and anon key. These are saved in your browser and never leave your device.</p>
+    <input class="overlay__input" id="sb-url" type="url" placeholder="https://xxxx.supabase.co" autocomplete="off">
+    <input class="overlay__input" id="sb-key" type="text" placeholder="eyJh… (anon key)" autocomplete="off">
+    <button class="overlay__btn" id="sb-btn">Save &amp; load dashboard</button>
+    <p class="overlay__small">Find these in your Supabase project → Settings → API</p>
+  </div>
+</div>
+
+<!-- ── App ────────────────────────────────────────────────────────── -->
+<div id="app">
+
+  <header>
+    <span class="header__logo">Harpoon</span>
+    <span class="header__title">Review Dashboard</span>
+    <span class="header__spacer"></span>
+    <div class="header__filter">
+      <button class="filter-btn is-active" data-filter="open">Open</button>
+      <button class="filter-btn" data-filter="resolved">Resolved</button>
+      <button class="filter-btn" data-filter="all">All</button>
+    </div>
+    <button class="header__refresh" id="refresh-btn">↻ Refresh</button>
+  </header>
+
+  <main>
+    <div class="summary-bar" id="summary-bar">
+      <div class="stat">
+        <span class="stat__value" id="stat-open">—</span>
+        <span class="stat__label">Open notes</span>
+      </div>
+      <div class="stat">
+        <span class="stat__value" id="stat-resolved">—</span>
+        <span class="stat__label">Resolved</span>
+      </div>
+      <div class="stat">
+        <span class="stat__value" id="stat-projects">—</span>
+        <span class="stat__label">Projects</span>
+      </div>
+      <div class="stat">
+        <span class="stat__value" id="stat-reviewers">—</span>
+        <span class="stat__label">Reviewers</span>
+      </div>
+    </div>
+
+    <div class="project-list" id="project-list">
+      <div class="state-msg"><span class="spinner"></span> Loading…</div>
+    </div>
+  </main>
+
+</div>
+
+<script>
+(function () {
+  var PASSWORD      = 'review';
+  var SESSION_KEY   = 'hse-admin-auth';
+  var SB_URL_KEY    = 'hse-sb-url';
+  var SB_KEY_KEY    = 'hse-sb-key';
+  var DELIVERY      = 'https://stories.har.pn'; // adjust if needed
+  var STORY_BASE    = DELIVERY + '/staging';     // default path prefix for story links
+
+  var supabaseUrl = localStorage.getItem(SB_URL_KEY);
+  var supabaseKey = localStorage.getItem(SB_KEY_KEY);
+
+  var currentFilter = 'open';
+  var allAnnotations = [];
+
+  // ── Password gate ─────────────────────────────────────────────
+  var overlayPw  = document.getElementById('overlay-password');
+  var pwInput    = document.getElementById('pw-input');
+  var pwError    = document.getElementById('pw-error');
+  var pwBtn      = document.getElementById('pw-btn');
+
+  function checkPassword() {
+    if (pwInput.value === PASSWORD) {
+      sessionStorage.setItem(SESSION_KEY, '1');
+      overlayPw.style.display = 'none';
+      afterAuth();
+    } else {
+      pwError.style.display = 'block';
+      pwInput.value = '';
+      pwInput.focus();
+    }
+  }
+
+  pwBtn.addEventListener('click', checkPassword);
+  pwInput.addEventListener('keydown', function (e) { if (e.key === 'Enter') checkPassword(); });
+
+  if (sessionStorage.getItem(SESSION_KEY) === '1') {
+    overlayPw.style.display = 'none';
+    afterAuth();
+  } else {
+    setTimeout(function () { pwInput.focus(); }, 80);
+  }
+
+  // ── Supabase setup ────────────────────────────────────────────
+  function afterAuth() {
+    if (!supabaseUrl || !supabaseKey) {
+      document.getElementById('overlay-setup').style.display = 'flex';
+      var sbUrl = document.getElementById('sb-url');
+      var sbKey = document.getElementById('sb-key');
+      var sbBtn = document.getElementById('sb-btn');
+
+      sbBtn.addEventListener('click', function () {
+        var u = sbUrl.value.trim().replace(/\/$/, '');
+        var k = sbKey.value.trim();
+        if (!u || !k) { sbUrl.focus(); return; }
+        localStorage.setItem(SB_URL_KEY, u);
+        localStorage.setItem(SB_KEY_KEY, k);
+        supabaseUrl = u;
+        supabaseKey = k;
+        document.getElementById('overlay-setup').style.display = 'none';
+        startApp();
+      });
+    } else {
+      startApp();
+    }
+  }
+
+  // ── App ───────────────────────────────────────────────────────
+  function startApp() {
+    document.getElementById('app').classList.add('is-ready');
+    loadData();
+
+    document.getElementById('refresh-btn').addEventListener('click', loadData);
+
+    document.querySelectorAll('.filter-btn').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        document.querySelectorAll('.filter-btn').forEach(function (b) { b.classList.remove('is-active'); });
+        btn.classList.add('is-active');
+        currentFilter = btn.dataset.filter;
+        renderProjects(allAnnotations);
+      });
+    });
+  }
+
+  // ── Data ──────────────────────────────────────────────────────
+  function apiFetch(path) {
+    return fetch(supabaseUrl + '/rest/v1/' + path, {
+      headers: {
+        'apikey':        supabaseKey,
+        'Authorization': 'Bearer ' + supabaseKey
+      }
+    }).then(function (r) {
+      if (!r.ok) return r.text().then(function (t) { throw new Error(t); });
+      return r.json();
+    });
+  }
+
+  function apiPatch(path, body) {
+    return fetch(supabaseUrl + '/rest/v1/' + path, {
+      method: 'PATCH',
+      headers: {
+        'apikey':        supabaseKey,
+        'Authorization': 'Bearer ' + supabaseKey,
+        'Content-Type':  'application/json'
+      },
+      body: JSON.stringify(body)
+    });
+  }
+
+  function apiDelete(path) {
+    return fetch(supabaseUrl + '/rest/v1/' + path, {
+      method: 'DELETE',
+      headers: {
+        'apikey':        supabaseKey,
+        'Authorization': 'Bearer ' + supabaseKey
+      }
+    });
+  }
+
+  function loadData() {
+    var list = document.getElementById('project-list');
+    list.innerHTML = '<div class="state-msg"><span class="spinner"></span> Loading…</div>';
+
+    apiFetch('story_annotations?order=created_at.asc').then(function (rows) {
+      allAnnotations = rows;
+      renderProjects(rows);
+    }).catch(function (e) {
+      list.innerHTML = '<div class="state-msg">Failed to load: ' + esc(e.message) + '</div>';
+    });
+  }
+
+  // ── Render ────────────────────────────────────────────────────
+  function renderProjects(rows) {
+    // Separate top-level and replies
+    var topLevel = rows.filter(function (r) { return !r.parent_id; });
+    var byParent = {};
+    rows.filter(function (r) { return r.parent_id; }).forEach(function (r) {
+      if (!byParent[r.parent_id]) byParent[r.parent_id] = [];
+      byParent[r.parent_id].push(r);
+    });
+
+    // Group top-level by project
+    var projects = {};
+    topLevel.forEach(function (ann) {
+      if (!projects[ann.project_id]) projects[ann.project_id] = [];
+      projects[ann.project_id].push(ann);
+    });
+
+    // Stats
+    var totalOpen     = topLevel.filter(function (a) { return !a.resolved; }).length;
+    var totalResolved = topLevel.filter(function (a) { return a.resolved; }).length;
+    var reviewers     = new Set(rows.map(function (r) { return r.reviewer_name; })).size;
+    document.getElementById('stat-open').textContent     = totalOpen;
+    document.getElementById('stat-resolved').textContent = totalResolved;
+    document.getElementById('stat-projects').textContent = Object.keys(projects).length;
+    document.getElementById('stat-reviewers').textContent = reviewers;
+
+    // Filter
+    var filtered = {};
+    Object.keys(projects).forEach(function (pid) {
+      var anns = projects[pid].filter(function (a) {
+        if (currentFilter === 'open')     return !a.resolved;
+        if (currentFilter === 'resolved') return a.resolved;
+        return true;
+      });
+      if (anns.length) filtered[pid] = anns;
+    });
+
+    var list = document.getElementById('project-list');
+
+    if (!Object.keys(filtered).length) {
+      list.innerHTML = '<div class="state-msg">No ' + currentFilter + ' notes.</div>';
+      return;
+    }
+
+    list.innerHTML = '';
+
+    // Sort projects: most recent open note first
+    var pids = Object.keys(filtered).sort(function (a, b) {
+      var latestA = projects[a].filter(function (x) { return !x.resolved; }).slice(-1)[0];
+      var latestB = projects[b].filter(function (x) { return !x.resolved; }).slice(-1)[0];
+      if (!latestA && !latestB) return 0;
+      if (!latestA) return 1;
+      if (!latestB) return -1;
+      return new Date(latestB.created_at) - new Date(latestA.created_at);
+    });
+
+    pids.forEach(function (pid) {
+      var anns   = filtered[pid];
+      var openN  = projects[pid].filter(function (a) { return !a.resolved; }).length;
+      var replyN = Object.keys(byParent).reduce(function (n, k) {
+        return projects[pid].find(function (a) { return a.id === k; }) ? n + byParent[k].length : n;
+      }, 0);
+
+      var card = document.createElement('div');
+      card.className = 'project-card';
+
+      // Format project_id to a readable name: staging--opera-voices-2026 → opera-voices-2026
+      var displayId = pid.replace(/^staging--/, '').replace(/--/g, '/');
+      var storyUrl  = DELIVERY + '/' + pid.replace(/--/g, '/') + '?review=1';
+
+      card.innerHTML =
+        '<div class="project-card__header">' +
+          '<span class="project-card__name">' + esc(displayId) + '</span>' +
+          (openN     ? '<span class="badge badge--open">' + openN + ' open</span>' : '') +
+          (replyN    ? '<span class="badge badge--replies">' + replyN + ' repl' + (replyN === 1 ? 'y' : 'ies') + '</span>' : '') +
+          '<span class="chevron">▼</span>' +
+        '</div>' +
+        '<div class="project-card__body"></div>';
+
+      var header = card.querySelector('.project-card__header');
+      var body   = card.querySelector('.project-card__body');
+
+      header.addEventListener('click', function () {
+        card.classList.toggle('is-open');
+        if (card.classList.contains('is-open') && !body.dataset.rendered) {
+          renderAnnotations(body, anns, byParent, storyUrl);
+          body.dataset.rendered = '1';
+        }
+      });
+
+      // Auto-open if there are open notes
+      if (openN > 0) {
+        card.classList.add('is-open');
+        renderAnnotations(body, anns, byParent, storyUrl);
+        body.dataset.rendered = '1';
+      }
+
+      list.appendChild(card);
+    });
+  }
+
+  function renderAnnotations(container, anns, byParent, storyUrl) {
+    anns.forEach(function (ann) {
+      var replies = byParent[ann.id] || [];
+      var row = document.createElement('div');
+      row.className = 'ann-row' + (ann.resolved ? ' ann-row--resolved' : '');
+      row.dataset.annId = ann.id;
+
+      var repliesHtml = '';
+      if (replies.length) {
+        repliesHtml = '<div class="ann-replies">' +
+          replies.map(function (r) {
+            return '<div>' +
+              '<div class="ann-reply__author">' +
+                '<span class="ann-dot" style="background:' + r.colour + '"></span>' +
+                '<span class="ann-reply__name">' + esc(r.reviewer_name) + '</span>' +
+                '<span class="ann-row__time">' + relTime(r.created_at) + '</span>' +
+              '</div>' +
+              '<p class="ann-reply__note">' + esc(r.note) + '</p>' +
+            '</div>';
+          }).join('') +
+        '</div>';
+      }
+
+      row.innerHTML =
+        '<div class="ann-row__left">' +
+          '<div class="ann-row__author">' +
+            '<span class="ann-dot" style="background:' + ann.colour + '"></span>' +
+            '<span class="ann-row__name">' + esc(ann.reviewer_name) + '</span>' +
+            '<span class="ann-row__time">' + relTime(ann.created_at) + '</span>' +
+          '</div>' +
+          '<p class="ann-row__note">' + esc(ann.note) + '</p>' +
+          repliesHtml +
+        '</div>' +
+        '<div class="ann-row__actions">' +
+          '<a class="act-btn act-btn--story" href="' + esc(storyUrl) + '" target="_blank" rel="noopener">Open story ↗</a>' +
+          (!ann.resolved ? '<button class="act-btn act-btn--resolve" data-id="' + ann.id + '">✓ Resolve</button>' : '') +
+          '<button class="act-btn act-btn--delete" data-id="' + ann.id + '">Delete</button>' +
+        '</div>';
+
+      var resolveBtn = row.querySelector('.act-btn--resolve');
+      if (resolveBtn) {
+        resolveBtn.addEventListener('click', function () {
+          if (!confirm('Mark this note as resolved?')) return;
+          apiPatch('story_annotations?id=eq.' + ann.id, { resolved: true }).then(function () {
+            row.classList.add('ann-row--resolved');
+            resolveBtn.remove();
+            ann.resolved = true;
+          });
+        });
+      }
+
+      row.querySelector('.act-btn--delete').addEventListener('click', function () {
+        if (!confirm('Delete this note and all its replies? This cannot be undone.')) return;
+        apiDelete('story_annotations?id=eq.' + ann.id).then(function () {
+          row.remove();
+        });
+      });
+
+      container.appendChild(row);
+    });
+  }
+
+  // ── Utilities ─────────────────────────────────────────────────
+  function esc(str) {
+    if (!str) return '';
+    return String(str)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;');
+  }
+
+  function relTime(iso) {
+    var diff = (Date.now() - new Date(iso)) / 1000;
+    if (diff < 60)   return 'just now';
+    if (diff < 3600) return Math.floor(diff / 60) + 'm ago';
+    if (diff < 86400) return Math.floor(diff / 3600) + 'h ago';
+    return Math.floor(diff / 86400) + 'd ago';
+  }
+
+})();
+</script>
+</body>
+</html>
