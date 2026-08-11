@@ -465,7 +465,7 @@
     });
   }
 
-  wireSearchBox('nav-search-input', 'nav-search-panel', ['nav-search-toggle']);
+  wireSearchBox('nav-search-input', 'nav-search-panel', ['nav-search-toggle', 'nav-search-label']);
   wireSearchBox('inputField1', 'find-search-panel', []);
 
   var SEARCH_ICON = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>';
@@ -496,6 +496,15 @@
     setNavSearchOpen(!document.getElementById('nav-search-input')?.classList.contains('open'));
   });
 
+  // The "Search name:" label next to the icon looked clickable but never
+  // had a handler — real feedback: "the search icon and word... aren't
+  // clickable". Only ever needs to open (it hides itself via CSS once
+  // the input is open, so there's nothing to toggle closed here).
+  var navSearchLabel = document.querySelector('.gg-nav-search-label');
+  navSearchLabel?.addEventListener('click', function () {
+    setNavSearchOpen(true);
+  });
+
   // Tapping anywhere else on the page — the other natural "never mind"
   // gesture, alongside Escape (wireSearchBox) and re-tapping the toggle
   // — also closes the drawer, not just its results panel.
@@ -503,6 +512,7 @@
     var inp = document.getElementById('nav-search-input');
     if (!inp || !inp.classList.contains('open')) return;
     if (e.target === inp || e.target === navSearchToggle || navSearchToggle?.contains(e.target)) return;
+    if (e.target === navSearchLabel) return;
     var panel = document.getElementById('nav-search-panel');
     if (panel && panel.contains(e.target)) return;
     setNavSearchOpen(false);

@@ -82,7 +82,7 @@ a{color:inherit;text-decoration:none}
 .gg-nav-dropdown-item-label{color:rgba(255,255,255,0.85);}
 
 .gg-nav-right{display:flex;align-items:center;gap:10px;margin-left:auto;flex-shrink:0;}
-.gg-nav-search-label{font-size:14px;color:rgba(255,255,255,0.75);white-space:nowrap;transition:opacity 0.15s ease;}
+.gg-nav-search-label{font-size:14px;color:rgba(255,255,255,0.75);white-space:nowrap;transition:opacity 0.15s ease;cursor:pointer;}
 /* The search input overlays leftward when open (see .gg-nav-search-input
    above) — at narrower desktop widths there isn't always room for both
    it and this label, so hide the label rather than let them overlap. */

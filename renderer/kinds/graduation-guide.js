@@ -180,7 +180,7 @@ function buildBody(institution, guide, ceremonies, asset, groupMembers, config) 
     ${buildTopNavLinks(groupMembers, 'gg-nav-link')}
   </div>
   <div class="gg-nav-right">
-    <span class="gg-nav-search-label">Search name:</span>
+    <span class="gg-nav-search-label" id="nav-search-label">Search name:</span>
     <div class="gg-nav-search-wrap">
       <input type="text" class="gg-nav-search-input" id="nav-search-input" placeholder="Search name" autocomplete="off">
       <div class="gg-search-panel" id="nav-search-panel" role="listbox" hidden></div>
