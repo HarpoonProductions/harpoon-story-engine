@@ -54,6 +54,10 @@
           "properties": {
             "enabled": { "type": "boolean", "default": false }
           }
+        },
+        "demoPassword": {
+          "type": "string",
+          "description": "Optional client-side-only gate for a pre-launch demo link — NOT real security, the page is still fully downloaded to the browser regardless of whether the password is entered; it only stops casual browsing to the URL. Shows a simple password prompt on every visit until localStorage records it was entered correctly once, per browser. Absent = no gate at all, the default for every project."
         }
       }
     },

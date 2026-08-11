@@ -83,7 +83,8 @@
     },
     "scrollHero": {
       "enabled": true
-    }
+    },
+    "demoPassword": "1907"
   },
   "ceremonies": [
     {

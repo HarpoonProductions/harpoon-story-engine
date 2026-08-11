@@ -55,11 +55,83 @@ function renderGraduationGuide(content, opts) {
 <html lang="en">
 ${head}
 <body>
+${buildDemoGateScript(config?.demoPassword)}
 ${body}
 ${dataScript}
 <script defer src="${asset('js/graduation-guide-runtime.js')}"></script>
 </body>
 </html>`;
+}
+
+// ── Demo-link password gate (client-side only, opt-in via config.demoPassword) ──
+// NOT real security — the page is fully downloaded to the browser either
+// way, this only stops casual browsing to a pre-launch demo URL. The style
+// tag hides <html> synchronously, before body ever paints; the script (top
+// of body, see renderGraduationGuide) either removes it immediately (already
+// unlocked, this browser) or shows a password prompt that removes it on a
+// correct entry. Absent config.demoPassword = both functions return '' and
+// every other project renders exactly as before.
+
+function buildDemoGateStyle(demoPassword) {
+  if (!demoPassword) return '';
+  return '<style id="gg-gate-style">html{visibility:hidden}</style>';
+}
+
+function buildDemoGateScript(demoPassword) {
+  if (!demoPassword) return '';
+  return `<script>
+(function () {
+  var PASSWORD = ${JSON.stringify(demoPassword)};
+  var KEY = 'gg-demo-pw-ok';
+  var gateStyle = document.getElementById('gg-gate-style');
+  function reveal() { if (gateStyle) gateStyle.remove(); }
+  try {
+    if (localStorage.getItem(KEY) === '1') { reveal(); return; }
+  } catch (e) { reveal(); return; }
+
+  var overlay = document.createElement('div');
+  overlay.id = 'gg-gate-overlay';
+  overlay.innerHTML =
+    '<style>' +
+    '#gg-gate-overlay{visibility:visible;position:fixed;inset:0;z-index:99999;' +
+    'display:flex;align-items:center;justify-content:center;' +
+    'background:#161a1d;font-family:-apple-system,BlinkMacSystemFont,"Helvetica Neue",Arial,sans-serif;}' +
+    '#gg-gate-card{width:100%;max-width:320px;padding:0 24px;text-align:center;}' +
+    '#gg-gate-card p{color:rgba(255,255,255,0.6);font-size:14px;margin-bottom:16px;}' +
+    '#gg-gate-input{width:100%;padding:12px 14px;font-size:16px;border-radius:8px;' +
+    'border:1px solid rgba(255,255,255,0.3);background:rgba(255,255,255,0.08);color:#fff;' +
+    'text-align:center;outline:none;margin-bottom:12px;box-sizing:border-box;}' +
+    '#gg-gate-input::placeholder{color:rgba(255,255,255,0.4);}' +
+    '#gg-gate-btn{width:100%;padding:12px;font-size:15px;font-weight:700;border-radius:8px;' +
+    'border:none;background:#fff;color:#161a1d;cursor:pointer;}' +
+    '#gg-gate-error{color:#ff9d9d;font-size:13px;margin-top:10px;visibility:hidden;}' +
+    '</style>' +
+    '<div id="gg-gate-card">' +
+    '<p>This preview is password-protected.</p>' +
+    '<input type="password" id="gg-gate-input" placeholder="Password" autocomplete="off" inputmode="numeric">' +
+    '<button type="button" id="gg-gate-btn">Continue</button>' +
+    '<p id="gg-gate-error">Incorrect password — try again.</p>' +
+    '</div>';
+  document.body.appendChild(overlay);
+
+  var input = overlay.querySelector('#gg-gate-input');
+  var error = overlay.querySelector('#gg-gate-error');
+  function tryUnlock() {
+    if (input.value === PASSWORD) {
+      try { localStorage.setItem(KEY, '1'); } catch (e) {}
+      overlay.remove();
+      reveal();
+    } else {
+      error.style.visibility = 'visible';
+      input.value = '';
+      input.focus();
+    }
+  }
+  overlay.querySelector('#gg-gate-btn').addEventListener('click', tryUnlock);
+  input.addEventListener('keydown', function (e) { if (e.key === 'Enter') tryUnlock(); });
+  input.focus();
+})();
+</script>`;
 }
 
 // ── <head> ──────────────────────────────────────────────────────────────
@@ -79,6 +151,7 @@ function buildHead(meta, config, institution, base, asset) {
     : '';
 
   return `<head>
+  ${buildDemoGateStyle(config?.demoPassword)}
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width,initial-scale=1.0,viewport-fit=cover">
   <meta name="theme-color" content="${escHtml(institution.primaryColor)}">
