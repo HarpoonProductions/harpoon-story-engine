@@ -810,7 +810,10 @@
     // later visit back to the same edit link once the photo's already
     // added. No-ops entirely if HarpoonPWA isn't present (config.pwa.enabled
     // false) or if the visitor isn't on iOS / already has it installed.
-    if (window.HarpoonPWA && !editToken) {
+    // ?nopwa=1 additionally suppresses just this nudge (not the PWA feature
+    // itself — service worker/offline caching still work normally) for
+    // demo links where the "install this" prompt would be a distraction.
+    if (window.HarpoonPWA && !editToken && p.get('nopwa') !== '1') {
       var institution = data.institution || {};
       window.HarpoonPWA.maybeShowIOSInstallBanner({
         message: name
