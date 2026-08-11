@@ -155,7 +155,7 @@ function buildMobileMenu(guide, ceremonies, groupMembers) {
     ${buildCeremonyLinks(guide.days, ceremonies, '')}
     ${dropdownMembers.length ? `<div class="gg-nav-mobile-group-label">Explore more</div>
     ${buildExploreLinks(dropdownMembers)}` : ''}
-    ${buildTopNavLinks(groupMembers, 'gg-nav-mobile-link')}
+    ${buildTopNavLinks(groupMembers, 'gg-nav-dropdown-item')}
   </div>
 </div>`;
 }
@@ -183,9 +183,6 @@ function buildBody(institution, guide, ceremonies, asset, groupMembers, config) 
     <span class="gg-nav-search-label">Search name:</span>
     <div class="gg-nav-search-wrap">
       <input type="text" class="gg-nav-search-input" id="nav-search-input" placeholder="Search name" autocomplete="off">
-      <button class="gg-nav-search-arrow" id="nav-search-submit" aria-label="Go">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
-      </button>
       <div class="gg-search-panel" id="nav-search-panel" role="listbox" hidden></div>
     </div>
     <button class="gg-nav-search-icon" id="nav-search-toggle" aria-label="Search">
@@ -214,9 +211,6 @@ ${buildAboutSection(guide, asset)}
       <input type="text" class="gg-find-input" id="inputField1"
              placeholder="Search name" autocomplete="off" autocorrect="off"
              autocapitalize="words" spellcheck="false">
-      <button class="gg-find-btn" id="find-btn" aria-label="Search">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-      </button>
       <div class="gg-search-panel gg-search-panel--find" id="find-search-panel" role="listbox" hidden></div>
     </div>
   </div>
@@ -433,7 +427,10 @@ function buildChooserHtml(guide, ceremonies) {
       const tiles = ceremonies
         .filter((c) => c.day === dayInfo.day)
         .map(
-          (c) => `<button class="gg-chooser-tile${c.active ? ' active' : ''}" data-id="${escHtml(c.ceremonyId)}">
+          // No ceremony is pre-selected — a plain visit shows the chooser
+          // grid with nothing active until the visitor picks one (or a
+          // deep link / share link selects one via the runtime JS).
+          (c) => `<button class="gg-chooser-tile" data-id="${escHtml(c.ceremonyId)}">
         <span class="gg-chooser-tile-time">${escHtml(c.ceremonyTime)}</span>
         <span class="gg-chooser-tile-label">${escHtml(c.ceremonyLabel)}</span>
         <span class="gg-chooser-tile-caret">&#9660;</span>
@@ -559,7 +556,7 @@ function buildCeremonySection(cfg, guide, asset) {
     ${courseGroups}
   </section>`;
 
-  return `<div class="gg-ceremony${cfg.active ? ' active' : ''}" id="cer-${escHtml(cfg.ceremonyId)}" data-id="${escHtml(cfg.ceremonyId)}">
+  return `<div class="gg-ceremony" id="cer-${escHtml(cfg.ceremonyId)}" data-id="${escHtml(cfg.ceremonyId)}">
   <section class="gg-cer-header">
     <h2 class="gg-cer-time-title"><b>${escHtml(cfg.ceremonyTime)}</b> ${escHtml(cfg.ceremonyLabel)}</h2>
     ${dean.name ? `<div class="gg-dean-grid">
@@ -567,7 +564,7 @@ function buildCeremonySection(cfg, guide, asset) {
         <h3 class="gg-dean-h3">Dean's welcome</h3>
         <p class="gg-dean-intro">${escHtml(dean.intro)}</p>
         <p class="gg-dean-body">${escHtml(dean.body)}</p>
-        <button class="gg-dean-expand">&#8964;</button>
+        <button class="gg-dean-expand" aria-expanded="false" aria-label="Read the rest of the dean's welcome">&#8964;</button>
       </div>
       <div class="gg-dean-portrait-col">
         <div class="gg-dean-photo">${renderPersonPhoto(dean.photo, asset, dean.name)}</div>

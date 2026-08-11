@@ -103,7 +103,11 @@
   if (!data) return;
 
   var ceremonies = data.ceremonies || [];
-  var activeCer = (ceremonies.find(function (c) { return c.active; }) || ceremonies[0] || {}).ceremonyId;
+  // No ceremony is pre-selected on a plain visit — real feedback: a
+  // default-active ceremony read as broken/confusing, not helpful. Deep
+  // links (?ceremony=), personalised share links, and search jump-tos
+  // still select one explicitly via selectCeremony() below.
+  var activeCer = null;
 
   // ── Plausible wrapper — no-ops if Plausible isn't loaded (preview) ──
   function track(event, props) {
@@ -135,8 +139,25 @@
     }
   }
 
+  // Clicking the currently-active tile used to just re-select the same
+  // ceremony (a visible no-op) — real feedback: no way to back out to
+  // "nothing chosen" once a tile was clicked. This restores that.
+  function deselectCeremony() {
+    activeCer = null;
+    document.querySelectorAll('.gg-chooser-tile').forEach(function (t) { t.classList.remove('active'); });
+    document.querySelectorAll('.gg-ceremony').forEach(function (s) { s.classList.remove('active'); });
+    var textEl = document.getElementById('floating-bar-text');
+    if (textEl) textEl.textContent = '';
+  }
+
   document.querySelectorAll('.gg-chooser-tile').forEach(function (tile) {
-    tile.addEventListener('click', function () { selectCeremony(tile.dataset.id); });
+    tile.addEventListener('click', function () {
+      if (tile.dataset.id === activeCer) {
+        deselectCeremony();
+      } else {
+        selectCeremony(tile.dataset.id);
+      }
+    });
   });
 
   // ── Ceremony links — shared by the desktop dropdown and the mobile
@@ -212,6 +233,20 @@
   document.querySelectorAll('.gg-prizes-toggle').forEach(function (btn) {
     btn.addEventListener('click', function () {
       btn.nextElementSibling && btn.nextElementSibling.classList.toggle('open');
+    });
+  });
+
+  // ── Dean's welcome expand/collapse ───────────────────────────────────
+  // The chevron button existed in the markup with no click handler at
+  // all — clicking it did nothing, real feedback: "not working".
+  document.querySelectorAll('.gg-dean-expand').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      var body = btn.previousElementSibling;
+      if (!body || !body.classList.contains('gg-dean-body')) return;
+      var expanding = !body.classList.contains('expanded');
+      body.classList.toggle('expanded', expanding);
+      btn.classList.toggle('expanded', expanding);
+      btn.setAttribute('aria-expanded', String(expanding));
     });
   });
 
@@ -430,8 +465,8 @@
     });
   }
 
-  wireSearchBox('nav-search-input', 'nav-search-panel', ['nav-search-toggle', 'nav-search-submit']);
-  wireSearchBox('inputField1', 'find-search-panel', ['find-btn']);
+  wireSearchBox('nav-search-input', 'nav-search-panel', ['nav-search-toggle']);
+  wireSearchBox('inputField1', 'find-search-panel', []);
 
   var SEARCH_ICON = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>';
   var CLOSE_ICON = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>';
@@ -471,14 +506,6 @@
     var panel = document.getElementById('nav-search-panel');
     if (panel && panel.contains(e.target)) return;
     setNavSearchOpen(false);
-  });
-  document.getElementById('nav-search-submit')?.addEventListener('click', function () {
-    var input = document.getElementById('nav-search-input');
-    renderSearchPanel(document.getElementById('nav-search-panel'), searchNames(input.value));
-  });
-  document.getElementById('find-btn')?.addEventListener('click', function () {
-    var input = document.getElementById('inputField1');
-    renderSearchPanel(document.getElementById('find-search-panel'), searchNames(input.value));
   });
   document.getElementById('return-top')?.addEventListener('click', function () {
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -898,5 +925,8 @@
   })();
 
   // ── Init ─────────────────────────────────────────────────────────────
-  selectCeremony(activeCer, { silent: true, noScroll: true });
+  // Only re-syncs the DOM if a deep link / share link / search jump-to
+  // already set activeCer above — a plain visit leaves it null and the
+  // chooser grid simply shows nothing pre-selected.
+  if (activeCer) selectCeremony(activeCer, { silent: true, noScroll: true });
 })();

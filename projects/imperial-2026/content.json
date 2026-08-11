@@ -89,15 +89,20 @@
     {
       "day": 1,
       "dean": {
-        "body": "Your engineering education at Imperial has given you the analytical rigour, creativity and technical depth to tackle the defining challenges of our time.",
+        "body": "Your engineering education at Imperial has given you the analytical rigour, creativity and technical depth to tackle the defining challenges of our time. This is your moment to reflect on all that you've achieved, and to look ahead with confidence to everything still to come.",
         "name": "Professor Faron Moller",
         "role": "Dean, Faculty of Engineering",
         "intro": "Congratulations to all those graduating from the Faculty of Engineering today."
       },
-      "active": false,
-      "awardees": [],
+      "awardees": [
+        {
+          "name": "[Placeholder — prizewinner name]",
+          "medal": "IMPERIAL COLLEGE MEDAL",
+          "desc": "[Placeholder — recipient details to be confirmed]"
+        }
+      ],
       "ceremonyId": "C1",
-      "prizesIntro": null,
+      "prizesIntro": "The following awards and prizes are given to students with a record of exceptional achievement in scholarship in the Faculty of Engineering. Visit our website for more information on our graduate prizes.",
       "ceremonyTime": "10.30",
       "courseGroups": [
         {
@@ -1120,21 +1125,83 @@
         }
       ],
       "ceremonyLabel": "Faculty of Engineering (Ceremony One)",
-      "orderOfCeremony": [],
-      "processionGroups": []
+      "orderOfCeremony": [
+        {
+          "t": "Fanfare",
+          "d": "[Placeholder — fanfare to be confirmed]",
+          "i": true
+        },
+        {
+          "t": "Student Orator",
+          "d": "[Placeholder — student orator to be confirmed]"
+        },
+        {
+          "t": "Presentation of graduates",
+          "d": "Presentation of graduates from the Faculty of Engineering (Ceremony One) to whom degrees have been awarded",
+          "jump": true
+        },
+        {
+          "t": "Musical interlude",
+          "d": "[Placeholder — musical performance to be confirmed]",
+          "i": true
+        },
+        {
+          "t": "Valediction",
+          "d": "President, Professor Hugh Brady"
+        },
+        {
+          "t": "National anthem"
+        },
+        {
+          "t": "Recession",
+          "d": "[Placeholder — recession music to be confirmed]",
+          "i": true
+        }
+      ],
+      "processionGroups": [
+        {
+          "label": "FIRST GROUP",
+          "members": [
+            "[Placeholder — Procession Marshal and faculty representative]"
+          ]
+        },
+        {
+          "label": "SECOND GROUP",
+          "members": [
+            "Faculty officers and distinguished guests"
+          ]
+        },
+        {
+          "label": "THIRD GROUP",
+          "members": [
+            "Faculty of Engineering graduates"
+          ]
+        },
+        {
+          "label": "FOURTH GROUP",
+          "members": [
+            "Doctoral graduates"
+          ]
+        }
+      ]
     },
     {
       "day": 1,
       "dean": {
-        "body": "Each of you has demonstrated the dedication and intellectual curiosity that defines an Imperial engineer.",
+        "body": "Each of you has demonstrated the dedication and intellectual curiosity that defines an Imperial engineer. This is your moment to reflect on all that you've achieved, and to look ahead with confidence to everything still to come.",
         "name": "Professor Faron Moller",
         "role": "Dean, Faculty of Engineering",
         "intro": "Welcome to this second Faculty of Engineering graduation ceremony."
       },
-      "active": false,
-      "awardees": [],
+      "awardees": [
+        {
+          "name": "[Placeholder — prizewinner name]",
+          "medal": "IMPERIAL COLLEGE MEDAL",
+          "desc": "[Placeholder — recipient details to be confirmed]"
+        }
+      ],
       "ceremonyId": "C2",
-      "prizesIntro": null,
+      "prizesIntro": "The following awards and prizes are given to students with a record of exceptional achievement in scholarship in the Faculty of Engineering. Visit our website for more information on our graduate prizes.",
       "ceremonyTime": "13.30",
       "courseGroups": [
         {
@@ -1991,21 +2058,83 @@
         }
       ],
       "ceremonyLabel": "Faculty of Engineering (Ceremony Two)",
-      "orderOfCeremony": [],
-      "processionGroups": []
+      "orderOfCeremony": [
+        {
+          "t": "Fanfare",
+          "d": "[Placeholder — fanfare to be confirmed]",
+          "i": true
+        },
+        {
+          "t": "Student Orator",
+          "d": "[Placeholder — student orator to be confirmed]"
+        },
+        {
+          "t": "Presentation of graduates",
+          "d": "Presentation of graduates from the Faculty of Engineering (Ceremony Two) to whom degrees have been awarded",
+          "jump": true
+        },
+        {
+          "t": "Musical interlude",
+          "d": "[Placeholder — musical performance to be confirmed]",
+          "i": true
+        },
+        {
+          "t": "Valediction",
+          "d": "President, Professor Hugh Brady"
+        },
+        {
+          "t": "National anthem"
+        },
+        {
+          "t": "Recession",
+          "d": "[Placeholder — recession music to be confirmed]",
+          "i": true
+        }
+      ],
+      "processionGroups": [
+        {
+          "label": "FIRST GROUP",
+          "members": [
+            "[Placeholder — Procession Marshal and faculty representative]"
+          ]
+        },
+        {
+          "label": "SECOND GROUP",
+          "members": [
+            "Faculty officers and distinguished guests"
+          ]
+        },
+        {
+          "label": "THIRD GROUP",
+          "members": [
+            "Faculty of Engineering graduates"
+          ]
+        },
+        {
+          "label": "FOURTH GROUP",
+          "members": [
+            "Doctoral graduates"
+          ]
+        }
+      ]
     },
     {
       "day": 1,
       "dean": {
-        "body": "The research skills, clinical knowledge and scientific rigour you have developed here will shape the future of global health.",
+        "body": "The research skills, clinical knowledge and scientific rigour you have developed here will shape the future of global health. This is your moment to reflect on all that you've achieved, and to look ahead with confidence to everything still to come.",
         "name": "Professor Jonathan Weber",
         "role": "Dean, Faculty of Medicine",
         "intro": "Congratulations to all graduating from the Faculty of Medicine, CLCC and CHERS today."
       },
-      "active": false,
-      "awardees": [],
+      "awardees": [
+        {
+          "name": "[Placeholder — prizewinner name]",
+          "medal": "IMPERIAL COLLEGE MEDAL",
+          "desc": "[Placeholder — recipient details to be confirmed]"
+        }
+      ],
       "ceremonyId": "C3",
-      "prizesIntro": null,
+      "prizesIntro": "The following awards and prizes are given to students with a record of exceptional achievement in scholarship in the Faculty of Medicine, CHERS and CLCC. Visit our website for more information on our graduate prizes.",
       "ceremonyTime": "16.30",
       "courseGroups": [
         {
@@ -3240,21 +3369,83 @@
         }
       ],
       "ceremonyLabel": "Faculty of Medicine, CHERS and CLCC",
-      "orderOfCeremony": [],
-      "processionGroups": []
+      "orderOfCeremony": [
+        {
+          "t": "Fanfare",
+          "d": "[Placeholder — fanfare to be confirmed]",
+          "i": true
+        },
+        {
+          "t": "Student Orator",
+          "d": "[Placeholder — student orator to be confirmed]"
+        },
+        {
+          "t": "Presentation of graduates",
+          "d": "Presentation of graduates from the Faculty of Medicine, CHERS and CLCC to whom degrees have been awarded",
+          "jump": true
+        },
+        {
+          "t": "Musical interlude",
+          "d": "[Placeholder — musical performance to be confirmed]",
+          "i": true
+        },
+        {
+          "t": "Valediction",
+          "d": "President, Professor Hugh Brady"
+        },
+        {
+          "t": "National anthem"
+        },
+        {
+          "t": "Recession",
+          "d": "[Placeholder — recession music to be confirmed]",
+          "i": true
+        }
+      ],
+      "processionGroups": [
+        {
+          "label": "FIRST GROUP",
+          "members": [
+            "[Placeholder — Procession Marshal and faculty representative]"
+          ]
+        },
+        {
+          "label": "SECOND GROUP",
+          "members": [
+            "Faculty officers and distinguished guests"
+          ]
+        },
+        {
+          "label": "THIRD GROUP",
+          "members": [
+            "Faculty of Medicine, CHERS and CLCC graduates"
+          ]
+        },
+        {
+          "label": "FOURTH GROUP",
+          "members": [
+            "Doctoral graduates"
+          ]
+        }
+      ]
     },
     {
       "day": 2,
       "dean": {
-        "body": "Your commitment to discovery and advancing human understanding exemplifies everything that makes Imperial great.",
+        "body": "Your commitment to discovery and advancing human understanding exemplifies everything that makes Imperial great. This is your moment to reflect on all that you've achieved, and to look ahead with confidence to everything still to come.",
         "name": "Professor Richard Craster",
         "role": "Dean, Faculty of Natural Sciences",
         "intro": "Congratulations to all graduating from the Faculty of Natural Sciences."
       },
-      "active": false,
-      "awardees": [],
+      "awardees": [
+        {
+          "name": "[Placeholder — prizewinner name]",
+          "medal": "IMPERIAL COLLEGE MEDAL",
+          "desc": "[Placeholder — recipient details to be confirmed]"
+        }
+      ],
       "ceremonyId": "C4",
-      "prizesIntro": null,
+      "prizesIntro": "The following awards and prizes are given to students with a record of exceptional achievement in scholarship in the Faculty of Natural Sciences. Visit our website for more information on our graduate prizes.",
       "ceremonyTime": "10.30",
       "courseGroups": [
         {
@@ -4200,8 +4391,65 @@
         }
       ],
       "ceremonyLabel": "Faculty of Natural Sciences",
-      "orderOfCeremony": [],
-      "processionGroups": []
+      "orderOfCeremony": [
+        {
+          "t": "Fanfare",
+          "d": "[Placeholder — fanfare to be confirmed]",
+          "i": true
+        },
+        {
+          "t": "Student Orator",
+          "d": "[Placeholder — student orator to be confirmed]"
+        },
+        {
+          "t": "Presentation of graduates",
+          "d": "Presentation of graduates from the Faculty of Natural Sciences to whom degrees have been awarded",
+          "jump": true
+        },
+        {
+          "t": "Musical interlude",
+          "d": "[Placeholder — musical performance to be confirmed]",
+          "i": true
+        },
+        {
+          "t": "Valediction",
+          "d": "President, Professor Hugh Brady"
+        },
+        {
+          "t": "National anthem"
+        },
+        {
+          "t": "Recession",
+          "d": "[Placeholder — recession music to be confirmed]",
+          "i": true
+        }
+      ],
+      "processionGroups": [
+        {
+          "label": "FIRST GROUP",
+          "members": [
+            "[Placeholder — Procession Marshal and faculty representative]"
+          ]
+        },
+        {
+          "label": "SECOND GROUP",
+          "members": [
+            "Faculty officers and distinguished guests"
+          ]
+        },
+        {
+          "label": "THIRD GROUP",
+          "members": [
+            "Faculty of Natural Sciences graduates"
+          ]
+        },
+        {
+          "label": "FOURTH GROUP",
+          "members": [
+            "Doctoral graduates"
+          ]
+        }
+      ]
     },
     {
       "day": 2,
@@ -4211,7 +4459,6 @@
         "role": "Dean of Imperial Business School",
         "intro": "Congratulations to all those graduating from Imperial Business School today."
       },
-      "active": true,
       "awardees": [
         {
           "desc": "Mrs Leila Guerra is Associate Vice President (Education) at the London School of Economics and Political Science.",
@@ -5109,7 +5356,6 @@
         "role": "Dean of Imperial Business School",
         "intro": "Welcome to this second Imperial Business School graduation ceremony."
       },
-      "active": false,
       "awardees": [],
       "ceremonyId": "C6",
       "prizesIntro": null,
@@ -6246,7 +6492,7 @@
     "textColor": "#161a1d",
     "accentColor": "#40E0CF",
     "fontHeading": "Imperial Sans",
-    "bodyFontSize": "16px",
+    "bodyFontSize": "18px",
     "primaryColor": "#232333",
     "lightBackground": "#f0f0f0"
   },

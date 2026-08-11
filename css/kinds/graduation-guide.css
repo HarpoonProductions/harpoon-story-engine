@@ -90,23 +90,18 @@ a{color:inherit;text-decoration:none}
 .gg-nav-search-wrap{display:flex;align-items:center;position:relative;}
 /* Absolutely positioned (not in normal flow) so expanding it from 0 to
    180px on open never pushes .gg-nav-links or forces the fixed nav to
-   overflow — it overlays leftward from the arrow button instead of
+   overflow — it overlays leftward from the search-toggle icon instead of
    growing the flex row, whatever the viewport width. */
 .gg-nav-search-input{
   position:absolute;right:0;top:50%;transform:translateY(-50%);
   width:0;overflow:hidden;padding:0;margin:0;
   background:rgba(255,255,255,0.12);
-  border:1px solid rgba(255,255,255,0.3);border-right:none;
+  border:1px solid rgba(255,255,255,0.3);
   color:#fff;font-size:14px;font-family:inherit;outline:none;
   transition:width 0.2s ease;height:28px;z-index:1;
 }
 .gg-nav-search-input.open{width:180px;padding:0 8px;}
 .gg-nav-search-input::placeholder{color:rgba(255,255,255,0.45)}
-.gg-nav-search-arrow{
-  background:none;border:none;color:rgba(255,255,255,0.8);
-  cursor:pointer;padding:0 6px;display:flex;align-items:center;height:28px;
-}
-.gg-nav-search-arrow:hover{color:#fff}
 .gg-nav-search-icon{
   background:none;border:none;color:rgba(255,255,255,0.85);
   cursor:pointer;padding:4px;display:flex;align-items:center;
@@ -198,7 +193,6 @@ a{color:inherit;text-decoration:none}
     z-index:1001;
   }
   .gg-nav-search-input.open{top:100%;width:auto;padding:0 20px;}
-  .gg-nav-search-arrow{display:none;}
   /* #nav-search-panel specifically — not the shared .gg-search-panel
      class, which the page-body "Find a graduating student" box also
      uses and must keep its own inline (non-drawer) positioning. Same
@@ -392,14 +386,12 @@ a{color:inherit;text-decoration:none}
 .gg-find-box{background:var(--gg-primary);padding:28px 32px;max-width:700px;}
 .gg-find-label{font-size:14px;font-weight:700;color:#fff;margin-bottom:12px;}
 .gg-find-row{display:flex;gap:0;position:relative;}
-.gg-find-input{flex:1;padding:12px 14px;background:#fff;border:none;font-size:15px;font-family:inherit;outline:none;color:var(--gg-text);}
+/* font-size:16px, not smaller — anything under 16px makes iOS Safari
+   auto-zoom the whole page on focus, which reads as an unexplained
+   sideways shift (same root cause already fixed for .gg-nav-search-input
+   below; this box just never got the same fix). */
+.gg-find-input{flex:1;padding:12px 14px;background:#fff;border:none;font-size:16px;font-family:inherit;outline:none;color:var(--gg-text);}
 .gg-find-input::placeholder{color:#999;}
-.gg-find-btn{
-  padding:0 18px;background:var(--gg-primary);border:2px solid #fff;
-  color:#fff;font-family:inherit;display:flex;align-items:center;justify-content:center;
-  cursor:pointer;flex-shrink:0;transition:background 0.15s;
-}
-.gg-find-btn:hover{background:rgba(255,255,255,0.1);}
 
 /* Chooser */
 .gg-chooser-day{margin-bottom:44px;}
@@ -427,15 +419,23 @@ section.gg-chooser .gg-chooser-prompt{color:rgba(255,255,255,0.55);}
 /* Ceremony */
 .gg-ceremony{display:none;background:var(--gg-bg);}
 .gg-ceremony.active{display:block;}
-.gg-cer-header{padding:40px 48px 32px;max-width:1080px;}
+/* margin:0 auto centers this within .gg-ceremony's full-bleed width — it
+   was max-width-constrained but never centered, so on any screen wider
+   than 1080+96px it sat flush left with a large dead gap on the right,
+   reading as an accidental narrow column next to the full-bleed sections
+   around it. */
+.gg-cer-header{padding:40px 48px 32px;max-width:1080px;margin:0 auto;}
 .gg-cer-time-title{font-size:24px;font-weight:700;color:var(--gg-text);margin-bottom:32px;}
 .gg-cer-time-title b{font-weight:700;}
 .gg-dean-grid{display:grid;grid-template-columns:1fr auto;gap:48px;align-items:start;margin-bottom:32px;padding-bottom:32px;border-bottom:1px solid #ccc;}
 @media(max-width:720px){.gg-dean-grid{grid-template-columns:1fr;}}
 .gg-dean-h3{font-size:22px;font-weight:700;color:var(--gg-text);margin-bottom:14px;}
 .gg-dean-intro{font-size:var(--gg-body-font-size);font-weight:700;color:var(--gg-text);margin-bottom:12px;line-height:1.55;}
-.gg-dean-body{font-size:var(--gg-body-font-size);color:var(--gg-text);line-height:1.75;}
-.gg-dean-expand{background:none;border:none;font-size:22px;cursor:pointer;color:var(--gg-text);margin-top:10px;display:block;}
+.gg-dean-body{font-size:var(--gg-body-font-size);color:var(--gg-text);line-height:1.75;
+  display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:3;overflow:hidden;}
+.gg-dean-body.expanded{display:block;-webkit-line-clamp:unset;overflow:visible;}
+.gg-dean-expand{background:none;border:none;font-size:22px;cursor:pointer;color:var(--gg-text);margin-top:10px;display:block;transition:transform 0.2s ease;}
+.gg-dean-expand.expanded{transform:rotate(180deg);}
 .gg-dean-portrait-col{text-align:left;flex-shrink:0;}
 .gg-dean-photo{width:290px;height:330px;background:#d0d0d0;display:flex;align-items:center;justify-content:center;font-size:90px;margin-bottom:10px;overflow:hidden;}
 .gg-dean-photo img{width:100%;height:100%;object-fit:cover;display:block;}
@@ -443,7 +443,7 @@ section.gg-chooser .gg-chooser-prompt{color:rgba(255,255,255,0.55);}
 .gg-dean-role-text{font-size:13px;color:#555;}
 
 /* Procession */
-.gg-procession{padding:0 48px 40px;max-width:1080px;}
+.gg-procession{padding:0 48px 40px;max-width:1080px;margin:0 auto;}
 .gg-section-h2{font-size:22px;font-weight:700;color:var(--gg-text);margin-bottom:24px;}
 .gg-proc-tabs{display:flex;gap:0;flex-wrap:wrap;}
 .gg-proc-tab{
@@ -509,12 +509,25 @@ section.gg-chooser .gg-chooser-prompt{color:rgba(255,255,255,0.55);}
 .gg-prizes-toggle{padding:10px 18px;background:var(--gg-primary);border:none;color:#fff;font-size:14px;font-family:inherit;cursor:pointer;}
 
 /* Names */
+/* Same width-cap-plus-centering as .gg-cer-header/.gg-procession above —
+   consistent content width down the whole ceremony section, and the
+   deciding factor for the course-toggle alignment fix below: bounding
+   this row's width is what keeps the toggle buttons off the far edge of
+   a wide screen while still lining up in a column (see .gg-course-group-hdr). */
 .gg-names{background:var(--gg-bg);padding:48px;}
+.gg-names > *{max-width:1080px;margin-left:auto;margin-right:auto;}
 .gg-names-heading{font-size:26px;font-weight:700;color:var(--gg-text);margin-bottom:12px;}
 .gg-names-disclaimer{font-size:14px;font-weight:700;color:var(--gg-text);line-height:1.6;max-width:800px;margin-bottom:36px;}
 .gg-course-group{margin-bottom:8px;}
+/* Grid instead of flex: with flex, the toggle button packs immediately
+   after the title text, so its horizontal position drifts row to row
+   with each qualification's title length — untidy. Grid's first column
+   is the same width on every row (computed once, across the whole
+   grid), so the toggle lands in a consistent column regardless of any
+   one row's title length — without pinning it to the far edge of
+   .gg-names, since that's now width-capped above. */
 .gg-course-group-hdr{
-  display:flex;align-items:center;gap:16px;padding:4px 0;
+  display:grid;grid-template-columns:minmax(0,1fr) auto;column-gap:16px;align-items:center;padding:4px 0;
   position:sticky;top:86px;background:var(--gg-bg);z-index:80;
 }
 .gg-course-group-title{font-size:16px;font-weight:700;color:var(--gg-text);}

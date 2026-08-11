@@ -81,7 +81,10 @@ assertContains('Plausible script uses the correct domain', html, 'analytics.har.
 assertContains('Chooser tiles present', html, 'gg-chooser-tile');
 assertCount('One chooser tile per ceremony', html, 'class="gg-chooser-tile(?:"| )', content.ceremonies.length);
 assertCount('One ceremony section per ceremony', html, 'class="gg-ceremony', content.ceremonies.length);
-assertContains('Active ceremony is marked active', html, 'gg-ceremony active');
+// No ceremony is pre-selected server-side any more — real feedback: a
+// default-active ceremony on a plain visit read as broken, not helpful.
+// The runtime JS only activates one when a deep link / share link says so.
+assert('No ceremony is marked active by default', !html.includes('gg-ceremony active') && !html.includes('gg-chooser-tile active'));
 assertContains('Search-related DOM hooks present', html, 'id="nav-search-input"');
 assertContains('Nav search results panel present', html, 'id="nav-search-panel"');
 assertContains('Find-box search results panel present', html, 'id="find-search-panel"');
