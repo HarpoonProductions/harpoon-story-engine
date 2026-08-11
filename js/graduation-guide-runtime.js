@@ -409,7 +409,28 @@
     if (!row) return;
     var list = row.closest('.gg-student-list');
     if (list) list.classList.add('open');
-    var top = row.getBoundingClientRect().top + window.pageYOffset - 200;
+    // The sticky course-group header for this row's own group stays pinned
+    // above it while scrolled to — a fixed offset assumed it was always
+    // short, but a long qualification title (e.g. "Associate of the
+    // Imperial College School of Medicine, Bachelor of Medicine, Bachelor
+    // of Surgery") wraps to several lines on a narrow phone, so the header
+    // ends up taller than the old flat -200px accounted for and covers
+    // part of the row underneath it — real feedback: a name half-hidden
+    // behind the heading above it.
+    //
+    // The header's own CSS `top` (currently 86px) is the authoritative
+    // "space already reserved above it" — nav height *and* the floating
+    // bar, both baked into that one value by the stylesheet. Re-measuring
+    // just the nav element misses the floating bar entirely (a first pass
+    // at this fix did exactly that, and still left a real, smaller overlap
+    // — confirmed by comparing the row's landed position against the
+    // header's actual pinned bottom edge). Reading the CSS value directly
+    // instead of reconstructing it from parts avoids drifting out of sync
+    // with the stylesheet again the next time that spacing changes.
+    var hdr = row.closest('.gg-course-group')?.querySelector('.gg-course-group-hdr');
+    var hdrTopOffset = hdr ? parseFloat(getComputedStyle(hdr).top) || 0 : 86;
+    var hdrHeight = hdr ? hdr.getBoundingClientRect().height : 0;
+    var top = row.getBoundingClientRect().top + window.pageYOffset - (hdrTopOffset + hdrHeight + 16);
     window.scrollTo({ top: Math.max(0, top), behavior: 'smooth' });
     row.classList.add('gg-jumped-to');
     setTimeout(function () { row.classList.remove('gg-jumped-to'); }, 2000);
