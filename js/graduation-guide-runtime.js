@@ -707,14 +707,20 @@
 
       var congrats = document.getElementById('hero-congrats');
       if (congrats) {
-        congrats.textContent = 'Congratulations, ' + name + '!';
-        // The CSS clamp() size is tuned for the generic "Congratulations!"
-        // — a real student's name can be long enough that, combined with
-        // white-space:nowrap (needed so it never wraps to a second line),
-        // it would silently overflow sideways on a narrow phone instead.
-        // Only JS can measure the actual rendered string width, so shrink
-        // it down in 2px steps until it genuinely fits, with a floor so an
-        // extremely long name degrades gracefully rather than vanishing.
+        // Deliberate break after "Congratulations," rather than shrinking
+        // to force everything onto one line — that kept the text one line
+        // but at the cost of the large size's own impact for a long name.
+        // A real name goes on its own line instead, at the same big size.
+        // escapeHtml is required here (unlike the plain textContent this
+        // replaces) — name comes straight from the URL, and this is now
+        // innerHTML, not textContent, so it wouldn't auto-escape on its own.
+        congrats.innerHTML = 'Congratulations,<br>' + escapeHtml(name) + '!';
+        // white-space:nowrap in CSS stops either line from *also* wrapping
+        // mid-word — the <br> above is what supplies the one deliberate
+        // break. Still keep a shrink-to-fit safety net: scrollWidth on a
+        // nowrap block with a forced break reflects whichever of the two
+        // lines is wider, so this still correctly catches an unusually
+        // long single name that wouldn't fit on its own line at full size.
         var minFontSize = 15;
         var shrinkAttempts = 20;
         while (congrats.scrollWidth > congrats.clientWidth && shrinkAttempts-- > 0) {
