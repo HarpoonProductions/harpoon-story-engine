@@ -245,7 +245,14 @@ function buildWordmark(institution, asset) {
 
 function buildBody(institution, guide, ceremonies, asset, groupMembers, config) {
   const scrollHeroEnabled = !!config?.scrollHero?.enabled;
-  return `<nav class="gg-nav">
+  return `<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="gg-share-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+    <circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/>
+    <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/>
+    <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>
+  </symbol>
+</svg>
+<nav class="gg-nav">
   ${buildWordmark(institution, asset)}
   <div class="gg-nav-links">
     ${buildCeremonyDropdown(guide.days, ceremonies, '')}
@@ -598,14 +605,17 @@ function buildCeremonySection(cfg, guide, asset) {
       const gid = `sl-${cfg.ceremonyId}-${ci}`;
       const rows = (course.students || [])
         .map(
+          // The full <svg> used to be inlined per row — harmless at one
+          // row, but this renders thousands of times per ceremony (5,373
+          // students across imperial-2026 alone) and that repetition alone
+          // added ~2.3MB to the page, nearly half its total weight. A
+          // single shared <symbol> (see buildBody, rendered once) plus a
+          // short <use> reference per row is visually and behaviourally
+          // identical but a fraction of the size.
           (name) => `<div class="gg-student-name-row" data-student="${escHtml(name)}" data-ceremony="${escHtml(cfg.ceremonyId)}">
         <span class="gg-student-name-text">${escHtml(name)}</span>
         <button class="gg-share-btn" aria-label="Share">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/>
-            <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/>
-            <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>
-          </svg>
+          <svg width="14" height="14"><use href="#gg-share-icon" xlink:href="#gg-share-icon"></use></svg>
         </button>
       </div>`
         )

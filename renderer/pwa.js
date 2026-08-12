@@ -51,7 +51,7 @@ function buildPwaHeadTags(opts) {
       });
     }
   </script>
-  <script src="${opts.asset('ios-install-banner.js')}"></script>`;
+  <script defer src="${opts.asset('ios-install-banner.js')}"></script>`;
 }
 
 // ── Icon generation ──────────────────────────────────────────────────
