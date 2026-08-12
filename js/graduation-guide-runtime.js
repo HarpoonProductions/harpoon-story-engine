@@ -353,10 +353,16 @@
   }
 
   function searchPanelItemHtml(entry) {
+    // entry.course can legitimately be empty (a handful of C1 groups had a
+    // misparsed name in place of a real qualification title, blanked
+    // rather than left wrong — see project notes) — skip the segment
+    // entirely rather than leave a dangling leading " · " with nothing
+    // before it.
+    var courseSegment = entry.course ? escapeHtml(entry.course) + ' &middot; ' : '';
     return '<button type="button" class="gg-search-panel-item" role="option" ' +
       'data-result-name="' + escapeHtml(entry.name) + '" data-result-ceremony="' + escapeHtml(entry.ceremonyId) + '">' +
       '<span class="gg-search-panel-item-name">' + escapeHtml(entry.name) + '</span>' +
-      '<span class="gg-search-panel-item-meta">' + escapeHtml(entry.course) + ' &middot; ' + escapeHtml(entry.ceremonyLabel) + ' &middot; ' + escapeHtml(entry.ceremonyTime) + '</span>' +
+      '<span class="gg-search-panel-item-meta">' + courseSegment + escapeHtml(entry.ceremonyLabel) + ' &middot; ' + escapeHtml(entry.ceremonyTime) + '</span>' +
       '</button>';
   }
 
