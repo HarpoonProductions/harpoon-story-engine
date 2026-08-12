@@ -706,7 +706,23 @@
       track('Shared Link Opened', { type: 'student' });
 
       var congrats = document.getElementById('hero-congrats');
-      if (congrats) congrats.textContent = 'Congratulations, ' + name + '!';
+      if (congrats) {
+        congrats.textContent = 'Congratulations, ' + name + '!';
+        // The CSS clamp() size is tuned for the generic "Congratulations!"
+        // — a real student's name can be long enough that, combined with
+        // white-space:nowrap (needed so it never wraps to a second line),
+        // it would silently overflow sideways on a narrow phone instead.
+        // Only JS can measure the actual rendered string width, so shrink
+        // it down in 2px steps until it genuinely fits, with a floor so an
+        // extremely long name degrades gracefully rather than vanishing.
+        var minFontSize = 15;
+        var shrinkAttempts = 20;
+        while (congrats.scrollWidth > congrats.clientWidth && shrinkAttempts-- > 0) {
+          var currentSize = parseFloat(getComputedStyle(congrats).fontSize);
+          if (currentSize <= minFontSize) break;
+          congrats.style.fontSize = Math.max(minFontSize, currentSize - 2) + 'px';
+        }
+      }
 
       var photoEl = document.getElementById('hero-photo');
       var photoImg = document.getElementById('hero-photo-img');
