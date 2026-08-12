@@ -102,9 +102,16 @@ a{color:inherit;text-decoration:none}
 }
 .gg-nav-search-input.open{width:180px;padding:0 8px;}
 .gg-nav-search-input::placeholder{color:rgba(255,255,255,0.45)}
+/* padding:13px, not 4px — with the 18px icon that's a 44px touch target,
+   the generally-recommended mobile minimum (Apple HIG / WCAG). At 4px
+   padding the real hit area was ~26px, small enough that a finger
+   landing just outside it — common, not a precision mouse pointer —
+   missed silently with zero feedback. Real feedback: "activating it by
+   touch is very sporadic". Doesn't change the icon's visual size, only
+   the tappable area around it. */
 .gg-nav-search-icon{
   background:none;border:none;color:rgba(255,255,255,0.85);
-  cursor:pointer;padding:4px;display:flex;align-items:center;
+  cursor:pointer;padding:13px;display:flex;align-items:center;justify-content:center;
 }
 .gg-nav-search-icon:hover{color:#fff}
 
