@@ -18,7 +18,7 @@
 
   // ── Project ID from URL path ──────────────────────────────────────
   var projectId = window.location.pathname
-    .replace(/\/index\.html$/, '')
+    .replace(/\/index\.html$/, '') // strip trailing index.html
     .replace(/^\/|\/$/g, '')
     .replace(/\//g, '--');
   if (!projectId) return;
