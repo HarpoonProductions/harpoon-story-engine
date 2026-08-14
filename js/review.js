@@ -17,7 +17,10 @@
   if (!onReviewSubdomain && !hasReviewParam) return;
 
   // ── Project ID from URL path ──────────────────────────────────────
-  var projectId = window.location.pathname.replace(/^\/|\/$/g, '').replace(/\//g, '--');
+  var projectId = window.location.pathname
+    .replace(/\/index\.html$/, '')
+    .replace(/^\/|\/$/g, '')
+    .replace(/\//g, '--');
   if (!projectId) return;
 
   // ── Supabase config from meta tags ────────────────────────────────
