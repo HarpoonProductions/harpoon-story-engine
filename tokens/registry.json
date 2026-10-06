@@ -46,6 +46,13 @@
       "description": "FA - Welcome to Football brand token set",
       "fonts": "Bebas Neue, DM Sans",
       "logo_url": "https://raw.githubusercontent.com/HarpoonProductions/harpoon-story-engine/main/assets/logos/welcome-to-football-logo.png"
+    },
+    {
+      "id": "wansteadium",
+      "label": "Wansteadium",
+      "description": "Wansteadium hose style",
+      "fonts": "DM Sans",
+      "logo_url": "https://raw.githubusercontent.com/HarpoonProductions/harpoon-story-engine/main/assets/logos/wansteadium-logo.png"
     }
   ]
 }
