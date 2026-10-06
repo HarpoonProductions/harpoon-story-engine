@@ -1540,4 +1540,160 @@
     reportVisible();
   })();
 
+  // ── Interaction analytics ──────────────────────────────────────────
+  // Reports which sections readers reach and which interactive elements
+  // they use, for story reports on reports.har.pn. Listen-only: it adds
+  // no markup, styles or behaviour, and runs last, inside its own
+  // try/catch, so a failure here can't affect anything above.
+  //
+  // Event names and props are a contract with the reports (like the
+  // audio/PDF events above): change them only with a note in the
+  // reports repo. Every event carries `section` (section id) and
+  // `layout`. Each element counts once per page view. Only producer-
+  // written labels are sent; nothing a reader types ever is.
+  //
+  // No-ops unless the Plausible script loaded (editor preview has none).
+  (function () {
+    try {
+      if (typeof window.plausible !== "function") return;
+
+      var sent = {};
+      function send(event, el, extra, key) {
+        try {
+          var sec = el && el.closest ? el.closest(".hse-section[id]") : null;
+          var props = {
+            section: sec ? sec.id : "none",
+            layout: (sec && sec.getAttribute("data-layout")) || "none",
+          };
+          for (var k in extra) props[k] = extra[k];
+          var once = event + "|" + props.section + "|" + (key || "");
+          if (sent[once]) return;
+          sent[once] = true;
+          window.plausible(event, { props: props });
+        } catch (e) {}
+      }
+      function label(el) {
+        return ((el && el.textContent) || "").replace(/\s+/g, " ").trim().slice(0, 100);
+      }
+
+      // Section Reached / Story Finished — a section counts once its top
+      // has passed the middle of the screen. Checked against positions
+      // (not visibility) so fast scrolling can't skip a section, and
+      // reaching the bottom of the page counts every section, so a short
+      // last section still registers.
+      var sections = Array.prototype.slice.call(document.querySelectorAll(".hse-section[id]"));
+      var reached = 0;
+      var ticking = false;
+      function checkSections() {
+        ticking = false;
+        var atBottom = window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 2;
+        var line = window.innerHeight * 0.5;
+        while (reached < sections.length &&
+               (atBottom || sections[reached].getBoundingClientRect().top <= line)) {
+          var s = sections[reached];
+          reached++;
+          send("Section Reached", s, { position: String(reached) });
+          if (reached === sections.length) {
+            send("Story Finished", s, {});
+            window.removeEventListener("scroll", onScroll);
+          }
+        }
+      }
+      function onScroll() {
+        if (!ticking) {
+          ticking = true;
+          window.requestAnimationFrame(checkSections);
+        }
+      }
+      if (sections.length) {
+        window.addEventListener("scroll", onScroll, { passive: true });
+        checkSections();
+      }
+
+      // Clicks: one delegated listener in the capture phase, so it sees
+      // every click before the elements' own handlers run (and even if
+      // one of them stops the click from bubbling).
+      document.addEventListener("click", function (e) {
+        try {
+          var t = e.target;
+          if (!t || !t.closest) return;
+
+          var navLink = t.closest("#hse-nav a[href^='#'], #hse-nav-mobile-menu a[href^='#']");
+          if (navLink) {
+            var target = navLink.getAttribute("href").slice(1) || "top";
+            send("Nav Used", document.getElementById(target), { target: target }, target);
+            return;
+          }
+
+          var toggleBtn = t.closest(".hse-toggle__btn");
+          if (toggleBtn) {
+            var option = label(toggleBtn);
+            send("Toggle Switched", toggleBtn, { option: option }, option);
+            return;
+          }
+
+          var trigger = t.closest(".hse-accordion__trigger");
+          if (trigger) {
+            // Capture runs before the accordion's handler: "true" now means this click closes it
+            if (trigger.getAttribute("aria-expanded") === "true") return;
+            var item = label(trigger);
+            send("Accordion Opened", trigger, { item: item }, item);
+            return;
+          }
+
+          var arrow = t.closest(".hse-sc__prev, .hse-sc__next");
+          if (arrow) {
+            // Capture runs before the carousel moves, so work out the card
+            // this click is heading to from the one showing now
+            var sc = arrow.closest(".hse-section--scroll-carousel");
+            var cards = sc ? Array.prototype.slice.call(sc.querySelectorAll(".hse-sc__card")) : [];
+            var now = Math.max(0, cards.indexOf(sc ? sc.querySelector(".hse-sc__card.is-active") : null));
+            var step = arrow.classList.contains("hse-sc__next") ? 1 : -1;
+            var card = String(Math.min(cards.length, Math.max(1, now + 1 + step)));
+            send("Carousel Moved", arrow, { card: card }, card);
+            return;
+          }
+
+          var chip = t.closest(".hse-be__chip, .hse-be__send");
+          if (chip) {
+            var kind = chip.classList.contains("hse-be__chip") ? "chip" : "typed";
+            send("Briefing Question", chip, { kind: kind }, kind + "|" + label(chip));
+            return;
+          }
+
+          var link = t.closest("a[href]");
+          if (link && /^https?:$/.test(link.protocol) && link.hostname !== location.hostname) {
+            var url = (link.hostname + link.pathname).replace(/\/$/, "").slice(0, 200);
+            send("Link Clicked", link, { url: url }, url);
+          }
+        } catch (err) {}
+      }, true);
+
+      // Embeds: clicks inside an iframe never reach the page, but the
+      // page loses focus to it — that counts as using the embed.
+      var embeds = Array.prototype.slice.call(document.querySelectorAll(".hse-embed, .hse-cr__iframe"));
+      function embedName(el) {
+        var frame = el.matches && el.matches("iframe") ? el : el.querySelector && el.querySelector("iframe");
+        return (frame && frame.getAttribute("title")) || "embed " + (embeds.indexOf(el) + 1);
+      }
+      embeds.forEach(function (el) {
+        el.addEventListener("pointerdown", function () {
+          send("Embed Used", el, { embed: embedName(el) }, embedName(el));
+        }, { passive: true });
+      });
+      window.addEventListener("blur", function () {
+        setTimeout(function () {
+          var a = document.activeElement;
+          if (!a || a.tagName !== "IFRAME") return;
+          for (var i = 0; i < embeds.length; i++) {
+            if (embeds[i] === a || embeds[i].contains(a)) {
+              send("Embed Used", embeds[i], { embed: embedName(embeds[i]) }, embedName(embeds[i]));
+              return;
+            }
+          }
+        }, 0);
+      });
+    } catch (e) {}
+  })();
+
 })();
