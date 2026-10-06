@@ -1,0 +1,53 @@
+/*
+ * ════════════════════════════════════════════════════════════════════
+ *  Harpoon Platform — Client Token Set: Wansteadium
+ *  css/tokens-wansteadium.css
+ *
+ *  This is the canonical brand identity file for Wansteadium
+ *  across all Harpoon products — Story Engine stories, Edition OS
+ *  magazines, Briefing Engine sessions, analytics reports, and any
+ *  future Harpoon product built for this client. It is the single
+ *  source of truth for this client's visual identity within the
+ *  Harpoon platform.
+ *
+ *  Generated from manual entry, October 2026.
+ *  This file contains overrides only. Base tokens not listed here
+ *  remain at their platform defaults defined in css/tokens.css.
+ * ════════════════════════════════════════════════════════════════════
+ */
+
+/* ── Proprietary typeface — served from client CDN if available ─────
+   local() picks it up when hosted on client infrastructure.
+   Falls back to the generic stack if not available.
+*/
+@font-face {
+  font-family: 'DM Sans';
+  src: local('DM Sans');
+}
+
+:root {
+  /* ── Accent colours ── */
+  --hse-accent:   #1a3f6f;
+  --hse-accent-2: #c9a84c;
+
+  /* ── Neutral palette ── */
+  --hse-ink:    #0a0a0c;
+  --hse-ink-2:  #111116;
+  --hse-ink-3:  #1c1c24;
+  --hse-warm:   #f2ede6;
+  --hse-warm-2: #c8bfb0;
+  --hse-warm-3: #7a7268;
+
+  /* ── RGB channels ── */
+  --hse-ink-rgb:  10, 10, 12;
+  --hse-warm-rgb: 242, 237, 230;
+
+  /* ── Typography ── */
+  --hse-font-display: DM Sans;
+  --hse-font-body:    'DM Sans', system-ui, sans-serif;
+  --hse-font-mono:    'DM Mono', 'Courier New', monospace;
+
+  /* ── Geometry ── */
+  --hse-max-w:  1160px;
+  --hse-text-w: 680px;
+}
