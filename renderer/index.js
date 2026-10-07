@@ -146,7 +146,8 @@ async function render(content, outputDir, options) {
   const registryLogoUrl = registryEntry?.logo_url || null;
 
   // Build the single-page HTML document
-  const html = buildPage(meta, config, cover, sections, basePath, registryLogoUrl, navGroupMembers);
+  const canonicalUrl = opts.canonicalUrl || meta.canonical_url || null;
+  const html = buildPage(meta, config, cover, sections, basePath, registryLogoUrl, navGroupMembers, canonicalUrl);
 
   const outPath = path.join(outputDir, "index.html");
   fs.writeFileSync(outPath, html, "utf8");
@@ -199,7 +200,7 @@ function pwaCacheVersion(meta) {
 
 // ── Page assembly ─────────────────────────────────────────────────
 
-function buildPage(meta, config, cover, sections, basePath, registryLogoUrl, groupMembers) {
+function buildPage(meta, config, cover, sections, basePath, registryLogoUrl, groupMembers, canonicalUrl) {
   const base = basePath
     ? "/" + basePath.replace(/^\//, "").replace(/\/$/, "")
     : "";
@@ -211,7 +212,7 @@ function buildPage(meta, config, cover, sections, basePath, registryLogoUrl, gro
   const coverData    = coverSection || cover || {};
 
   const heroImageUrl = coverData.hero_image?.url || coverData.hero_video?.poster || null;
-  let head = renderHead(meta, config, null, basePath, false, heroImageUrl);
+  let head = renderHead(meta, config, null, basePath, false, heroImageUrl, canonicalUrl);
 
   // A project with meta.group_id gets the graduation-guide kind's own
   // .gg-nav bar instead of the plain narrative nav, so it looks identical

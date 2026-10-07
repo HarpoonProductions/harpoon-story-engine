@@ -1334,6 +1334,20 @@
                                 </div>
                             </div>
 
+                            <p class="form-section-title">Publishing</p>
+                            <div class="form-group">
+                                <label class="form-label" for="meta-canonical-url">Canonical URL</label>
+                                <input
+                                    class="form-input"
+                                    id="meta-canonical-url"
+                                    data-path="meta.canonical_url"
+                                    placeholder="https://www.client.org/their-story/"
+                                />
+                                <p class="form-hint">
+                                    If this story will be hosted on a client's own domain, enter that URL here. It overrides the default stories.har.pn address in social sharing tags and enables client-hosted export.
+                                </p>
+                            </div>
+
                             <p class="form-section-title">Social sharing</p>
                             <div class="form-group">
                                 <label class="form-label" for="meta-og-description">Description</label>
@@ -3533,6 +3547,11 @@
                             msg += `<br>✗ Failed to redeploy: ${data.failedSiblings.join(", ")}`;
                         }
                         showToast(msg, false, 10000);
+                        // Update in-memory timestamps so status panel refreshes correctly
+                        const now = new Date().toISOString();
+                        if (isProduction) content.meta.last_published_at = now;
+                        else content.meta.last_staged_at = now;
+                        refreshStatusPanel();
                     } else {
                         showToast(
                             "✗ " + (data.error || "Deploy failed"),
@@ -3555,6 +3574,42 @@
                     body: JSON.stringify({ target, ...extra }),
                 });
                 return res.json();
+            }
+
+            function unpublish() {
+                alert('Unpublish is not yet implemented.');
+            }
+
+            async function exportBundle() {
+                const canonicalUrl = content.meta.canonical_url || '';
+                if (!canonicalUrl) {
+                    alert('Set a Canonical URL in the Meta tab before exporting.\n\nThis is the URL where the client will host the story.');
+                    switchTab('meta', document.getElementById('tab-btn-meta'));
+                    return;
+                }
+                showToast('⏳ Building export bundle…', false, 60000);
+                try {
+                    const res = await fetch(`/api/project/${projectId}/export`);
+                    if (!res.ok) {
+                        const data = await res.json().catch(() => ({}));
+                        showToast('✗ Export failed: ' + (data.error || res.statusText), true, 8000);
+                        return;
+                    }
+                    const blob = await res.blob();
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `${projectId}-export.zip`;
+                    document.body.appendChild(a);
+                    a.click();
+                    a.remove();
+                    URL.revokeObjectURL(url);
+                    content.meta.last_exported_at = new Date().toISOString();
+                    showToast('✓ Export downloaded — ready to hand off to client', false, 8000);
+                    refreshStatusPanel();
+                } catch (err) {
+                    showToast('✗ Export failed: ' + err.message, true, 8000);
+                }
             }
 
             // ── Toast notification ────────────────────────────────────────────
@@ -4658,59 +4713,93 @@ function initBlocksEditor(sectionIndex) {
                 const panel = document.getElementById('statusPanel');
                 if (!panel) return;
 
-                const deliveryDomain = 'stories.har.pn';
-                const liveUrl    = `https://${deliveryDomain}/${projectId}/`;
-                const stagingUrl = `https://${deliveryDomain}/staging/${projectId}/`;
+                panel.innerHTML = '<p class="form-hint" style="margin-top:0.5rem">Loading…</p>';
 
-                let status = 'draft';
+                const deliveryDomain = 'stories.har.pn';
+                const stagingUrl  = `https://${deliveryDomain}/staging/${projectId}/`;
+                const productionUrl = `https://${deliveryDomain}/${projectId}/`;
+                const canonicalUrl  = content.meta.canonical_url || '';
+
+                let statusData = {};
                 try {
-                    const res  = await fetch(`/api/project/${projectId}/status`);
-                    const data = await res.json();
-                    status = data.status || 'draft';
+                    const res = await fetch(`/api/project/${projectId}/status`);
+                    statusData = await res.json();
                 } catch {}
 
-                const statusColour = { published:'#2D7D46', staged:'#2980B9', unpublished:'#C0392B', draft:'#7A7268' }[status] || '#7A7268';
-                const statusLabel  = { published:'Live', staged:'Staged', unpublished:'Unpublished', draft:'Draft' }[status] || 'Draft';
-                const lastSaved    = content.meta.last_saved ? new Date(content.meta.last_saved).toLocaleString() : '—';
+                const lastSaved       = content.meta.last_saved      ? new Date(content.meta.last_saved).toLocaleString()      : null;
+                const lastStagedAt    = content.meta.last_staged_at   ? new Date(content.meta.last_staged_at).toLocaleString()   : null;
+                const lastPublishedAt = content.meta.last_published_at ? new Date(content.meta.last_published_at).toLocaleString() : null;
+                const lastExportedAt  = content.meta.last_exported_at  ? new Date(content.meta.last_exported_at).toLocaleString()  : null;
 
-                const liveBlock = (status === 'published' || status === 'staged') ? `
-                    <div class="form-group">
-                        <p class="form-label">Live URL</p>
-                        <a href="${liveUrl}" target="_blank" style="font-family:var(--font-mono);font-size:0.65rem;color:var(--accent);word-break:break-all;text-decoration:none;display:block;margin-top:0.25rem">${liveUrl} ↗</a>
-                    </div>` : '';
+                function destRow({ label, url, timestamp, doneVerb = 'Published', actionLabel, actionFn, actionColour, dimmed }) {
+                    const urlHtml = url
+                        ? `<a href="${url}" target="_blank" style="font-family:var(--font-mono);font-size:0.62rem;color:${dimmed?'var(--ink-3)':'#2980B9'};word-break:break-all;text-decoration:none;display:block;margin-top:0.1rem;line-height:1.3">${url} ↗</a>`
+                        : `<span style="font-family:var(--font-mono);font-size:0.62rem;color:var(--ink-3)">Not set — add in Meta tab</span>`;
+                    const tsHtml = timestamp
+                        ? `<span style="font-size:0.68rem;color:var(--ink-3)">${doneVerb} ${timestamp}</span>`
+                        : `<span style="font-size:0.68rem;color:var(--ink-3)">Not yet ${doneVerb.toLowerCase()}</span>`;
+                    return `
+                        <div style="display:grid;grid-template-columns:1fr auto;align-items:start;gap:0.5rem;padding:0.65rem 0;border-bottom:1px solid var(--rule-2)">
+                            <div>
+                                <p class="form-label" style="margin-bottom:0.15rem">${label}</p>
+                                ${urlHtml}
+                                <div style="margin-top:0.3rem">${tsHtml}</div>
+                            </div>
+                            <button class="tbtn tbtn--ghost" style="font-size:0.7rem;padding:0.25rem 0.55rem;flex-shrink:0;margin-top:0.1rem${actionColour ? ';color:'+actionColour+';border-color:'+actionColour+'40' : ''}"
+                                onclick="${actionFn}">${actionLabel}</button>
+                        </div>`;
+                }
 
-                const stagingBlock = status === 'staged' ? `
-                    <div class="form-group">
-                        <p class="form-label">Staging URL</p>
-                        <a href="${stagingUrl}" target="_blank" style="font-family:var(--font-mono);font-size:0.65rem;color:#2980B9;word-break:break-all;text-decoration:none;display:block;margin-top:0.25rem">${stagingUrl} ↗</a>
-                    </div>` : '';
+                const stagingRow = destRow({
+                    label: 'Staging',
+                    url: stagingUrl,
+                    timestamp: lastStagedAt,
+                    actionLabel: 'Stage',
+                    actionFn: "deploy('staging')",
+                });
+                const productionRow = destRow({
+                    label: 'Production',
+                    url: productionUrl,
+                    timestamp: lastPublishedAt,
+                    actionLabel: 'Publish',
+                    actionFn: "deploy('production')",
+                });
+                const clientRow = destRow({
+                    label: 'Client site',
+                    url: canonicalUrl || null,
+                    timestamp: lastExportedAt,
+                    doneVerb: 'Exported',
+                    actionLabel: 'Export ↓',
+                    actionFn: 'exportBundle()',
+                    actionColour: '#2D7D46',
+                    dimmed: !canonicalUrl,
+                });
 
-                const unpublishBlock = status === 'published' ? `
-                    <div class="form-group" style="margin-top:1rem">
-                        <button class="tbtn tbtn--ghost" style="width:100%;justify-content:center;color:#C0392B;border-color:rgba(192,57,43,0.3)"
-                            onclick="unpublish()">Unpublish story</button>
+                const unpublishBlock = lastPublishedAt ? `
+                    <div style="margin-top:1rem">
+                        <button class="tbtn tbtn--ghost" style="width:100%;justify-content:center;font-size:0.75rem;color:#C0392B;border-color:rgba(192,57,43,0.3)"
+                            onclick="unpublish()">Unpublish from stories.har.pn</button>
                         <p class="form-hint" style="margin-top:0.25rem;text-align:center">Replaces live page with "no longer available"</p>
                     </div>` : '';
 
                 panel.innerHTML = `
-                    <div style="margin-bottom:1rem">
-                        <p class="form-label">Status</p>
-                        <span style="display:inline-block;font-family:var(--font-mono);font-size:0.6rem;letter-spacing:0.14em;text-transform:uppercase;padding:0.2rem 0.6rem;border-radius:2px;background:${statusColour}18;color:${statusColour};border:1px solid ${statusColour}40">${statusLabel}</span>
+                    <div style="margin-bottom:0.75rem">
+                        <p class="form-label" style="margin-bottom:0.35rem">Last saved</p>
+                        <p class="form-hint">${lastSaved || '—'}</p>
                     </div>
-                    <div class="form-group">
-                        <p class="form-label">Last saved</p>
-                        <p class="form-hint">${lastSaved}</p>
+                    <div style="border-top:1px solid var(--rule);padding-top:0.5rem">
+                        ${stagingRow}
+                        ${productionRow}
+                        ${clientRow}
                     </div>
-                    ${liveBlock}
-                    ${stagingBlock}
                     ${unpublishBlock}
-                    <div class="form-group" style="margin-top:1.5rem;padding-top:1rem;border-top:1px solid var(--rule)">
-                        <p class="form-label">Project ID</p>
-                        <p class="form-hint">${projectId}</p>
+                    <div style="margin-top:1.5rem;padding-top:1rem;border-top:1px solid var(--rule)">
+                        <p class="form-label" style="margin-bottom:0.2rem">Project ID</p>
+                        <p class="form-hint" style="font-family:var(--font-mono)">${projectId}</p>
                     </div>
-                    <div class="form-group">
-                        <p class="form-label">Plausible analytics</p>
-                        <a href="https://plausible.io/${projectId}" target="_blank" style="font-family:var(--font-mono);font-size:0.65rem;color:var(--accent);text-decoration:none">View analytics ↗</a>
+                    <div style="margin-top:0.75rem">
+                        <p class="form-label" style="margin-bottom:0.2rem">Analytics</p>
+                        <a href="https://analytics.har.pn/${projectId}" target="_blank" style="font-family:var(--font-mono);font-size:0.65rem;color:var(--accent);text-decoration:none">analytics.har.pn/${projectId} ↗</a>
                     </div>`;
             }
 

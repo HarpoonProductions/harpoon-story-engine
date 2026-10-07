@@ -46,7 +46,7 @@ function renderPlausibleScript(config) {
  * @param {string} basePath  - root-relative base path, e.g. '/opera-voices-2026'
  * @returns {string} HTML string
  */
-function renderHead(meta, config, title, basePath, staging, heroImageUrl) {
+function renderHead(meta, config, title, basePath, staging, heroImageUrl, canonicalUrl) {
   const pageTitle = title
     ? `${title} — ${meta.title}`
     : meta.title;
@@ -118,11 +118,14 @@ function renderHead(meta, config, title, basePath, staging, heroImageUrl) {
   const ogTitle       = escHtml(meta.title || '');
   const ogDescription = escHtml(meta.og_description || '');
   const ogImage       = escHtml(meta.og_image || heroImageUrl || '');
+  const ogUrl = escHtml(canonicalUrl || '');
   const ogTags = [
     ogTitle       ? `<meta property="og:title" content="${ogTitle}">` : '',
     ogDescription ? `<meta property="og:description" content="${ogDescription}">` : '',
     ogImage       ? `<meta property="og:image" content="${ogImage}">` : '',
     ogImage       ? `<meta name="twitter:card" content="summary_large_image">` : '',
+    ogUrl         ? `<meta property="og:url" content="${ogUrl}">` : '',
+    ogUrl         ? `<link rel="canonical" href="${ogUrl}">` : '',
   ].filter(Boolean).join('\n  ');
 
   return `<!DOCTYPE html>
