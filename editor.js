@@ -36,9 +36,9 @@ const { validate } = require("./renderer/validate");
 const db = require("./db");
 
 // AWS S3 upload (optional — only active if AWS credentials are set in environment)
-let S3Client, Upload;
+let S3Client, Upload, GetObjectCommand;
 try {
-  ({ S3Client } = require("@aws-sdk/client-s3"));
+  ({ S3Client, GetObjectCommand } = require("@aws-sdk/client-s3"));
   ({ Upload } = require("@aws-sdk/lib-storage"));
 } catch {}
 
@@ -1049,12 +1049,286 @@ app.post("/api/project/:id/deploy", async (req, res) => {
     // this to decide whether to ask again.
     if (isGrouped) {
       content.meta._groupNavDeployedAs = groupNavSnapshot(content.meta);
-      if (db.isConfigured()) await db.saveProject(projectId, content).catch(() => {});
+    }
+
+    // Record deploy timestamp
+    const now = new Date().toISOString();
+    if (target === 'staging') {
+      content.meta.last_staged_at = now;
+    } else {
+      content.meta.last_published_at = now;
+    }
+    if (db.isConfigured()) await db.saveProject(projectId, content).catch(() => {});
+    else {
+      const contentPath = path.join(PROJECTS_DIR, projectId, "content.json");
+      if (fs.existsSync(contentPath)) fs.writeFileSync(contentPath, JSON.stringify(content, null, 2));
     }
 
     res.json({ ok: true, target, url, projectId, deployedSiblings, failedSiblings });
   } catch (err) {
     console.error("Deploy error:", err.message);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ── Project status ────────────────────────────────────────────────
+app.get("/api/project/:id/status", async (req, res) => {
+  const projectId = req.params.id;
+  try {
+    let content = null;
+    if (db.isConfigured()) {
+      content = await db.getProject(projectId).catch(() => null);
+    } else {
+      const contentPath = path.join(PROJECTS_DIR, projectId, "content.json");
+      if (fs.existsSync(contentPath)) content = JSON.parse(fs.readFileSync(contentPath, "utf8"));
+    }
+    if (!content) return res.status(404).json({ error: "Project not found" });
+
+    const { last_staged_at, last_published_at, last_exported_at } = content.meta || {};
+    let status = 'draft';
+    if (last_published_at) status = 'published';
+    else if (last_staged_at) status = 'staged';
+
+    res.json({ status, last_staged_at, last_published_at, last_exported_at });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ── Export bundle ────────────────────────────────────────────────
+app.get("/api/project/:id/export", async (req, res) => {
+  const projectId = req.params.id;
+  const { execFile } = require("child_process");
+  const https = require("https");
+  const http  = require("http");
+  const os = require("os");
+
+  try {
+    let content = null;
+    if (db.isConfigured()) {
+      content = await db.getProject(projectId).catch(() => null);
+    } else {
+      const contentPath = path.join(PROJECTS_DIR, projectId, "content.json");
+      if (fs.existsSync(contentPath)) content = JSON.parse(fs.readFileSync(contentPath, "utf8"));
+    }
+    if (!content) return res.status(404).json({ error: "Project not found" });
+
+    const canonicalUrl = content.meta.canonical_url || null;
+    if (!canonicalUrl) {
+      return res.status(400).json({ error: "Set a Canonical URL in the Meta tab before exporting." });
+    }
+
+    // Render to a fresh temp directory
+    const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), `hse-export-${projectId}-`));
+    try {
+      await render(content, tmpDir, { basePath: '', canonicalUrl });
+    } catch (renderErr) {
+      fs.rmSync(tmpDir, { recursive: true, force: true });
+      return res.status(500).json({ error: `Render failed: ${renderErr.message}` });
+    }
+
+    // ── Strip internal-only files and other-client IP ────────────────
+
+    // Directories never needed in a client export
+    for (const dir of ['print', 'pdf-preview']) {
+      const p = path.join(tmpDir, dir);
+      if (fs.existsSync(p)) fs.rmSync(p, { recursive: true, force: true });
+    }
+
+    // JS files only relevant inside the editor or to other products
+    for (const file of ['js/review.js', 'js/graduation-guide-runtime.js', 'js/photo-capture.js']) {
+      const p = path.join(tmpDir, file);
+      if (fs.existsSync(p)) fs.rmSync(p, { force: true });
+    }
+
+    // CSS files that belong to other products or other clients
+    const cssDir = path.join(tmpDir, 'css');
+    const tokenSet = content.meta?.token_set || 'default';
+    if (fs.existsSync(cssDir)) {
+      // Remove internal CSS
+      for (const file of ['review.css', 'print.css', 'magazine-cover.css']) {
+        const p = path.join(cssDir, file);
+        if (fs.existsSync(p)) fs.rmSync(p, { force: true });
+      }
+      // Remove graduation-guide kind CSS
+      const kindsDir = path.join(cssDir, 'kinds');
+      if (fs.existsSync(kindsDir)) fs.rmSync(kindsDir, { recursive: true, force: true });
+      // Remove all token sets that aren't this story's own
+      const tokenFiles = fs.readdirSync(cssDir).filter(f => f.startsWith('tokens-') && f.endsWith('.css'));
+      for (const tf of tokenFiles) {
+        const id = tf.replace(/^tokens-/, '').replace(/\.css$/, '');
+        if (id !== tokenSet && id !== 'default') {
+          fs.rmSync(path.join(cssDir, tf), { force: true });
+        }
+      }
+      // Remove fonts belonging to other token sets (keep only if referenced by this story's token CSS)
+      const fontsDir = path.join(cssDir, 'fonts');
+      if (fs.existsSync(fontsDir)) {
+        const tokenCssPath = path.join(cssDir, `tokens-${tokenSet}.css`);
+        const tokenCss = fs.existsSync(tokenCssPath) ? fs.readFileSync(tokenCssPath, 'utf8') : '';
+        const baseCssPath = path.join(cssDir, 'tokens.css');
+        const baseCss = fs.existsSync(baseCssPath) ? fs.readFileSync(baseCssPath, 'utf8') : '';
+        const usedFonts = new Set([...tokenCss.matchAll(/url\(['"]?([^'")]+\.woff2[^'")]*)/g)].map(m => path.basename(m[1])));
+        [...baseCss.matchAll(/url\(['"]?([^'")]+\.woff2[^'")]*)/g)].forEach(m => usedFonts.add(path.basename(m[1])));
+        for (const f of fs.readdirSync(fontsDir)) {
+          if (!usedFonts.has(f)) fs.rmSync(path.join(fontsDir, f), { force: true });
+        }
+        // Remove fonts dir entirely if nothing left
+        if (fs.readdirSync(fontsDir).length === 0) fs.rmdirSync(fontsDir);
+      }
+    }
+
+    // ── Download story assets and rewrite HTML ────────────────────────
+
+    const indexPath = path.join(tmpDir, 'index.html');
+    let html = fs.readFileSync(indexPath, 'utf8');
+
+    // Find all absolute asset URLs that belong to our own S3 bucket
+    // Pattern: https://harpn.s3[-eu-west-2].amazonaws.com/[path]
+    const assetPattern = /https:\/\/harpn(?:\.s3(?:[^.]*)?\.amazonaws\.com|s3[^.]*\.amazonaws\.com)\/([^"'\s>]+)/g;
+    const assetUrls = new Map(); // url -> local relative path
+    let match;
+    while ((match = assetPattern.exec(html)) !== null) {
+      const url = match[0];
+      if (!assetUrls.has(url)) {
+        // Preserve subfolder structure: decode and use as-is under assets/
+        const rawPath = decodeURIComponent(match[1]);
+        // Strip leading bucket prefix (e.g. "oceans/") - keep the rest
+        const parts = rawPath.split('/');
+        const localPath = 'assets/' + parts.join('/');
+        assetUrls.set(url, localPath);
+      }
+    }
+
+    // Find external assets that can't be bundled (flag them)
+    const externalDomains = new Set();
+    const externalPattern = /https?:\/\/(?!harpn(?:\.s3|s3))([a-z0-9.-]+\.[a-z]{2,})\/[^\s"'>]+\.(jpg|jpeg|png|gif|webp|svg|mp4|mp3|woff2)/gi;
+    while ((match = externalPattern.exec(html)) !== null) {
+      externalDomains.add(match[1]);
+    }
+
+    if (assetUrls.size > 0) {
+      const assetsDir = path.join(tmpDir, 'assets');
+      fs.mkdirSync(assetsDir, { recursive: true });
+
+      const downloadFile = (url, dest) => new Promise((resolve, reject) => {
+        fs.mkdirSync(path.dirname(dest), { recursive: true });
+        const file = fs.createWriteStream(dest);
+        const proto = url.startsWith('https') ? https : http;
+        const req = proto.get(url, (response) => {
+          if (response.statusCode === 301 || response.statusCode === 302) {
+            file.close();
+            fs.rmSync(dest, { force: true });
+            return downloadFile(response.headers.location, dest).then(resolve).catch(reject);
+          }
+          response.pipe(file);
+          file.on('finish', () => file.close(resolve));
+        });
+        req.on('error', (err) => { fs.rmSync(dest, { force: true }); reject(err); });
+      });
+
+      await Promise.all([...assetUrls.entries()].map(async ([url, localPath]) => {
+        const dest = path.join(tmpDir, localPath);
+        try {
+          await downloadFile(url, dest);
+          console.log(`✓ Export asset: ${localPath}`);
+        } catch (e) {
+          console.warn(`Export: failed to download ${url}: ${e.message}`);
+        }
+      }));
+
+      // Rewrite asset URLs in HTML to relative paths
+      for (const [url, localPath] of assetUrls) {
+        html = html.split(url).join(localPath);
+      }
+      fs.writeFileSync(indexPath, html, 'utf8');
+    }
+
+    // ── Add README ────────────────────────────────────────────────────
+    const externalNote = externalDomains.size > 0
+      ? `\nNote: Some assets still reference external domains (${[...externalDomains].join(', ')}). These are not included in this bundle and must be re-hosted or replaced before going fully self-contained.\n`
+      : '';
+    const readme = `Harpoon Story Engine — Export Package
+======================================
+Story: ${content.meta.title || projectId}
+Exported: ${new Date().toISOString()}
+Canonical URL: ${canonicalUrl}
+
+DEPLOYMENT
+----------
+Upload the contents of this folder to your web server at the path
+matching the canonical URL above. No server-side processing required
+— this is static HTML.
+
+The story loads CSS and JS from relative paths, so it will work at
+any URL as long as the folder structure is preserved.
+
+INCLUDED
+--------
+- index.html       Main story page
+- css/             Stylesheets (this story's token set only)
+- js/              Runtime scripts (GSAP, ScrollTrigger, HSE runtime)
+- assets/          Images, videos, and other media${fs.existsSync(path.join(tmpDir, 'story.pdf')) ? '\n- story.pdf        Publication PDF' : ''}${fs.existsSync(path.join(tmpDir, 'story.mp3')) ? '\n- story.mp3        Narrated audio' : ''}
+
+ANALYTICS
+---------
+Harpoon analytics are included via a script tag in index.html pointing
+to analytics.har.pn. This requires no configuration on your end.
+${externalNote}`;
+    fs.writeFileSync(path.join(tmpDir, 'README.txt'), readme, 'utf8');
+
+    // ── Fetch story.pdf and story.mp3 from S3 if they exist ──────────
+    if (S3Client && S3_BUCKET) {
+      const s3 = new S3Client({ region: AWS_REGION });
+      const fetchS3Asset = async (s3Key, localName) => {
+        try {
+          const r = await s3.send(new GetObjectCommand({ Bucket: S3_BUCKET, Key: s3Key }));
+          const dest = path.join(tmpDir, localName);
+          await new Promise((resolve, reject) => {
+            const write = fs.createWriteStream(dest);
+            r.Body.pipe(write);
+            write.on('finish', resolve);
+            write.on('error', reject);
+          });
+          console.log(`✓ Export: fetched ${s3Key}`);
+        } catch (e) {
+          if (e.name !== 'NoSuchKey') console.warn(`Export: skipping ${s3Key} (${e.message})`);
+        }
+      };
+      if (content.meta.generate_pdf)   await fetchS3Asset(`${projectId}/story.pdf`, 'story.pdf');
+      if (content.meta.generate_audio) await fetchS3Asset(`${projectId}/story.mp3`, 'story.mp3');
+    }
+
+    // ── Create zip ────────────────────────────────────────────────────
+    const zipPath = path.join(os.tmpdir(), `${projectId}-export.zip`);
+    await new Promise((resolve, reject) => {
+      execFile("zip", ["-r", zipPath, "."], { cwd: tmpDir }, (err) => err ? reject(err) : resolve());
+    });
+
+    // Save export timestamp
+    content.meta.last_exported_at = new Date().toISOString();
+    if (db.isConfigured()) await db.saveProject(projectId, content).catch(() => {});
+    else {
+      const contentPath = path.join(PROJECTS_DIR, projectId, "content.json");
+      if (fs.existsSync(contentPath)) fs.writeFileSync(contentPath, JSON.stringify(content, null, 2));
+    }
+
+    // Stream zip to client
+    const filename = `${projectId}-export.zip`;
+    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+    res.setHeader('Content-Type', 'application/zip');
+    const stream = fs.createReadStream(zipPath);
+    stream.pipe(res);
+    stream.on('end', () => {
+      fs.rmSync(tmpDir, { recursive: true, force: true });
+      fs.rmSync(zipPath, { force: true });
+    });
+    stream.on('error', (err) => {
+      fs.rmSync(tmpDir, { recursive: true, force: true });
+      res.status(500).end();
+    });
+  } catch (err) {
+    console.error("Export error:", err.message);
     res.status(500).json({ error: err.message });
   }
 });
