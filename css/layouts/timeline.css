@@ -1,0 +1,276 @@
+/* Harpoon Story Engine — Timeline Layout */
+
+/* ── Section ─────────────────────────────────────────────────────── */
+
+.hse-section--timeline {
+  position: relative;
+  background: var(--hse-ink);
+}
+
+/* ── Sticky canvas (desktop) ─────────────────────────────────────── */
+
+.hse-tl__sticky-wrap {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  z-index: 0;
+  pointer-events: none;
+}
+
+.hse-tl__canvas {
+  position: absolute;
+  inset: 0;
+}
+
+/* ── Media layers ────────────────────────────────────────────────── */
+
+.hse-tl__layer {
+  position: absolute;
+  inset: 0;
+  background-size: cover;
+  background-position: center;
+  opacity: 0;
+  transition: opacity 0.9s ease;
+}
+
+.hse-tl__layer.is-active {
+  opacity: 1;
+}
+
+.hse-tl__video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hse-tl__layer { transition: none; }
+}
+
+/* ── Gradient overlay ────────────────────────────────────────────── */
+
+.hse-tl__gradient {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to bottom,
+    rgba(var(--hse-ink-rgb), 0.15) 0%,
+    rgba(var(--hse-ink-rgb), 0.55) 50%,
+    rgba(var(--hse-ink-rgb), 0.9) 100%
+  );
+}
+
+/* ── Phases wrapper ──────────────────────────────────────────────── */
+
+.hse-tl__phases {
+  position: relative;
+  z-index: 2;
+  margin-top: -100vh;
+}
+
+/* ── Spine ───────────────────────────────────────────────────────── */
+
+.hse-tl__spine {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: linear-gradient(
+    to bottom,
+    transparent 0%,
+    var(--hse-accent) 4%,
+    var(--hse-accent) 96%,
+    transparent 100%
+  );
+  opacity: 0.5;
+}
+
+[data-align="left"]      .hse-tl__spine { left: calc(var(--hse-page-pad) + 0.35rem); }
+[data-align="right"]     .hse-tl__spine { right: calc(var(--hse-page-pad) + 0.35rem); left: auto; }
+[data-align="alternate"] .hse-tl__spine { left: 50%; transform: translateX(-1px); }
+
+/* ── Entry ───────────────────────────────────────────────────────── */
+
+.hse-tl__entry {
+  position: relative;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  padding: clamp(4rem, 10vh, 7rem) 0;
+}
+
+/* Alignment — where the text panel sits */
+[data-align="left"]  .hse-tl__entry { justify-content: flex-start; }
+[data-align="right"] .hse-tl__entry { justify-content: flex-end; }
+
+[data-align="alternate"] .hse-tl__entry[data-side="left"]  { justify-content: flex-start; }
+[data-align="alternate"] .hse-tl__entry[data-side="right"] { justify-content: flex-end; }
+
+/* ── Entry inner (the text panel) ───────────────────────────────── */
+
+.hse-tl__entry-inner {
+  position: relative;
+  max-width: 440px;
+  opacity: 0;
+  transform: translateY(20px);
+  transition:
+    opacity  0.6s var(--hse-ease-out, ease),
+    transform 0.6s var(--hse-ease-out, ease);
+}
+
+.hse-tl__entry.is-visible .hse-tl__entry-inner {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Horizontal placement — clear of the spine */
+[data-align="left"]  .hse-tl__entry-inner { margin-left: calc(var(--hse-page-pad) + 2rem); }
+[data-align="right"] .hse-tl__entry-inner { margin-right: calc(var(--hse-page-pad) + 2rem); }
+
+[data-align="alternate"] .hse-tl__entry[data-side="left"]  .hse-tl__entry-inner {
+  margin-left: var(--hse-page-pad);
+  margin-right: 0;
+  max-width: calc(50% - 3.5rem);
+  padding-right: 1.5rem;
+}
+[data-align="alternate"] .hse-tl__entry[data-side="right"] .hse-tl__entry-inner {
+  margin-right: var(--hse-page-pad);
+  margin-left: 0;
+  max-width: calc(50% - 3.5rem);
+  padding-left: 1.5rem;
+}
+
+/* ── Dot (sits on the spine) ─────────────────────────────────────── */
+
+.hse-tl__dot {
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--hse-ink);
+  border: 2px solid var(--hse-accent);
+  top: 0.2rem; /* aligns with the date label */
+  transition: background 0.3s, transform 0.3s;
+}
+
+.hse-tl__entry.is-visible .hse-tl__dot {
+  background: var(--hse-accent);
+  transform: scale(1.25);
+}
+
+/* Dot x-position mirrors the spine */
+[data-align="left"]  .hse-tl__entry-inner .hse-tl__dot { left: calc(-2rem - 5px); }
+[data-align="right"] .hse-tl__entry-inner .hse-tl__dot { right: calc(-2rem - 5px); left: auto; }
+
+[data-align="alternate"] .hse-tl__entry[data-side="left"]  .hse-tl__entry-inner .hse-tl__dot {
+  right: calc(-1.5rem - 5px);
+  left: auto;
+}
+[data-align="alternate"] .hse-tl__entry[data-side="right"] .hse-tl__entry-inner .hse-tl__dot {
+  left: calc(-1.5rem - 5px);
+  right: auto;
+}
+
+/* ── Typography ──────────────────────────────────────────────────── */
+
+.hse-tl__date {
+  display: block;
+  font-family: var(--hse-font-mono);
+  font-size: var(--hse-font-size-micro, 0.7rem);
+  letter-spacing: var(--hse-tracking-md, 0.1em);
+  text-transform: uppercase;
+  color: var(--hse-accent);
+  margin-bottom: 0.6rem;
+}
+
+.hse-tl__heading {
+  font-family: var(--hse-font-display);
+  font-size: clamp(1.4rem, 2.8vw, 2.1rem);
+  line-height: var(--hse-leading-snug, 1.2);
+  color: var(--hse-warm, #fff);
+  margin: 0 0 0.9rem;
+  font-weight: 400;
+}
+
+.hse-tl__body {
+  font-family: var(--hse-font-body, var(--hse-font-display));
+  font-size: clamp(0.9rem, 1.5vw, 1.05rem);
+  line-height: var(--hse-leading-loose, 1.65);
+  color: var(--hse-warm-3, rgba(255,255,255,0.65));
+  margin: 0;
+}
+
+/* ── Mobile thumbnail (hidden on desktop) ────────────────────────── */
+
+.hse-tl__thumb {
+  display: none;
+}
+
+/* ── Mobile — stacked flow ───────────────────────────────────────── */
+
+@media (max-width: 768px) {
+
+  /* Hide sticky canvas entirely */
+  .hse-tl__sticky-wrap { display: none; }
+
+  /* Undo the negative margin that pulled phases up over the canvas */
+  .hse-tl__phases { margin-top: 0; }
+
+  /* Spine: thin left-edge line */
+  .hse-tl__spine {
+    left: calc(var(--hse-page-pad) + 0.35rem) !important;
+    right: auto !important;
+    transform: none !important;
+  }
+
+  /* Each entry stacks vertically, left-aligned regardless of desktop setting */
+  .hse-tl__entry {
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: flex-start !important;
+    min-height: auto;
+    padding: 0 var(--hse-page-pad) clamp(2.5rem, 6vh, 4rem);
+  }
+
+  /* Show thumbnail, hide canvas background */
+  .hse-tl__thumb {
+    display: block;
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    background-size: cover;
+    background-position: center;
+    background-color: var(--hse-ink-2);
+    margin-bottom: 1.25rem;
+    border-radius: 4px;
+  }
+
+  .hse-tl__thumb--video::after {
+    content: '';
+    display: block;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.3) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' width='40' height='40'%3E%3Cpolygon points='8,5 19,12 8,19' fill='rgba(255,255,255,0.8)'/%3E%3C/svg%3E") center / 40px no-repeat;
+  }
+
+  /* Text inner — full width, left-aligned, enough left pad for spine+dot */
+  .hse-tl__entry-inner {
+    max-width: 100% !important;
+    margin-left: calc(var(--hse-page-pad) + 2rem) !important;
+    margin-right: 0 !important;
+    padding: 0 !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+
+  /* Dot — back on the left spine */
+  .hse-tl__dot {
+    left: calc(-2rem - 5px) !important;
+    right: auto !important;
+  }
+
+  /* First entry: add breathing room at top */
+  .hse-tl__entry:first-child {
+    padding-top: clamp(2rem, 6vh, 4rem);
+  }
+}

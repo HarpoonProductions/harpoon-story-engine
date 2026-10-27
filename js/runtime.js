@@ -46,11 +46,13 @@
           setupFullbleedQuote();
           setupStickySteps();
           setupRevealCrossfade();
+          setupTimeline();
           setupParallax();
         } else {
           setupFullbleedQuoteA11y();
           setupStickyStepsA11y();
           setupRevealCrossfadeA11y();
+          setupTimelineA11y();
         }
 
         setupTogglePanels();
@@ -577,7 +579,77 @@
         }
       });
   }
-  // ── 9. Parallax ────────────────────────────────────────────────────
+  // ── 9. Timeline ────────────────────────────────────────────────────
+
+  function setupTimeline() {
+    gsap.utils.toArray(".hse-section--timeline").forEach(function (section) {
+      var entries = Array.from(section.querySelectorAll(".hse-tl__entry"));
+      var layers  = Array.from(section.querySelectorAll(".hse-tl__layer"));
+
+      if (!entries.length) return;
+
+      // Activate a media layer (fade in image, play/pause videos)
+      function activateLayer(index) {
+        layers.forEach(function (layer, i) {
+          var active = i === index;
+          layer.classList.toggle("is-active", active);
+          var video = layer.querySelector("video[data-tl-video]");
+          if (video) {
+            if (active) {
+              video.play().catch(function () {});
+            } else {
+              video.pause();
+              video.currentTime = 0;
+            }
+          }
+        });
+      }
+
+      // Ensure only the first video plays on load
+      layers.forEach(function (layer, i) {
+        var video = layer.querySelector("video[data-tl-video]");
+        if (!video) return;
+        if (i === 0) { video.play().catch(function () {}); }
+        else { video.pause(); }
+      });
+
+      entries.forEach(function (entry, i) {
+        // Fade entry text in when it approaches the viewport centre
+        ScrollTrigger.create({
+          trigger: entry,
+          start: "top 65%",
+          end: "bottom 20%",
+          onEnter:     function () { entry.classList.add("is-visible"); },
+          onLeaveBack: function () { entry.classList.remove("is-visible"); },
+        });
+
+        // Switch media layer when this entry crosses the viewport midpoint
+        ScrollTrigger.create({
+          trigger: entry,
+          start: "top 55%",
+          end: "bottom 55%",
+          onEnter:     function () { activateLayer(i); },
+          onEnterBack: function () { activateLayer(i); },
+        });
+      });
+    });
+  }
+
+  function setupTimelineA11y() {
+    // Reduced-motion: show all entries and the last media layer
+    document.querySelectorAll(".hse-section--timeline").forEach(function (section) {
+      section.querySelectorAll(".hse-tl__entry").forEach(function (e) {
+        e.classList.add("is-visible");
+      });
+      var layers = Array.from(section.querySelectorAll(".hse-tl__layer"));
+      if (layers.length) {
+        layers.forEach(function (l) { l.classList.remove("is-active"); });
+        layers[layers.length - 1].classList.add("is-active");
+      }
+    });
+  }
+
+  // ── 10. Parallax ────────────────────────────────────────────────────
 
   function setupParallax() {
     gsap.utils.toArray(".hse-parallax__img").forEach(function (img) {
