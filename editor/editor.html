@@ -4865,13 +4865,13 @@ function initBlocksEditor(sectionIndex) {
                 const lastPublishedAt = content.meta.last_published_at ? new Date(content.meta.last_published_at).toLocaleString() : null;
                 const lastExportedAt  = content.meta.last_exported_at  ? new Date(content.meta.last_exported_at).toLocaleString()  : null;
 
-                function destRow({ label, url, timestamp, actionLabel, actionFn, actionColour, dimmed }) {
+                function destRow({ label, url, timestamp, doneVerb = 'Published', actionLabel, actionFn, actionColour, dimmed }) {
                     const urlHtml = url
                         ? `<a href="${url}" target="_blank" style="font-family:var(--font-mono);font-size:0.62rem;color:${dimmed?'var(--ink-3)':'#2980B9'};word-break:break-all;text-decoration:none;display:block;margin-top:0.1rem;line-height:1.3">${url} ↗</a>`
                         : `<span style="font-family:var(--font-mono);font-size:0.62rem;color:var(--ink-3)">Not set — add in Meta tab</span>`;
                     const tsHtml = timestamp
-                        ? `<span style="font-size:0.68rem;color:var(--ink-3)">Published ${timestamp}</span>`
-                        : `<span style="font-size:0.68rem;color:var(--ink-3)">Not yet published</span>`;
+                        ? `<span style="font-size:0.68rem;color:var(--ink-3)">${doneVerb} ${timestamp}</span>`
+                        : `<span style="font-size:0.68rem;color:var(--ink-3)">Not yet ${doneVerb.toLowerCase()}</span>`;
                     return `
                         <div style="display:grid;grid-template-columns:1fr auto;align-items:start;gap:0.5rem;padding:0.65rem 0;border-bottom:1px solid var(--rule-2)">
                             <div>
@@ -4901,7 +4901,8 @@ function initBlocksEditor(sectionIndex) {
                 const clientRow = destRow({
                     label: 'Client site',
                     url: canonicalUrl || null,
-                    timestamp: lastExportedAt ? lastExportedAt.replace('Published', 'Exported') : null,
+                    timestamp: lastExportedAt,
+                    doneVerb: 'Exported',
                     actionLabel: 'Export ↓',
                     actionFn: 'exportBundle()',
                     actionColour: '#2D7D46',
