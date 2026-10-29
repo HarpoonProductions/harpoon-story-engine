@@ -33,7 +33,12 @@ jobs:
     runs-on: ubuntu-latest
     name: Render → Test → Deploy (${{ github.event.inputs.target || 'production' }})
 
-    if: startsWith(github.ref, 'refs/heads/')
+    # 'create' is in the triggers only so a version tag can start
+    # build-electron below. A new branch fires it too, and must never
+    # deploy: that would publish every project, with the branch's
+    # unreviewed code, to production. Only a push to main or a manual
+    # run reaches this job.
+    if: github.event_name != 'create' && startsWith(github.ref, 'refs/heads/')
 
     steps:
       - name: Checkout repository
@@ -92,7 +97,8 @@ jobs:
           fi
 
           if [ "${{ github.event_name }}" != "push" ]; then
-            # e.g. a 'create' event (new branch/tag) — no diff to scope by
+            # Unreachable while the job skips 'create' events; kept as a
+            # fail-open guard for any trigger added later
             echo "mode=all" >> "$GITHUB_OUTPUT"
             echo "Scope: all projects (${{ github.event_name }} event)"
             exit 0

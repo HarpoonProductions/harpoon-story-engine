@@ -1098,7 +1098,7 @@ app.get("/api/project/:id/status", async (req, res) => {
 // ── Export bundle ────────────────────────────────────────────────
 app.get("/api/project/:id/export", async (req, res) => {
   const projectId = req.params.id;
-  const { exec } = require("child_process");
+  const { execFile } = require("child_process");
   const https = require("https");
   const http  = require("http");
   const os = require("os");
@@ -1302,7 +1302,7 @@ ${externalNote}`;
     // ── Create zip ────────────────────────────────────────────────────
     const zipPath = path.join(os.tmpdir(), `${projectId}-export.zip`);
     await new Promise((resolve, reject) => {
-      exec(`cd "${tmpDir}" && zip -r "${zipPath}" .`, (err) => err ? reject(err) : resolve());
+      execFile("zip", ["-r", zipPath, "."], { cwd: tmpDir }, (err) => err ? reject(err) : resolve());
     });
 
     // Save export timestamp
