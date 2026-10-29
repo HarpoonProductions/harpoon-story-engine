@@ -7,3 +7,6 @@ dist/
 *.log
 .env
 dist-electron/
+.pdf-output/
+# macOS custom-folder-icon files (named "Icon" + carriage return)
+Icon
