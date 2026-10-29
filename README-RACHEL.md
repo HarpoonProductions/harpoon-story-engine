@@ -36,7 +36,7 @@ say yes, then run setup again.
 
 ## Every day
 
-Double-click `start.command` to launch the Story Engine.  
+Double-click **Story Engine** (or `start.command`) to launch the Story Engine.  
 Your browser will open automatically at the editor.
 
 To stop the editor, close the Terminal window that opened.
@@ -46,7 +46,7 @@ and Giles are always using the same one. To pick up a change Giles has just made
 close the Terminal window and double-click `start.command` again. The version is
 shown in the Terminal window.
 
-**Tip:** Drag `start.command` to your Dock so it's always one click away.
+**Tip:** The folder also has a **Story Engine** app with the Harpoon icon that does the same thing. Drag it from the folder to your Dock so it's always one click away. Leave the app itself in the folder; don't move it to Applications.
 
 ---
 

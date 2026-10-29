@@ -1,0 +1,15 @@
+#!/bin/bash
+
+# Story Engine launcher app — opens start.command in Terminal.
+# start.command does the real work (updating to the latest main and
+# starting the editor). The app has to stay inside the
+# harpoon-story-engine folder; put it in the Dock from there.
+
+ROOT="$(cd "$(dirname "$0")/../../.." && pwd)"
+
+if [ ! -f "$ROOT/start.command" ]; then
+  osascript -e 'display alert "Story Engine has been moved" message "Keep the Story Engine app inside the harpoon-story-engine folder. To launch it from the Dock, drag it to the Dock from that folder rather than moving it." as critical' >/dev/null
+  exit 1
+fi
+
+open -a Terminal "$ROOT/start.command"
