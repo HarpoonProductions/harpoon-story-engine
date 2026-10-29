@@ -66,8 +66,8 @@ fi
 
 # Install dependencies
 echo "  Installing dependencies (this takes a minute)..."
-npm install --include=optional --silent
-npm install --os=darwin --cpu=arm64 sharp --silent 2>/dev/null || true
+npm ci --include=optional --silent
+npm install --no-save --os=darwin --cpu=arm64 sharp --silent 2>/dev/null || true
 shasum package-lock.json | cut -d' ' -f1 > node_modules/.lock-hash
 echo "  ✓ Dependencies installed"
 

@@ -66,11 +66,13 @@ fi
 
 # ── Install dependencies when they change ──────────────────────────
 # Re-installs whenever package-lock.json differs from the last install,
-# so an update that adds a dependency doesn't break the editor.
+# so an update that adds a dependency doesn't break the editor. npm ci and
+# --no-save never rewrite package-lock.json, which would otherwise count
+# as a local change and block the next update.
 LOCK_HASH=$(shasum package-lock.json 2>/dev/null | cut -d' ' -f1)
 if [ ! -d "node_modules" ] || [ "$(cat node_modules/.lock-hash 2>/dev/null)" != "$LOCK_HASH" ]; then
   echo "  Installing dependencies..."
-  if npm install --include=optional && npm install --os=darwin --cpu=arm64 sharp; then
+  if npm ci --include=optional && npm install --no-save --os=darwin --cpu=arm64 sharp; then
     echo "$LOCK_HASH" > node_modules/.lock-hash
   else
     alert "Install failed" "The Story Engine's dependencies couldn't be installed. Check your internet connection and try again."
