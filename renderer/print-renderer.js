@@ -6,21 +6,15 @@
  * Generates a clean, branded, text-focused HTML page from story content.
  * Served at /print/:projectId/ — readers print or save as PDF from their browser.
  *
- * Includes: cover summary, section titles/intros, text blocks, pull quotes,
- *           stat blocks, toggle panels, accordions, print-flagged images.
- * Excludes: visual-only layouts (cinema-reveal, frame-scrubber, panoramic-scroll,
- *           scroll-carousel, split-reveal, two-column) — title/intro only.
+ * Section content comes from readable.js, so every layout prints its words
+ * (and any images ticked "Include in print & PDF") in the same way the PDF
+ * and the audio narration read them.
  */
 
 const { escHtml } = require('./shell/head');
+const { readSection } = require('./readable');
 const path = require('path');
 const fs   = require('fs');
-
-// ── Layouts that are purely visual — print title+intro only ──────
-const VISUAL_ONLY = new Set([
-  'cinema-reveal', 'frame-scrubber', 'panoramic-scroll',
-  'scroll-carousel', 'split-reveal', 'reveal-crossfade',
-]);
 
 // ── Main entry point ─────────────────────────────────────────────
 
@@ -239,6 +233,12 @@ function renderPrintHead(meta, config, coverData) {
     .hpe-panel { margin: 0 0 2mm; }
     .hpe-panel__title { font-weight: 600; font-size: 10pt; margin: 0 0 0.5mm; }
     .hpe-panel__body  { font-size: 9.5pt; color: #333; margin: 0 0 2mm; }
+    .hpe-panel__meta  { font-size: 8pt; color: #666; margin: 0; letter-spacing: 0.05em; }
+
+    /* ── Images ticked "Include in print & PDF" ── */
+    .hpe-figure { margin: 4mm 0; break-inside: avoid; }
+    .hpe-figure img { display: block; max-width: 100%; max-height: 90mm; }
+    .hpe-figure figcaption { font-size: 8pt; color: #666; margin-top: 1mm; }
 
     /* ── Footer ── */
     .hpe-print-footer {
@@ -298,26 +298,22 @@ function renderPrintCoverBlock(meta, cover) {
 </header>`;
 }
 
-// ── Section dispatcher ───────────────────────────────────────────
+// ── Section renderer ─────────────────────────────────────────────
+// Content comes from readable.js, shared with the PDF and audio.
 
 function renderPrintSection(section) {
-  const layout   = section.layout || 'default';
-  const navLabel = section.nav_label || null;
+  const { label, title, intro, items } = readSection(section);
 
-  const numHtml   = navLabel ? `<p class="hpe-section__label">${escHtml(navLabel)}</p>` : '';
-  const titleHtml = section.title
-    ? `<h2 class="hpe-section__title">${escHtml(section.title)}</h2>` : '';
-  const introHtml = section.intro
-    ? section.intro.split(/\n\n+/).map(p =>
-        `<p class="hpe-section__intro">${escHtml(p.trim())}</p>`).join('') : '';
+  const header = [
+    label ? `<p class="hpe-section__label">${escHtml(label)}</p>` : '',
+    title ? `<h2 class="hpe-section__title">${escHtml(title)}</h2>` : '',
+    ...intro.map(p => `<p class="hpe-section__intro">${escHtml(p)}</p>`),
+  ].join('');
 
-  const header = `${numHtml}${titleHtml}${introHtml}`;
+  const body = items.map(renderPrintItem).filter(Boolean).join('\n');
 
-  // Visual-only layouts: skip entirely — no stub note in a clean print doc
-  if (VISUAL_ONLY.has(layout)) return '';
-
-  const body = renderPrintSectionBody(section, layout);
-  if (!header && !body) return '';
+  // A section with no words of its own adds nothing to a printed page
+  if (!intro.length && !body) return '';
 
   return `<section class="hpe-section">
   ${header}
@@ -325,109 +321,42 @@ function renderPrintSection(section) {
 </section>`;
 }
 
-function renderPrintSectionBody(section, layout) {
-  const parts = [];
-
-  // Text blocks (text layout and default layout)
-  if (section.blocks && section.blocks.length) {
-    parts.push(renderPrintBlocks(section.blocks));
-  }
-
-  // Pull quote
-  if (section.pull_quote?.text) {
-    parts.push(renderPrintPullQuote(section.pull_quote));
-  }
-
-  // Stat block
-  if (section.stat_block?.length) {
-    parts.push(renderPrintStats(section.stat_block));
-  }
-
-  // Toggle panels
-  if (section.toggle_panels?.length) {
-    parts.push(renderPrintPanels(section.toggle_panels, 'tab'));
-  }
-
-  // Accordion
-  if (section.accordion_items?.length) {
-    parts.push(renderPrintPanels(section.accordion_items, 'accordion'));
-  }
-
-  // Cards (stackable-cards, cascading-slides) — title + body only
-  if (section.cards?.length) {
-    parts.push(renderPrintCards(section.cards));
-  }
-
-  // Sticky steps — each step's text
-  if (section.sticky_steps?.length) {
-    parts.push(renderPrintStickySteps(section.sticky_steps));
-  }
-
-  // Parallax — body text if present
-  if (layout === 'parallax' && section.body) {
-    parts.push(`<p>${escHtml(section.body)}</p>`);
-  }
-
-  return parts.filter(Boolean).join('\n');
-}
-
-// ── Block renderers ──────────────────────────────────────────────
-
-function renderPrintBlocks(blocks) {
-  return blocks.map(block => {
-    const tag   = ['p','h2','h3','h4','blockquote'].includes(block.tag) ? block.tag : 'p';
-    const style = ['lead','caption','mono'].includes(block.style) ? ` hpe-block--${block.style}` : '';
-    const text  = escHtml(block.text || '').replace(/\n\n/g, '</p><p class="hpe-block-p">').replace(/\n/g, '<br>');
-    return `<${tag} class="hpe-block-${tag}${style}">${text}</${tag}>`;
-  }).join('\n');
-}
-
-function renderPrintPullQuote(pq) {
-  return `<div class="hpe-pull-quote">
-  <p class="hpe-pull-quote__text">${escHtml(pq.text)}</p>
-  ${pq.attribution ? `<p class="hpe-pull-quote__attr">— ${escHtml(pq.attribution)}</p>` : ''}
+function renderPrintItem(item) {
+  switch (item.kind) {
+    case 'heading': {
+      const tag = `h${item.level}`;
+      return `<${tag} class="hpe-block-${tag}">${escHtml(item.text)}</${tag}>`;
+    }
+    case 'text': {
+      const text = escHtml(item.text).replace(/\n\n/g, '</p><p class="hpe-block-p">').replace(/\n/g, '<br>');
+      if (item.style === 'quote') return `<blockquote class="hpe-block-blockquote">${text}</blockquote>`;
+      const style = item.style ? ` hpe-block--${item.style}` : '';
+      return `<p class="hpe-block-p${style}">${text}</p>`;
+    }
+    case 'quote':
+      return `<div class="hpe-pull-quote">
+  <p class="hpe-pull-quote__text">${escHtml(item.text)}</p>
+  ${item.attribution ? `<p class="hpe-pull-quote__attr">— ${escHtml(item.attribution)}</p>` : ''}
 </div>`;
-}
-
-function renderPrintStats(stats) {
-  const items = stats.map(s => `<div class="hpe-stat">
+    case 'stats':
+      return `<div class="hpe-stats">${item.items.map(s => `<div class="hpe-stat">
   <div class="hpe-stat__value">${escHtml(s.value || '')}</div>
   ${s.label ? `<div class="hpe-stat__label">${escHtml(s.label)}</div>` : ''}
+</div>`).join('\n')}</div>`;
+    case 'items':
+      return item.items.map(i => `<div class="hpe-panel">
+  ${i.meta  ? `<p class="hpe-panel__meta">${escHtml(i.meta)}</p>` : ''}
+  ${i.title ? `<p class="hpe-panel__title">${escHtml(i.title)}</p>` : ''}
+  ${i.body  ? `<p class="hpe-panel__body">${escHtml(i.body)}</p>` : ''}
 </div>`).join('\n');
-  return `<div class="hpe-stats">${items}</div>`;
-}
-
-function renderPrintPanels(panels, type) {
-  return panels.map(p => {
-    const title = p.title || p.label || '';
-    const body  = p.body  || p.content || '';
-    return `<div class="hpe-panel">
-  ${title ? `<p class="hpe-panel__title">${escHtml(title)}</p>` : ''}
-  ${body  ? `<p class="hpe-panel__body">${escHtml(body)}</p>`  : ''}
-</div>`;
-  }).join('\n');
-}
-
-function renderPrintCards(cards) {
-  return cards.map(c => {
-    const title = c.title || c.tag || '';
-    const body  = c.body  || '';
-    return `<div class="hpe-panel">
-  ${title ? `<p class="hpe-panel__title">${escHtml(title)}</p>` : ''}
-  ${body  ? `<p class="hpe-panel__body">${escHtml(body)}</p>`  : ''}
-</div>`;
-  }).join('\n');
-}
-
-function renderPrintStickySteps(steps) {
-  return steps.map((s, i) => {
-    const title = s.title || `Step ${i + 1}`;
-    const body  = s.body || '';
-    return `<div class="hpe-panel">
-  <p class="hpe-panel__title">${escHtml(title)}</p>
-  ${body ? `<p class="hpe-panel__body">${escHtml(body)}</p>` : ''}
-</div>`;
-  }).join('\n');
+    case 'image':
+      return `<figure class="hpe-figure">
+  <img src="${escHtml(item.url)}" alt="${escHtml(item.alt)}">
+  ${item.caption ? `<figcaption>${escHtml(item.caption)}</figcaption>` : ''}
+</figure>`;
+    default:
+      return '';
+  }
 }
 
 module.exports = { renderPrint };

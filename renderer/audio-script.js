@@ -4,23 +4,16 @@
  * Harpoon Story Engine — Audio script builder.
  *
  * Converts story content to an SSML document for AWS Polly.
- * Extracts: publication title, headline, byline, summary, then
- * section crossheads and body paragraphs in order.
+ * Extracts: publication title, headline, byline, summary, then each
+ * section's crosshead and words in order, as read by readable.js (the same
+ * content the print page and PDF use).
  *
- * Excluded: pull quotes (repeated from body), image captions,
- * stats, cards, video, and any purely visual layout blocks.
+ * Excluded: pull quotes that repeat the body, captions, stats and images.
+ * Quotes that are a section's main content (full-bleed quotes, crossfade
+ * and panoramic text) are read.
  */
 
-// Layouts that contribute nothing useful to a narrated reading
-const SKIP_LAYOUTS = new Set([
-  'image', 'hero', 'hero_video', 'video', 'frame_scrubber',
-  'panoramic_scroll', 'reveal_crossfade', 'sticky_steps',
-  'stats', 'cards', 'pull_quote', 'fullbleed_quote',
-  'cover',  // cover is handled separately from the meta fields
-]);
-
-// Layouts where we read title + body but skip images/captions
-const PANELS_LAYOUT = new Set(['panels', 'text_panels']);
+const { readSection } = require('./readable');
 
 /**
  * Build an SSML string from a story content object.
@@ -75,44 +68,24 @@ function buildAudioScript(content) {
   const bodySections = sections.filter(s => s.layout !== 'cover');
 
   for (const section of bodySections) {
-    if (SKIP_LAYOUTS.has(section.layout)) continue;
-
+    const { label, title, intro, items } = readSection(section);
     const sectionParts = [];
 
     // Crosshead
-    const crosshead = section.nav_label || section.title || '';
+    const crosshead = label || title;
     if (crosshead) {
       sectionParts.push(`<p><prosody rate="90%">${x(crosshead)}</prosody></p>`);
       sectionParts.push(`<break time="500ms"/>`);
     }
 
-    // Intro paragraph
-    if (section.intro) {
-      sectionParts.push(`<p>${x(stripHtml(section.intro))}</p>`);
-    }
+    // Intro paragraphs
+    for (const p of intro) sectionParts.push(`<p>${x(stripHtml(p))}</p>`);
 
-    // Body blocks
-    if (section.blocks) {
-      for (const block of section.blocks) {
-        const text = extractBlockText(block);
-        if (text) sectionParts.push(`<p>${x(text)}</p>`);
-      }
-    }
+    // Body
+    for (const item of items) sectionParts.push(...speakItem(item));
 
-    // Fallback: plain body field
-    if (!section.blocks && section.body) {
-      sectionParts.push(`<p>${x(stripHtml(section.body))}</p>`);
-    }
-
-    // Panels layout — title + body per panel, skip images
-    if (PANELS_LAYOUT.has(section.layout) && section.panels) {
-      for (const panel of section.panels) {
-        if (panel.title) sectionParts.push(`<p><prosody rate="90%">${x(panel.title)}</prosody></p>`);
-        if (panel.body)  sectionParts.push(`<p>${x(stripHtml(panel.body))}</p>`);
-      }
-    }
-
-    if (sectionParts.length > 0) {
+    // A crosshead alone is not worth a pause in the narration
+    if (sectionParts.length > 2 || (sectionParts.length && !crosshead)) {
       parts.push(...sectionParts);
       parts.push(`<break time="900ms"/>`);
     }
@@ -123,13 +96,28 @@ function buildAudioScript(content) {
 
 // ── Helpers ───────────────────────────────────────────────────────
 
-function extractBlockText(block) {
-  if (!block) return '';
-  // Skip purely visual block types
-  const skipTypes = new Set(['image', 'video', 'caption', 'pull_quote', 'stat', 'divider']);
-  if (skipTypes.has(block.type)) return '';
-  // Rich text or plain body
-  return stripHtml(block.text || block.body || block.content || '').trim();
+function speakItem(item) {
+  switch (item.kind) {
+    case 'heading':
+      return [`<p><prosody rate="90%">${x(stripHtml(item.text))}</prosody></p>`];
+    case 'text':
+      if (item.style === 'caption') return [];
+      return [`<p>${x(stripHtml(item.text))}</p>`];
+    case 'quote':
+      if (!item.standalone) return [];
+      return [`<p>${x(stripHtml(item.text))}${item.attribution ? ` <break time="300ms"/>${x(stripHtml(item.attribution))}.` : ''}</p>`];
+    case 'items':
+      return item.items.flatMap(i => {
+        const heading = [i.meta, i.title].filter(Boolean).join('. ');
+        return [
+          heading ? `<p><prosody rate="90%">${x(stripHtml(heading))}</prosody></p>` : '',
+          i.body  ? `<p>${x(stripHtml(i.body))}</p>` : '',
+        ].filter(Boolean);
+      });
+    default:
+      // stats and images are not read aloud
+      return [];
+  }
 }
 
 function stripHtml(str) {

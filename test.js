@@ -11,6 +11,10 @@ const fs   = require('fs');
 const path = require('path');
 const { validate } = require('./renderer/validate');
 const { render }   = require('./renderer/index');
+const { hasReader } = require('./renderer/readable');
+const { renderPrint } = require('./renderer/print-renderer');
+const { renderPdf }   = require('./renderer/pdf-renderer');
+const { buildAudioScript } = require('./renderer/audio-script');
 
 // ── Utilities ─────────────────────────────────────────────────────
 
@@ -53,6 +57,45 @@ const outputBase = path.join(__dirname, 'output', 'test');
 let allPassed = true;
 
 (async () => {
+
+// ── Print, PDF and audio coverage ────────────────────────────────
+// Every layout must say what it contains in words (renderer/readable.js),
+// or its text silently disappears from the print page, PDF and narration.
+console.log('\n── Print, PDF and audio coverage ─────────────────────');
+{
+  const schema = JSON.parse(fs.readFileSync(path.join(__dirname, 'schema/content.schema.json'), 'utf8'));
+  const schemaLayouts = schema.definitions.section.properties.layout.enum;
+  const indexSrc = fs.readFileSync(path.join(__dirname, 'renderer/index.js'), 'utf8');
+  const switchSrc = indexSrc.slice(indexSrc.indexOf('function renderSectionHtml'));
+  const rendererLayouts = [...switchSrc.slice(0, switchSrc.indexOf('default:')).matchAll(/case\s+["']([^"']+)["']/g)]
+    .map(m => m[1]);
+  for (const layout of new Set([...schemaLayouts, ...rendererLayouts])) {
+    assert(`Layout "${layout}" has a reader in renderer/readable.js`, hasReader(layout));
+  }
+
+  const sample = {
+    meta: { title: 'Coverage', project_id: 'coverage-test' },
+    sections: [
+      { id: 'a', layout: 'default', title: 'Flagged', hero_image: { url: 'https://example.com/keep.jpg', alt: 'Kept', print_include: true },
+        interstitial_image: { url: 'https://example.com/drop.jpg' }, pull_quote: { text: 'Repeated quote' } },
+      { id: 'b', layout: 'timeline', title: 'History', timeline_entries: [{ date: '1987', heading: 'Founded', body: 'Timeline body text' }] },
+      { id: 'c', layout: 'reveal-crossfade', crossfade_phases: [{ text: 'Crossfade phase text' }] },
+    ],
+  };
+  const printHtml = renderPrint(sample);
+  const pdfHtml   = renderPdf(sample);
+  const ssml      = buildAudioScript(sample);
+  assertContains('Print includes ticked image',   printHtml, 'keep.jpg');
+  assertAbsent('Print omits unticked image',      printHtml, 'drop.jpg');
+  assertContains('PDF includes ticked image',     pdfHtml,   'keep.jpg');
+  assertAbsent('PDF omits unticked image',        pdfHtml,   'drop.jpg');
+  assertContains('Print includes timeline text',  printHtml, 'Timeline body text');
+  assertContains('PDF includes timeline text',    pdfHtml,   'Timeline body text');
+  assertContains('Audio includes timeline text',  ssml,      'Timeline body text');
+  assertContains('PDF includes crossfade text',   pdfHtml,   'Crossfade phase text');
+  assertContains('Audio includes crossfade text', ssml,      'Crossfade phase text');
+  assertAbsent('Audio skips repeated pull quote', ssml,      'Repeated quote');
+}
 for (const example of examples) {
   console.log(`\n── ${example.name} ──────────────────────────────────────`);
 

@@ -11,19 +11,14 @@
  *   Page 1 — Cover: full-bleed hero image, headline overlaid, colophon
  *   Pages 2+ — Body: branded running header, two-column text flow
  *
- * Visual-only sections (cinema-reveal, panoramic-scroll etc) are skipped.
- * Images within sections are omitted — text content only in the body.
+ * Section content comes from readable.js. Body images appear only when an
+ * editor has ticked "Include in print & PDF" on them.
  */
 
 const { escHtml } = require('./shell/head');
+const { readSection } = require('./readable');
 const path = require('path');
 const fs   = require('fs');
-
-// Layouts that carry no extractable text worth printing
-const VISUAL_ONLY = new Set([
-  'cinema-reveal', 'frame-scrubber', 'panoramic-scroll',
-  'scroll-carousel', 'split-reveal', 'reveal-crossfade',
-]);
 
 // ── Main entry ────────────────────────────────────────────────────
 
@@ -32,9 +27,7 @@ function renderPdf(content) {
 
   const coverSection = (sections || []).find(s => s.layout === 'cover');
   const coverData    = coverSection || cover || {};
-  const bodySections = (sections || []).filter(s =>
-    s.layout !== 'cover' && !VISUAL_ONLY.has(s.layout || 'default')
-  );
+  const bodySections = (sections || []).filter(s => s.layout !== 'cover');
 
   const tokenSetId    = meta.token_set || 'default';
   const registryPath  = path.join(__dirname, '../tokens/registry.json');
@@ -435,6 +428,12 @@ function buildHead(meta, fontsLink, tokenSetCss, accent, accent2, reg) {
     .hpdf-panel { margin-bottom: 2.5mm; break-inside: avoid; }
     .hpdf-panel__title { font-weight: 600; font-size: 9.5pt; margin-bottom: 0.5mm; }
     .hpdf-panel__body  { font-size: 9pt; color: #333; }
+    .hpdf-panel__meta  { font-size: 7.5pt; color: #666; letter-spacing: 0.05em; margin-bottom: 0.5mm; }
+
+    /* Images ticked "Include in print & PDF" — one column wide */
+    .hpdf-figure { margin: 2mm 0 3mm; break-inside: avoid; }
+    .hpdf-figure img { display: block; width: 100%; height: auto; max-height: 110mm; object-fit: cover; }
+    .hpdf-figure figcaption, .hpdf-caption { font-size: 7.5pt; color: #666; margin-top: 1mm; }
 
     /* ── Print ── */
     @media print {
@@ -521,131 +520,76 @@ ${body}
 }
 
 // ── Section renderer ──────────────────────────────────────────────
+// Content comes from readable.js, shared with the print page and audio.
 // Elements are emitted FLAT — direct children of .hpdf-columns.
 // This is required for column-span:all to work reliably in Chrome.
 // A .hpdf-section wrapper div traps column-span inside a fragmentation
 // boundary, preventing panels/pull-quotes from escaping to full-width.
 
 function renderPdfSection(section) {
-  const navLabel = section.nav_label || null;
-  const title    = section.title || '';
-  const intro    = section.intro || '';
+  const { label, title, intro, items } = readSection(section);
+
+  const body = items.map(renderPdfItem).filter(Boolean);
+
+  // A section with no words of its own adds nothing to the PDF
+  if (!intro.length && !body.length) return '';
 
   const parts = [];
 
   // Section header — spans both columns
-  if (navLabel || title) {
+  if (label || title) {
     parts.push(`<div class="hpdf-section__header">
-  ${navLabel ? `<p class="hpdf-section__label">${escHtml(navLabel)}</p>` : ''}
-  ${title    ? `<h2 class="hpdf-section__title">${escHtml(title)}</h2>` : ''}
+  ${label ? `<p class="hpdf-section__label">${escHtml(label)}</p>` : ''}
+  ${title ? `<h2 class="hpdf-section__title">${escHtml(title)}</h2>` : ''}
 </div>`);
   }
 
   // Intro — spans both columns
-  if (intro) {
-    intro.split(/\n\n+/).forEach(p => {
-      parts.push(`<p class="hpdf-section__intro">${escHtml(p.trim())}</p>`);
-    });
-  }
+  intro.forEach(p => parts.push(`<p class="hpdf-section__intro">${escHtml(p)}</p>`));
 
   // Body content — mix of two-column prose and full-width spanning elements
-  parts.push(...renderPdfSectionBody(section));
+  parts.push(...body);
 
-  return parts.filter(Boolean).join('\n');
+  return parts.join('\n');
 }
 
-// Returns an array of HTML strings — each is a direct child of .hpdf-columns.
-// Prose blocks are plain <p>/<h2> etc (flow in columns).
-// Pull quotes, stats, panels use column-span:all (full-width).
-function renderPdfSectionBody(section) {
-  const layout = section.layout || 'default';
-  const parts  = [];
-
-  if (section.blocks?.length) {
-    // Blocks may contain inline headings — emit individually so they flow naturally
-    parts.push(renderPdfBlocks(section.blocks));
-  }
-
-  if (section.pull_quote?.text) {
-    parts.push(renderPdfPullQuote(section.pull_quote));
-  }
-
-  if (section.stat_block?.length) {
-    parts.push(renderPdfStats(section.stat_block));
-  }
-
-  if (section.toggle_panels?.length) {
-    parts.push(renderPdfPanels(section.toggle_panels));
-  }
-
-  if (section.accordion_items?.length) {
-    parts.push(renderPdfPanels(section.accordion_items));
-  }
-
-  if (section.cards?.length) {
-    parts.push(renderPdfPanels(section.cards.map(c => ({
-      title: c.title || c.tag || '',
-      body:  c.body  || '',
-    }))));
-  }
-
-  if (section.sticky_steps?.length) {
-    parts.push(renderPdfPanels(section.sticky_steps.map((s, i) => ({
-      title: s.title || `Step ${i + 1}`,
-      body:  s.body  || '',
-    }))));
-  }
-
-  if (layout === 'parallax' && section.body) {
-    parts.push(`<p>${escHtml(section.body)}</p>`);
-  }
-
-  return parts.filter(Boolean);
-}
-
-// ── Element renderers ─────────────────────────────────────────────
-
-function renderPdfBlocks(blocks) {
-  return blocks.map(block => {
-    const text = escHtml(block.text || '').replace(/\n\n/g, '</p><p>').replace(/\n/g, '<br>');
-    switch (block.tag) {
-      case 'h2': return `<h2 class="hpdf-h2">${text}</h2>`;
-      case 'h3': return `<h3 class="hpdf-h3">${text}</h3>`;
-      case 'h4': return `<h4 class="hpdf-h4">${text}</h4>`;
-      case 'blockquote': return `<blockquote>${text}</blockquote>`;
-      default:
-        const cls = block.style === 'lead' ? ' style="font-size:11pt"' : '';
-        return `<p${cls}>${text}</p>`;
+// Prose (headings, paragraphs, images) flows in the columns.
+// Pull quotes, stats and panels use column-span:all (full-width).
+function renderPdfItem(item) {
+  switch (item.kind) {
+    case 'heading':
+      return `<h${item.level} class="hpdf-h${item.level}">${escHtml(item.text)}</h${item.level}>`;
+    case 'text': {
+      const text = escHtml(item.text).replace(/\n\n/g, '</p><p>').replace(/\n/g, '<br>');
+      if (item.style === 'quote')   return `<blockquote>${text}</blockquote>`;
+      if (item.style === 'lead')    return `<p style="font-size:11pt">${text}</p>`;
+      if (item.style === 'caption') return `<p class="hpdf-caption">${text}</p>`;
+      return `<p>${text}</p>`;
     }
-  }).join('\n');
-}
-
-function renderPdfPullQuote(pq) {
-  return `<div class="hpdf-pull-quote">
-  <p class="hpdf-pull-quote__text">${escHtml(pq.text)}</p>
-  ${pq.attribution ? `<span class="hpdf-pull-quote__attr">— ${escHtml(pq.attribution)}</span>` : ''}
+    case 'quote':
+      return `<div class="hpdf-pull-quote">
+  <p class="hpdf-pull-quote__text">${escHtml(item.text)}</p>
+  ${item.attribution ? `<span class="hpdf-pull-quote__attr">— ${escHtml(item.attribution)}</span>` : ''}
 </div>`;
-}
-
-function renderPdfStats(stats) {
-  const items = stats.map(s => `<div class="hpdf-stat">
+    case 'stats':
+      return `<div class="hpdf-stats">${item.items.map(s => `<div class="hpdf-stat">
   <div class="hpdf-stat__value">${escHtml(s.value || '')}</div>
   ${s.label ? `<div class="hpdf-stat__label">${escHtml(s.label)}</div>` : ''}
-</div>`).join('\n');
-  return `<div class="hpdf-stats">${items}</div>`;
-}
-
-function renderPdfPanels(panels) {
-  const items = panels.map(p => {
-    const title = p.title || p.label || '';
-    const body  = p.body  || p.content || '';
-    if (!title && !body) return '';
-    return `<div class="hpdf-panel">
-  ${title ? `<p class="hpdf-panel__title">${escHtml(title)}</p>` : ''}
-  ${body  ? `<p class="hpdf-panel__body">${escHtml(body)}</p>`   : ''}
-</div>`;
-  }).filter(Boolean).join('\n');
-  return items ? `<div class="hpdf-panels">${items}</div>` : '';
+</div>`).join('\n')}</div>`;
+    case 'items':
+      return `<div class="hpdf-panels">${item.items.map(i => `<div class="hpdf-panel">
+  ${i.meta  ? `<p class="hpdf-panel__meta">${escHtml(i.meta)}</p>` : ''}
+  ${i.title ? `<p class="hpdf-panel__title">${escHtml(i.title)}</p>` : ''}
+  ${i.body  ? `<p class="hpdf-panel__body">${escHtml(i.body)}</p>` : ''}
+</div>`).join('\n')}</div>`;
+    case 'image':
+      return `<figure class="hpdf-figure">
+  <img src="${escHtml(item.url)}" alt="${escHtml(item.alt)}">
+  ${item.caption ? `<figcaption>${escHtml(item.caption)}</figcaption>` : ''}
+</figure>`;
+    default:
+      return '';
+  }
 }
 
 module.exports = { renderPdf };
