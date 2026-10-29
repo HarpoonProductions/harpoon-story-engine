@@ -16,11 +16,7 @@ you'll remember — your Desktop or Documents folder is fine.
 
 **Step 3 — Add your credentials file**
 
-Giles will send you a file called `.env`. 
-
-1. Open the app once first (Step 4 below) — this creates the folder you need
-2. Then in Finder, go to **Documents → Harpoon Story Engine**
-3. Drop the `.env` file into that folder
+Giles will send you a file called `.env`. Drop it into the `harpoon-story-engine` folder.
 
 > Note: `.env` files are hidden by default on Mac. To see hidden files in Finder,  
 > press **Cmd + Shift + .** (that's a full stop). Press it again to hide them.
@@ -32,7 +28,9 @@ Double-click `setup.command` inside the folder.
 If Mac asks "are you sure you want to open this?" — right-click it instead, 
 choose Open, then click Open again. You only need to do this once.
 
-The setup will install everything the Story Engine needs. It takes about a minute.
+The setup links the folder to GitHub and installs everything the Story Engine needs.
+It takes about a minute. If your Mac offers to install "command line developer tools",
+say yes, then run setup again.
 
 ---
 
@@ -42,6 +40,11 @@ Double-click `start.command` to launch the Story Engine.
 Your browser will open automatically at the editor.
 
 To stop the editor, close the Terminal window that opened.
+
+Each time it starts, the Story Engine updates itself to the latest version, so you
+and Giles are always using the same one. To pick up a change Giles has just made,
+close the Terminal window and double-click `start.command` again. The version is
+shown in the Terminal window.
 
 **Tip:** Drag `start.command` to your Dock so it's always one click away.
 
@@ -53,6 +56,8 @@ To stop the editor, close the Terminal window that opened.
 - **"Missing .env file"** — ask Giles to resend the `.env` file
 - **Editor won't open** — make sure the Terminal window from `start.command` is still open
 - **Changes not saving** — check you have internet access (the editor saves to the cloud)
+- **"Couldn't check for updates"** — you're probably offline. You can continue, but you may be on an older version
+- **"This folder has local changes"** — files in the folder have been edited. Choose Quit and tell Giles
 
 ---
 
