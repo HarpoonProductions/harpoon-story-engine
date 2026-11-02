@@ -22,8 +22,12 @@ fi
 
 VERSION=$(git log -1 --date=format:'%d %b %Y' --format='%h, %cd' 2>/dev/null || echo "unknown")
 
-# Clear the terminal and show a clean startup message
-clear
+if [ "$(uname)" = "Darwin" ]; then
+  echo ""
+  echo "  ⚠  The Story Engine app isn't available (see above), so the"
+  echo "     editor is opening in the browser instead."
+fi
+
 echo ""
 echo "  ╔═══════════════════════════════════════╗"
 echo "  ║   Harpoon Story Engine — Editor       ║"
