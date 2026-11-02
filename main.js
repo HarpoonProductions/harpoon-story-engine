@@ -107,7 +107,7 @@ function createWindow() {
     },
     backgroundColor: "#F7F6F3",
     show: false, // Don't show until ready
-    titleBarStyle: "hiddenInset", // Mac-style traffic lights inset into toolbar
+    // A normal title bar: the editor pages have no room for inset traffic lights
   });
 
   // Load the editor
