@@ -72,6 +72,11 @@ console.log('\n── Print, PDF and audio coverage ─────────�
   for (const layout of new Set([...schemaLayouts, ...rendererLayouts])) {
     assert(`Layout "${layout}" has a reader in renderer/readable.js`, hasReader(layout));
   }
+  // A layout the renderer knows but the schema doesn't fails validation,
+  // so the editor preview and every deploy of that story break.
+  for (const layout of rendererLayouts) {
+    assert(`Layout "${layout}" is allowed by the schema`, schemaLayouts.includes(layout));
+  }
 
   const sample = {
     meta: { title: 'Coverage', project_id: 'coverage-test' },
