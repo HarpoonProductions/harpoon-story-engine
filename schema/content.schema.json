@@ -623,7 +623,8 @@
             "frame-scrubber",
             "two-column",
             "split-reveal",
-            "cover"
+            "cover",
+            "timeline"
           ],
           "default": "default",
           "description": "Rendering template for this section. fullbleed-quote: full-viewport hero_image with pull_quote overlaid. reveal-crossfade: two images crossfade on scroll, driven by crossfade_images and crossfade_phases."
@@ -811,6 +812,26 @@
           "type": "string",
           "enum": ["fade", "wipe-left", "wipe-right", "wipe-up", "wipe-down", "circle"],
           "description": "Transition style between crossfade images. Default: fade."
+        },
+        "timeline_align": {
+          "type": "string",
+          "enum": ["left", "right", "alternate"],
+          "default": "left",
+          "description": "Used by timeline layout. Which side the entries sit on."
+        },
+        "timeline_entries": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "date": { "type": "string" },
+              "heading": { "type": "string" },
+              "body": { "type": "string" },
+              "image": { "type": "object" },
+              "video": { "type": "object" }
+            }
+          },
+          "description": "Used by timeline layout. Each entry's image or video (video wins if both are set) fills the sticky canvas while the entry is in view."
         },
         "crossfade_wipe_origin": {
           "type": "string",
