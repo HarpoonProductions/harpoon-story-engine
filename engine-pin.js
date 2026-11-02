@@ -120,6 +120,25 @@ function sameFile(sha, file) {
   }
 }
 
+// True when the commit's package-lock.json installs the same packages as
+// this checkout's. Only the dependency entries count: a change to the
+// app's own version number doesn't mean a fresh (slow) npm install.
+function sameDependencies(sha) {
+  if (sameFile(sha, "package-lock.json")) return true;
+  try {
+    const deps = (lock) => {
+      const { packages = {}, dependencies = {} } = JSON.parse(lock);
+      const { "": _root, ...rest } = packages;
+      return JSON.stringify({ packages: rest, dependencies });
+    };
+    const then = git(["show", `${sha}:package-lock.json`]);
+    const now = fs.readFileSync(path.join(ROOT, "package-lock.json"), "utf8");
+    return deps(then) === deps(now);
+  } catch {
+    return false;
+  }
+}
+
 function replaceWithLink(linkPath, target) {
   fs.rmSync(linkPath, { recursive: true, force: true });
   fs.symlinkSync(target, linkPath, "dir");
@@ -159,7 +178,7 @@ function prepareEngine(sha, { baseDir = ROOT, projectsDir = path.join(ROOT, "pro
     // Dependencies: reuse this checkout's node_modules when the lockfile
     // is unchanged (the usual case); otherwise install the frozen set.
     let installed = false;
-    if (!sameFile(full, "package-lock.json")) {
+    if (!sameDependencies(full)) {
       try {
         execFileSync("npm", ["ci", "--include=optional", "--no-audit", "--no-fund"], { cwd: tmp, stdio: "ignore" });
         installed = true;
