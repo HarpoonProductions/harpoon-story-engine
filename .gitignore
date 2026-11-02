@@ -10,3 +10,7 @@ dist-electron/
 .pdf-output/
 # macOS custom-folder-icon files (named "Icon" + carriage return)
 Icon
+
+# Story Engine desktop app, built locally by scripts/build-desktop-app.sh
+/Story Engine.app/
+/.Story Engine.app.building/

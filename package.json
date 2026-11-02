@@ -1,12 +1,13 @@
 {
   "name": "harpoon-story-engine",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "description": "Renders Harpoon Story Engine JSON content files into HTML publications",
   "main": "main.js",
   "scripts": {
     "render": "node render.js",
     "render-magazine-cover": "node render-magazine-cover.js",
     "test": "node test.js",
+    "postinstall": "bash scripts/build-desktop-app.sh || true",
     "editor": "node editor.js",
     "electron": "electron .",
     "electron:build": "electron-builder --config electron/builder.json",
