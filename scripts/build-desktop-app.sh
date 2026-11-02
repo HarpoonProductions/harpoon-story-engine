@@ -24,9 +24,18 @@ SRC="node_modules/electron/dist/Electron.app"
 DEST="$APP_NAME.app"
 TMP=".$APP_NAME.app.building"
 
-if [ ! -d "$SRC" ]; then
+# Say what failed rather than stopping silently, and tidy up
+trap 'echo "  ✗ Couldn'"'"'t build the Story Engine app (line $LINENO: $BASH_COMMAND)"; rm -rf "$TMP"' ERR
+
+if [ ! -d "node_modules/electron" ]; then
   echo "  Electron isn't installed yet; skipping the Story Engine app."
   exit 0
+fi
+
+# npm can skip Electron's own download step; fetch it if it's missing
+if [ ! -d "$SRC" ]; then
+  echo "  Downloading Electron..."
+  node node_modules/electron/install.js
 fi
 
 # An older checkout keeps a launcher app in git at the same path. Leave it be.
@@ -94,7 +103,9 @@ echo "$STAMP" > "$TMP/Contents/Resources/app/stamp"
 
 # Re-sign locally now the contents have changed
 xattr -cr "$TMP" 2>/dev/null || true
-codesign --force --deep --sign - "$TMP" >/dev/null 2>&1
+if ! codesign --force --deep --sign - "$TMP"; then
+  echo "  ⚠  Couldn't re-sign the Story Engine app; it may not open."
+fi
 
 rm -rf "$DEST"
 mv "$TMP" "$DEST"
