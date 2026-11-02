@@ -263,6 +263,8 @@ console.log('\nFrozen engine versions');
   if (!head) {
     console.log('  – git history not available, skipping the frozen render check');
   } else {
+    const exported = enginePin.suggestFreeze({ meta: { last_exported_at: head.date } });
+    assert('Freeze suggestion follows a client-site export', exported && exported.basis === 'last-exported');
     const os = require('os');
     const tmpBase = fs.mkdtempSync(path.join(os.tmpdir(), 'hse-engine-test-'));
     try {

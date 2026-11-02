@@ -4951,6 +4951,8 @@ function initBlocksEditor(sectionIndex) {
                 }
                 const which = s.basis === 'last-published'
                     ? `the engine it was last published with (${engineDateLabel(s.date)})`
+                    : s.basis === 'last-exported'
+                    ? `the engine it was last exported with (${engineDateLabel(s.date)})`
                     : `today's engine (${engineDateLabel(s.date)})`;
                 return wrap(`
                     <p class="form-hint" style="margin:0 0 0.4rem">Follows the latest engine, so engine updates can change how it looks the next time it's published.</p>
