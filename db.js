@@ -51,6 +51,7 @@ async function listProjects() {
     folder: row.content?.meta?.folder || "",
     backup_of: row.content?.meta?.backup_of || "",
     note: row.content?.meta?.note || "",
+    backed_up_at: row.content?.meta?.backed_up_at || "",
     last_saved: row.updated_at,
   }));
 }

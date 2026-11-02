@@ -3,1048 +3,910 @@
     <head>
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <title>Harpoon Story Engine</title>
+        <title>Story Engine</title>
         <style>
-            *,
-            *::before,
-            *::after {
-                box-sizing: border-box;
-                margin: 0;
-                padding: 0;
-            }
+            *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
             :root {
+                --navy: #081041;
+                --navy-2: #1d2a6b;
+                --yellow: #eac654;
                 --bg: #f7f6f3;
-                --bg-2: #eeecea;
+                --surface: #ffffff;
                 --ink: #1a1916;
                 --ink-2: #3d3c39;
-                --ink-3: #7a7870;
-                --accent: #8b3a2a;
-                --rule: rgba(26, 25, 22, 0.1);
-                --font-body:
-                    -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica,
-                    Arial, sans-serif;
-                --font-mono: "SF Mono", "Fira Code", "Roboto Mono", monospace;
+                --muted: #5f5d57;
+                --line: #e4e1db;
+                --line-2: #efece6;
+                --amber: #c27c1a;
+                --green: #2d6a4f;
+                --grey: #9a978e;
+                --danger: #a3261b;
+                --font-body: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+                --font-display: "Iowan Old Style", "Charter", "Source Serif 4", Georgia, serif;
+                --radius: 14px;
             }
 
-            html,
-            body {
+            html, body {
                 min-height: 100%;
                 background: var(--bg);
                 color: var(--ink);
                 font-family: var(--font-body);
-                font-size: 13px;
+                font-size: 16px;
                 line-height: 1.5;
+                -webkit-font-smoothing: antialiased;
             }
 
-            /* Focus visible */
-            :focus-visible {
-                outline: 2px solid var(--accent);
-                outline-offset: 3px;
-                border-radius: 2px;
-            }
-            :focus:not(:focus-visible) {
-                outline: none;
+            button, input { font: inherit; color: inherit; }
+            button { cursor: pointer; }
+            :focus-visible { outline: 3px solid var(--yellow); outline-offset: 2px; }
+
+            .visually-hidden {
+                position: absolute; width: 1px; height: 1px; overflow: hidden;
+                clip: rect(0 0 0 0); white-space: nowrap;
             }
 
-            .shell {
-                min-height: 100vh;
-                display: grid;
-                grid-template-rows: auto 1fr auto;
-            }
-
-            header {
-                padding: 1rem 1.75rem;
-                border-bottom: 1px solid var(--rule);
-                display: flex;
-                align-items: center;
-                justify-content: space-between;
-                background: white;
-                -webkit-app-region: drag;
-            }
-            header button,
-            header a {
-                -webkit-app-region: no-drag;
-            }
-
-            .wordmark {
-                display: flex;
-                align-items: center;
-                gap: 0.6rem;
-            }
-            .wordmark__harpoon {
-                font-family: var(--font-mono);
-                font-size: 0.58rem;
-                letter-spacing: 0.26em;
-                text-transform: uppercase;
-                color: var(--ink-3);
-            }
-            .wordmark__sep {
-                width: 1px;
-                height: 10px;
-                background: var(--rule);
-            }
-            .wordmark__title {
-                font-family: var(--font-mono);
-                font-size: 0.68rem;
-                letter-spacing: 0.16em;
-                text-transform: uppercase;
-                color: var(--accent);
-                font-weight: 400;
-            }
-
-            main {
-                padding: 2rem 1.75rem;
-                max-width: 960px;
-            }
-
-            .section-label {
-                font-family: var(--font-mono);
-                font-size: 0.58rem;
-                letter-spacing: 0.26em;
-                text-transform: uppercase;
-                color: var(--ink-3);
-                margin-bottom: 0.75rem;
-            }
-
-            .project-grid {
-                display: grid;
-                grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-                gap: 1px;
-                background: var(--rule);
-                border: 1px solid var(--rule);
-                margin-bottom: 1.5rem;
-            }
-
-            .project-card {
-                background: white;
-                padding: 1rem 1rem 1rem 1.25rem;
-                cursor: pointer;
-                position: relative;
-                display: flex;
-                flex-direction: column;
-                gap: 0.25rem;
-                text-decoration: none;
-                color: inherit;
-                transition: background 0.12s;
-                min-height: 100px;
-                overflow: hidden;
-            }
-            .project-card:hover,
-            .project-card:focus-visible {
-                background: var(--bg);
-            }
-            .project-card:focus-visible {
-                outline-offset: -2px;
-            }
-
-            .project-card__accent {
-                position: absolute;
-                top: 0;
-                left: 0;
-                width: 3px;
-                height: 100%;
-            }
-            .project-card__client {
-                font-family: var(--font-mono);
-                font-size: 0.54rem;
-                letter-spacing: 0.18em;
-                text-transform: uppercase;
-                color: var(--ink-3);
-            }
-            .project-card__title {
-                font-size: 0.85rem;
-                font-weight: 500;
-                line-height: 1.3;
-                color: var(--ink);
-                flex: 1;
-            }
-            .project-card__meta {
-                font-family: var(--font-mono);
-                font-size: 0.52rem;
-                color: var(--ink-3);
-                margin-top: auto;
-            }
-            .project-card__note {
-                font-size: 0.72rem;
-                color: var(--ink-3);
-                font-style: italic;
-                background: none;
-                border: none;
-                border-bottom: 1px dashed transparent;
-                padding: 0;
-                width: 100%;
-                cursor: text;
-                outline: none;
-                transition: border-color 0.15s;
-                font-family: inherit;
-            }
-            .project-card__note:hover {
-                border-bottom-color: var(--ink-3);
-            }
-            .project-card__note:focus {
-                border-bottom-color: var(--accent);
-                color: var(--ink);
-            }
-            .project-card__note::placeholder {
-                color: var(--ink-3);
-                opacity: 0.5;
-            }
-            .project-card__arrow {
-                position: absolute;
-                top: 0.75rem;
-                right: 0.75rem;
-                font-size: 0.65rem;
-                color: var(--ink-3);
-                opacity: 0;
-                transition:
-                    opacity 0.12s,
-                    transform 0.12s;
-            }
-            .project-card:hover .project-card__arrow,
-            .project-card:focus-visible .project-card__arrow {
-                opacity: 1;
-                transform: translate(2px, -2px);
-            }
-
-            .empty-state {
-                padding: 2rem;
-                text-align: center;
-                color: var(--ink-3);
-                background: white;
-                font-size: 0.8rem;
-            }
-
-            /* ── Card actions row ── */
-            .project-card__actions {
-                display: flex;
-                align-items: center;
-                gap: 0.4rem;
-                margin-top: 0.35rem;
-                flex-wrap: wrap;
-            }
-            .project-card__open {
-                font-family: var(--font-mono);
-                font-size: 0.5rem;
-                letter-spacing: 0.1em;
-                text-transform: uppercase;
-                color: var(--accent);
-                text-decoration: none;
-                padding: 0.2rem 0.4rem;
-                border: 1px solid var(--accent);
-                border-radius: 2px;
-                transition: background 0.12s;
-            }
-            .project-card__open:hover { background: rgba(139,58,42,0.07); }
-            .project-card__backup-btn {
-                font-family: var(--font-mono);
-                font-size: 0.5rem;
-                letter-spacing: 0.1em;
-                text-transform: uppercase;
-                color: var(--ink-3);
-                background: none;
-                border: 1px solid var(--rule);
-                border-radius: 2px;
-                padding: 0.2rem 0.4rem;
-                cursor: pointer;
-                transition: all 0.12s;
-                white-space: nowrap;
-            }
-            .project-card__backup-btn:hover { color: var(--ink); border-color: var(--ink-3); background: var(--bg); }
-            .project-card__backup-btn.is-loading { opacity: 0.5; pointer-events: none; }
-            .project-card__backup-btn.is-done { color: #2d7a4f; border-color: #2d7a4f; }
-            .project-card__folder-select {
-                font-family: var(--font-mono);
-                font-size: 0.5rem;
-                letter-spacing: 0.08em;
-                color: var(--ink-3);
-                background: none;
-                border: 1px solid var(--rule);
-                border-radius: 2px;
-                padding: 0.2rem 0.35rem;
-                cursor: pointer;
-                outline: none;
-                margin-left: auto;
-            }
-            .project-card__folder-select:hover { border-color: var(--ink-3); color: var(--ink); }
-
-            /* ── Folder sections (collapsible) ── */
-            .folder-section {
-                margin-top: 0.25rem;
-                margin-bottom: 1rem;
-            }
-            .folder-toggle {
-                display: flex;
-                align-items: center;
-                gap: 0.5rem;
-                background: none;
-                border: none;
-                cursor: pointer;
-                padding: 0.4rem 0;
-                margin-bottom: 0.5rem;
-                color: inherit;
-            }
-            .folder-toggle:hover .section-label { color: var(--ink-2); }
-            .folder-toggle__count {
-                font-family: var(--font-mono);
-                font-size: 0.52rem;
-                color: var(--ink-3);
-                background: var(--bg-2);
-                border: 1px solid var(--rule);
-                border-radius: 2px;
-                padding: 0.1rem 0.35rem;
-            }
-            .folder-toggle__chevron {
-                font-size: 0.6rem;
-                color: var(--ink-3);
-                transition: transform 0.15s;
-            }
-            .folder-toggle[aria-expanded="true"] .folder-toggle__chevron {
-                transform: rotate(90deg);
-            }
-            .project-card__folder-badge {
-                font-family: var(--font-mono);
-                font-size: 0.48rem;
-                letter-spacing: 0.1em;
-                text-transform: uppercase;
-                color: var(--ink-3);
-                margin-bottom: 0.1rem;
-            }
-
-            .action-strip {
-                display: flex;
-                gap: 0.6rem;
-            }
-
-            /* ── Mode tabs ── */
-            .mode-tabs {
-                display: flex;
-                gap: 0.25rem;
-                margin-bottom: 1.5rem;
-                border-bottom: 1px solid var(--rule);
-            }
-            .mode-tab {
-                font-family: var(--font-mono);
-                font-size: 0.6rem;
-                letter-spacing: 0.14em;
-                text-transform: uppercase;
-                color: var(--ink-3);
-                background: none;
-                border: none;
-                border-bottom: 2px solid transparent;
-                padding: 0.6rem 0.2rem;
-                margin-right: 1.25rem;
-                cursor: pointer;
-                transition: color 0.12s;
-            }
-            .mode-tab:hover { color: var(--ink); }
-            .mode-tab.is-active {
-                color: var(--ink);
-                border-bottom-color: var(--accent);
-            }
-            .mode-note {
-                font-size: 0.74rem;
-                color: var(--ink-3);
-                font-style: italic;
-                margin-bottom: 1.25rem;
-            }
-            .project-card__preview {
-                font-family: var(--font-mono);
-                font-size: 0.5rem;
-                letter-spacing: 0.1em;
-                text-transform: uppercase;
-                color: var(--accent);
-                background: none;
-                text-decoration: none;
-                padding: 0.2rem 0.4rem;
-                border: 1px solid var(--accent);
-                border-radius: 2px;
-                cursor: pointer;
-            }
-            .project-card__preview:hover { background: rgba(139,58,42,0.07); }
-            .project-card__preview.is-loading { opacity: 0.5; pointer-events: none; }
-
+            /* ── Buttons ───────────────────────────────────────────── */
             .btn {
-                display: inline-flex;
-                align-items: center;
-                gap: 0.35rem;
-                padding: 0.45rem 0.9rem;
-                font-family: var(--font-mono);
-                font-size: 0.6rem;
-                letter-spacing: 0.14em;
-                text-transform: uppercase;
-                cursor: pointer;
-                transition: all 0.12s;
-                text-decoration: none;
-                border-radius: 2px;
+                display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+                height: 44px; padding: 0 18px; border-radius: 10px; border: 1px solid transparent;
+                font-size: 16px; font-weight: 600; text-decoration: none; white-space: nowrap;
+                transition: background 0.15s, border-color 0.15s, color 0.15s;
             }
-            .btn--primary {
-                background: var(--accent);
-                color: white;
-                border: 1px solid var(--accent);
+            .btn--yellow { background: var(--yellow); color: var(--navy); }
+            .btn--yellow:hover { background: #f1d16c; }
+            .btn--navy { background: var(--navy); color: #fff; }
+            .btn--navy:hover { background: var(--navy-2); }
+            .btn--outline { background: var(--surface); border-color: var(--navy); color: var(--navy); }
+            .btn--outline:hover { background: #f0f1f7; }
+            .btn--ghost { background: transparent; color: var(--ink-2); }
+            .btn--ghost:hover { background: var(--line-2); }
+            .btn--danger { background: var(--danger); color: #fff; }
+            .btn--sm { height: 40px; padding: 0 14px; font-size: 15px; }
+            .btn[disabled], .btn.is-busy { opacity: 0.55; pointer-events: none; }
+
+            .icon-btn {
+                width: 40px; height: 40px; display: inline-flex; align-items: center; justify-content: center;
+                border: 1px solid var(--line); border-radius: 8px; background: var(--surface); color: var(--ink-2);
             }
-            .btn--primary:hover {
-                background: #7a3225;
+            .icon-btn:hover { background: var(--bg); }
+
+            /* ── Top bar ───────────────────────────────────────────── */
+            .topbar {
+                position: sticky; top: 0; z-index: 20;
+                display: flex; flex-wrap: wrap; align-items: center; gap: 16px 24px;
+                padding: 16px 40px; background: var(--navy); color: #fff;
+                border-bottom: 4px solid var(--yellow);
             }
-            .btn--ghost {
-                background: white;
-                color: var(--ink-2);
-                border: 1px solid var(--rule);
+            .brand { display: flex; align-items: center; gap: 12px; flex: 0 0 auto; }
+            .brand__mark { width: 42px; height: 42px; display: block; }
+            .brand__name { font-family: var(--font-display); font-size: 23px; font-weight: 600; letter-spacing: 0.005em; }
+            .brand__by { font-size: 14px; color: #c9cde0; }
+
+            .search { flex: 1 1 320px; display: flex; justify-content: center; }
+            .search__box {
+                display: flex; align-items: center; gap: 10px; width: 100%; max-width: 520px; height: 44px;
+                padding: 0 14px; background: #fff; border-radius: 10px; color: #4a4f6a;
             }
-            .btn--ghost:hover {
-                border-color: var(--ink-3);
-                color: var(--ink);
+            .search__box input {
+                flex: 1; min-width: 0; border: 0; background: transparent; font-size: 16px; color: var(--ink); outline: none;
+            }
+            .search__box:focus-within { outline: 3px solid var(--yellow); outline-offset: 2px; }
+
+            /* ── Main ──────────────────────────────────────────────── */
+            main { max-width: 1240px; margin: 0 auto; padding: 32px 40px 96px; }
+
+            .kinds { display: flex; flex-wrap: wrap; gap: 8px; }
+            .kind {
+                height: 40px; padding: 0 16px; border-radius: 999px; border: 1px solid #d6d2c9;
+                background: var(--surface); color: var(--ink-2); font-size: 15px; font-weight: 500;
+            }
+            .kind.is-active { background: var(--navy); border-color: var(--navy); color: #fff; }
+
+            .kind-note {
+                margin-top: 16px; max-width: 720px; padding: 14px 18px; border-radius: 10px;
+                background: var(--surface); border: 1px solid var(--line); color: var(--ink-2); font-size: 15px;
             }
 
-            footer {
-                padding: 0.85rem 1.75rem;
-                border-top: 1px solid var(--rule);
-                display: flex;
-                align-items: center;
-                justify-content: space-between;
-                background: white;
+            .tabbar {
+                display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 12px 24px;
+                margin: 28px 0 8px; border-bottom: 1px solid var(--line);
             }
-            .footer-note {
-                font-family: var(--font-mono);
-                font-size: 0.54rem;
-                letter-spacing: 0.1em;
-                color: var(--ink-3);
+            .tabs { display: flex; gap: 28px; }
+            .tab {
+                height: 50px; padding: 0; border: 0; background: transparent; font-size: 17px; font-weight: 500;
+                color: var(--ink-2); border-bottom: 3px solid transparent; margin-bottom: -1px;
             }
+            .tab .count { color: var(--muted); font-weight: 400; margin-left: 4px; }
+            .tab.is-active { color: var(--ink); font-weight: 600; border-bottom-color: var(--navy); }
+            .tabbar__hint { padding-bottom: 13px; font-size: 15px; color: var(--muted); }
 
-            /* ── Modal ── */
+            .group { margin-top: 40px; }
+            .group__head { display: flex; align-items: baseline; gap: 12px; margin-bottom: 16px; }
+            .group__name { font-family: var(--font-display); font-size: 27px; font-weight: 600; line-height: 1.2; }
+            .group__count { font-size: 15px; color: var(--muted); }
+
+            .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 16px; }
+
+            /* ── Story card ────────────────────────────────────────── */
+            .card {
+                position: relative; display: flex; flex-direction: column; gap: 10px;
+                padding: 22px 22px 18px; background: var(--surface);
+                border: 1px solid var(--line); border-radius: var(--radius);
+                transition: border-color 0.15s, box-shadow 0.15s;
+            }
+            .card:hover { border-color: #cfcabf; box-shadow: 0 4px 18px rgba(8, 16, 65, 0.06); }
+            .card__status { display: flex; align-items: center; gap: 8px; font-size: 14px; color: var(--ink-2); }
+            .card__status .ago { color: var(--muted); }
+            .dot { width: 10px; height: 10px; border-radius: 50%; flex: 0 0 auto; }
+            .dot--progress { background: var(--amber); }
+            .dot--published { background: var(--green); }
+            .dot--archived { background: var(--grey); }
+            .card__title {
+                font-family: var(--font-display); font-size: 22px; line-height: 1.25; font-weight: 600;
+                color: var(--ink); text-decoration: none;
+            }
+            .card__title:hover { color: var(--navy-2); text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 3px; }
+            .card__note { font-size: 15px; color: var(--ink-2); }
+            .card__spacer { flex: 1; }
+            .card__actions {
+                display: flex; align-items: center; gap: 8px; padding-top: 12px; border-top: 1px solid var(--line-2);
+            }
+            .card__actions .push { flex: 1; }
+
+            /* ── Menus ─────────────────────────────────────────────── */
+            .menu {
+                position: absolute; z-index: 30; min-width: 220px; padding: 6px;
+                background: var(--surface); border: 1px solid var(--line); border-radius: 12px;
+                box-shadow: 0 12px 32px rgba(8, 16, 65, 0.16);
+            }
+            .menu button {
+                display: block; width: 100%; text-align: left; padding: 10px 12px; border: 0; border-radius: 8px;
+                background: transparent; font-size: 15px; color: var(--ink);
+            }
+            .menu button:hover, .menu button:focus-visible { background: var(--bg); }
+            .menu hr { border: 0; border-top: 1px solid var(--line-2); margin: 6px 4px; }
+
+            .empty {
+                margin-top: 48px; padding: 48px 24px; text-align: center; color: var(--muted);
+                border: 1px dashed #d6d2c9; border-radius: var(--radius); font-size: 17px;
+            }
+            .empty .btn { margin-top: 16px; }
+
+            .footer-actions { margin-top: 56px; display: flex; gap: 12px; }
+
+            /* ── Versions panel ────────────────────────────────────── */
+            .scrim {
+                position: fixed; inset: 0; z-index: 40; background: rgba(8, 16, 65, 0.28);
+                opacity: 0; pointer-events: none; transition: opacity 0.2s;
+            }
+            .scrim.is-open { opacity: 1; pointer-events: auto; }
+            .panel {
+                position: fixed; top: 0; right: 0; bottom: 0; z-index: 41; width: min(520px, 100%);
+                display: flex; flex-direction: column; background: var(--surface);
+                box-shadow: -12px 0 32px rgba(8, 16, 65, 0.14);
+                transform: translateX(100%); visibility: hidden;
+                transition: transform 0.22s ease, visibility 0s linear 0.22s;
+            }
+            .panel.is-open { transform: none; visibility: visible; transition: transform 0.22s ease; }
+            .panel__head { display: flex; align-items: flex-start; gap: 16px; padding: 28px 28px 20px; border-bottom: 1px solid var(--line); }
+            .panel__client { font-size: 14px; color: var(--muted); }
+            .panel__title { margin-top: 4px; font-family: var(--font-display); font-size: 24px; line-height: 1.25; font-weight: 600; }
+            .panel__intro { padding: 20px 28px; display: flex; flex-direction: column; align-items: flex-start; gap: 12px; border-bottom: 1px solid var(--line); }
+            .panel__intro p { font-size: 15px; color: var(--ink-2); }
+            .panel__list { flex: 1; overflow: auto; padding: 4px 28px 28px; list-style: none; }
+            .version { display: flex; align-items: center; gap: 14px; padding: 16px 0; border-bottom: 1px solid var(--line-2); }
+            .version__dot { width: 12px; height: 12px; border-radius: 50%; border: 2px solid var(--grey); flex: 0 0 auto; }
+            .version--current .version__dot { background: var(--yellow); border-color: var(--navy); }
+            .version__body { flex: 1; min-width: 0; }
+            .version__label { font-weight: 500; overflow-wrap: anywhere; }
+            .version--current .version__label { font-weight: 600; }
+            .version__when { font-size: 15px; color: var(--muted); }
+            .version .btn--sm { height: 38px; padding: 0 12px; font-size: 14px; }
+            .version__restore { color: var(--navy); }
+            .panel__empty { padding: 20px 0; color: var(--muted); font-size: 15px; }
+
+            /* ── Dialogs ───────────────────────────────────────────── */
             .modal-backdrop {
-                display: none;
-                position: fixed;
-                inset: 0;
-                background: rgba(26, 25, 22, 0.45);
-                z-index: 1000;
-                align-items: center;
-                justify-content: center;
+                position: fixed; inset: 0; z-index: 60; display: none; align-items: center; justify-content: center;
+                padding: 24px; background: rgba(8, 16, 65, 0.4);
             }
-            .modal-backdrop.is-open {
-                display: flex;
-            }
-
+            .modal-backdrop.is-open { display: flex; }
             .modal {
-                background: white;
-                border: 1px solid var(--rule);
-                padding: 1.75rem;
-                width: 420px;
-                max-width: calc(100vw - 2rem);
-                box-shadow: 0 8px 24px rgba(26, 25, 22, 0.12);
-                border-radius: 2px;
+                width: 100%; max-width: 480px; padding: 28px; background: var(--surface);
+                border-radius: 16px; box-shadow: 0 24px 60px rgba(8, 16, 65, 0.25);
             }
-            .modal__title {
-                font-size: 1rem;
-                font-weight: 600;
-                margin-bottom: 0.15rem;
-            }
-            .modal__subtitle {
-                font-family: var(--font-mono);
-                font-size: 0.56rem;
-                letter-spacing: 0.16em;
-                text-transform: uppercase;
-                color: var(--ink-3);
-                margin-bottom: 1.25rem;
-            }
-
-            .field {
-                margin-bottom: 0.85rem;
-            }
-            .field label {
-                display: block;
-                font-family: var(--font-mono);
-                font-size: 0.56rem;
-                letter-spacing: 0.18em;
-                text-transform: uppercase;
-                color: var(--ink-3);
-                margin-bottom: 0.25rem;
-            }
+            .modal__title { font-family: var(--font-display); font-size: 24px; font-weight: 600; }
+            .modal__subtitle { margin-top: 6px; font-size: 15px; color: var(--ink-2); }
+            .field { margin-top: 18px; display: flex; flex-direction: column; gap: 6px; }
+            .field label { font-size: 15px; font-weight: 600; }
             .field input[type="text"] {
-                width: 100%;
-                background: var(--bg);
-                border: 1px solid var(--rule);
-                color: var(--ink);
-                font-family: var(--font-mono);
-                font-size: 0.78rem;
-                padding: 0.4rem 0.6rem;
-                outline: none;
-                transition: border-color 0.12s;
-                border-radius: 2px;
+                height: 46px; padding: 0 14px; border: 1px solid #d6d2c9; border-radius: 10px; background: #fff; font-size: 16px;
             }
-            .field input[type="text"]:focus {
-                border-color: var(--accent);
-            }
-            .field input[type="color"] {
-                width: 100%;
-                background: var(--bg);
-                border: 1px solid var(--rule);
-                padding: 0.15rem 0.4rem;
-                height: 30px;
-                cursor: pointer;
-                border-radius: 2px;
-            }
-            .field-row {
-                display: grid;
-                grid-template-columns: 1fr 1fr;
-                gap: 0.6rem;
-            }
-            .field-hint {
-                font-size: 0.68rem;
-                color: var(--ink-3);
-                margin-top: 0.2rem;
-            }
+            .field input[type="text"]:focus { outline: 3px solid var(--yellow); outline-offset: 1px; border-color: var(--navy); }
+            .field input[type="color"] { width: 100%; height: 46px; padding: 4px; border: 1px solid #d6d2c9; border-radius: 10px; background: #fff; }
+            .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+            .field-hint { font-size: 14px; color: var(--muted); }
+            details.more { margin-top: 18px; }
+            details.more summary { cursor: pointer; font-size: 15px; color: var(--navy); font-weight: 500; }
+            .modal__error { margin-top: 14px; color: var(--danger); font-size: 15px; display: none; }
+            .modal__actions { margin-top: 24px; display: flex; justify-content: flex-end; gap: 10px; }
 
-            .modal__actions {
-                display: flex;
-                gap: 0.5rem;
-                justify-content: flex-end;
-                margin-top: 1.25rem;
-                padding-top: 1rem;
-                border-top: 1px solid var(--rule);
+            /* ── Toast ─────────────────────────────────────────────── */
+            .toast {
+                position: fixed; left: 50%; bottom: 28px; z-index: 70; transform: translate(-50%, 20px);
+                padding: 12px 20px; border-radius: 10px; background: var(--navy); color: #fff; font-size: 15px;
+                opacity: 0; pointer-events: none; transition: opacity 0.2s, transform 0.2s;
             }
-            .modal__error {
-                font-size: 0.72rem;
-                color: #c0392b;
-                margin-top: 0.5rem;
-                display: none;
-            }
-            .modal__error[role="alert"] {
-                display: block;
-            }
+            .toast.is-visible { opacity: 1; transform: translate(-50%, 0); }
 
-            @keyframes fadeUp {
-                from {
-                    opacity: 0;
-                    transform: translateY(6px);
-                }
-                to {
-                    opacity: 1;
-                    transform: translateY(0);
-                }
+            @media (max-width: 640px) {
+                .topbar, main { padding-left: 16px; padding-right: 16px; }
+                .grid { grid-template-columns: 1fr; }
+                .field-row { grid-template-columns: 1fr; }
             }
-            .section-label {
-                animation: fadeUp 0.3s ease both;
-            }
-            .project-grid {
-                animation: fadeUp 0.3s ease both 0.04s;
-            }
-            .action-strip {
-                animation: fadeUp 0.3s ease both 0.1s;
-            }
-
             @media (prefers-reduced-motion: reduce) {
-                .section-label,
-                .project-grid,
-                .action-strip {
-                    animation: none;
-                }
+                * { transition: none !important; }
             }
         </style>
     </head>
     <body>
-        <div class="shell">
-            <header>
-                <div class="wordmark" aria-label="Harpoon Story Engine">
-                    <span class="wordmark__harpoon" aria-hidden="true"
-                        >Harpoon</span
-                    >
-                    <div class="wordmark__sep" aria-hidden="true"></div>
-                    <span class="wordmark__title" aria-hidden="true"
-                        >Story Engine</span
-                    >
+        <header class="topbar">
+            <div class="brand">
+                <img class="brand__mark" src="/editor/harpoon-roundel.png" alt="Harpoon" width="42" height="42" />
+                <span class="brand__name">Story Engine</span>
+                <span class="brand__by">by Harpoon</span>
+            </div>
+            <div class="search" role="search">
+                <label class="search__box">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="M20 20l-3.5-3.5"></path></svg>
+                    <span class="visually-hidden">Search stories</span>
+                    <input type="search" id="search" placeholder="Search stories or clients" autocomplete="off" />
+                </label>
+            </div>
+            <button class="btn btn--yellow" id="newStoryBtn" aria-haspopup="dialog">+ New story</button>
+        </header>
+
+        <main>
+            <nav class="kinds" aria-label="Kind of project">
+                <button class="kind is-active" data-kind="story" aria-pressed="true">Stories</button>
+                <button class="kind" data-kind="graduation-guide" aria-pressed="false">Graduation guides</button>
+            </nav>
+            <p class="kind-note" id="guideNote" hidden>
+                Graduation guides are built from the university's ceremony data, so new ones are set up for you rather than made here. You can still edit their branding and welcome text, and preview them.
+            </p>
+
+            <div class="tabbar">
+                <div class="tabs" role="tablist" aria-label="Where stories are">
+                    <button class="tab is-active" role="tab" data-tab="progress" aria-selected="true">In progress<span class="count" id="count-progress"></span></button>
+                    <button class="tab" role="tab" data-tab="published" aria-selected="false">Published<span class="count" id="count-published"></span></button>
+                    <button class="tab" role="tab" data-tab="archive" aria-selected="false">Archive<span class="count" id="count-archive"></span></button>
                 </div>
-                <button
-                    class="btn btn--primary"
-                    id="newStoryBtn"
-                    onclick="openNewModal()"
-                    aria-haspopup="dialog"
-                >
-                    + New story
+                <div class="tabbar__hint">Grouped by client · most recent first</div>
+            </div>
+
+            <div id="groups" aria-live="polite"></div>
+
+            <div class="footer-actions">
+                <button class="btn btn--ghost btn--sm" id="openByIdBtn">Open a story by its ID…</button>
+            </div>
+        </main>
+
+        <!-- Versions panel -->
+        <div class="scrim" id="scrim"></div>
+        <aside class="panel" id="panel" role="dialog" aria-modal="true" aria-labelledby="panelTitle" aria-hidden="true">
+            <div class="panel__head">
+                <div style="flex: 1; min-width: 0">
+                    <div class="panel__client" id="panelClient"></div>
+                    <h2 class="panel__title" id="panelTitle"></h2>
+                </div>
+                <button class="icon-btn" id="panelClose" aria-label="Close versions">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"></path></svg>
                 </button>
-            </header>
+            </div>
+            <div class="panel__intro">
+                <p>Save a version before big changes. You can look at any version, or bring it back as the current story. Restoring never loses work: what's there now is saved as a version first.</p>
+                <button class="btn btn--outline btn--sm" id="panelSave">Save a version now</button>
+            </div>
+            <ul class="panel__list" id="panelList"></ul>
+        </aside>
 
-            <main>
-                <div class="mode-tabs" role="tablist" aria-label="Content kind">
-                    <button class="mode-tab is-active" id="tabStory" role="tab" aria-selected="true" onclick="setMode('story')">Stories</button>
-                    <button class="mode-tab" id="tabGraduation" role="tab" aria-selected="false" onclick="setMode('graduation-guide')">Graduation Guides</button>
-                </div>
-                <p class="mode-note" id="graduationNote" style="display:none">
-                    Graduation guides are a different HSE render path (content.kind = "graduation-guide") — schema-driven ceremony/roster data, not the narrative section editor below. New guides are added via the data pipeline (scripts/promote-imperial-data.js + scripts/push-to-supabase.js), not this screen. See docs/graduation-guide-integration.md.
-                </p>
-                <p class="section-label" aria-hidden="true">In production</p>
-                <section aria-label="Stories in production">
-                    <div class="project-grid" id="productionGrid" role="list">
-                        <div class="empty-state" id="emptyState" style="display:none" role="listitem">
-                            No stories yet — create your first
-                        </div>
-                    </div>
-                </section>
-
-                <div class="folder-section" id="publishedSection" style="display:none">
-                    <button class="folder-toggle" id="publishedToggle" aria-expanded="false" aria-controls="publishedGrid">
-                        <span class="section-label" style="margin:0">Published</span>
-                        <span class="folder-toggle__count" id="publishedCount"></span>
-                        <span class="folder-toggle__chevron" aria-hidden="true">▸</span>
-                    </button>
-                    <div class="project-grid" id="publishedGrid" role="list" hidden></div>
-                </div>
-
-                <div class="folder-section" id="backupsSection" style="display:none">
-                    <button class="folder-toggle" id="backupsToggle" aria-expanded="false" aria-controls="backupsGrid">
-                        <span class="section-label" style="margin:0">Back up</span>
-                        <span class="folder-toggle__count" id="backupsCount"></span>
-                        <span class="folder-toggle__chevron" aria-hidden="true">▸</span>
-                    </button>
-                    <div class="project-grid" id="backupsGrid" role="list" hidden></div>
-                </div>
-
-                <div class="folder-section" id="trashSection" style="display:none">
-                    <button class="folder-toggle" id="trashToggle" aria-expanded="false" aria-controls="trashGrid">
-                        <span class="section-label" style="margin:0">Trash</span>
-                        <span class="folder-toggle__count" id="trashCount"></span>
-                        <span class="folder-toggle__chevron" aria-hidden="true">▸</span>
-                    </button>
-                    <div class="project-grid" id="trashGrid" role="list" hidden></div>
-                </div>
-
-                <div class="action-strip">
-                    <button class="btn btn--ghost" onclick="openExisting()">
-                        Open existing JSON
-                    </button>
-                </div>
-            </main>
-
-            <footer role="contentinfo">
-                <span class="footer-note">Story Engine — Local Editor</span>
-                <span class="footer-note">http://localhost:3001</span>
-            </footer>
-        </div>
-
-        <!-- New story modal -->
-        <div
-            class="modal-backdrop"
-            id="newModal"
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="modalTitle"
-            aria-describedby="modalSubtitle"
-        >
+        <!-- Generic text / confirm dialog -->
+        <div class="modal-backdrop" id="askModal" role="dialog" aria-modal="true" aria-labelledby="askTitle">
             <div class="modal">
-                <h2 class="modal__title" id="modalTitle">New story</h2>
-                <p class="modal__subtitle" id="modalSubtitle">Project setup</p>
-
-                <div class="field">
-                    <label for="newTitle">Story title</label>
-                    <input
-                        type="text"
-                        id="newTitle"
-                        placeholder="e.g. The State of the Oceans"
-                        autocomplete="off"
-                    />
+                <h2 class="modal__title" id="askTitle"></h2>
+                <p class="modal__subtitle" id="askMessage"></p>
+                <div class="field" id="askField">
+                    <label for="askInput" id="askLabel"></label>
+                    <input type="text" id="askInput" autocomplete="off" />
                 </div>
-                <div class="field">
-                    <label for="newClient">Client name</label>
-                    <input
-                        type="text"
-                        id="newClient"
-                        placeholder="e.g. Royal Opera House"
-                        autocomplete="off"
-                    />
-                </div>
-                <div class="field">
-                    <label for="newId">Project ID</label>
-                    <input
-                        type="text"
-                        id="newId"
-                        placeholder="e.g. oceans-2026"
-                        autocomplete="off"
-                        aria-describedby="newIdHint"
-                    />
-                    <p class="field-hint" id="newIdHint">
-                        Auto-generated. Lowercase letters, numbers, hyphens
-                        only.
-                    </p>
-                </div>
-                <div class="field-row">
-                    <div class="field">
-                        <label for="newAccent">Primary colour</label>
-                        <input type="color" id="newAccent" value="#1A3F6F" />
-                    </div>
-                    <div class="field">
-                        <label for="newAccent2">Secondary colour</label>
-                        <input type="color" id="newAccent2" value="#C9A84C" />
-                    </div>
-                </div>
-
-                <p class="modal__error" id="newError" aria-live="assertive"></p>
-
                 <div class="modal__actions">
-                    <button class="btn btn--ghost" onclick="closeNewModal()">
-                        Cancel
-                    </button>
-                    <button class="btn btn--primary" onclick="createProject()">
-                        Create →
-                    </button>
+                    <button class="btn btn--ghost" id="askCancel">Cancel</button>
+                    <button class="btn btn--navy" id="askOk">OK</button>
                 </div>
             </div>
         </div>
 
+        <!-- New story dialog -->
+        <div class="modal-backdrop" id="newModal" role="dialog" aria-modal="true" aria-labelledby="newModalTitle">
+            <div class="modal">
+                <h2 class="modal__title" id="newModalTitle">New story</h2>
+                <div class="field">
+                    <label for="newTitle">Story title</label>
+                    <input type="text" id="newTitle" placeholder="e.g. The State of the Oceans" autocomplete="off" />
+                </div>
+                <div class="field">
+                    <label for="newClient">Client</label>
+                    <input type="text" id="newClient" list="clientList" placeholder="e.g. Royal Opera House" autocomplete="off" />
+                    <datalist id="clientList"></datalist>
+                </div>
+                <details class="more">
+                    <summary>More options</summary>
+                    <div class="field">
+                        <label for="newId">Web address name</label>
+                        <input type="text" id="newId" placeholder="e.g. oceans-2026" autocomplete="off" aria-describedby="newIdHint" />
+                        <p class="field-hint" id="newIdHint">Filled in from the title. Lowercase letters, numbers and hyphens only. It can't be changed later.</p>
+                    </div>
+                    <div class="field-row">
+                        <div class="field">
+                            <label for="newAccent">Main colour</label>
+                            <input type="color" id="newAccent" value="#1A3F6F" />
+                        </div>
+                        <div class="field">
+                            <label for="newAccent2">Second colour</label>
+                            <input type="color" id="newAccent2" value="#C9A84C" />
+                        </div>
+                    </div>
+                </details>
+                <p class="modal__error" id="newError" aria-live="assertive"></p>
+                <div class="modal__actions">
+                    <button class="btn btn--ghost" id="newCancel">Cancel</button>
+                    <button class="btn btn--navy" id="newCreate">Create story</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
         <script>
             "use strict";
 
-            // ── Focus trap for modal ──────────────────────────────────────────
+            const $ = (id) => document.getElementById(id);
+            const esc = (s) => String(s == null ? "" : s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 
-            const FOCUSABLE =
-                'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])';
-            let lastFocusedBeforeModal = null;
+            const state = { projects: [], kind: "story", tab: "progress", query: "", panelStoryId: null };
+            let model = { byId: {}, stories: [], versions: {} };
 
-            function trapFocus(e) {
-                const modal = document.getElementById("newModal");
-                const focusable = Array.from(
-                    modal.querySelectorAll(FOCUSABLE),
-                ).filter((el) => !el.disabled);
-                const first = focusable[0];
-                const last = focusable[focusable.length - 1];
+            // ── Time formatting ──────────────────────────────────────────────
+            function timeAgo(iso) {
+                if (!iso) return "never";
+                const d = Math.floor((Date.now() - new Date(iso)) / 1000);
+                if (d < 60) return "just now";
+                if (d < 3600) { const m = Math.floor(d / 60); return m === 1 ? "1 minute ago" : `${m} minutes ago`; }
+                if (d < 86400) { const h = Math.floor(d / 3600); return h === 1 ? "1 hour ago" : `${h} hours ago`; }
+                const days = Math.floor(d / 86400);
+                if (days === 1) return "yesterday";
+                if (days < 45) return `${days} days ago`;
+                return "on " + new Date(iso).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
+            }
+            function fullDate(iso) {
+                if (!iso) return "";
+                return new Date(iso).toLocaleString("en-GB", { day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" });
+            }
 
-                if (e.key === "Tab") {
-                    if (e.shiftKey) {
-                        if (document.activeElement === first) {
-                            e.preventDefault();
-                            last.focus();
-                        }
-                    } else {
-                        if (document.activeElement === last) {
-                            e.preventDefault();
-                            first.focus();
+            // ── Toast ────────────────────────────────────────────────────────
+            let toastTimer = null;
+            function toast(msg) {
+                const t = $("toast");
+                t.textContent = msg;
+                t.classList.add("is-visible");
+                clearTimeout(toastTimer);
+                toastTimer = setTimeout(() => t.classList.remove("is-visible"), 2600);
+            }
+
+            // ── Data ─────────────────────────────────────────────────────────
+            async function loadProjects() {
+                try {
+                    const res = await fetch("/api/projects");
+                    const data = await res.json();
+                    state.projects = data.projects || [];
+                } catch (err) {
+                    console.error(err);
+                    state.projects = [];
+                }
+                buildModel();
+                render();
+                if (state.panelStoryId) renderPanel();
+            }
+
+            // A "version" is a backup (folder "backups") whose chain of
+            // backup_of links leads to a story that still exists. Those are
+            // shown inside that story's Versions panel, not as cards.
+            function buildModel() {
+                const byId = {};
+                state.projects.forEach((p) => { byId[p.id] = p; });
+                const isBackup = (p) => p.folder === "backups";
+                const rootOf = (p) => {
+                    let q = p;
+                    const seen = new Set();
+                    while (q && isBackup(q) && q.backup_of && !seen.has(q.id)) {
+                        seen.add(q.id);
+                        q = byId[q.backup_of];
+                    }
+                    return q && !isBackup(q) ? q : null;
+                };
+                const versions = {};
+                const stories = [];
+                state.projects.forEach((p) => {
+                    if (isBackup(p)) {
+                        const root = p.backup_of ? rootOf(p) : null;
+                        if (root) {
+                            (versions[root.id] = versions[root.id] || []).push(p);
+                            return;
                         }
                     }
-                }
-                if (e.key === "Escape") {
-                    closeNewModal();
-                }
+                    stories.push(p);
+                });
+                Object.values(versions).forEach((list) =>
+                    list.sort((a, b) => versionTime(b) - versionTime(a)));
+                model = { byId, stories, versions };
+            }
+            const versionTime = (v) => new Date(v.backed_up_at || v.last_saved || 0).getTime();
+
+            function tabOf(p) {
+                if (p.folder === "published") return "published";
+                if (p.folder === "trash" || p.folder === "backups") return "archive";
+                return "progress";
+            }
+            function statusOf(p) {
+                if (p.folder === "published") return { label: "Published", cls: "published" };
+                if (p.folder === "backups") return { label: "Old back-up", cls: "archived" };
+                if (p.folder === "trash") return { label: "Archived", cls: "archived" };
+                return { label: "In progress", cls: "progress" };
+            }
+            function matches(p, q) {
+                if (!q) return true;
+                return [p.title, p.client, p.note, p.id].some((s) => (s || "").toLowerCase().includes(q));
             }
 
-            function openNewModal() {
-                lastFocusedBeforeModal = document.activeElement;
-                const modal = document.getElementById("newModal");
-                modal.classList.add("is-open");
-                modal.addEventListener("keydown", trapFocus);
-                // Move focus into modal
-                setTimeout(
-                    () => document.getElementById("newTitle").focus(),
-                    50,
-                );
-            }
+            // ── Render the home screen ───────────────────────────────────────
+            function render() {
+                const q = state.query.trim().toLowerCase();
+                const inKind = model.stories.filter((p) =>
+                    state.kind === "graduation-guide" ? p.kind === "graduation-guide" : p.kind !== "graduation-guide");
+                const visible = inKind.filter((p) => matches(p, q));
 
-            function closeNewModal() {
-                const modal = document.getElementById("newModal");
-                modal.classList.remove("is-open");
-                modal.removeEventListener("keydown", trapFocus);
-                const errEl = document.getElementById("newError");
-                errEl.textContent = "";
-                errEl.removeAttribute("role");
-                // Return focus to trigger
-                if (lastFocusedBeforeModal) lastFocusedBeforeModal.focus();
-            }
-
-            // Close on backdrop click
-            document
-                .getElementById("newModal")
-                .addEventListener("click", (e) => {
-                    if (e.target === document.getElementById("newModal"))
-                        closeNewModal();
+                ["progress", "published", "archive"].forEach((t) => {
+                    const n = visible.filter((p) => tabOf(p) === t).length;
+                    $("count-" + t).textContent = n ? String(n) : "";
                 });
 
-            // ── Auto-generate project ID from title ───────────────────────────
+                const list = visible
+                    .filter((p) => tabOf(p) === state.tab)
+                    .sort((a, b) => new Date(b.last_saved || 0) - new Date(a.last_saved || 0));
 
-            document
-                .getElementById("newTitle")
-                .addEventListener("input", function () {
-                    const slug = this.value
-                        .toLowerCase()
-                        .replace(/[^a-z0-9\s-]/g, "")
-                        .trim()
-                        .replace(/\s+/g, "-");
-                    document.getElementById("newId").value = slug
-                        ? `${slug}-${new Date().getFullYear()}`
-                        : "";
+                const groups = new Map();
+                list.forEach((p) => {
+                    const key = (p.client || "").trim() || "No client";
+                    if (!groups.has(key)) groups.set(key, []);
+                    groups.get(key).push(p);
                 });
 
-            // Enter key in modal submits
-            document
-                .getElementById("newModal")
-                .addEventListener("keydown", (e) => {
-                    if (e.key === "Enter" && e.target.tagName !== "BUTTON")
-                        createProject();
-                });
+                const host = $("groups");
+                host.innerHTML = "";
 
-            // ── Create project ────────────────────────────────────────────────
-
-            async function createProject() {
-                const id = document.getElementById("newId").value.trim();
-                const title = document.getElementById("newTitle").value.trim();
-                const errEl = document.getElementById("newError");
-
-                errEl.textContent = "";
-                errEl.removeAttribute("role");
-
-                if (!title || !id) {
-                    errEl.textContent = "Title and ID are required.";
-                    errEl.setAttribute("role", "alert");
-                    errEl.style.display = "block";
-                    return;
-                }
-                if (!/^[a-z0-9-]+$/.test(id)) {
-                    errEl.textContent =
-                        "ID: lowercase letters, numbers and hyphens only.";
-                    errEl.setAttribute("role", "alert");
-                    errEl.style.display = "block";
+                if (!list.length) {
+                    host.innerHTML = emptyMessage(q);
+                    const b = host.querySelector("[data-new]");
+                    if (b) b.addEventListener("click", openNewModal);
                     return;
                 }
 
-                const res = await fetch("/api/project/create", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({
-                        id,
-                        title,
-                        client: document
-                            .getElementById("newClient")
-                            .value.trim(),
-                        accent_color:
-                            document.getElementById("newAccent").value,
-                        accent_color_2:
-                            document.getElementById("newAccent2").value,
-                    }),
-                });
-                const data = await res.json();
-                if (!res.ok) {
-                    errEl.textContent = data.error || "Something went wrong.";
-                    errEl.setAttribute("role", "alert");
-                    errEl.style.display = "block";
-                    return;
-                }
-                window.location.href = `/edit/${id}`;
-            }
-
-            // ── Folder definitions ────────────────────────────────────────────
-            const FOLDERS = [
-                { key: "",          label: "In production" },
-                { key: "published", label: "Published"     },
-                { key: "backups",   label: "Back up"       },
-                { key: "trash",     label: "Trash"         },
-            ];
-
-            // ── Mode (content kind) ─────────────────────────────────────────────
-            let currentMode = "story";
-            let allProjects = [];
-
-            function setMode(mode) {
-                currentMode = mode;
-                document.getElementById("tabStory").classList.toggle("is-active", mode === "story");
-                document.getElementById("tabStory").setAttribute("aria-selected", String(mode === "story"));
-                document.getElementById("tabGraduation").classList.toggle("is-active", mode === "graduation-guide");
-                document.getElementById("tabGraduation").setAttribute("aria-selected", String(mode === "graduation-guide"));
-                document.getElementById("graduationNote").style.display = mode === "graduation-guide" ? "block" : "none";
-                document.getElementById("newStoryBtn").style.display = mode === "graduation-guide" ? "none" : "inline-flex";
-                renderProjects();
-            }
-
-            // ── Load projects ─────────────────────────────────────────────────
-            async function loadProjects() {
-                const res  = await fetch("/api/projects");
-                const data = await res.json();
-                allProjects = data.projects;
-                renderProjects();
-            }
-
-            function renderProjects() {
-                const filtered = allProjects.filter(p =>
-                    currentMode === "graduation-guide"
-                        ? p.kind === "graduation-guide"
-                        : p.kind !== "graduation-guide"
-                );
-
-                const buckets = { "": [], published: [], backups: [], trash: [] };
-                filtered.forEach(p => {
-                    const key = buckets.hasOwnProperty(p.folder) ? p.folder : "";
-                    buckets[key].push(p);
-                });
-
-                // Production grid (always visible)
-                const prodGrid = document.getElementById("productionGrid");
-                const empty    = document.getElementById("emptyState");
-                Array.from(prodGrid.children).forEach(c => { if (c !== empty) c.remove(); });
-                if (buckets[""].length) {
-                    empty.style.display = "none";
-                    buckets[""].forEach(p => prodGrid.appendChild(makeCard(p)));
-                } else {
-                    empty.style.display = "block";
-                    empty.textContent = currentMode === "graduation-guide"
-                        ? "No graduation guides yet"
-                        : "No stories yet — create your first";
-                }
-
-                // Collapsible folder sections
-                [
-                    { key: "published", sectionId: "publishedSection", gridId: "publishedGrid", countId: "publishedCount" },
-                    { key: "backups",   sectionId: "backupsSection",   gridId: "backupsGrid",   countId: "backupsCount"   },
-                    { key: "trash",     sectionId: "trashSection",     gridId: "trashGrid",     countId: "trashCount"     },
-                ].forEach(({ key, sectionId, gridId, countId }) => {
-                    const sec   = document.getElementById(sectionId);
-                    const grid  = document.getElementById(gridId);
-                    const count = document.getElementById(countId);
-                    const items = buckets[key];
-                    sec.style.display = items.length ? "block" : "none";
-                    count.textContent = items.length || "";
-                    grid.innerHTML = "";
-                    items.forEach(p => grid.appendChild(makeCard(p)));
+                groups.forEach((items, client) => {
+                    const sec = document.createElement("section");
+                    sec.className = "group";
+                    sec.innerHTML = `
+                        <div class="group__head">
+                            <h2 class="group__name">${esc(client)}</h2>
+                            <span class="group__count">${items.length === 1 ? "1 " + noun() : items.length + " " + noun(true)}</span>
+                        </div>
+                        <div class="grid" role="list"></div>`;
+                    const grid = sec.querySelector(".grid");
+                    items.forEach((p) => grid.appendChild(makeCard(p)));
+                    host.appendChild(sec);
                 });
             }
+            const noun = (plural) => state.kind === "graduation-guide" ? (plural ? "guides" : "guide") : (plural ? "stories" : "story");
 
-            // ── Unified card builder ──────────────────────────────────────────
+            function emptyMessage(q) {
+                if (q) return `<div class="empty">Nothing matches “${esc(state.query)}” here.</div>`;
+                if (state.kind === "graduation-guide") return `<div class="empty">No graduation guides here.</div>`;
+                if (state.tab === "progress") return `<div class="empty">No stories in progress.<br><button class="btn btn--navy" data-new>+ New story</button></div>`;
+                if (state.tab === "published") return `<div class="empty">Nothing published yet. Use the “…” menu on a story to move it here once it's live.</div>`;
+                return `<div class="empty">The archive is empty.</div>`;
+            }
+
             function makeCard(p) {
-                const card = document.createElement("div");
-                card.className = "project-card";
+                const card = document.createElement("article");
+                card.className = "card";
                 card.setAttribute("role", "listitem");
+                const st = statusOf(p);
+                const vCount = (model.versions[p.id] || []).length;
+                const isGuide = p.kind === "graduation-guide";
+                const isOldBackup = p.folder === "backups";
 
-                const ago        = p.last_saved ? timeAgo(p.last_saved) : "Never edited";
-                const noteVal    = (p.note || "").replace(/"/g, "&quot;");
-                const folderBadge = p.folder
-                    ? `<span class="project-card__folder-badge">${FOLDERS.find(f => f.key === p.folder)?.label || p.folder}</span>`
-                    : "";
-                const backupOfBadge = p.backup_of
-                    ? `<span class="project-card__folder-badge">Backup of ${p.backup_of}</span>`
-                    : "";
-
-                // Move-to options: all folders except current
-                const moveOpts = FOLDERS
-                    .filter(f => f.key !== (p.folder || ""))
-                    .map(f => `<option value="${f.key}">${f.label}</option>`)
-                    .join("");
-
-                const backupBtn = (!p.folder || p.folder === "")
-                    ? `<button class="project-card__backup-btn" title="Snapshot this story">Make back up</button>`
-                    : "";
-
-                // Graduation guides: /edit/:id now shows a reduced tab set
-                // (Meta + Guide + Status — Cover/Sections don't apply and
-                // are hidden by setupGraduationGuideTab()), covering branding
-                // and welcome-message fields. Roster/ceremony data still
-                // isn't editable there — see the note above the grid.
-                const openAction = p.kind === "graduation-guide"
-                    ? `<a class="project-card__open" href="/edit/${p.id}">✎ Edit</a>
-                       <button class="project-card__preview" data-id="${p.id}">👁 Preview</button>`
-                    : `<a class="project-card__open" href="/edit/${p.id}">↗ Open</a>`;
+                const openBtns = isGuide
+                    ? `<a class="btn btn--navy btn--sm" href="/edit/${encodeURIComponent(p.id)}">Edit</a>
+                       <button class="btn btn--ghost btn--sm" data-act="preview">Preview</button>`
+                    : `<a class="btn btn--navy btn--sm" href="/edit/${encodeURIComponent(p.id)}">Open</a>`;
+                const versionsBtn = isOldBackup ? "" :
+                    `<button class="btn btn--ghost btn--sm" data-act="versions">${vCount ? vCount + (vCount === 1 ? " version" : " versions") : "Versions"}</button>`;
 
                 card.innerHTML = `
-                    <div class="project-card__accent" style="background:${p.accent_color}" aria-hidden="true"></div>
-                    ${folderBadge || backupOfBadge}
-                    <span class="project-card__client">${p.client || "—"}</span>
-                    <span class="project-card__title">${p.title}</span>
-                    <input class="project-card__note" type="text" value="${noteVal}" placeholder="Add a note…" aria-label="Note for ${p.title}">
-                    <span class="project-card__meta">${p.id} · ${ago}</span>
-                    <div class="project-card__actions">
-                        ${openAction}
-                        ${backupBtn}
-                        <select class="project-card__folder-select" aria-label="Move to folder">
-                            <option value="" disabled selected>Move to…</option>
-                            ${moveOpts}
-                        </select>
+                    <div class="card__status">
+                        <span class="dot dot--${st.cls}" aria-hidden="true"></span>
+                        <span>${st.label}</span>
+                        <span class="ago">· Edited ${esc(timeAgo(p.last_saved))}</span>
+                    </div>
+                    <a class="card__title" href="/edit/${encodeURIComponent(p.id)}">${esc(p.title)}</a>
+                    ${p.note ? `<p class="card__note">${esc(p.note)}</p>` : ""}
+                    <div class="card__spacer"></div>
+                    <div class="card__actions">
+                        ${openBtns}
+                        ${versionsBtn}
+                        <span class="push"></span>
+                        <button class="icon-btn" data-act="menu" aria-label="More actions for ${esc(p.title)}" aria-haspopup="menu" aria-expanded="false">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="5" cy="12" r="1.8"></circle><circle cx="12" cy="12" r="1.8"></circle><circle cx="19" cy="12" r="1.8"></circle></svg>
+                        </button>
                     </div>`;
 
-                const previewBtn = card.querySelector(".project-card__preview");
-                if (previewBtn) {
-                    previewBtn.addEventListener("click", async (e) => {
-                        e.stopPropagation();
-                        previewBtn.textContent = "Rendering…";
-                        previewBtn.classList.add("is-loading");
-                        try {
-                            const r = await fetch(`/api/project/${p.id}/preview`);
-                            const data = await r.json();
-                            if (!r.ok || !data.ok) throw new Error(data.error || "Render failed");
-                            window.open(data.url, "_blank");
-                            previewBtn.textContent = "👁 Preview";
-                        } catch (err) {
-                            previewBtn.textContent = "Failed";
-                            console.error(err);
-                            setTimeout(() => { previewBtn.textContent = "👁 Preview"; }, 2000);
-                        }
-                        previewBtn.classList.remove("is-loading");
-                    });
-                }
-
-                // Note field — preventDefault stops the <a> inside card from firing
-                const noteInput = card.querySelector(".project-card__note");
-                noteInput.addEventListener("click",   e => e.stopPropagation());
-                noteInput.addEventListener("keydown", e => { if (e.key === "Enter") noteInput.blur(); });
-                noteInput.addEventListener("blur", () => {
-                    fetch(`/api/project/${p.id}/note`, {
-                        method: "PATCH",
-                        headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({ note: noteInput.value }),
-                    });
-                });
-
-                // Make back up
-                const backupBtnEl = card.querySelector(".project-card__backup-btn");
-                if (backupBtnEl) {
-                    backupBtnEl.addEventListener("click", async (e) => {
-                        e.stopPropagation();
-                        backupBtnEl.textContent = "Saving…";
-                        backupBtnEl.classList.add("is-loading");
-                        const r = await fetch(`/api/project/${p.id}/backup`, { method: "POST" });
-                        if (r.ok) {
-                            backupBtnEl.textContent = "✓ Done";
-                            backupBtnEl.classList.remove("is-loading");
-                            backupBtnEl.classList.add("is-done");
-                            setTimeout(loadProjects, 800);
-                        } else {
-                            backupBtnEl.textContent = "Failed";
-                            backupBtnEl.classList.remove("is-loading");
-                        }
-                    });
-                }
-
-                // Move to folder
-                const folderSelect = card.querySelector(".project-card__folder-select");
-                folderSelect.addEventListener("click", e => e.stopPropagation());
-                folderSelect.addEventListener("change", async () => {
-                    await fetch(`/api/project/${p.id}/folder`, {
-                        method: "PATCH",
-                        headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({ folder: folderSelect.value }),
-                    });
-                    loadProjects();
-                });
-
+                const vBtn = card.querySelector('[data-act="versions"]');
+                if (vBtn) vBtn.addEventListener("click", () => openPanel(p.id, vBtn));
+                const pBtn = card.querySelector('[data-act="preview"]');
+                if (pBtn) pBtn.addEventListener("click", () => preview(p.id, pBtn));
+                const mBtn = card.querySelector('[data-act="menu"]');
+                mBtn.addEventListener("click", (e) => { e.stopPropagation(); openMenu(p, mBtn, card); });
                 return card;
             }
 
-            // ── Folder section toggles ────────────────────────────────────────
-            ["published", "backups", "trash"].forEach(key => {
-                document.getElementById(key + "Toggle").addEventListener("click", () => {
-                    const toggle = document.getElementById(key + "Toggle");
-                    const grid   = document.getElementById(key + "Grid");
-                    const open   = toggle.getAttribute("aria-expanded") === "true";
-                    toggle.setAttribute("aria-expanded", String(!open));
-                    grid.hidden = open;
+            // ── Card "…" menu ────────────────────────────────────────────────
+            let openMenuEl = null;
+            function closeMenu() {
+                if (!openMenuEl) return;
+                const { el, trigger } = openMenuEl;
+                el.remove();
+                trigger.setAttribute("aria-expanded", "false");
+                openMenuEl = null;
+            }
+            function openMenu(p, trigger, card) {
+                const wasOpen = openMenuEl && openMenuEl.trigger === trigger;
+                closeMenu();
+                if (wasOpen) return;
+
+                const items = [];
+                items.push(["note", p.note ? "Edit note" : "Add a note"]);
+                if (p.folder !== "backups") items.push(["save", "Save a version"]);
+                items.push(["-"]);
+                if (p.folder === "published") items.push(["move:", "Move back to In progress"]);
+                else if (!p.folder) items.push(["move:published", "Move to Published"]);
+                if (p.folder === "trash" || p.folder === "backups") items.push(["move:", "Take out of the archive"]);
+                else items.push(["move:trash", "Archive"]);
+
+                const el = document.createElement("div");
+                el.className = "menu";
+                el.setAttribute("role", "menu");
+                el.innerHTML = items.map(([k, label]) => k === "-" ? "<hr>" : `<button role="menuitem" data-k="${k}">${esc(label)}</button>`).join("");
+                el.style.right = "16px";
+                el.style.bottom = "64px";
+                card.appendChild(el);
+                trigger.setAttribute("aria-expanded", "true");
+                openMenuEl = { el, trigger };
+                el.querySelector("button").focus();
+
+                el.addEventListener("click", async (e) => {
+                    const b = e.target.closest("button[data-k]");
+                    if (!b) return;
+                    e.stopPropagation();
+                    closeMenu();
+                    const k = b.dataset.k;
+                    if (k === "note") return editNote(p);
+                    if (k === "save") return saveVersionFlow(p.id);
+                    if (k.startsWith("move:")) return moveTo(p, k.slice(5));
                 });
+                el.addEventListener("keydown", (e) => {
+                    const btns = Array.from(el.querySelectorAll("button"));
+                    const i = btns.indexOf(document.activeElement);
+                    if (e.key === "ArrowDown") { e.preventDefault(); btns[(i + 1) % btns.length].focus(); }
+                    if (e.key === "ArrowUp") { e.preventDefault(); btns[(i - 1 + btns.length) % btns.length].focus(); }
+                    if (e.key === "Escape") { closeMenu(); trigger.focus(); }
+                });
+            }
+            document.addEventListener("click", (e) => {
+                if (openMenuEl && !openMenuEl.el.contains(e.target)) closeMenu();
             });
 
-            function timeAgo(iso) {
-                const d = Math.floor((Date.now() - new Date(iso)) / 1000);
-                if (d < 60) return "just now";
-                if (d < 3600) return `${Math.floor(d / 60)} minutes ago`;
-                if (d < 86400) return `${Math.floor(d / 3600)} hours ago`;
-                return `${Math.floor(d / 86400)} days ago`;
+            // ── Actions ──────────────────────────────────────────────────────
+            async function api(url, method, body) {
+                const res = await fetch(url, {
+                    method,
+                    headers: { "Content-Type": "application/json" },
+                    body: body ? JSON.stringify(body) : undefined,
+                });
+                let data = {};
+                try { data = await res.json(); } catch {}
+                if (!res.ok) throw new Error(data.error || "Something went wrong");
+                return data;
             }
 
-            function openExisting() {
-                const id = prompt("Enter project ID:");
-                if (id) window.location.href = `/edit/${id.trim()}`;
+            async function editNote(p) {
+                const note = await ask({
+                    title: p.note ? "Edit note" : "Add a note",
+                    message: p.title,
+                    label: "Note",
+                    value: p.note || "",
+                    placeholder: "e.g. Waiting for client sign-off",
+                    ok: "Save note",
+                });
+                if (note === null) return;
+                try {
+                    await api(`/api/project/${encodeURIComponent(p.id)}/note`, "PATCH", { note: note.trim() });
+                    toast("Note saved");
+                    loadProjects();
+                } catch (err) { toast("Couldn't save the note: " + err.message); }
             }
+
+            async function moveTo(p, folder) {
+                try {
+                    await api(`/api/project/${encodeURIComponent(p.id)}/folder`, "PATCH", { folder });
+                    const where = folder === "published" ? "Published" : folder === "trash" ? "the archive" : "In progress";
+                    toast(`Moved “${p.title}” to ${where}`);
+                    loadProjects();
+                } catch (err) { toast("Couldn't move it: " + err.message); }
+            }
+
+            async function saveVersionFlow(id) {
+                const label = await ask({
+                    title: "Save a version",
+                    message: "Give this version a short name so you can find it later. You can leave it blank.",
+                    label: "Version name",
+                    value: "",
+                    placeholder: "e.g. Before client review",
+                    ok: "Save version",
+                });
+                if (label === null) return;
+                try {
+                    await api(`/api/project/${encodeURIComponent(id)}/backup`, "POST", { label: label.trim() });
+                    toast("Version saved");
+                    loadProjects();
+                } catch (err) { toast("Couldn't save a version: " + err.message); }
+            }
+
+            async function preview(id, btn) {
+                const original = btn.textContent;
+                btn.textContent = "Preparing…";
+                btn.classList.add("is-busy");
+                try {
+                    const data = await api(`/api/project/${encodeURIComponent(id)}/preview`, "GET");
+                    window.open(data.url, "_blank");
+                } catch (err) {
+                    toast("Couldn't open the preview: " + err.message);
+                }
+                btn.textContent = original;
+                btn.classList.remove("is-busy");
+            }
+
+            // ── Versions panel ───────────────────────────────────────────────
+            let panelReturnFocus = null;
+            function openPanel(storyId, trigger) {
+                state.panelStoryId = storyId;
+                panelReturnFocus = trigger || null;
+                renderPanel();
+                $("scrim").classList.add("is-open");
+                $("panel").classList.add("is-open");
+                $("panel").setAttribute("aria-hidden", "false");
+                setTimeout(() => $("panelClose").focus(), 50);
+            }
+            function closePanel() {
+                state.panelStoryId = null;
+                $("scrim").classList.remove("is-open");
+                $("panel").classList.remove("is-open");
+                $("panel").setAttribute("aria-hidden", "true");
+                if (panelReturnFocus && document.body.contains(panelReturnFocus)) panelReturnFocus.focus();
+            }
+            $("panelClose").addEventListener("click", closePanel);
+            $("scrim").addEventListener("click", closePanel);
+            $("panelSave").addEventListener("click", () => state.panelStoryId && saveVersionFlow(state.panelStoryId));
+
+            function renderPanel() {
+                const p = model.byId[state.panelStoryId];
+                if (!p) return closePanel();
+                $("panelClient").textContent = p.client || "No client";
+                $("panelTitle").textContent = p.title;
+                const versions = model.versions[p.id] || [];
+                const list = $("panelList");
+                list.innerHTML = `
+                    <li class="version version--current">
+                        <span class="version__dot" aria-hidden="true"></span>
+                        <div class="version__body">
+                            <div class="version__label">Current version</div>
+                            <div class="version__when">Edited ${esc(timeAgo(p.last_saved))} · this is what Open edits</div>
+                        </div>
+                    </li>` +
+                    (versions.length ? versions.map((v) => `
+                    <li class="version">
+                        <span class="version__dot" aria-hidden="true"></span>
+                        <div class="version__body">
+                            <div class="version__label">${esc(v.note || "Saved version")}</div>
+                            <div class="version__when">Saved ${esc(fullDate(v.backed_up_at || v.last_saved))}</div>
+                        </div>
+                        <button class="btn btn--outline btn--sm" data-view="${esc(v.id)}">View</button>
+                        <button class="btn btn--ghost btn--sm version__restore" data-restore="${esc(v.id)}">Restore</button>
+                    </li>`).join("") : `<li class="panel__empty">No saved versions yet.</li>`);
+
+                list.querySelectorAll("[data-view]").forEach((b) =>
+                    b.addEventListener("click", () => preview(b.dataset.view, b)));
+                list.querySelectorAll("[data-restore]").forEach((b) =>
+                    b.addEventListener("click", () => restore(p, model.byId[b.dataset.restore])));
+            }
+
+            async function restore(p, v) {
+                if (!v) return;
+                const ok = await ask({
+                    title: "Restore this version?",
+                    message: `“${v.note || "Saved version"}” from ${fullDate(v.backed_up_at || v.last_saved)} will become the current story. What's there now will be saved as a version first, so you can always go back.`,
+                    ok: "Restore",
+                });
+                if (ok === null) return;
+                try {
+                    await api(`/api/project/${encodeURIComponent(p.id)}/restore`, "POST", { versionId: v.id });
+                    toast("Version restored");
+                    loadProjects();
+                } catch (err) { toast("Couldn't restore: " + err.message); }
+            }
+
+            // ── Ask dialog (text input or confirm) ───────────────────────────
+            // Electron doesn't support window.prompt, so all questions use this.
+            let askResolve = null;
+            let askReturnFocus = null;
+            function ask({ title, message, label, value, placeholder, ok }) {
+                askReturnFocus = document.activeElement;
+                $("askTitle").textContent = title;
+                $("askMessage").textContent = message || "";
+                $("askMessage").hidden = !message;
+                const hasInput = label != null;
+                $("askField").hidden = !hasInput;
+                $("askLabel").textContent = label || "";
+                $("askInput").value = value || "";
+                $("askInput").placeholder = placeholder || "";
+                $("askOk").textContent = ok || "OK";
+                $("askModal").classList.add("is-open");
+                setTimeout(() => (hasInput ? $("askInput") : $("askOk")).focus(), 30);
+                return new Promise((resolve) => {
+                    askResolve = (val) => {
+                        $("askModal").classList.remove("is-open");
+                        askResolve = null;
+                        if (askReturnFocus && document.body.contains(askReturnFocus)) askReturnFocus.focus();
+                        resolve(val === null ? null : hasInput ? val : true);
+                    };
+                });
+            }
+            $("askOk").addEventListener("click", () => askResolve && askResolve($("askInput").value));
+            $("askCancel").addEventListener("click", () => askResolve && askResolve(null));
+            $("askModal").addEventListener("click", (e) => { if (e.target === $("askModal") && askResolve) askResolve(null); });
+            $("askModal").addEventListener("keydown", (e) => {
+                if (e.key === "Escape" && askResolve) askResolve(null);
+                if (e.key === "Enter" && e.target.tagName === "INPUT" && askResolve) askResolve($("askInput").value);
+                trapTab(e, $("askModal"));
+            });
+
+            function trapTab(e, root) {
+                if (e.key !== "Tab") return;
+                const f = Array.from(root.querySelectorAll('button, [href], input, summary, [tabindex]:not([tabindex="-1"])'))
+                    .filter((el) => !el.disabled && el.offsetParent !== null);
+                if (!f.length) return;
+                const first = f[0], last = f[f.length - 1];
+                if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+                else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+            }
+
+            // ── New story ────────────────────────────────────────────────────
+            let newReturnFocus = null;
+            function openNewModal() {
+                newReturnFocus = document.activeElement;
+                const clients = [...new Set(state.projects.map((p) => (p.client || "").trim()).filter(Boolean))].sort();
+                $("clientList").innerHTML = clients.map((c) => `<option value="${esc(c)}"></option>`).join("");
+                $("newModal").classList.add("is-open");
+                setTimeout(() => $("newTitle").focus(), 30);
+            }
+            function closeNewModal() {
+                $("newModal").classList.remove("is-open");
+                $("newError").style.display = "none";
+                if (newReturnFocus) newReturnFocus.focus();
+            }
+            $("newStoryBtn").addEventListener("click", openNewModal);
+            $("newCancel").addEventListener("click", closeNewModal);
+            $("newCreate").addEventListener("click", createProject);
+            $("newModal").addEventListener("click", (e) => { if (e.target === $("newModal")) closeNewModal(); });
+            $("newModal").addEventListener("keydown", (e) => {
+                if (e.key === "Escape") closeNewModal();
+                if (e.key === "Enter" && e.target.tagName === "INPUT") createProject();
+                trapTab(e, $("newModal"));
+            });
+
+            let idEdited = false;
+            $("newId").addEventListener("input", () => { idEdited = true; });
+            $("newTitle").addEventListener("input", function () {
+                if (idEdited) return;
+                const slug = this.value.toLowerCase().replace(/[^a-z0-9\s-]/g, "").trim().replace(/\s+/g, "-");
+                $("newId").value = slug ? `${slug}-${new Date().getFullYear()}` : "";
+            });
+
+            function showNewError(msg) {
+                const el = $("newError");
+                el.textContent = msg;
+                el.style.display = "block";
+            }
+
+            async function createProject() {
+                const title = $("newTitle").value.trim();
+                const id = $("newId").value.trim();
+                if (!title) return showNewError("Please give the story a title.");
+                if (!/^[a-z0-9-]+$/.test(id)) {
+                    $("newModal").querySelector("details.more").open = true;
+                    return showNewError("The web address name can only use lowercase letters, numbers and hyphens.");
+                }
+                if (state.projects.some((p) => p.id === id)) {
+                    $("newModal").querySelector("details.more").open = true;
+                    return showNewError("That web address name is already used by another story. Please pick a different one.");
+                }
+                try {
+                    await api("/api/project/create", "POST", {
+                        id,
+                        title,
+                        client: $("newClient").value.trim(),
+                        accent_color: $("newAccent").value,
+                        accent_color_2: $("newAccent2").value,
+                    });
+                    window.location.href = `/edit/${encodeURIComponent(id)}`;
+                } catch (err) {
+                    showNewError(err.message);
+                }
+            }
+
+            // ── Open by ID ───────────────────────────────────────────────────
+            $("openByIdBtn").addEventListener("click", async () => {
+                const id = await ask({ title: "Open a story by its ID", label: "Story ID", value: "", placeholder: "e.g. oceans-2026", ok: "Open" });
+                if (id && id.trim()) window.location.href = `/edit/${encodeURIComponent(id.trim())}`;
+            });
+
+            // ── Kind pills, tabs, search, keys ───────────────────────────────
+            document.querySelectorAll(".kind").forEach((b) => b.addEventListener("click", () => {
+                state.kind = b.dataset.kind;
+                document.querySelectorAll(".kind").forEach((x) => {
+                    const on = x === b;
+                    x.classList.toggle("is-active", on);
+                    x.setAttribute("aria-pressed", String(on));
+                });
+                $("guideNote").hidden = state.kind !== "graduation-guide";
+                $("newStoryBtn").style.display = state.kind === "graduation-guide" ? "none" : "";
+                render();
+            }));
+            document.querySelectorAll(".tab").forEach((b) => b.addEventListener("click", () => {
+                state.tab = b.dataset.tab;
+                document.querySelectorAll(".tab").forEach((x) => {
+                    const on = x === b;
+                    x.classList.toggle("is-active", on);
+                    x.setAttribute("aria-selected", String(on));
+                });
+                render();
+            }));
+            $("search").addEventListener("input", (e) => { state.query = e.target.value; render(); });
+
+            document.addEventListener("keydown", (e) => {
+                if (e.key === "Escape" && state.panelStoryId && !askResolve) closePanel();
+                if (e.key === "Tab" && state.panelStoryId && !askResolve) trapTab(e, $("panel"));
+                if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "f") { e.preventDefault(); $("search").focus(); }
+            });
 
             loadProjects();
         </script>

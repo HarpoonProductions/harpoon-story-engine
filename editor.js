@@ -220,6 +220,8 @@ app.get("/api/projects", async (req, res) => {
               accent_color: meta.accent_color || "#1A3F6F",
               folder: meta.folder || "",
               backup_of: meta.backup_of || "",
+              backed_up_at: meta.backed_up_at || "",
+              note: meta.note || "",
             };
           });
       }
@@ -413,44 +415,94 @@ app.post("/api/project/create", async (req, res) => {
   }
 });
 
-// ── Backup a project ──────────────────────────────────────────────
-// Deep-copies the current content into a new project row tagged
-// meta.folder = "backups". The copy is independent — no sync.
+// ── Versions (backups) of a project ──────────────────────────────
+// A version is a deep copy of a story saved as its own project row,
+// tagged meta.folder = "backups" and meta.backup_of = <story id>. The
+// home screen shows these as a story's "Versions" rather than as cards.
 
-app.post("/api/project/:id/backup", async (req, res) => {
-  const { id } = req.params;
+async function readContent(id) {
+  if (db.isConfigured()) return db.getProject(id);
+  const p = path.join(PROJECTS_DIR, id, "content.json");
+  if (!fs.existsSync(p)) return null;
+  return JSON.parse(fs.readFileSync(p, "utf8"));
+}
+
+async function writeContent(id, content) {
+  if (db.isConfigured()) return db.saveProject(id, content);
+  const p = path.join(PROJECTS_DIR, id, "content.json");
+  fs.writeFileSync(p, JSON.stringify(content, null, 2), "utf8");
+}
+
+async function saveVersion(id, label) {
+  const original = await readContent(id);
+  if (!original) {
+    const err = new Error("Project not found");
+    err.status = 404;
+    throw err;
+  }
   const now = new Date();
-  const stamp = now.toISOString().replace(/[-:T]/g, "").slice(0, 12); // YYYYMMDDHHmm
+  const stamp = now.toISOString().replace(/[-:T.]/g, "").slice(0, 17); // YYYYMMDDHHmmssSSS
   const backupId = `${id}--bak-${stamp}`;
 
+  const copy = JSON.parse(JSON.stringify(original));
+  if (!copy.meta) copy.meta = {};
+  copy.meta.project_id = backupId;
+  copy.meta.folder = "backups";
+  copy.meta.backup_of = id;
+  copy.meta.backed_up_at = now.toISOString();
+  copy.meta.last_saved = now.toISOString();
+  if (label) copy.meta.note = label;
+  else delete copy.meta.note;
+
+  if (db.isConfigured()) {
+    await db.createProject(backupId, copy);
+  } else {
+    const backupDir = path.join(PROJECTS_DIR, backupId);
+    fs.mkdirSync(backupDir, { recursive: true });
+    fs.writeFileSync(path.join(backupDir, "content.json"), JSON.stringify(copy, null, 2), "utf8");
+  }
+  return backupId;
+}
+
+// POST body (optional): { label: "Before client review" }
+app.post("/api/project/:id/backup", async (req, res) => {
   try {
-    let original;
-    if (db.isConfigured()) {
-      original = await db.getProject(id);
-    } else {
-      const p = path.join(PROJECTS_DIR, id, "content.json");
-      original = JSON.parse(fs.readFileSync(p, "utf8"));
-    }
-    if (!original) return res.status(404).json({ error: "Project not found" });
-
-    // Deep copy and tag as backup
-    const copy = JSON.parse(JSON.stringify(original));
-    if (!copy.meta) copy.meta = {};
-    copy.meta.project_id = backupId;
-    copy.meta.folder     = "backups";
-    copy.meta.backup_of  = id;
-    copy.meta.backed_up_at = now.toISOString();
-    copy.meta.last_saved   = now.toISOString();
-
-    if (db.isConfigured()) {
-      await db.createProject(backupId, copy);
-    } else {
-      const backupDir = path.join(PROJECTS_DIR, backupId);
-      fs.mkdirSync(backupDir, { recursive: true });
-      fs.writeFileSync(path.join(backupDir, "content.json"), JSON.stringify(copy, null, 2), "utf8");
-    }
-
+    const label = String((req.body && req.body.label) || "").trim().slice(0, 120);
+    const backupId = await saveVersion(req.params.id, label);
     res.json({ ok: true, backupId });
+  } catch (err) {
+    res.status(err.status || 500).json({ error: err.message });
+  }
+});
+
+// Bring a saved version back as the story's current content.
+// The current content is saved as a version first, so nothing is lost.
+// POST body: { versionId }
+app.post("/api/project/:id/restore", async (req, res) => {
+  const { id } = req.params;
+  const versionId = req.body && req.body.versionId;
+  if (!versionId) return res.status(400).json({ error: "versionId is required" });
+  try {
+    const [current, version] = await Promise.all([readContent(id), readContent(versionId)]);
+    if (!current) return res.status(404).json({ error: "Project not found" });
+    if (!version) return res.status(404).json({ error: "Version not found" });
+
+    const safetyId = await saveVersion(id, "Before restoring an older version");
+
+    const restored = JSON.parse(JSON.stringify(version));
+    if (!restored.meta) restored.meta = {};
+    restored.meta.project_id = id;
+    delete restored.meta.backup_of;
+    delete restored.meta.backed_up_at;
+    // Keep where the story lives and its note as they are now.
+    const curMeta = current.meta || {};
+    if (curMeta.folder) restored.meta.folder = curMeta.folder;
+    else delete restored.meta.folder;
+    if (curMeta.note) restored.meta.note = curMeta.note;
+    else delete restored.meta.note;
+
+    await writeContent(id, restored);
+    res.json({ ok: true, savedCurrentAs: safetyId });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
