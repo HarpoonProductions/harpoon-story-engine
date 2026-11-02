@@ -1,0 +1,196 @@
+/*
+ * Story Engine editor — readability theme
+ * ─────────────────────────────────────────────────────────────────────
+ * Loaded after editor.html's own <style>, so these rules win on order.
+ * It is a re-skin only: no layout, markup or behaviour changes.
+ *
+ *  - Harpoon navy and yellow (from the app icon), matching the home screen.
+ *  - Bigger, sentence-case, sans-serif text in place of tiny all-caps mono.
+ *  - Clearer buttons and fields with real hit areas.
+ *
+ * To roll back, delete the <link> to this file in editor.html.
+ */
+
+:root {
+    --navy: #081041;
+    --navy-2: #1d2a6b;
+    --yellow: #eac654;
+    --accent: var(--navy);
+    --ink-3: #5f5d57;              /* was #7a7870: too faint for small text */
+    --rule: rgba(26, 25, 22, 0.14);
+    --font-code: "SF Mono", "Fira Code", "Roboto Mono", monospace;
+    /* Everything that used the mono stack now reads in the body face. */
+    --font-mono: var(--font-body);
+    --toolbar-h: 60px;
+    --preview-toolbar-h: 46px;
+    --sidebar-w: 380px;
+}
+
+/* rem-based sizes all over the editor (and in its scripts) scale with this. */
+html { font-size: 16px; }
+html, body { font-size: 15px; line-height: 1.5; }
+
+/* No more shouting: sentence case, normal tracking, everywhere in the UI. */
+body *:not(.css-override__editor) {
+    text-transform: none !important;
+    letter-spacing: normal !important;
+}
+
+:focus-visible { outline: 3px solid var(--yellow); outline-offset: 2px; }
+
+/* ── Top bar ─────────────────────────────────────────────────────── */
+.toolbar {
+    background: var(--navy);
+    color: #fff;
+    border-bottom: 4px solid var(--yellow);
+    gap: 0.75rem;
+}
+.toolbar__back {
+    display: inline-flex; align-items: center; gap: 10px;
+    font-size: 15px; font-weight: 500; color: #dfe2ef;
+}
+.toolbar__back::before {
+    content: ""; width: 34px; height: 34px; flex: 0 0 auto;
+    background: url("/editor/harpoon-roundel.png") center / contain no-repeat;
+}
+.toolbar__back:hover { color: #fff; }
+.toolbar__sep { background: rgba(255, 255, 255, 0.25); height: 22px; }
+.toolbar__project { font-size: 16px; font-weight: 600; color: #fff; }
+.toolbar__status { font-size: 14px; color: #c9cde0; }
+.status-dot { width: 9px; height: 9px; }
+
+.tbtn {
+    height: 38px; padding: 0 14px; border-radius: 8px;
+    font-size: 14px; font-weight: 600;
+    display: inline-flex; align-items: center; gap: 6px;
+}
+.tbtn--ghost {
+    border: 1px solid rgba(255, 255, 255, 0.35); color: #fff; background: transparent;
+}
+.tbtn--ghost:hover { border-color: #fff; color: #fff; background: rgba(255, 255, 255, 0.08); }
+.tbtn--stage {
+    border: 1px solid #fff; color: #fff; background: transparent;
+}
+.tbtn--stage:hover { border-color: #fff; background: rgba(255, 255, 255, 0.12); }
+.tbtn--publish,
+.tbtn--publish:hover {
+    background: var(--yellow); border: 1px solid var(--yellow); color: var(--navy);
+}
+.tbtn--publish:hover { background: #f1d16c; }
+
+/* Buttons inside the panels (not the navy bar) keep a light outline. */
+.sidebar .tbtn--ghost, .preview .tbtn--ghost {
+    border-color: var(--rule); color: var(--ink-2);
+}
+.sidebar .tbtn--ghost:hover, .preview .tbtn--ghost:hover {
+    border-color: var(--navy); color: var(--navy); background: #f0f1f7;
+}
+
+/* ── Sidebar ─────────────────────────────────────────────────────── */
+.sidebar__tab {
+    padding: 14px 6px; font-size: 15px; font-weight: 500; color: var(--ink-2);
+    border-bottom-width: 3px;
+}
+.sidebar__tab.is-active { color: var(--navy); font-weight: 600; background: #fff; border-bottom-color: var(--navy); }
+
+.tab-panel.is-active:not(#tab-sections) { padding: 20px; }
+.section-rail-pane { padding: 14px 16px; }
+.section-editor-pane { padding: 0 20px 28px; }
+
+.form-group { margin-bottom: 18px; }
+.form-label {
+    font-size: 14px; font-weight: 600; color: var(--ink); margin-bottom: 6px;
+}
+.form-input, .form-select {
+    min-height: 40px; font-size: 15px; padding: 8px 10px;
+    background: #fff; border: 1px solid #d6d2c9; border-radius: 8px;
+}
+.form-textarea {
+    font-size: 15px; padding: 10px; line-height: 1.55;
+    background: #fff; border: 1px solid #d6d2c9; border-radius: 8px;
+}
+.form-input:focus, .form-textarea:focus, .form-select:focus {
+    border-color: var(--navy); outline: 3px solid rgba(234, 198, 84, 0.6); outline-offset: 0;
+}
+.form-hint { font-size: 13px; color: var(--ink-3); margin-top: 6px; }
+.form-section-title {
+    font-size: 17px !important; font-weight: 600; color: var(--ink) !important;
+    margin-top: 8px;
+}
+.form-color-row { grid-template-columns: 40px 1fr; gap: 8px; }
+.form-color-swatch { width: 40px; height: 40px; border-radius: 8px; }
+.toggle { width: 40px; height: 22px; }
+.toggle__track { border-radius: 11px; }
+.toggle__track::after { width: 16px; height: 16px; }
+.toggle input:checked ~ .toggle__track::after { transform: translateX(18px); }
+
+/* Section list */
+.section-item { padding: 10px 10px; border-radius: 8px; gap: 10px; }
+.section-item.is-active { background: #eef0f7; border-color: #c9cde0; }
+.section-item__num { font-size: 13px; font-weight: 600; color: var(--navy); width: 22px; }
+.section-item__label { font-size: 15px; color: var(--ink); }
+.section-item__layout { font-size: 12px; color: var(--ink-3); }
+.section-item__move button { font-size: 12px; padding: 2px 5px; }
+.add-section-btn {
+    margin-top: 10px; padding: 12px; border-radius: 8px;
+    font-size: 15px; font-weight: 600; color: var(--navy); border: 1px dashed #b9bdd2;
+}
+.add-section-btn:hover { background: #f0f1f7; border-color: var(--navy); color: var(--navy); }
+
+.section-editor-title { font-size: 18px; font-weight: 600; color: var(--ink); }
+.section-delete {
+    padding: 6px 12px; font-size: 13px; border-radius: 8px; opacity: 1;
+    border-color: rgba(192, 57, 43, 0.4);
+}
+.coming-note { font-size: 14px; border-left-color: var(--yellow); }
+.group-members-item { font-size: 14px; }
+.group-members-item__id { font-size: 13px; }
+
+/* Code stays monospaced. */
+.css-override__editor { font-family: var(--font-code); font-size: 13px; }
+
+/* ── Preview area ────────────────────────────────────────────────── */
+.preview__toolbar { padding: 0 16px; }
+.preview__label { font-size: 14px; color: var(--ink-2); }
+.viewport-select { font-size: 14px; padding: 6px 8px; border-radius: 8px; }
+.viewport__hint, .device-hint { font-size: 12px; }
+
+/* ── Image fields (styles injected by image-field.js; .sidebar wins on specificity) ── */
+.sidebar .img-upload-btn {
+    font-size: 14px; font-weight: 600; padding: 0 12px; min-height: 40px;
+    border-radius: 8px; color: var(--navy); background: #fff; border: 1px solid #b9bdd2;
+}
+.sidebar .img-upload-btn:hover { background: #f0f1f7; border-color: var(--navy); }
+.sidebar .focal-label { font-size: 13px; }
+.sidebar .focal-coords { font-size: 12px; }
+
+/* ── Small text set inline by the editor's scripts ──
+   Many labels are built in JavaScript with inline sizes of 8–14px.
+   Lift them to a readable minimum without touching the scripts. */
+.sidebar [style*="font-size:8px"],
+.sidebar [style*="font-size: 8px"],
+.sidebar [style*="font-size:0.6rem"],
+.sidebar [style*="font-size: 0.6rem"],
+.sidebar [style*="font-size:0.62rem"],
+.sidebar [style*="font-size: 0.62rem"],
+.sidebar [style*="font-size:0.65rem"],
+.sidebar [style*="font-size: 0.65rem"],
+.sidebar [style*="font-size:0.68rem"],
+.sidebar [style*="font-size: 0.68rem"],
+.sidebar [style*="font-size:0.7rem"],
+.sidebar [style*="font-size: 0.7rem"] {
+    font-size: 13px !important;
+}
+.sidebar [style*="font-size:0.72rem"],
+.sidebar [style*="font-size: 0.72rem"],
+.sidebar [style*="font-size:0.75rem"],
+.sidebar [style*="font-size: 0.75rem"],
+.sidebar [style*="font-size:0.8rem"],
+.sidebar [style*="font-size: 0.8rem"],
+.sidebar [style*="font-size:0.85rem"],
+.sidebar [style*="font-size: 0.85rem"] {
+    font-size: 14px !important;
+}
+.toolbar [style*="font-size"], .preview__toolbar [style*="font-size"] {
+    font-size: 14px !important;
+}
