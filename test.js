@@ -58,6 +58,33 @@ let allPassed = true;
 
 (async () => {
 
+// ── Timeline marker and line ─────────────────────────────────────
+console.log('\n── Timeline marker and line ──────────────────────────');
+{
+  const { renderTimeline } = require('./renderer/layouts/timeline');
+  const entries = [{ date: '1987', heading: 'One' }];
+
+  const plain = renderTimeline({ id: 'tl', timeline_entries: entries });
+  assertContains('Defaults to a dot marker', plain, 'data-marker="dot"');
+  assert('No inline style without settings', !/<section[^>]*style=/.test(plain));
+
+  const styled = renderTimeline({ id: 'tl', timeline_entries: entries, timeline_marker: 'triangle',
+    timeline_marker_size: 22, timeline_marker_color: '#ffcc00', timeline_line_color: 'rgb(255, 255, 255)', timeline_line_width: 99 });
+  assertContains('Triangle marker', styled, 'data-marker="triangle"');
+  assertContains('Marker size as px', styled, '--tl-marker-size:22px');
+  assertContains('Marker colour', styled, '--tl-marker-color:#ffcc00');
+  assertContains('Line colour at full strength', styled, '--tl-line-opacity:1');
+  assertContains('Line thickness clamped to 16px', styled, '--tl-line-width:16px');
+
+  const icon = renderTimeline({ id: 'tl', timeline_entries: entries, timeline_marker: 'icon', timeline_marker_icon: 'https://example.com/i.svg' });
+  assertContains('Icon marker image', icon, '<img src="https://example.com/i.svg" alt="">');
+  const noIcon = renderTimeline({ id: 'tl', timeline_entries: entries, timeline_marker: 'icon' });
+  assertContains('Icon without a URL falls back to a dot', noIcon, 'data-marker="dot"');
+
+  const hostile = renderTimeline({ id: 'tl', timeline_entries: entries, timeline_line_color: 'red;background:url(x)' });
+  assert('Unsafe colour value is dropped', !hostile.includes('background:url'));
+}
+
 // ── Print, PDF and audio coverage ────────────────────────────────
 // Every layout must say what it contains in words (renderer/readable.js),
 // or its text silently disappears from the print page, PDF and narration.

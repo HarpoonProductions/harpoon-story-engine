@@ -819,6 +819,36 @@
           "default": "left",
           "description": "Used by timeline layout. Which side the entries sit on."
         },
+        "timeline_marker": {
+          "type": "string",
+          "enum": ["dot", "triangle", "icon"],
+          "default": "dot",
+          "description": "Used by timeline layout. Shape of the marker on the line. icon uses timeline_marker_icon."
+        },
+        "timeline_marker_icon": {
+          "type": "string",
+          "description": "Used by timeline layout. Image URL for the marker when timeline_marker is icon. Shown as supplied (not recoloured)."
+        },
+        "timeline_marker_size": {
+          "type": "number",
+          "minimum": 4,
+          "maximum": 64,
+          "description": "Used by timeline layout. Marker width and height in px. Default 14."
+        },
+        "timeline_marker_color": {
+          "type": "string",
+          "description": "Used by timeline layout. Marker colour (any CSS colour). Default: the story's primary colour."
+        },
+        "timeline_line_color": {
+          "type": "string",
+          "description": "Used by timeline layout. Line colour (any CSS colour). Default: the story's primary colour at half strength."
+        },
+        "timeline_line_width": {
+          "type": "number",
+          "minimum": 1,
+          "maximum": 16,
+          "description": "Used by timeline layout. Line thickness in px. Default 2."
+        },
         "timeline_entries": {
           "type": "array",
           "items": {
