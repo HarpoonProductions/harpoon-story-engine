@@ -116,6 +116,22 @@ fs.mkdirSync(PREVIEW_DIR, { recursive: true });
 
 app.use(express.json({ limit: "10mb" }));
 
+// Note any request that takes over a second in
+// ~/Library/Logs/Story Engine/editor.log, so slow spots can be traced
+const SLOW_LOG = path.join(require("os").homedir(), "Library", "Logs", "Story Engine", "editor.log");
+app.use((req, res, next) => {
+  const started = Date.now();
+  res.on("finish", () => {
+    const ms = Date.now() - started;
+    if (ms < 1000 || process.platform !== "darwin") return;
+    try {
+      fs.mkdirSync(path.dirname(SLOW_LOG), { recursive: true });
+      fs.appendFileSync(SLOW_LOG, `${new Date().toISOString()}  ${(ms / 1000).toFixed(1)}s  ${req.method} ${req.originalUrl}\n`);
+    } catch {}
+  });
+  next();
+});
+
 // Explicit MIME types — express.static can misserve .css as octet-stream
 const mime = {
   ".html": "text/html; charset=utf-8",
@@ -1549,38 +1565,9 @@ chokidar
 
 // ── Start ─────────────────────────────────────────────────────────
 
-// Pre-render all existing projects on startup
-async function preRenderAll() {
-  if (db.isConfigured()) {
-    try {
-      const projects = await db.getAllProjectContents();
-      for (const p of projects) {
-        try {
-          const result = await renderToPreview(p.id, p.content);
-          if (result.ok) console.log(`✓  Pre-rendered ${p.id}`);
-        } catch (err) {
-          console.warn(`⚠  Could not pre-render ${p.id}:`, err.message);
-        }
-      }
-    } catch (err) {
-      console.warn("⚠  Could not load projects from Supabase:", err.message);
-    }
-  } else if (fs.existsSync(PROJECTS_DIR)) {
-    const dirs = fs.readdirSync(PROJECTS_DIR, { withFileTypes: true }).filter((e) => e.isDirectory());
-    for (const e of dirs) {
-      const result = await renderToPreview(e.name);
-      if (result.ok) console.log(`✓  Pre-rendered ${e.name}`);
-    }
-  }
-}
-
 app.listen(PORT, () => {
   console.log(`\n  Harpoon Story Engine — Editor`);
   console.log(`  http://localhost:${PORT}\n`);
-
-  // Pre-render once the editor is answering, so opening the window
-  // doesn't wait behind it
-  setTimeout(preRenderAll, 2000);
 
   // Auto-open in browser on Mac (skip when running inside Electron)
   if (!process.versions.electron) {
