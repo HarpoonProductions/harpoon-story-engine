@@ -74,17 +74,27 @@ function currentEngine() {
 
 /**
  * Which engine to freeze a story to: the main-branch commit that was live
- * when the story was last published (every publish builds from main), or,
- * for a story never published, the engine running now.
+ * the last time the story went out, whether published to stories.har.pn
+ * (every publish builds from main) or exported for a client's own site
+ * (built in the editor, which runs the latest main), whichever was later.
+ * For a story that has never gone out, the engine running now.
  */
 function suggestFreeze(content) {
-  const publishedAt = content && content.meta && content.meta.last_published_at;
-  if (publishedAt && !Number.isNaN(Date.parse(publishedAt))) {
+  const meta = (content && content.meta) || {};
+  const outings = [
+    { at: meta.last_published_at, basis: "last-published" },
+    { at: meta.last_exported_at, basis: "last-exported" },
+  ].filter((o) => o.at && !Number.isNaN(Date.parse(o.at)))
+   .sort((a, b) => Date.parse(b.at) - Date.parse(a.at));
+
+  const latest = outings[0];
+  if (latest) {
+    const before = new Date(Date.parse(latest.at)).toISOString();
     for (const branch of ["origin/main", "main"]) {
       try {
-        const sha = git(["rev-list", "-1", "--first-parent", `--before=${publishedAt}`, branch]).trim();
+        const sha = git(["rev-list", "-1", "--first-parent", `--before=${before}`, branch]).trim();
         const info = sha && describeCommit(sha);
-        if (info) return { ...info, basis: "last-published", published_at: publishedAt };
+        if (info) return { ...info, basis: latest.basis, published_at: latest.at };
       } catch {}
     }
   }
