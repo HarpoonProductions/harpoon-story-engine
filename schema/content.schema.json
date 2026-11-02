@@ -102,6 +102,16 @@
         "_groupNavDeployedAs": {
           "type": "object",
           "description": "System-managed, not user-editable. Snapshot of {title, group_label, group_role, group_id} as of this project's last successful deploy dispatch — editor.js compares against it to detect when a change would make sibling group members' already-deployed nav stale, and offer to redeploy them too."
+        },
+        "engine_freeze": {
+          "type": "object",
+          "description": "Set from the editor's Status tab. Freezes this story to the engine (renderer, CSS, JS, schema, tokens) at a given commit of this repo: the editor preview and every deploy build it with that commit's code instead of the latest, so later engine changes never reach it. Remove to unfreeze. See engine-pin.js.",
+          "required": ["commit"],
+          "properties": {
+            "commit": { "type": "string", "pattern": "^[0-9a-f]{7,40}$", "description": "Git commit of this repo whose engine builds the story" },
+            "engine_date": { "type": ["string", "null"], "description": "ISO date of that commit, for display" },
+            "frozen_at": { "type": ["string", "null"], "description": "ISO date the story was frozen" }
+          }
         }
       }
     },

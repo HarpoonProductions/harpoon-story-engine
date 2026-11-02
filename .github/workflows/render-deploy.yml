@@ -145,8 +145,23 @@ jobs:
             local PROJECT_ID="$1"
             echo "Fetching: $PROJECT_ID"
             node fetch-content.js "$PROJECT_ID"
+
+            # A frozen story (meta.engine_freeze, set from the editor's
+            # Status tab) builds with the engine it was frozen to, not
+            # this commit's — see engine-pin.js. Later steps (PDF, audio)
+            # read .engines/by-project/<id> to use the same engine.
+            local ENGINE_DIR="."
+            local PIN
+            PIN=$(node engine-pin.js commit "projects/${PROJECT_ID}/content.json")
+            if [ -n "$PIN" ]; then
+              ENGINE_DIR=$(node engine-pin.js prepare "$PIN" --projects projects)
+              echo "Frozen: $PROJECT_ID builds with engine ${PIN:0:7}"
+            fi
+            mkdir -p .engines/by-project
+            echo "$ENGINE_DIR" > ".engines/by-project/${PROJECT_ID}"
+
             echo "Rendering: $PROJECT_ID (target: $TARGET)"
-            node render.js "projects/${PROJECT_ID}/content.json" --out "dist/${PROJECT_ID}" --base "${BASE_PREFIX}${PROJECT_ID}"
+            node "${ENGINE_DIR}/render.js" "projects/${PROJECT_ID}/content.json" --out "dist/${PROJECT_ID}" --base "${BASE_PREFIX}${PROJECT_ID}"
           }
 
           if [ "$MODE" = "single" ]; then
@@ -216,13 +231,17 @@ jobs:
               continue
             fi
 
+            # Frozen stories use their own engine's PDF scripts too
+            ENGINE_DIR=$(cat ".engines/by-project/${PROJECT_ID}" 2>/dev/null || echo .)
+            [ -f "${ENGINE_DIR}/scripts/generate-pdf.js" ] || ENGINE_DIR="."
+
             echo "Generating PDF: $PROJECT_ID"
-            node scripts/generate-pdf.js "$PROJECT_ID" \
+            node "${ENGINE_DIR}/scripts/generate-pdf.js" "$PROJECT_ID" \
               --file "$PREVIEW_HTML" \
               --out "${DIR}story.pdf"
 
             echo "Post-processing for PDF/UA-1 accessibility: $PROJECT_ID"
-            python3 scripts/tag-pdf.py "${DIR}story.pdf" "${DIR}story.pdf"
+            python3 "${ENGINE_DIR}/scripts/tag-pdf.py" "${DIR}story.pdf" "${DIR}story.pdf"
 
             GENERATED=$((GENERATED + 1))
           done
@@ -341,8 +360,12 @@ jobs:
               continue
             fi
 
+            # Frozen stories use their own engine's audio script too
+            ENGINE_DIR=$(cat ".engines/by-project/${PROJECT_ID}" 2>/dev/null || echo .)
+            [ -f "${ENGINE_DIR}/scripts/generate-audio.js" ] || ENGINE_DIR="."
+
             echo "Generating audio: $PROJECT_ID"
-            OUTPUT=$(node scripts/generate-audio.js "$PROJECT_ID" \
+            OUTPUT=$(node "${ENGINE_DIR}/scripts/generate-audio.js" "$PROJECT_ID" \
               --content "$CONTENT_JSON" \
               --bucket "$S3_BUCKET" \
               --prefix "${PROJECT_ID}/")

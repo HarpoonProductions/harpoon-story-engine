@@ -247,6 +247,54 @@ for (const example of examples) {
   assertAbsent('No undefined values',         html, '>undefined<');
 }
 
+// ── Frozen engine versions (engine-pin.js) ──────────────────────
+// A story frozen to an engine commit is built from a copy of the repo at
+// that commit. Check the switch reads the freeze safely, and that a copy
+// of this very commit renders a story exactly like the live code does.
+console.log('\nFrozen engine versions');
+{
+  const enginePin = require('./engine-pin');
+  const { execFileSync } = require('child_process');
+  assert('No freeze: follows the latest engine', enginePin.pinnedCommit({ meta: {} }) === null);
+  assert('Freeze with a bad commit id is ignored', enginePin.pinnedCommit({ meta: { engine_freeze: { commit: 'main; rm -rf /' } } }) === null);
+  assert('Freeze commit id is read', enginePin.pinnedCommit({ meta: { engine_freeze: { commit: 'ABCDEF1' } } }) === 'abcdef1');
+
+  const head = enginePin.currentEngine();
+  if (!head) {
+    console.log('  – git history not available, skipping the frozen render check');
+  } else {
+    const os = require('os');
+    const tmpBase = fs.mkdtempSync(path.join(os.tmpdir(), 'hse-engine-test-'));
+    try {
+      const example = JSON.parse(fs.readFileSync(path.join(__dirname, 'examples/opera-example.json'), 'utf8'));
+      const frozen = { ...example, meta: { ...example.meta, engine_freeze: { commit: head.commit, engine_date: head.date } } };
+      assert('Current schema accepts a frozen story', validate(frozen).length === 0);
+
+      const engine = enginePin.loadEngine(head.commit, { baseDir: tmpBase });
+      assert('Frozen engine is its own copy of the code', engine.dir !== __dirname && fs.existsSync(path.join(engine.dir, 'renderer/index.js')));
+      assert('Frozen engine accepts the frozen story', engine.validate(frozen).length === 0);
+
+      const frozenOut = path.join(tmpBase, 'out-frozen');
+      const liveOut = path.join(tmpBase, 'out-live');
+      await engine.render(frozen, frozenOut, { basePath: '' });
+      await render(frozen, liveOut, { basePath: '' });
+      assert('Frozen engine copies its own CSS', fs.existsSync(path.join(frozenOut, 'css')));
+
+      // Only comparable when the engine code here is exactly that commit
+      const dirty = execFileSync('git', ['-C', __dirname, 'status', '--porcelain', '--', 'renderer', 'css', 'js', 'tokens'], { encoding: 'utf8' }).trim();
+      if (dirty) {
+        console.log('  – engine files have uncommitted changes, skipping the identical-output check');
+      } else {
+        const a = fs.readFileSync(path.join(frozenOut, 'index.html'), 'utf8');
+        const b = fs.readFileSync(path.join(liveOut, 'index.html'), 'utf8');
+        assert('Frozen copy of this commit renders identically', a === b);
+      }
+    } finally {
+      fs.rmSync(tmpBase, { recursive: true, force: true });
+    }
+  }
+}
+
 })().then(() => {
   // ── Summary ─────────────────────────────────────────────────────
   console.log(`\n${'─'.repeat(52)}`);

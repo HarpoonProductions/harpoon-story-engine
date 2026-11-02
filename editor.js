@@ -46,6 +46,7 @@ const S3_BUCKET = process.env.S3_BUCKET || "";
 const AWS_REGION =
   process.env.AWS_REGION || process.env.AWS_DEFAULT_REGION || "eu-west-2";
 const { render, renderSection } = require("./renderer/index");
+const enginePin = require("./engine-pin");
 const { resolveGroup } = require("./renderer/groups");
 
 const app = express();
@@ -69,6 +70,42 @@ const RECENT_FILE = path.join(USER_DATA, ".editor-recent.json");
 // Editor UI and schema live inside the bundle (read-only is fine)
 const EDITOR_DIR = path.join(ROOT, "editor");
 const SCHEMA_FILE = path.join(ROOT, "schema", "content.schema.json");
+
+// ── Frozen engines ────────────────────────────────────────────────
+// A story with meta.engine_freeze is built with the engine it was frozen
+// to (see engine-pin.js), in the preview as well as on publish, so what
+// the editor shows is what goes live. engineFor() returns the renderer
+// functions to use for a story; a frozen one is a copy of the code at that
+// commit, kept in <USER_DATA>/.engines/<sha>.
+
+const CURRENT_ENGINE = {
+  dir: ROOT,
+  commit: null,
+  render,
+  renderSection,
+  validate,
+  renderPdf: (...a) => require("./renderer/pdf-renderer").renderPdf(...a),
+  renderPrint: (...a) => require("./renderer/print-renderer").renderPrint(...a),
+};
+const loadedEngines = new Map();
+
+// Throws if a frozen engine can't be loaded: building a frozen story with
+// the latest engine instead would quietly show the wrong thing.
+function engineFor(content) {
+  const sha = enginePin.pinnedCommit(content);
+  if (!sha) return CURRENT_ENGINE;
+  if (!loadedEngines.has(sha)) {
+    try {
+      loadedEngines.set(sha, enginePin.loadEngine(sha, { baseDir: USER_DATA, projectsDir: PROJECTS_DIR }));
+    } catch (err) {
+      throw new Error(`Couldn't load this story's frozen engine (${sha.slice(0, 7)}): ${err.message}`);
+    }
+  }
+  return loadedEngines.get(sha);
+}
+
+// Which engine's css/ and js/ each preview was last built with
+const previewEngineDir = new Map();
 
 // Ensure directories exist
 // Only create writable directories — EDITOR_DIR is inside the bundle (read-only)
@@ -117,18 +154,24 @@ app.use("/editor", express.static(EDITOR_DIR, noCacheOpts));
 const CSS_DIR = path.join(ROOT, "css");
 const JS_DIR  = path.join(ROOT, "js");
 
-app.get(/^\/preview\/[^/]+\/css\/(.+)$/, (req, res) => {
-  const rel = req.params[0];
-  const filePath = path.join(CSS_DIR, rel);
+app.get(/^\/preview\/([^/]+)\/css\/(.+)$/, (req, res) => {
+  const rel = req.params[1];
+  const engineDir = previewEngineDir.get(req.params[0]);
+  const dir = engineDir ? path.join(engineDir, "css") : CSS_DIR;
   res.setHeader("Cache-Control", "no-store");
-  res.sendFile(filePath, (err) => { if (err) res.status(404).end(); });
+  // root keeps the request inside css/; dotfiles is needed because a
+  // frozen engine lives under .engines/
+  res.sendFile(rel, { root: dir, dotfiles: "allow" }, (err) => { if (err) res.status(404).end(); });
 });
 
-app.get(/^\/preview\/[^/]+\/js\/(.+)$/, (req, res) => {
-  const rel = req.params[0];
-  const filePath = path.join(JS_DIR, rel);
+app.get(/^\/preview\/([^/]+)\/js\/(.+)$/, (req, res) => {
+  const rel = req.params[1];
+  const engineDir = previewEngineDir.get(req.params[0]);
+  const dir = engineDir ? path.join(engineDir, "js") : JS_DIR;
   res.setHeader("Cache-Control", "no-store");
-  res.sendFile(filePath, (err) => { if (err) res.status(404).end(); });
+  // root keeps the request inside js/; dotfiles is needed because a
+  // frozen engine lives under .engines/
+  res.sendFile(rel, { root: dir, dotfiles: "allow" }, (err) => { if (err) res.status(404).end(); });
 });
 
 // Serve preview output (HTML and assets other than CSS/JS)
@@ -168,14 +211,23 @@ async function renderToPreview(projectId, contentObj) {
     }
   }
 
-  const errors = validate(content);
+  let engine;
+  try {
+    engine = engineFor(content);
+  } catch (err) {
+    return { ok: false, error: err.message };
+  }
+
+  const errors = engine.validate(content);
   if (errors.length > 0) {
     return { ok: false, errors };
   }
 
   const outDir = path.join(PREVIEW_DIR, projectId);
   try {
-    await render(content, outDir, { basePath: "" });
+    await engine.render(content, outDir, { basePath: "" });
+    if (engine.commit) previewEngineDir.set(projectId, engine.dir);
+    else previewEngineDir.delete(projectId);
     return { ok: true };
   } catch (err) {
     return { ok: false, error: err.message };
@@ -624,7 +676,7 @@ app.get("/api/project/:id/section/:index/classes", async (req, res) => {
     const section = content.sections[parseInt(req.params.index, 10)];
     if (!section) return res.status(404).json({ error: "Section not found" });
 
-    const html = renderSection(section);
+    const html = engineFor(content).renderSection(section);
 
     // Extract every class name, deduplicate, sort by prefix
     const classRe = /class="([^"]+)"/g;
@@ -1141,11 +1193,23 @@ app.get("/api/project/:id/status", async (req, res) => {
     if (last_published_at) status = 'published';
     else if (last_staged_at) status = 'staged';
 
-    res.json({ status, last_staged_at, last_published_at, last_exported_at });
+    res.json({ status, last_staged_at, last_published_at, last_exported_at, engine: engineStatus(content) });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 });
+
+// What the Status tab's "Freeze" row shows: whether the story is frozen,
+// and if not, which engine freezing it now would lock in.
+function engineStatus(content) {
+  const frozen = content.meta && content.meta.engine_freeze;
+  const commit = enginePin.pinnedCommit(content);
+  if (commit) {
+    return { frozen: true, commit, engine_date: frozen.engine_date || null, frozen_at: frozen.frozen_at || null };
+  }
+  const suggestion = enginePin.suggestFreeze(content);
+  return { frozen: false, suggestion, current: enginePin.currentEngine() };
+}
 
 // ── Export bundle ────────────────────────────────────────────────
 app.get("/api/project/:id/export", async (req, res) => {
@@ -1173,7 +1237,7 @@ app.get("/api/project/:id/export", async (req, res) => {
     // Render to a fresh temp directory
     const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), `hse-export-${projectId}-`));
     try {
-      await render(content, tmpDir, { basePath: '', canonicalUrl });
+      await engineFor(content).render(content, tmpDir, { basePath: '', canonicalUrl });
     } catch (renderErr) {
       fs.rmSync(tmpDir, { recursive: true, force: true });
       return res.status(500).json({ error: `Render failed: ${renderErr.message}` });
@@ -1401,10 +1465,9 @@ app.get("/edit/:id", (req, res) => {
 
 app.get("/pdf-preview/:id", async (req, res) => {
   try {
-    const { renderPdf } = require("./renderer/pdf-renderer");
     const content = await db.getProject(req.params.id);
     if (!content) return res.status(404).send("Story not found");
-    const html = renderPdf(content);
+    const html = engineFor(content).renderPdf(content);
     res.setHeader("Content-Type", "text/html; charset=utf-8");
     res.send(html);
   } catch (err) {
@@ -1417,10 +1480,9 @@ app.get("/pdf-preview/:id", async (req, res) => {
 
 app.get("/print/:id", async (req, res) => {
   try {
-    const { renderPrint } = require("./renderer/print-renderer");
     const content = await db.getProject(req.params.id);
     if (!content) return res.status(404).send("Story not found");
-    const html = renderPrint(content);
+    const html = engineFor(content).renderPrint(content);
     res.setHeader("Content-Type", "text/html; charset=utf-8");
     res.send(html);
   } catch (err) {
