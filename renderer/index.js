@@ -3,7 +3,7 @@
 const fs = require("fs");
 const path = require("path");
 
-const { renderHead } = require("./shell/head");
+const { renderHead, safeStyleText } = require("./shell/head");
 const { renderNav } = require("./shell/nav");
 const { renderCover } = require("./render-cover");
 
@@ -246,7 +246,7 @@ function buildPage(meta, config, cover, sections, basePath, registryLogoUrl, gro
 
   // Sections: render each, or stub if renderer not yet built
   const sectionsHtml = sections
-    .map((section) => renderSection(section))
+    .map((section) => renderSection(section, meta))
     .join("\n\n");
 
   return `${head}
@@ -333,13 +333,38 @@ function renderPrintHeader(meta, cover) {
 // Routes each section to the appropriate layout renderer.
 // Add new cases here as layout renderers are built.
 
-function renderSection(section) {
+function renderSection(section, meta) {
   const layout = section.layout || "default";
   const html = renderSectionHtml(section, layout);
   if (section.custom_css && section.custom_css.trim()) {
-    return html + `\n<style data-section-override="${esc(section.id)}">\n${section.custom_css}\n</style>`;
+    const css = sectionCss(section, meta);
+    return html + `\n<style data-section-override="${esc(section.id)}">\n${safeStyleText(css)}\n</style>`;
   }
   return html;
+}
+
+// Stories with meta.scope_section_css (every story created from Nov 2026
+// on) keep each section's CSS inside that section with @scope, so plain
+// ".hse-section-intro { … }" can't leak into the rest of the story.
+// Inside @scope a bare selector means "inside the section", so a
+// selector written the old way, "#<section-id> .x", would look for the
+// section inside itself and match nothing; scopeSelf() turns that
+// #<section-id> into :scope. Older stories are left exactly as
+// they were: their section CSS applies page-wide, and some of them rely
+// on that, so it only changes when someone turns the flag on.
+function sectionCss(section, meta) {
+  if (!meta || !meta.scope_section_css || !section.id) return section.custom_css;
+  const id = cssIdent(section.id);
+  return `@scope (#${id}) {\n${scopeSelf(section.custom_css, id)}\n}`;
+}
+
+function scopeSelf(css, id) {
+  const escaped = id.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  return css.replace(new RegExp(`#${escaped}(?![\\w-])`, "g"), ":scope");
+}
+
+function cssIdent(id) {
+  return String(id).replace(/[^a-zA-Z0-9_-]/g, (c) => "\\" + c);
 }
 
 function renderSectionHtml(section, layout) {

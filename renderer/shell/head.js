@@ -201,8 +201,27 @@ function renderHead(meta, config, title, basePath, staging, heroImageUrl, canoni
       ${accentColor  ? `--hse-accent:   ${accentColor};`  : ''}
       ${accentColor2 ? `--hse-accent-2: ${accentColor2};` : ''}
     }
-  </style>` : ''}
+  </style>` : ''}${storyCssHtml(meta.custom_css)}
 </head>`;
+}
+
+/**
+ * Story-level custom CSS (meta.custom_css). Goes last in <head> (and adds nothing, not even a blank line, when empty,
+ * so stories without it render byte-for-byte as before), so it
+ * beats the theme (token set) and the platform CSS at equal specificity;
+ * each section's own CSS is written later still, in <body>, so a section
+ * can override the story. Theme -> story -> section, last one wins.
+ */
+function storyCssHtml(css) {
+  if (!css || !String(css).trim()) return '';
+  return `\n  <!-- Story custom CSS -->\n  <style data-story-css>\n${safeStyleText(css)}\n</style>`;
+}
+
+/**
+ * Keep user CSS from closing its own <style> tag early.
+ */
+function safeStyleText(css) {
+  return String(css).replace(/<\/(style)/gi, '<\\/$1');
 }
 
 /**
@@ -233,4 +252,4 @@ function parseVideoUrl(url) {
   return { type: 'iframe', embedUrl: url };
 }
 
-module.exports = { renderHead, escHtml, resolveTokenStyle, renderPlausibleScript, parseVideoUrl };
+module.exports = { safeStyleText, storyCssHtml, renderHead, escHtml, resolveTokenStyle, renderPlausibleScript, parseVideoUrl };
