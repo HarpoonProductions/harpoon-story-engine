@@ -8,7 +8,7 @@
  * The app behaves like a native Mac application.
  */
 
-const { app, BrowserWindow, shell, Menu, dialog } = require("electron");
+const { app, BrowserWindow, shell, Menu, dialog, utilityProcess } = require("electron");
 const path = require("path");
 const http = require("http");
 
@@ -30,6 +30,8 @@ for (const envPath of envPaths) {
 const PORT = 3001;
 let mainWindow = null;
 let serverStarted = false;
+let editorProcess = null;
+let quitting = false;
 
 // ── Start the Express editor server ───────────────────────────────
 
@@ -55,19 +57,39 @@ function startServer() {
       return;
     }
 
-    // Start the editor server
+    // Start the editor server in its own process. Running it inside the
+    // app's main process froze the window (the beach ball) whenever the
+    // editor was busy, e.g. pre-rendering every story after startup.
     try {
-      require("./editor.js");
+      editorProcess = utilityProcess.fork(path.join(__dirname, "editor.js"), [], {
+        cwd: __dirname,
+        serviceName: "Story Engine editor",
+        stdio: "inherit",
+      });
     } catch (err) {
       reject(err);
       return;
     }
+    let exited = false;
+    editorProcess.once("exit", (code) => {
+      exited = true;
+      editorProcess = null;
+      if (!serverStarted) {
+        reject(new Error(`The editor stopped while starting (exit code ${code})`));
+      } else if (!quitting) {
+        dialog.showErrorBox(
+          "Story Engine stopped",
+          "The editor stopped unexpectedly. Quit the Story Engine and open it again.",
+        );
+      }
+    });
 
     // Poll until the server is responding (max 10s)
     const start = Date.now();
     const timeout = 10000;
 
     function poll() {
+      if (exited) return;
       const req = http.get(`http://localhost:${PORT}`, (res) => {
         serverStarted = true;
         resolve();
@@ -322,6 +344,8 @@ app.on("window-all-closed", () => {
 
 // Ensure Cmd+Q always quits cleanly
 app.on("before-quit", () => {
+  quitting = true;
+  if (editorProcess) editorProcess.kill();
   if (mainWindow) {
     mainWindow.removeAllListeners("close");
     mainWindow.close();
