@@ -10,6 +10,12 @@ const { escHtml } = require('../shell/head');
  *
  * Section fields:
  *   timeline_align   {string}  'left' | 'right' | 'alternate'  (default: 'left')
+ *   timeline_marker  {string}  'dot' | 'triangle' | 'icon'      (default: 'dot')
+ *   timeline_marker_icon  {string}  image URL, used when timeline_marker is 'icon'
+ *   timeline_marker_size  {number}  px (default: 12)
+ *   timeline_marker_color {string}  CSS colour (default: the story accent)
+ *   timeline_line_color   {string}  CSS colour (default: the story accent, half opacity)
+ *   timeline_line_width   {number}  px (default: 2)
  *   timeline_entries {Array}   array of entry objects:
  *     entry.date     {string}  e.g. "1987" or "March 2020"
  *     entry.heading  {string}
@@ -20,9 +26,37 @@ const { escHtml } = require('../shell/head');
  * @param {object} section
  * @returns {string} HTML
  */
+// Only plain colour values reach the inline style: hex, names, rgb()/hsl()
+// and var() — nothing that could close the declaration.
+function cssColor(value) {
+  return typeof value === 'string' && /^[#a-zA-Z0-9(),.%\s-]+$/.test(value.trim()) ? value.trim() : null;
+}
+
+function px(value, min, max) {
+  const n = Number(value);
+  return value !== '' && value != null && Number.isFinite(n) ? `${Math.min(max, Math.max(min, n))}px` : null;
+}
+
 function renderTimeline(section) {
   const entries = section.timeline_entries || [];
   const align   = section.timeline_align   || 'left';
+  const icon    = section.timeline_marker === 'icon' && section.timeline_marker_icon;
+  const marker  = icon ? 'icon' : section.timeline_marker === 'triangle' ? 'triangle' : 'dot';
+
+  // Marker and line settings become custom properties on the section;
+  // css/layouts/timeline.css falls back to the story accent for any not set.
+  const lineColor = cssColor(section.timeline_line_color);
+  const vars = [
+    ['--tl-marker-size',  px(section.timeline_marker_size, 4, 64)],
+    ['--tl-marker-color', cssColor(section.timeline_marker_color)],
+    ['--tl-line-width',   px(section.timeline_line_width, 1, 16)],
+    ['--tl-line-color',   lineColor],
+    ['--tl-line-opacity', lineColor ? '1' : null],
+  ].filter(([, v]) => v).map(([k, v]) => `${k}:${v}`).join(';');
+
+  const markerHtml = icon
+    ? `<span class="hse-tl__marker" aria-hidden="true"><img src="${escHtml(icon)}" alt=""></span>`
+    : `<span class="hse-tl__marker" aria-hidden="true"></span>`;
 
   // ── Canvas layers ────────────────────────────────────────────────
   const canvasHtml = entries.map((entry, i) => {
@@ -70,7 +104,7 @@ function renderTimeline(section) {
     return `<div class="hse-tl__entry" data-index="${i}" data-side="${escHtml(side)}">
       ${thumbHtml}
       <div class="hse-tl__entry-inner">
-        <div class="hse-tl__dot" aria-hidden="true"></div>
+        ${markerHtml}
         ${entry.date    ? `<span class="hse-tl__date">${escHtml(entry.date)}</span>` : ''}
         ${entry.heading ? `<h3 class="hse-tl__heading">${escHtml(entry.heading)}</h3>` : ''}
         ${entry.body    ? `<p class="hse-tl__body">${escHtml(entry.body)}</p>` : ''}
@@ -83,6 +117,8 @@ function renderTimeline(section) {
   id="${escHtml(section.id)}"
   data-layout="timeline"
   data-align="${escHtml(align)}"
+  data-marker="${marker}"${vars ? `
+  style="${escHtml(vars)}"` : ''}
   data-entry-count="${entries.length}">
 
   <!-- Sticky image/video canvas (desktop) -->

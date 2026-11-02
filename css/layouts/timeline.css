@@ -5,6 +5,14 @@
 .hse-section--timeline {
   position: relative;
   background: var(--hse-ink);
+
+  /* Spine and marker geometry. The marker is centred on the spine by
+     construction: both are placed from --tl-spine-inset (left/right) or
+     50% (alternate), and the text panel sits --tl-gap away from it.
+     Size, colour and thickness can be overridden per section from the
+     editor (renderer/layouts/timeline.js sets them inline). */
+  --tl-spine-inset: calc(var(--hse-page-pad) + 0.5rem);
+  --tl-gap: 2rem;
 }
 
 /* ── Sticky canvas (desktop) ─────────────────────────────────────── */
@@ -75,20 +83,20 @@
   position: absolute;
   top: 0;
   bottom: 0;
-  width: 2px;
+  width: var(--tl-line-width, 2px);
   background: linear-gradient(
     to bottom,
     transparent 0%,
-    var(--hse-accent) 4%,
-    var(--hse-accent) 96%,
+    var(--tl-line-color, var(--hse-accent)) 4%,
+    var(--tl-line-color, var(--hse-accent)) 96%,
     transparent 100%
   );
-  opacity: 0.5;
+  opacity: var(--tl-line-opacity, 0.5);
 }
 
-[data-align="left"]      .hse-tl__spine { left: calc(var(--hse-page-pad) + 0.35rem); }
-[data-align="right"]     .hse-tl__spine { right: calc(var(--hse-page-pad) + 0.35rem); left: auto; }
-[data-align="alternate"] .hse-tl__spine { left: 50%; transform: translateX(-1px); }
+[data-align="left"]      .hse-tl__spine { left:  calc(var(--tl-spine-inset) - var(--tl-line-width, 2px) / 2); }
+[data-align="right"]     .hse-tl__spine { right: calc(var(--tl-spine-inset) - var(--tl-line-width, 2px) / 2); left: auto; }
+[data-align="alternate"] .hse-tl__spine { left: 50%; transform: translateX(-50%); }
 
 /* ── Entry ───────────────────────────────────────────────────────── */
 
@@ -124,52 +132,74 @@
   transform: translateY(0);
 }
 
-/* Horizontal placement — clear of the spine */
-[data-align="left"]  .hse-tl__entry-inner { margin-left: calc(var(--hse-page-pad) + 2rem); }
-[data-align="right"] .hse-tl__entry-inner { margin-right: calc(var(--hse-page-pad) + 2rem); }
+/* Horizontal placement — --tl-gap clear of the spine */
+[data-align="left"]  .hse-tl__entry-inner { margin-left:  calc(var(--tl-spine-inset) + var(--tl-gap)); }
+[data-align="right"] .hse-tl__entry-inner { margin-right: calc(var(--tl-spine-inset) + var(--tl-gap)); }
 
-[data-align="alternate"] .hse-tl__entry[data-side="left"]  .hse-tl__entry-inner {
-  margin-left: var(--hse-page-pad);
-  margin-right: 0;
-  max-width: calc(50% - 3.5rem);
-  padding-right: 1.5rem;
+/* Alternate: a fixed width puts the panel's inner edge exactly --tl-gap
+   from the centre spine (a max-width would shrink to the text and leave
+   the marker floating). */
+[data-align="alternate"] .hse-tl__entry[data-side] .hse-tl__entry-inner {
+  box-sizing: border-box;
+  width: calc(50% - var(--hse-page-pad) - var(--tl-gap));
+  max-width: none;
 }
-[data-align="alternate"] .hse-tl__entry[data-side="right"] .hse-tl__entry-inner {
-  margin-right: var(--hse-page-pad);
-  margin-left: 0;
-  max-width: calc(50% - 3.5rem);
-  padding-left: 1.5rem;
-}
+[data-align="alternate"] .hse-tl__entry[data-side="left"]  .hse-tl__entry-inner { margin: 0 0 0 var(--hse-page-pad); }
+[data-align="alternate"] .hse-tl__entry[data-side="right"] .hse-tl__entry-inner { margin: 0 var(--hse-page-pad) 0 0; }
 
-/* ── Dot (sits on the spine) ─────────────────────────────────────── */
+/* ── Marker (sits on the spine) ──────────────────────────────────── */
 
-.hse-tl__dot {
+.hse-tl__marker {
   position: absolute;
-  width: 10px;
-  height: 10px;
+  top: 0.55rem; /* level with the date label */
+  width: var(--tl-marker-size, 14px);
+  height: var(--tl-marker-size, 14px);
+  box-sizing: border-box;
+  translate: -50% -50%;
+  transition: background 0.3s, scale 0.3s, opacity 0.3s;
+}
+
+/* x-position: --tl-gap back from the panel edge that faces the spine */
+[data-align="left"]  .hse-tl__marker,
+[data-align="alternate"] [data-side="right"] .hse-tl__marker { left: calc(-1 * var(--tl-gap)); }
+[data-align="right"] .hse-tl__marker,
+[data-align="alternate"] [data-side="left"] .hse-tl__marker  { left: auto; right: calc(-1 * var(--tl-gap)); translate: 50% -50%; }
+
+/* Dot — hollow until its entry is in view */
+[data-marker="dot"] .hse-tl__marker {
   border-radius: 50%;
   background: var(--hse-ink);
-  border: 2px solid var(--hse-accent);
-  top: 0.2rem; /* aligns with the date label */
-  transition: background 0.3s, transform 0.3s;
+  border: 2px solid var(--tl-marker-color, var(--hse-accent));
+}
+[data-marker="dot"] .is-visible .hse-tl__marker {
+  background: var(--tl-marker-color, var(--hse-accent));
+  scale: 1.25;
 }
 
-.hse-tl__entry.is-visible .hse-tl__dot {
-  background: var(--hse-accent);
-  transform: scale(1.25);
+/* Triangle — points at its text */
+[data-marker="triangle"] .hse-tl__marker {
+  background: var(--tl-marker-color, var(--hse-accent));
+  clip-path: polygon(0 0, 100% 50%, 0 100%);
+  opacity: 0.5;
+}
+[data-align="right"][data-marker="triangle"] .hse-tl__marker,
+[data-align="alternate"][data-marker="triangle"] [data-side="left"] .hse-tl__marker {
+  clip-path: polygon(100% 0, 0 50%, 100% 100%);
 }
 
-/* Dot x-position mirrors the spine */
-[data-align="left"]  .hse-tl__entry-inner .hse-tl__dot { left: calc(-2rem - 5px); }
-[data-align="right"] .hse-tl__entry-inner .hse-tl__dot { right: calc(-2rem - 5px); left: auto; }
-
-[data-align="alternate"] .hse-tl__entry[data-side="left"]  .hse-tl__entry-inner .hse-tl__dot {
-  right: calc(-1.5rem - 5px);
-  left: auto;
+/* Custom icon — any image; shown as supplied */
+[data-marker="icon"] .hse-tl__marker { opacity: 0.55; }
+.hse-tl__marker img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
 }
-[data-align="alternate"] .hse-tl__entry[data-side="right"] .hse-tl__entry-inner .hse-tl__dot {
-  left: calc(-1.5rem - 5px);
-  right: auto;
+
+[data-marker="triangle"] .is-visible .hse-tl__marker,
+[data-marker="icon"] .is-visible .hse-tl__marker {
+  opacity: 1;
+  scale: 1.2;
 }
 
 /* ── Typography ──────────────────────────────────────────────────── */
@@ -219,7 +249,7 @@
 
   /* Spine: thin left-edge line */
   .hse-tl__spine {
-    left: calc(var(--hse-page-pad) + 0.35rem) !important;
+    left: calc(var(--tl-spine-inset) - var(--tl-line-width, 2px) / 2) !important;
     right: auto !important;
     transform: none !important;
   }
@@ -253,20 +283,26 @@
     background: rgba(0,0,0,0.3) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' width='40' height='40'%3E%3Cpolygon points='8,5 19,12 8,19' fill='rgba(255,255,255,0.8)'/%3E%3C/svg%3E") center / 40px no-repeat;
   }
 
-  /* Text inner — full width, left-aligned, enough left pad for spine+dot */
+  /* Text inner — full width, left-aligned, --tl-gap right of the spine
+     (the entry's own padding already supplies --hse-page-pad) */
   .hse-tl__entry-inner {
+    width: auto !important;
     max-width: 100% !important;
-    margin-left: calc(var(--hse-page-pad) + 2rem) !important;
+    margin-left: calc(var(--tl-spine-inset) + var(--tl-gap) - var(--hse-page-pad)) !important;
     margin-right: 0 !important;
     padding: 0 !important;
     opacity: 1 !important;
     transform: none !important;
   }
 
-  /* Dot — back on the left spine */
-  .hse-tl__dot {
-    left: calc(-2rem - 5px) !important;
+  /* Marker — back on the left spine, triangles pointing right */
+  .hse-tl__marker {
+    left: calc(-1 * var(--tl-gap)) !important;
     right: auto !important;
+    translate: -50% -50% !important;
+  }
+  [data-marker="triangle"] .hse-tl__marker {
+    clip-path: polygon(0 0, 100% 50%, 0 100%) !important;
   }
 
   /* First entry: add breathing room at top */

@@ -1994,6 +1994,11 @@
                                     </select>
                                   </div>
                                   <div class="form-group">
+                                    <label class="form-label">Marker &amp; line</label>
+                                    <p class="form-hint">Leave a field blank to use the default (the story's primary colour).</p>
+                                    <div id="tlStyle" style="display:flex;flex-direction:column;gap:0.5rem"></div>
+                                  </div>
+                                  <div class="form-group">
                                     <label class="form-label">Entries</label>
                                     <p class="form-hint">Each entry shows as the user scrolls past it. Add a date, heading, body text and a background image or video.</p>
                                     <div id="timelineList"></div>
@@ -4579,6 +4584,8 @@ function initTimelineEditor(sectionIndex) {
     scheduleAutosave();
   });
 
+  initTimelineStyle(section);
+
   if (!section.timeline_entries) section.timeline_entries = [{}];
 
   function renderEntries() {
@@ -4665,6 +4672,74 @@ function initTimelineEditor(sectionIndex) {
     renderEntriesAndInit();
     const inputs = list.querySelectorAll('.tl-date');
     if (inputs.length) inputs[inputs.length - 1].focus();
+  });
+}
+
+// Marker shape/size/colour and line colour/thickness. Rebuilt on every
+// call so no listeners from a previously selected section linger.
+function initTimelineStyle(section) {
+  const box = document.getElementById('tlStyle');
+  const esc = v => String(v == null ? '' : v).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
+  const hex = v => /^#[0-9a-f]{6}$/i.test(v || '') ? v : '#000000';
+  const row = 'display:grid;grid-template-columns:7rem 1fr;align-items:center;gap:0.5rem';
+  const label = 'font-family:var(--font-mono);font-size:0.6rem;letter-spacing:0.08em;text-transform:uppercase;color:var(--ink-3)';
+  const marker = section.timeline_marker || 'dot';
+
+  const colourRow = (key, text) => `
+    <div style="${row}">
+      <span style="${label}">${text}</span>
+      <div class="form-color-row">
+        <input type="color" class="form-color-swatch" data-swatch="${key}" value="${hex(section[key])}" aria-label="${text} picker">
+        <input class="form-input" data-key="${key}" placeholder="Default" value="${esc(section[key])}">
+      </div>
+    </div>`;
+  const numberRow = (key, text, min, max, def) => `
+    <div style="${row}">
+      <span style="${label}">${text}</span>
+      <input class="form-input" type="number" data-key="${key}" data-number min="${min}" max="${max}" placeholder="${def} (default)" value="${esc(section[key])}">
+    </div>`;
+
+  box.innerHTML = `
+    <div style="${row}">
+      <span style="${label}">Marker</span>
+      <select class="form-select" data-key="timeline_marker">
+        <option value="dot"${marker === 'dot' ? ' selected' : ''}>Dot</option>
+        <option value="triangle"${marker === 'triangle' ? ' selected' : ''}>Triangle</option>
+        <option value="icon"${marker === 'icon' ? ' selected' : ''}>Custom icon</option>
+      </select>
+    </div>
+    <div style="${row};display:${marker === 'icon' ? 'grid' : 'none'}" data-icon-row>
+      <span style="${label}">Icon URL</span>
+      <input class="form-input" data-key="timeline_marker_icon" placeholder="https://…/icon.svg" value="${esc(section.timeline_marker_icon)}">
+    </div>
+    ${numberRow('timeline_marker_size', 'Marker size px', 4, 64, 14)}
+    ${colourRow('timeline_marker_color', 'Marker colour')}
+    ${colourRow('timeline_line_color', 'Line colour')}
+    ${numberRow('timeline_line_width', 'Line px', 1, 16, 2)}`;
+
+  const set = (key, value) => {
+    if (value === '' || value == null) delete section[key];
+    else section[key] = value;
+    scheduleAutosave();
+  };
+
+  box.querySelectorAll('[data-key]').forEach(input => {
+    const key = input.dataset.key;
+    input.addEventListener(input.tagName === 'SELECT' ? 'change' : 'input', () => {
+      const raw = input.value.trim();
+      set(key, input.hasAttribute('data-number') && raw !== '' ? Number(raw) : raw);
+      if (key === 'timeline_marker') {
+        box.querySelector('[data-icon-row]').style.display = raw === 'icon' ? 'grid' : 'none';
+      }
+      const swatch = box.querySelector(`[data-swatch="${key}"]`);
+      if (swatch && /^#[0-9a-f]{6}$/i.test(raw)) swatch.value = raw;
+    });
+  });
+  box.querySelectorAll('[data-swatch]').forEach(swatch => {
+    swatch.addEventListener('input', () => {
+      box.querySelector(`[data-key="${swatch.dataset.swatch}"]`).value = swatch.value;
+      set(swatch.dataset.swatch, swatch.value);
+    });
   });
 }
 
