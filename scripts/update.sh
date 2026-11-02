@@ -51,7 +51,8 @@ else
     if ! ask_continue "This folder has local changes" "Files in this folder have been edited, so it can't update to the latest version. Do code work in a separate folder and keep this one for running the editor."; then
       exit 1
     fi
-  elif ! git fetch --quiet origin main; then
+  # Give up on a stalled connection rather than hanging the launch
+  elif ! git -c http.lowSpeedLimit=1000 -c http.lowSpeedTime=15 fetch --quiet origin main; then
     if ! ask_continue "Couldn't check for updates" "GitHub couldn't be reached, so this may not be the latest version. Check your internet connection."; then
       exit 1
     fi

@@ -56,6 +56,14 @@ async function listProjects() {
   }));
 }
 
+// Every project's content in one query (used to pre-render at startup)
+async function getAllProjectContents() {
+  const db = getClient();
+  const { data, error } = await db.from(TABLE).select("project_id, content");
+  if (error) throw new Error(error.message);
+  return data.map((row) => ({ id: row.project_id, content: row.content }));
+}
+
 async function getProject(projectId) {
   const db = getClient();
   const { data, error } = await db
@@ -177,6 +185,7 @@ async function getOtherEditors(projectId) {
 module.exports = {
   isConfigured,
   listProjects,
+  getAllProjectContents,
   getProject,
   saveProject,
   createProject,

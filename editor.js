@@ -1553,11 +1553,10 @@ chokidar
 async function preRenderAll() {
   if (db.isConfigured()) {
     try {
-      const projects = await db.listProjects();
+      const projects = await db.getAllProjectContents();
       for (const p of projects) {
         try {
-          const content = await db.getProject(p.id);
-          const result = await renderToPreview(p.id, content);
+          const result = await renderToPreview(p.id, p.content);
           if (result.ok) console.log(`✓  Pre-rendered ${p.id}`);
         } catch (err) {
           console.warn(`⚠  Could not pre-render ${p.id}:`, err.message);
@@ -1575,11 +1574,13 @@ async function preRenderAll() {
   }
 }
 
-preRenderAll();
-
 app.listen(PORT, () => {
   console.log(`\n  Harpoon Story Engine — Editor`);
   console.log(`  http://localhost:${PORT}\n`);
+
+  // Pre-render once the editor is answering, so opening the window
+  // doesn't wait behind it
+  setTimeout(preRenderAll, 2000);
 
   // Auto-open in browser on Mac (skip when running inside Electron)
   if (!process.versions.electron) {
