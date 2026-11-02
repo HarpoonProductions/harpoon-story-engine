@@ -58,6 +58,33 @@ let allPassed = true;
 
 (async () => {
 
+// ── Timeline marker and line ─────────────────────────────────────
+console.log('\n── Timeline marker and line ──────────────────────────');
+{
+  const { renderTimeline } = require('./renderer/layouts/timeline');
+  const entries = [{ date: '1987', heading: 'One' }];
+
+  const plain = renderTimeline({ id: 'tl', timeline_entries: entries });
+  assertContains('Defaults to a dot marker', plain, 'data-marker="dot"');
+  assert('No inline style without settings', !/<section[^>]*style=/.test(plain));
+
+  const styled = renderTimeline({ id: 'tl', timeline_entries: entries, timeline_marker: 'triangle',
+    timeline_marker_size: 22, timeline_marker_color: '#ffcc00', timeline_line_color: 'rgb(255, 255, 255)', timeline_line_width: 99 });
+  assertContains('Triangle marker', styled, 'data-marker="triangle"');
+  assertContains('Marker size as px', styled, '--tl-marker-size:22px');
+  assertContains('Marker colour', styled, '--tl-marker-color:#ffcc00');
+  assertContains('Line colour at full strength', styled, '--tl-line-opacity:1');
+  assertContains('Line thickness clamped to 16px', styled, '--tl-line-width:16px');
+
+  const icon = renderTimeline({ id: 'tl', timeline_entries: entries, timeline_marker: 'icon', timeline_marker_icon: 'https://example.com/i.svg' });
+  assertContains('Icon marker image', icon, '<img src="https://example.com/i.svg" alt="">');
+  const noIcon = renderTimeline({ id: 'tl', timeline_entries: entries, timeline_marker: 'icon' });
+  assertContains('Icon without a URL falls back to a dot', noIcon, 'data-marker="dot"');
+
+  const hostile = renderTimeline({ id: 'tl', timeline_entries: entries, timeline_line_color: 'red;background:url(x)' });
+  assert('Unsafe colour value is dropped', !hostile.includes('background:url'));
+}
+
 // ── Print, PDF and audio coverage ────────────────────────────────
 // Every layout must say what it contains in words (renderer/readable.js),
 // or its text silently disappears from the print page, PDF and narration.
@@ -250,6 +277,54 @@ for (const example of examples) {
   const selfScoped = await renderHtml({ ...base({ scope_section_css: true }), sections: [{ id: 'intro', layout: 'default', title: 'Intro', custom_css: '#intro .x { color: red; } #intro-2 .y {}' }] }, 'css-self');
   assertContains('Old-style #section selectors become :scope', selfScoped, ':scope .x { color: red; } #intro-2 .y {}');
   assert('Story CSS fields pass the schema', validate(base({ scope_section_css: true, custom_css: 'a{}' })).length === 0);
+}
+
+// ── Frozen engine versions (engine-pin.js) ──────────────────────
+// A story frozen to an engine commit is built from a copy of the repo at
+// that commit. Check the switch reads the freeze safely, and that a copy
+// of this very commit renders a story exactly like the live code does.
+console.log('\nFrozen engine versions');
+{
+  const enginePin = require('./engine-pin');
+  const { execFileSync } = require('child_process');
+  assert('No freeze: follows the latest engine', enginePin.pinnedCommit({ meta: {} }) === null);
+  assert('Freeze with a bad commit id is ignored', enginePin.pinnedCommit({ meta: { engine_freeze: { commit: 'main; rm -rf /' } } }) === null);
+  assert('Freeze commit id is read', enginePin.pinnedCommit({ meta: { engine_freeze: { commit: 'ABCDEF1' } } }) === 'abcdef1');
+
+  const head = enginePin.currentEngine();
+  if (!head) {
+    console.log('  – git history not available, skipping the frozen render check');
+  } else {
+    const os = require('os');
+    const tmpBase = fs.mkdtempSync(path.join(os.tmpdir(), 'hse-engine-test-'));
+    try {
+      const example = JSON.parse(fs.readFileSync(path.join(__dirname, 'examples/opera-example.json'), 'utf8'));
+      const frozen = { ...example, meta: { ...example.meta, engine_freeze: { commit: head.commit, engine_date: head.date } } };
+      assert('Current schema accepts a frozen story', validate(frozen).length === 0);
+
+      const engine = enginePin.loadEngine(head.commit, { baseDir: tmpBase });
+      assert('Frozen engine is its own copy of the code', engine.dir !== __dirname && fs.existsSync(path.join(engine.dir, 'renderer/index.js')));
+      assert('Frozen engine accepts the frozen story', engine.validate(frozen).length === 0);
+
+      const frozenOut = path.join(tmpBase, 'out-frozen');
+      const liveOut = path.join(tmpBase, 'out-live');
+      await engine.render(frozen, frozenOut, { basePath: '' });
+      await render(frozen, liveOut, { basePath: '' });
+      assert('Frozen engine copies its own CSS', fs.existsSync(path.join(frozenOut, 'css')));
+
+      // Only comparable when the engine code here is exactly that commit
+      const dirty = execFileSync('git', ['-C', __dirname, 'status', '--porcelain', '--', 'renderer', 'css', 'js', 'tokens'], { encoding: 'utf8' }).trim();
+      if (dirty) {
+        console.log('  – engine files have uncommitted changes, skipping the identical-output check');
+      } else {
+        const a = fs.readFileSync(path.join(frozenOut, 'index.html'), 'utf8');
+        const b = fs.readFileSync(path.join(liveOut, 'index.html'), 'utf8');
+        assert('Frozen copy of this commit renders identically', a === b);
+      }
+    } finally {
+      fs.rmSync(tmpBase, { recursive: true, force: true });
+    }
+  }
 }
 
 })().then(() => {

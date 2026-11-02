@@ -2008,6 +2008,11 @@
                                     </select>
                                   </div>
                                   <div class="form-group">
+                                    <label class="form-label">Marker &amp; line</label>
+                                    <p class="form-hint">Leave a field blank to use the default (the story's primary colour).</p>
+                                    <div id="tlStyle" style="display:flex;flex-direction:column;gap:0.5rem"></div>
+                                  </div>
+                                  <div class="form-group">
                                     <label class="form-label">Entries</label>
                                     <p class="form-hint">Each entry shows as the user scrolls past it. Add a date, heading, body text and a background image or video.</p>
                                     <div id="timelineList"></div>
@@ -4625,6 +4630,8 @@ function initTimelineEditor(sectionIndex) {
     scheduleAutosave();
   });
 
+  initTimelineStyle(section);
+
   if (!section.timeline_entries) section.timeline_entries = [{}];
 
   function renderEntries() {
@@ -4711,6 +4718,74 @@ function initTimelineEditor(sectionIndex) {
     renderEntriesAndInit();
     const inputs = list.querySelectorAll('.tl-date');
     if (inputs.length) inputs[inputs.length - 1].focus();
+  });
+}
+
+// Marker shape/size/colour and line colour/thickness. Rebuilt on every
+// call so no listeners from a previously selected section linger.
+function initTimelineStyle(section) {
+  const box = document.getElementById('tlStyle');
+  const esc = v => String(v == null ? '' : v).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
+  const hex = v => /^#[0-9a-f]{6}$/i.test(v || '') ? v : '#000000';
+  const row = 'display:grid;grid-template-columns:7rem 1fr;align-items:center;gap:0.5rem';
+  const label = 'font-family:var(--font-mono);font-size:0.6rem;letter-spacing:0.08em;text-transform:uppercase;color:var(--ink-3)';
+  const marker = section.timeline_marker || 'dot';
+
+  const colourRow = (key, text) => `
+    <div style="${row}">
+      <span style="${label}">${text}</span>
+      <div class="form-color-row">
+        <input type="color" class="form-color-swatch" data-swatch="${key}" value="${hex(section[key])}" aria-label="${text} picker">
+        <input class="form-input" data-key="${key}" placeholder="Default" value="${esc(section[key])}">
+      </div>
+    </div>`;
+  const numberRow = (key, text, min, max, def) => `
+    <div style="${row}">
+      <span style="${label}">${text}</span>
+      <input class="form-input" type="number" data-key="${key}" data-number min="${min}" max="${max}" placeholder="${def} (default)" value="${esc(section[key])}">
+    </div>`;
+
+  box.innerHTML = `
+    <div style="${row}">
+      <span style="${label}">Marker</span>
+      <select class="form-select" data-key="timeline_marker">
+        <option value="dot"${marker === 'dot' ? ' selected' : ''}>Dot</option>
+        <option value="triangle"${marker === 'triangle' ? ' selected' : ''}>Triangle</option>
+        <option value="icon"${marker === 'icon' ? ' selected' : ''}>Custom icon</option>
+      </select>
+    </div>
+    <div style="${row};display:${marker === 'icon' ? 'grid' : 'none'}" data-icon-row>
+      <span style="${label}">Icon URL</span>
+      <input class="form-input" data-key="timeline_marker_icon" placeholder="https://…/icon.svg" value="${esc(section.timeline_marker_icon)}">
+    </div>
+    ${numberRow('timeline_marker_size', 'Marker size px', 4, 64, 14)}
+    ${colourRow('timeline_marker_color', 'Marker colour')}
+    ${colourRow('timeline_line_color', 'Line colour')}
+    ${numberRow('timeline_line_width', 'Line px', 1, 16, 2)}`;
+
+  const set = (key, value) => {
+    if (value === '' || value == null) delete section[key];
+    else section[key] = value;
+    scheduleAutosave();
+  };
+
+  box.querySelectorAll('[data-key]').forEach(input => {
+    const key = input.dataset.key;
+    input.addEventListener(input.tagName === 'SELECT' ? 'change' : 'input', () => {
+      const raw = input.value.trim();
+      set(key, input.hasAttribute('data-number') && raw !== '' ? Number(raw) : raw);
+      if (key === 'timeline_marker') {
+        box.querySelector('[data-icon-row]').style.display = raw === 'icon' ? 'grid' : 'none';
+      }
+      const swatch = box.querySelector(`[data-swatch="${key}"]`);
+      if (swatch && /^#[0-9a-f]{6}$/i.test(raw)) swatch.value = raw;
+    });
+  });
+  box.querySelectorAll('[data-swatch]').forEach(swatch => {
+    swatch.addEventListener('input', () => {
+      box.querySelector(`[data-key="${swatch.dataset.swatch}"]`).value = swatch.value;
+      set(swatch.dataset.swatch, swatch.value);
+    });
   });
 }
 
@@ -4890,6 +4965,64 @@ function initBlocksEditor(sectionIndex) {
 
             // ── Status panel ──────────────────────────────────────────────────
 
+            // ── Freeze to an engine version ────────────────────────────────────
+            // A frozen story keeps building with the engine it was frozen to
+            // (see engine-pin.js), so later engine changes never alter it.
+            // The freeze is just meta.engine_freeze, saved like any other edit.
+
+            function engineDateLabel(iso) {
+                if (!iso) return 'an earlier version';
+                const d = new Date(iso);
+                return isNaN(d) ? iso : d.toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' });
+            }
+
+            function engineFreezeBlock(engine) {
+                if (!engine) return '';
+                const wrap = (body) => `
+                    <div style="margin-top:1rem;padding:0.75rem;border:1px solid var(--rule);border-radius:6px">
+                        <p class="form-label" style="margin-bottom:0.35rem">Engine</p>
+                        ${body}
+                    </div>`;
+
+                if (engine.frozen) {
+                    return wrap(`
+                        <p class="form-hint" style="margin:0 0 0.4rem">🔒 <strong>Frozen</strong> to the engine from ${engineDateLabel(engine.engine_date)}. Engine updates won't change how this story looks or works. You can still edit its words and pictures.</p>
+                        <p class="form-hint" style="margin:0 0 0.6rem;font-family:var(--font-mono);font-size:0.62rem">Version ${engine.commit.slice(0, 7)}${engine.frozen_at ? ' · frozen ' + engineDateLabel(engine.frozen_at) : ''}</p>
+                        <button class="tbtn tbtn--ghost" style="font-size:0.7rem;padding:0.25rem 0.55rem" onclick="unfreezeEngine()">Unfreeze</button>`);
+                }
+
+                const s = engine.suggestion;
+                if (!s) {
+                    return wrap(`<p class="form-hint" style="margin:0">Follows the latest engine. Freezing isn't available here because this copy of the editor can't see its version history.</p>`);
+                }
+                const which = s.basis === 'last-published'
+                    ? `the engine it was last published with (${engineDateLabel(s.date)})`
+                    : `today's engine (${engineDateLabel(s.date)})`;
+                return wrap(`
+                    <p class="form-hint" style="margin:0 0 0.4rem">Follows the latest engine, so engine updates can change how it looks the next time it's published.</p>
+                    <p class="form-hint" style="margin:0 0 0.6rem">Freezing locks it to ${which}. You can still edit its words and pictures.</p>
+                    <button class="tbtn tbtn--ghost" style="font-size:0.7rem;padding:0.25rem 0.55rem" onclick="freezeEngine('${s.commit}', '${s.date || ''}')">🔒 Freeze</button>`);
+            }
+
+            async function freezeEngine(commit, engineDate) {
+                if (!/^[0-9a-f]{7,40}$/.test(commit)) return;
+                if (!confirm(`Freeze "${content.meta.title}" to the engine from ${engineDateLabel(engineDate)}?\n\nFrom now on it will always be built with that engine, in this preview and when it's staged or published. Engine updates won't reach it until you unfreeze it.`)) return;
+                content.meta.engine_freeze = { commit, engine_date: engineDate || null, frozen_at: new Date().toISOString() };
+                clearTimeout(saveTimer);
+                await doSave();
+                reloadPreviews();
+                refreshStatusPanel();
+            }
+
+            async function unfreezeEngine() {
+                if (!confirm(`Unfreeze "${content.meta.title}"?\n\nIt will be built with the latest engine from now on, which may change how it looks or works. The live story only changes when you next publish it.`)) return;
+                delete content.meta.engine_freeze;
+                clearTimeout(saveTimer);
+                await doSave();
+                reloadPreviews();
+                refreshStatusPanel();
+            }
+
             async function refreshStatusPanel() {
                 const panel = document.getElementById('statusPanel');
                 if (!panel) return;
@@ -4956,6 +5089,8 @@ function initBlocksEditor(sectionIndex) {
                     dimmed: !canonicalUrl,
                 });
 
+                const engineBlock = engineFreezeBlock(statusData.engine);
+
                 const unpublishBlock = lastPublishedAt ? `
                     <div style="margin-top:1rem">
                         <button class="tbtn tbtn--ghost" style="width:100%;justify-content:center;font-size:0.75rem;color:#C0392B;border-color:rgba(192,57,43,0.3)"
@@ -4973,6 +5108,7 @@ function initBlocksEditor(sectionIndex) {
                         ${productionRow}
                         ${clientRow}
                     </div>
+                    ${engineBlock}
                     ${unpublishBlock}
                     <div style="margin-top:1.5rem;padding-top:1rem;border-top:1px solid var(--rule)">
                         <p class="form-label" style="margin-bottom:0.2rem">Project ID</p>

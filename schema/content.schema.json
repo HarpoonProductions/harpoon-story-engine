@@ -111,6 +111,16 @@
         "_groupNavDeployedAs": {
           "type": "object",
           "description": "System-managed, not user-editable. Snapshot of {title, group_label, group_role, group_id} as of this project's last successful deploy dispatch — editor.js compares against it to detect when a change would make sibling group members' already-deployed nav stale, and offer to redeploy them too."
+        },
+        "engine_freeze": {
+          "type": "object",
+          "description": "Set from the editor's Status tab. Freezes this story to the engine (renderer, CSS, JS, schema, tokens) at a given commit of this repo: the editor preview and every deploy build it with that commit's code instead of the latest, so later engine changes never reach it. Remove to unfreeze. See engine-pin.js.",
+          "required": ["commit"],
+          "properties": {
+            "commit": { "type": "string", "pattern": "^[0-9a-f]{7,40}$", "description": "Git commit of this repo whose engine builds the story" },
+            "engine_date": { "type": ["string", "null"], "description": "ISO date of that commit, for display" },
+            "frozen_at": { "type": ["string", "null"], "description": "ISO date the story was frozen" }
+          }
         }
       }
     },
@@ -827,6 +837,36 @@
           "enum": ["left", "right", "alternate"],
           "default": "left",
           "description": "Used by timeline layout. Which side the entries sit on."
+        },
+        "timeline_marker": {
+          "type": "string",
+          "enum": ["dot", "triangle", "icon"],
+          "default": "dot",
+          "description": "Used by timeline layout. Shape of the marker on the line. icon uses timeline_marker_icon."
+        },
+        "timeline_marker_icon": {
+          "type": "string",
+          "description": "Used by timeline layout. Image URL for the marker when timeline_marker is icon. Shown as supplied (not recoloured)."
+        },
+        "timeline_marker_size": {
+          "type": "number",
+          "minimum": 4,
+          "maximum": 64,
+          "description": "Used by timeline layout. Marker width and height in px. Default 14."
+        },
+        "timeline_marker_color": {
+          "type": "string",
+          "description": "Used by timeline layout. Marker colour (any CSS colour). Default: the story's primary colour."
+        },
+        "timeline_line_color": {
+          "type": "string",
+          "description": "Used by timeline layout. Line colour (any CSS colour). Default: the story's primary colour at half strength."
+        },
+        "timeline_line_width": {
+          "type": "number",
+          "minimum": 1,
+          "maximum": 16,
+          "description": "Used by timeline layout. Line thickness in px. Default 2."
         },
         "timeline_entries": {
           "type": "array",
