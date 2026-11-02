@@ -17,6 +17,15 @@
           "type": "string",
           "description": "Unique slug, e.g. oceans-2026"
         },
+        "custom_css": {
+          "type": "string",
+          "description": "Raw CSS for the whole story. Applied after the token set (theme) and before each section's own custom_css"
+        },
+        "scope_section_css": {
+          "type": "boolean",
+          "default": false,
+          "description": "true = each section's custom_css only affects that section (wrapped in @scope). Set on every new story; older stories keep page-wide section CSS"
+        },
         "title": {
           "type": "string",
           "description": "Publication title"
@@ -657,7 +666,7 @@
         },
         "custom_css": {
           "type": "string",
-          "description": "Raw CSS injected in a scoped <style> tag for this section only"
+          "description": "Raw CSS for this section. Kept inside the section when meta.scope_section_css is true; otherwise it applies page-wide"
         },
         "intro": {
           "type": "string",

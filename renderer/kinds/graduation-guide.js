@@ -1,6 +1,6 @@
 'use strict';
 
-const { escHtml, resolveTokenStyle, renderPlausibleScript, parseVideoUrl } = require('../shell/head');
+const { escHtml, storyCssHtml, resolveTokenStyle, renderPlausibleScript, parseVideoUrl } = require('../shell/head');
 const { buildPwaHeadTags } = require('../pwa');
 const { buildDropdown, buildDropdownItems, buildTopNavLinks, buildCeremonyDropdown, buildCeremonyLinks } = require('../shell/group-nav');
 
@@ -164,7 +164,7 @@ function buildHead(meta, config, institution, base, asset) {
   ${tokenSetHtml}
 
   <link rel="stylesheet" href="${asset('css/kinds/graduation-guide.css')}">
-  ${buildBrandStyle(institution, asset)}
+  ${buildBrandStyle(institution, asset)}${storyCssHtml(meta.custom_css)}
 </head>`;
 }
 

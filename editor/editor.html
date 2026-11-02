@@ -1276,6 +1276,20 @@
                             </div>
 
                             <div class="form-group">
+                                <label class="form-label" for="meta-custom-css">Custom CSS for this story</label>
+                                <textarea
+                                    class="css-override__editor"
+                                    id="meta-custom-css"
+                                    data-path="meta.custom_css"
+                                    spellcheck="false"
+                                    placeholder="/* e.g. .hse-section-intro { font-style: italic; } */"
+                                ></textarea>
+                                <p class="form-hint">
+                                    Applies to every section of this story, on top of the token set. A section's own CSS can still override it.
+                                </p>
+                            </div>
+
+                            <div class="form-group">
                                 <label class="form-label" for="meta-heading-animation">Heading animation</label>
                                 <select class="form-select" id="meta-heading-animation" data-path="config.heading_animation">
                                     <option value="none">None</option>
@@ -2290,7 +2304,7 @@
                                 <details id="cssOverridePanel" style="margin-top:1.5rem">
                                   <summary class="css-override__toggle">Override CSS for this section</summary>
                                   <div class="css-override__body">
-                                    <p class="form-hint">Click a class to insert it into the editor below. CSS is scoped to this section only.</p>
+                                    <p class="form-hint">Click a class to insert it into the editor below. Applies on top of the story CSS.</p>
                                     <div id="cssClassChips" class="css-override__chips"></div>
                                     <textarea id="cssOverrideEditor" class="css-override__editor" spellcheck="false" placeholder="/* e.g. #my-section .hse-inner { max-width: 900px; } */"></textarea>
                                     <p class="form-hint css-override__hint" id="cssOverrideHint"></p>
@@ -2532,6 +2546,11 @@
                 await loadTokenSets();
                 populateForm();
                 wireInputs();
+                // Story CSS shows live in the preview, like section CSS
+                document.getElementById("meta-custom-css").addEventListener("input", (e) => {
+                    injectStoryCssIntoPreview(e.target.value || "");
+                    skipNextReload = true;
+                });
                 renderSectionList();
                 setupGraduationGuideTab();
                 wireGroupMembers();
@@ -2821,6 +2840,33 @@
             }
 
             // Inject CSS directly into both preview iframes without reloading
+            function injectStoryCssIntoPreview(css) {
+                [document.getElementById("mobileFrame"), document.getElementById("desktopFrame")].forEach(function(frame) {
+                    try {
+                        const doc = frame.contentDocument;
+                        if (!doc) return;
+                        let style = doc.querySelector('style[data-story-css]');
+                        if (!style) {
+                            style = doc.createElement('style');
+                            style.setAttribute('data-story-css', '');
+                            // Before any section CSS, so sections still win
+                            const firstSection = doc.querySelector('style[data-section-override]');
+                            firstSection ? firstSection.before(style) : doc.head.appendChild(style);
+                        }
+                        style.textContent = css;
+                    } catch {}
+                });
+            }
+
+            // Mirrors renderer/index.js sectionCss(): scoped stories keep
+            // section CSS inside the section
+            function scopedSectionCss(sectionId, css) {
+                if (!content.meta || !content.meta.scope_section_css || !css.trim()) return css;
+                const id = CSS.escape(sectionId);
+                const self = new RegExp('#' + id.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '(?![\\w-])', 'g');
+                return '@scope (#' + id + ') {\n' + css.replace(self, ':scope') + '\n}';
+            }
+
             function injectCssIntoPreview(sectionId, css) {
                 [document.getElementById("mobileFrame"), document.getElementById("desktopFrame")].forEach(function(frame) {
                     try {
@@ -5725,11 +5771,12 @@ function initBlocksEditor(sectionIndex) {
             const css = textarea.value || '';
             content.sections[sectionIndex].custom_css = css || undefined;
             // Live-inject into preview iframes without reloading
-            injectCssIntoPreview(sectionId, css);
-            // Validation: warn if no selector references this section's id
+            injectCssIntoPreview(sectionId, scopedSectionCss(sectionId, css));
+            // Validation: in older (unscoped) stories, warn if no selector
+            // references this section's id, because the CSS would leak
             const stripped = css.replace(/\/\*[\s\S]*?\*\//g, '').trim();
-            if (stripped && !stripped.includes('#' + sectionId)) {
-              hint.textContent = '⚠ Add #' + sectionId + ' to your selectors to scope to this section.';
+            if (stripped && !content.meta?.scope_section_css && !stripped.includes('#' + sectionId)) {
+              hint.textContent = '⚠ This story is older, so this CSS affects the whole story. Add #' + sectionId + ' to your selectors to keep it to this section.';
               hint.style.color = '#e6a817';
             } else {
               hint.textContent = '';

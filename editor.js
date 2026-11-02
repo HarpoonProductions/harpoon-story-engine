@@ -431,6 +431,9 @@ app.post("/api/project/create", async (req, res) => {
       date: new Date().toISOString().split("T")[0],
       accent_color: accent_color || "#1A3F6F",
       accent_color_2: accent_color_2 || "#C9A84C",
+      // Section CSS stays inside its own section (see renderer/index.js
+      // sectionCss). Only new stories get this, so published ones are untouched.
+      scope_section_css: true,
       last_saved: new Date().toISOString(),
       version: 1,
     },

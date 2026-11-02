@@ -247,6 +247,38 @@ for (const example of examples) {
   assertAbsent('No undefined values',         html, '>undefined<');
 }
 
+// ── Custom CSS layers: theme -> story -> section ─────────────────
+{
+  console.log('\n── Custom CSS layers ──────────────────────────────────');
+  const base = (meta) => ({
+    meta: { title: 'CSS', project_id: 'css-test', ...meta },
+    cover: { headline: 'CSS' },
+    sections: [{ id: 'intro', layout: 'default', title: 'Intro', custom_css: '.hse-section-intro { color: red; }' }],
+  });
+  const renderHtml = async (content, name) => {
+    const dir = path.join(outputBase, name);
+    fs.mkdirSync(dir, { recursive: true });
+    await render(content, dir);
+    return fs.readFileSync(path.join(dir, 'index.html'), 'utf8');
+  };
+
+  const legacy = await renderHtml(base({}), 'css-legacy');
+  assertContains('Older story keeps page-wide section CSS', legacy, '<style data-section-override="intro">\n.hse-section-intro { color: red; }\n</style>');
+  assertAbsent('Older story gets no @scope', legacy, '@scope');
+  assertAbsent('No story CSS block when empty', legacy, 'data-story-css');
+
+  const scoped = await renderHtml(base({ scope_section_css: true, custom_css: 'body { --x: 1; } </style><script>' }), 'css-scoped');
+  assertContains('New story scopes section CSS', scoped, '@scope (#intro) {\n.hse-section-intro { color: red; }\n}');
+  assertContains('Story CSS rendered', scoped, '<style data-story-css>\nbody { --x: 1; }');
+  assertAbsent('Story CSS cannot close its <style> tag', scoped, '</style><script>');
+  const head = scoped.slice(0, scoped.indexOf('</head>'));
+  assert('Story CSS comes after the token set', head.lastIndexOf('data-story-css') > head.indexOf('css/base.css'));
+  assert('Section CSS comes after story CSS', scoped.indexOf('data-section-override') > scoped.indexOf('data-story-css'));
+  const selfScoped = await renderHtml({ ...base({ scope_section_css: true }), sections: [{ id: 'intro', layout: 'default', title: 'Intro', custom_css: '#intro .x { color: red; } #intro-2 .y {}' }] }, 'css-self');
+  assertContains('Old-style #section selectors become :scope', selfScoped, ':scope .x { color: red; } #intro-2 .y {}');
+  assert('Story CSS fields pass the schema', validate(base({ scope_section_css: true, custom_css: 'a{}' })).length === 0);
+}
+
 // ── Frozen engine versions (engine-pin.js) ──────────────────────
 // A story frozen to an engine commit is built from a copy of the repo at
 // that commit. Check the switch reads the freeze safely, and that a copy
