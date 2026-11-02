@@ -16,6 +16,7 @@
     "!.env.example",
     "!*.command",
     "!Story Engine.app/**",
+    "!.Story Engine.app.building/**",
     "!README-RACHEL.md",
     "!*.tar.gz",
     "!*.log",

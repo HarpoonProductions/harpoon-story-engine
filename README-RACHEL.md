@@ -36,17 +36,19 @@ say yes, then run setup again.
 
 ## Every day
 
-Double-click **Story Engine** (or `start.command`) to launch the Story Engine.  
-Your browser will open automatically at the editor.
+Open the **Story Engine** app (it has the Harpoon icon and lives in the
+`harpoon-story-engine` folder). The editor opens in its own window, and the Story
+Engine shows up in the Dock and in the app switcher (Cmd-Tab) like any other app.
 
-To stop the editor, close the Terminal window that opened.
+**Tip:** Drag the Story Engine app from the folder to your Dock so it's always one
+click away. Leave the app itself in the folder; don't move it to Applications.
 
 Each time it starts, the Story Engine updates itself to the latest version, so you
 and Giles are always using the same one. To pick up a change Giles has just made,
-close the Terminal window and double-click `start.command` again. The version is
-shown in the Terminal window.
+quit the Story Engine (Cmd-Q) and open it again.
 
-**Tip:** The folder also has a **Story Engine** app with the Harpoon icon that does the same thing. Drag it from the folder to your Dock so it's always one click away. Leave the app itself in the folder; don't move it to Applications.
+If the app is missing, double-click `start.command` in the folder. It updates
+everything, builds the app, and opens it.
 
 ---
 
@@ -54,7 +56,7 @@ shown in the Terminal window.
 
 - **"Node.js not found"** — run Step 1 again, then restart your Mac
 - **"Missing .env file"** — ask Giles to resend the `.env` file
-- **Editor won't open** — make sure the Terminal window from `start.command` is still open
+- **Editor won't open** — quit the Story Engine (Cmd-Q) and open it again. If that doesn't help, double-click `start.command`
 - **Changes not saving** — check you have internet access (the editor saves to the cloud)
 - **"Couldn't check for updates"** — you're probably offline. You can continue, but you may be on an older version
 - **"This folder has local changes"** — files in the folder have been edited. Choose Quit and tell Giles

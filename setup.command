@@ -70,6 +70,7 @@ npm ci --include=optional --silent
 npm install --no-save --os=darwin --cpu=arm64 sharp --silent 2>/dev/null || true
 shasum package-lock.json | cut -d' ' -f1 > node_modules/.lock-hash
 echo "  ✓ Dependencies installed"
+bash scripts/build-desktop-app.sh || echo "  ⚠  Couldn't build the Story Engine app. Use start.command instead."
 
 # Check .env
 if [ ! -f ".env" ]; then
@@ -87,8 +88,8 @@ fi
 echo ""
 echo "  ╔═══════════════════════════════════════╗"
 echo "  ║   Setup complete!                     ║"
-echo "  ║   Double-click start.command          ║"
-echo "  ║   to launch the Story Engine.         ║"
+echo "  ║   Open the Story Engine app in this   ║"
+echo "  ║   folder, or drag it to your Dock.    ║"
 echo "  ╚═══════════════════════════════════════╝"
 echo ""
 read -p "  Press Enter to close..."

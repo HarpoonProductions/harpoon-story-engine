@@ -33,8 +33,28 @@ let serverStarted = false;
 
 // ── Start the Express editor server ───────────────────────────────
 
+// Resolves true if something is already answering on the editor port
+function editorAlreadyRunning() {
+  return new Promise((resolve) => {
+    const req = http.get(`http://localhost:${PORT}`, (res) => {
+      res.resume();
+      resolve(true);
+    });
+    req.on("error", () => resolve(false));
+    req.setTimeout(500, () => req.destroy());
+  });
+}
+
 function startServer() {
-  return new Promise((resolve, reject) => {
+  return new Promise(async (resolve, reject) => {
+    // An editor started from start.command in Terminal may already be
+    // running. Use it rather than failing to start a second one.
+    if (await editorAlreadyRunning()) {
+      serverStarted = true;
+      resolve();
+      return;
+    }
+
     // Start the editor server
     try {
       require("./editor.js");
@@ -263,7 +283,20 @@ function buildMenu() {
 
 // ── App lifecycle ──────────────────────────────────────────────────
 
+// One copy at a time: opening it again brings the existing window forward
+const gotLock = app.requestSingleInstanceLock();
+if (!gotLock) {
+  app.quit();
+} else {
+  app.on("second-instance", () => {
+    if (!mainWindow) return;
+    if (mainWindow.isMinimized()) mainWindow.restore();
+    mainWindow.focus();
+  });
+}
+
 app.whenReady().then(async () => {
+  if (!gotLock) return;
   buildMenu();
 
   const splash = createSplash();
@@ -296,5 +329,5 @@ app.on("before-quit", () => {
 });
 
 app.on("activate", () => {
-  if (mainWindow === null) createWindow();
+  if (mainWindow === null && serverStarted) createWindow();
 });
