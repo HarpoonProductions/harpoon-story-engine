@@ -613,31 +613,74 @@
         else { video.pause(); }
       });
 
-      entries.forEach(function (entry, i) {
-        // Fade entry text in when it approaches the viewport centre
-        ScrollTrigger.create({
-          trigger: entry,
-          start: "top 65%",
-          end: "bottom 20%",
-          onEnter:     function () { entry.classList.add("is-visible"); },
-          onLeaveBack: function () { entry.classList.remove("is-visible"); },
-        });
+      function setupVertical() {
+        entries.forEach(function (entry, i) {
+          // Fade entry text in when it approaches the viewport centre
+          ScrollTrigger.create({
+            trigger: entry,
+            start: "top 65%",
+            end: "bottom 20%",
+            onEnter:     function () { entry.classList.add("is-visible"); },
+            onLeaveBack: function () { entry.classList.remove("is-visible"); },
+          });
 
-        // Switch media layer when this entry crosses the viewport midpoint
-        ScrollTrigger.create({
-          trigger: entry,
-          start: "top 55%",
-          end: "bottom 55%",
-          onEnter:     function () { activateLayer(i); },
-          onEnterBack: function () { activateLayer(i); },
+          // Switch media layer when this entry crosses the viewport midpoint
+          ScrollTrigger.create({
+            trigger: entry,
+            start: "top 55%",
+            end: "bottom 55%",
+            onEnter:     function () { activateLayer(i); },
+            onEnterBack: function () { activateLayer(i); },
+          });
         });
-      });
+      }
+
+      // Horizontal: the section pins (CSS sticky) and scrolling slides the
+      // entry track sideways. Media follows scroll progress; entries fade
+      // in as they come on screen.
+      function setupHorizontal() {
+        var viewport = section.querySelector(".hse-tl__viewport");
+        var track    = section.querySelector(".hse-tl__phases");
+        var current  = -1;
+        function update(self) {
+          var index = Math.round(self.progress * (entries.length - 1));
+          if (index !== current) { current = index; activateLayer(index); }
+          var edge = window.innerWidth * 0.9;
+          entries.forEach(function (entry) {
+            entry.classList.toggle("is-visible", entry.getBoundingClientRect().left < edge);
+          });
+        }
+        gsap.to(track, {
+          x: function () { return -Math.max(0, track.offsetWidth - viewport.clientWidth); },
+          ease: "none",
+          scrollTrigger: {
+            trigger: section,
+            start: "top top",
+            end: "bottom bottom",
+            scrub: 0.6,
+            invalidateOnRefresh: true,
+            onUpdate: update,
+            onRefresh: update,
+          },
+        });
+      }
+
+      if (section.dataset.direction === "horizontal" && section.querySelector(".hse-tl__viewport")) {
+        // Phones get the stacked vertical layout (css/layouts/timeline.css)
+        var mm = gsap.matchMedia();
+        mm.add("(min-width: 769px)", setupHorizontal);
+        mm.add("(max-width: 768px)", setupVertical);
+      } else {
+        setupVertical();
+      }
     });
   }
 
   function setupTimelineA11y() {
     // Reduced-motion: show all entries and the last media layer
     document.querySelectorAll(".hse-section--timeline").forEach(function (section) {
+      // Horizontal: no pinning; the track scrolls sideways by hand
+      if (section.dataset.direction === "horizontal") section.classList.add("is-static");
       section.querySelectorAll(".hse-tl__entry").forEach(function (e) {
         e.classList.add("is-visible");
       });
