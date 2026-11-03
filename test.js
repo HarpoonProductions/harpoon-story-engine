@@ -85,6 +85,19 @@ console.log('\n── Timeline marker and line ───────────
   assert('Unsafe colour value is dropped', !hostile.includes('background:url'));
 }
 
+// ── Timeline direction ───────────────────────────────────────────
+console.log('\n── Timeline direction ────────────────────────────────');
+{
+  const { renderTimeline } = require('./renderer/layouts/timeline');
+  const entries = [{ date: '1987', heading: 'One' }, { date: '1999', heading: 'Two' }];
+  const vertical = renderTimeline({ id: 'tl', timeline_entries: entries });
+  assert('Vertical by default, no horizontal markup', !vertical.includes('data-direction') && !vertical.includes('hse-tl__viewport') && !vertical.includes('--tl-count'));
+  const h = renderTimeline({ id: 'tl', timeline_entries: entries, timeline_direction: 'horizontal', timeline_align: 'alternate' });
+  assertContains('Horizontal flag', h, 'data-direction="horizontal"');
+  assertContains('Horizontal viewport wraps the track', h, '<div class="hse-tl__viewport">');
+  assertContains('Entry count drives the scroll length', h, '--tl-count:2');
+}
+
 // ── Timeline inline media and background blocks ──────────────────
 console.log('\n── Timeline media and backgrounds ────────────────────');
 {

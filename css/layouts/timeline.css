@@ -389,3 +389,116 @@
     padding-top: clamp(2rem, 6vh, 4rem);
   }
 }
+
+/* ── Horizontal direction ─────────────────────────────────────────
+   The section pins for a scroll distance set by its entry count while
+   the entries slide sideways along a horizontal line; the background
+   still crossfades entry by entry (js/runtime.js). Alignment reads as
+   line at the top (left), bottom (right) or middle (alternate).
+   Phones keep the stacked vertical layout above. */
+
+@media (min-width: 769px) {
+  .hse-section--timeline[data-direction="horizontal"] {
+    --tl-line-y: 24vh;
+    --tl-card-w: clamp(280px, 30vw, 420px);
+    --tl-card-gap: clamp(3rem, 6vw, 6rem);
+    height: calc(100vh + var(--tl-count, 1) * 70vh);
+  }
+  .hse-section--timeline[data-direction="horizontal"][data-align="right"]     { --tl-line-y: 76vh; }
+  .hse-section--timeline[data-direction="horizontal"][data-align="alternate"] { --tl-line-y: 50vh; }
+
+  [data-direction="horizontal"] .hse-tl__viewport {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    height: 100vh;
+    margin-top: -100vh;
+    overflow: hidden;
+  }
+
+  [data-direction="horizontal"] .hse-tl__phases {
+    display: flex;
+    width: max-content;
+    height: 100%;
+    margin-top: 0;
+    padding: 0 var(--hse-page-pad);
+    box-sizing: border-box;
+    will-change: transform;
+  }
+
+  /* The line runs the full length of the track */
+  [data-direction="horizontal"][data-align] .hse-tl__spine {
+    top: calc(var(--tl-line-y) - var(--tl-line-width, 2px) / 2);
+    bottom: auto;
+    left: 0;
+    right: 0;
+    width: auto;
+    height: var(--tl-line-width, 2px);
+    transform: none;
+    background: linear-gradient(
+      to right,
+      transparent 0%,
+      var(--tl-line-color, var(--hse-accent)) 3%,
+      var(--tl-line-color, var(--hse-accent)) 97%,
+      transparent 100%
+    );
+  }
+
+  /* Each entry is a column on the track; its panel sits --tl-gap below
+     the line (side "left") or above it (side "right") */
+  [data-direction="horizontal"] .hse-tl__entry {
+    display: block;
+    flex: none;
+    width: var(--tl-card-w);
+    height: 100%;
+    min-height: 0;
+    padding: 0;
+    margin-right: var(--tl-card-gap);
+  }
+  [data-direction="horizontal"] .hse-tl__entry:last-child { margin-right: 0; }
+
+  [data-direction="horizontal"] .hse-tl__entry[data-side] .hse-tl__entry-inner {
+    position: absolute;
+    left: 0;
+    right: 0;
+    width: auto;
+    max-width: none;
+    margin: 0;
+  }
+  [data-direction="horizontal"] .hse-tl__entry[data-side="left"]  .hse-tl__entry-inner { top: calc(var(--tl-line-y) + var(--tl-gap)); }
+  [data-direction="horizontal"] .hse-tl__entry[data-side="right"] .hse-tl__entry-inner { bottom: calc(100vh - var(--tl-line-y) + var(--tl-gap)); }
+
+  /* Marker on the line, 1rem in from the panel's left edge */
+  [data-direction="horizontal"] [data-side] .hse-tl__marker {
+    left: 1rem;
+    right: auto;
+  }
+  [data-direction="horizontal"] [data-side="left"] .hse-tl__marker {
+    top: calc(-1 * var(--tl-gap));
+    bottom: auto;
+    translate: -50% -50%;
+  }
+  [data-direction="horizontal"] [data-side="right"] .hse-tl__marker {
+    top: auto;
+    bottom: calc(-1 * var(--tl-gap));
+    translate: -50% 50%;
+  }
+
+  /* Triangle: base against the line, pointing down or up at its text */
+  [data-direction="horizontal"][data-marker="triangle"] [data-side="left"] .hse-tl__marker {
+    top: calc(-1 * var(--tl-gap) + var(--tl-line-width, 2px) / 2);
+    translate: -50% 0;
+    transform-origin: top center;
+    clip-path: polygon(0 0, 100% 0, 50% 100%);
+  }
+  [data-direction="horizontal"][data-marker="triangle"] [data-side="right"] .hse-tl__marker {
+    bottom: calc(-1 * var(--tl-gap) + var(--tl-line-width, 2px) / 2);
+    translate: -50% 0;
+    transform-origin: bottom center;
+    clip-path: polygon(50% 0, 100% 100%, 0 100%);
+  }
+
+  /* Reduced motion: no pinning; the track scrolls sideways by hand */
+  .hse-section--timeline[data-direction="horizontal"].is-static { height: auto; }
+  [data-direction="horizontal"].is-static .hse-tl__viewport { overflow-x: auto; }
+}

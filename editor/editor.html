@@ -2000,6 +2000,14 @@
                                 <!-- Timeline editor (shown only for timeline layout) -->
                                 <div id="timelineEditor" style="display:none">
                                   <div class="form-group">
+                                    <label class="form-label" for="tl-direction">Direction</label>
+                                    <select class="form-select" id="tl-direction">
+                                      <option value="vertical">Vertical — entries scroll down the page</option>
+                                      <option value="horizontal">Horizontal — entries slide sideways as you scroll</option>
+                                    </select>
+                                    <p class="form-hint">Horizontal pins the section while the reader scrolls. Phones show the vertical layout.</p>
+                                  </div>
+                                  <div class="form-group">
                                     <label class="form-label" for="tl-align">Alignment</label>
                                     <select class="form-select" id="tl-align">
                                       <option value="left">Left — text panel on the left</option>
@@ -4627,6 +4635,26 @@ function initTimelineEditor(sectionIndex) {
   newAlignSelect.value = section.timeline_align || 'left';
   newAlignSelect.addEventListener('change', e => {
     section.timeline_align = e.target.value;
+    scheduleAutosave();
+  });
+
+  // Direction; alignment reads as top/bottom/middle when horizontal
+  const alignLabels = {
+    vertical:   { left: 'Left — text panel on the left', right: 'Right — text panel on the right', alternate: 'Alternate — left/right alternating' },
+    horizontal: { left: 'Top — line at the top, text below', right: 'Bottom — line at the bottom, text above', alternate: 'Middle — text alternating above and below' },
+  };
+  const relabelAlign = dir => {
+    newAlignSelect.querySelectorAll('option').forEach(o => { o.textContent = alignLabels[dir][o.value]; });
+  };
+  const dirSelect = document.getElementById('tl-direction');
+  const newDirSelect = dirSelect.cloneNode(true);
+  dirSelect.parentNode.replaceChild(newDirSelect, dirSelect);
+  newDirSelect.value = section.timeline_direction === 'horizontal' ? 'horizontal' : 'vertical';
+  relabelAlign(newDirSelect.value);
+  newDirSelect.addEventListener('change', e => {
+    if (e.target.value === 'horizontal') section.timeline_direction = 'horizontal';
+    else delete section.timeline_direction;
+    relabelAlign(e.target.value);
     scheduleAutosave();
   });
 

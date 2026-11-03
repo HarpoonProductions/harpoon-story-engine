@@ -840,11 +840,17 @@
           "enum": ["fade", "wipe-left", "wipe-right", "wipe-up", "wipe-down", "circle"],
           "description": "Transition style between crossfade images. Default: fade."
         },
+        "timeline_direction": {
+          "type": "string",
+          "enum": ["vertical", "horizontal"],
+          "default": "vertical",
+          "description": "Used by timeline layout. Horizontal pins the section and slides the entries sideways as the reader scrolls (phones keep the vertical layout)."
+        },
         "timeline_align": {
           "type": "string",
           "enum": ["left", "right", "alternate"],
           "default": "left",
-          "description": "Used by timeline layout. Which side the entries sit on."
+          "description": "Used by timeline layout. Which side the entries sit on. When horizontal: left = line at the top, right = line at the bottom, alternate = line in the middle."
         },
         "timeline_marker": {
           "type": "string",

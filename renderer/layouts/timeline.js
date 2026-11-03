@@ -9,7 +9,13 @@ const { escHtml } = require('../shell/head');
  * Each entry activates its corresponding media layer as it scrolls into view.
  *
  * Section fields:
+ *   timeline_direction {string} 'vertical' | 'horizontal'      (default: 'vertical')
+ *                              Horizontal pins the section and scrolls the entries
+ *                              sideways; phones get the stacked vertical layout.
  *   timeline_align   {string}  'left' | 'right' | 'alternate'  (default: 'left')
+ *                              Horizontal reads these as line at the top (text
+ *                              below), at the bottom (text above), or in the
+ *                              middle (text alternating above and below).
  *   timeline_marker  {string}  'dot' | 'triangle' | 'icon'      (default: 'dot')
  *   timeline_marker_icon  {string}  image URL, used when timeline_marker is 'icon'
  *   timeline_marker_size  {number}  px (default: 12)
@@ -96,6 +102,7 @@ function renderTimeline(section) {
   const align   = section.timeline_align   || 'left';
   const icon    = section.timeline_marker === 'icon' && section.timeline_marker_icon;
   const marker  = icon ? 'icon' : section.timeline_marker === 'triangle' ? 'triangle' : 'dot';
+  const horizontal = section.timeline_direction === 'horizontal';
 
   // Marker and line settings become custom properties on the section;
   // css/layouts/timeline.css falls back to the story accent for any not set.
@@ -106,6 +113,7 @@ function renderTimeline(section) {
     ['--tl-line-width',   px(section.timeline_line_width, 1, 16)],
     ['--tl-line-color',   lineColor],
     ['--tl-line-opacity', lineColor ? '1' : null],
+    ['--tl-count',        horizontal ? String(entries.length) : null],
   ].filter(([, v]) => v).map(([k, v]) => `${k}:${v}`).join(';');
 
   const markerHtml = icon
@@ -184,7 +192,8 @@ function renderTimeline(section) {
   class="hse-section hse-section--timeline"
   id="${escHtml(section.id)}"
   data-layout="timeline"
-  data-align="${escHtml(align)}"
+  data-align="${escHtml(align)}"${horizontal ? `
+  data-direction="horizontal"` : ''}
   data-marker="${marker}"${vars ? `
   style="${escHtml(vars)}"` : ''}
   data-entry-count="${entries.length}">
@@ -197,11 +206,13 @@ function renderTimeline(section) {
     </div>
   </div>
 
-  <!-- Scrolling entries -->
+  <!-- Scrolling entries -->${horizontal ? `
+  <div class="hse-tl__viewport">` : ''}
   <div class="hse-tl__phases">
     <div class="hse-tl__spine" aria-hidden="true"></div>
     ${entriesHtml}
-  </div>
+  </div>${horizontal ? `
+  </div>` : ''}
 
 </section>`;
 }
