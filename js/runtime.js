@@ -766,22 +766,27 @@
           // Runs. Up straight after down, or down after up, would double
           // back, so it goes across. An across run reached by climbing hangs
           // its panel above the line, and the view sits low to show it.
+          // Diagonals (rise ↗, fall ↘) slope at SLOPE; their panel sits off
+          // the line's corner, below-right of a rise and above-right of a fall.
+          var SLOPE = Math.tan(30 * Math.PI / 180);
           var runs = [], prevVertical = null;
           entries.forEach(function (entry, i) {
             var run = entry.dataset.run || (i % 2 ? "down" : "across");
             if ((run === "up" && prevVertical === "down") || (run === "down" && prevVertical === "up")) run = "across";
-            prevVertical = run === "across" ? null : run;
+            prevVertical = run === "up" || run === "down" ? run : null;
             runs.push(run);
             entry.setAttribute("data-run", run);
             if (run === "across" && runs[i - 1] === "up") entry.setAttribute("data-hang", "above");
             else entry.removeAttribute("data-hang");
           });
-          var anchorY = entries.map(function (entry) { return H * (entry.dataset.hang ? 0.72 : 0.3); });
+          // Panels that sit above their line
+          var above = runs.map(function (run, i) { return run === "fall" || !!entries[i].dataset.hang; });
+          var anchorY = above.map(function (a) { return H * (a ? 0.72 : 0.3); });
 
           fitEntries(function (entry) {
             var i = entries.indexOf(entry);
-            if (runs[i] !== "across") return H - anchorY[i] - 40;
-            return entry.dataset.hang ? anchorY[i] - gap - NAV : H - anchorY[i] - gap - 40;
+            if (runs[i] === "up" || runs[i] === "down") return H - anchorY[i] - 40;
+            return above[i] ? anchorY[i] - gap - NAV : H - anchorY[i] - gap - 40;
           });
 
           // Each panel's box relative to its node (the point on the line)
@@ -789,6 +794,8 @@
             var marker = entry.querySelector(".hse-tl__marker");
             var h = entry.querySelector(".hse-tl__entry-inner").offsetHeight;
             var w = entry.offsetWidth;
+            if (runs[i] === "rise") return { dx: gap, dy: gap, w: w, h: h };
+            if (runs[i] === "fall") return { dx: gap, dy: -(gap + h), w: w, h: h };
             if (runs[i] === "across") {
               var mx = marker ? marker.offsetLeft : 16;
               return { dx: -mx, dy: entry.dataset.hang ? -(gap + h) : gap, w: w, h: h };
@@ -801,7 +808,7 @@
           // hanging above it, down) as far as it needs to fit on screen
           anchorY = anchorY.map(function (ay, i) {
             var b = boxes[i];
-            if (b.dy < 0 && runs[i] === "across") return Math.min(H - 40, Math.max(ay, NAV - b.dy));
+            if (above[i]) return Math.min(H - 40, Math.max(ay, NAV - b.dy));
             return Math.max(NAV - Math.min(0, b.dy), Math.min(ay, H - 40 - b.dy - b.h));
           });
 
@@ -815,8 +822,11 @@
             entry.style.left = (x + b.dx) + "px";
             entry.style.top  = (y + b.dy) + "px";
             if (!nb) return;
-            if (runs[i] === "across") {
-              x += Math.max(b.dx + b.w + room - nb.dx, W - ax - nb.dx + room, ax + b.dx + b.w + room);
+            if (runs[i] === "across" || runs[i] === "rise" || runs[i] === "fall") {
+              var step = Math.max(b.dx + b.w + room - nb.dx, W - ax - nb.dx + room, ax + b.dx + b.w + room);
+              x += step;
+              if (runs[i] === "rise") y -= step * SLOPE;
+              if (runs[i] === "fall") y += step * SLOPE;
             } else if (runs[i] === "down") {
               y += Math.max(b.dy + b.h + room - nb.dy, H - ay - nb.dy + room, nay + b.dy + b.h + room);
             } else {
@@ -824,7 +834,11 @@
             }
           });
           var last = nodes[nodes.length - 1];
-          var tail = { x: last.x + (last.run === "across" ? 120 : 0), y: last.y + (last.run === "down" ? 120 : last.run === "up" ? -120 : 0) };
+          var flat = last.run === "across" || last.run === "rise" || last.run === "fall";
+          var tail = {
+            x: last.x + (flat ? 120 : 0),
+            y: last.y + (last.run === "down" ? 120 : last.run === "up" ? -120 : last.run === "rise" ? -120 * SLOPE : last.run === "fall" ? 120 * SLOPE : 0),
+          };
 
           // Path: a faint track, and a copy drawn on as the reader goes
           var d = nodes.concat([tail]).map(function (p, i) { return (i ? "L" : "M") + p.x + " " + p.y; }).join(" ");
@@ -853,7 +867,7 @@
           nodes.forEach(function (p, i) {
             if (i) {
               var prev = nodes[i - 1];
-              var len = Math.abs(p.x - prev.x) + Math.abs(p.y - prev.y);
+              var len = Math.hypot(p.x - prev.x, p.y - prev.y);
               drawnLen += len;
               tl.to(world, { x: ax - p.x, y: anchorY[i] - p.y, duration: len, ease: "power1.inOut" });
               tl.to(drawn, { strokeDashoffset: total - drawnLen, duration: len, ease: "power1.inOut" }, "<");

@@ -37,7 +37,8 @@ const { escHtml } = require('../shell/head');
  *     entry.media    {object}  inline media shown with the text:
  *                              { type: 'image'|'video'|'embed', url, alt, caption, poster,
  *                                html (embed code), position: 'above'|'below'|'left'|'right' }
- *     entry.next     {string}  stepped only: 'across' | 'down' | 'up', the way the path
+ *     entry.next     {string}  stepped only: 'across' | 'down' | 'up' | 'rise' (↗) | 'fall' (↘),
+ *                              the way the path
  *                              goes after this entry (default: alternating, across first)
  *     entry.date_bg  {object}  { color, opacity } overrides timeline_date_bg for this entry
  *     entry.text_bg  {object}  { color, opacity } overrides timeline_text_bg for this entry
@@ -203,7 +204,7 @@ function renderTimeline(section) {
     const hasText = heading || body || media.html;
 
     // Stepped: which way the path runs from this entry
-    const run = !stepped ? '' : ['across', 'down', 'up'].includes(entry.next) ? entry.next : (i % 2 === 0 ? 'across' : 'down');
+    const run = !stepped ? '' : ['across', 'down', 'up', 'rise', 'fall'].includes(entry.next) ? entry.next : (i % 2 === 0 ? 'across' : 'down');
 
     return `<div class="hse-tl__entry" data-index="${i}" data-side="${escHtml(side)}"${run ? ` data-run="${run}"` : ''}>
       ${thumbHtml}
