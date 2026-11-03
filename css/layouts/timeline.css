@@ -176,14 +176,24 @@
   scale: 1.25;
 }
 
-/* Triangle — points at its text */
+/* Triangle — a pointer: its flat base sits against the outer edge of the
+   line and its tip points away, at the text. Scaling grows it from the base. */
 [data-marker="triangle"] .hse-tl__marker {
   background: var(--tl-marker-color, var(--hse-accent));
   clip-path: polygon(0 0, 100% 50%, 0 100%);
   opacity: 0.5;
 }
+[data-align="left"][data-marker="triangle"] .hse-tl__marker,
+[data-align="alternate"][data-marker="triangle"] [data-side="right"] .hse-tl__marker {
+  left: calc(-1 * var(--tl-gap) + var(--tl-line-width, 2px) / 2);
+  translate: 0 -50%;
+  transform-origin: left center;
+}
 [data-align="right"][data-marker="triangle"] .hse-tl__marker,
 [data-align="alternate"][data-marker="triangle"] [data-side="left"] .hse-tl__marker {
+  right: calc(-1 * var(--tl-gap) + var(--tl-line-width, 2px) / 2);
+  translate: 0 -50%;
+  transform-origin: right center;
   clip-path: polygon(100% 0, 0 50%, 100% 100%);
 }
 
@@ -201,6 +211,9 @@
   opacity: 1;
   scale: 1.2;
 }
+
+/* A date with a background block: the marker drops to stay level with it */
+[data-date-bg] > .hse-tl__marker { top: calc(0.55rem + 0.4rem); }
 
 /* ── Typography ──────────────────────────────────────────────────── */
 
@@ -229,6 +242,61 @@
   line-height: var(--hse-leading-loose, 1.65);
   color: var(--hse-warm-3, rgba(255,255,255,0.65));
   margin: 0;
+}
+
+/* ── Background blocks (set per section or per entry) ─────────────── */
+
+.hse-tl__date.has-bg {
+  display: inline-block;
+  padding: 0.4rem 0.7rem;
+}
+
+.hse-tl__text {
+  display: flow-root; /* contains floated media */
+}
+.hse-tl__text.has-bg {
+  padding: 1.25rem 1.5rem;
+}
+
+/* ── Inline media (image, video or embed beside the text) ─────────── */
+
+.hse-tl__media {
+  margin: 0 0 1rem;
+}
+.hse-tl__media--below { margin: 1rem 0 0; }
+.hse-tl__media--left {
+  float: left;
+  width: 45%;
+  margin: 0.3rem 1.25rem 0.75rem 0;
+}
+.hse-tl__media--right {
+  float: right;
+  width: 45%;
+  margin: 0.3rem 0 0.75rem 1.25rem;
+}
+
+.hse-tl__media img,
+.hse-tl__media video {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.hse-tl__embed iframe { max-width: 100%; }
+.hse-tl__embed--frame { aspect-ratio: 16 / 9; }
+.hse-tl__embed--frame iframe {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border: 0;
+}
+
+.hse-tl__media figcaption {
+  font-family: var(--hse-font-mono);
+  font-size: var(--hse-font-size-micro, 0.7rem);
+  line-height: 1.4;
+  color: var(--hse-warm-3, rgba(255,255,255,0.65));
+  margin-top: 0.4rem;
 }
 
 /* ── Mobile thumbnail (hidden on desktop) ────────────────────────── */
@@ -302,7 +370,18 @@
     translate: -50% -50% !important;
   }
   [data-marker="triangle"] .hse-tl__marker {
+    left: calc(-1 * var(--tl-gap) + var(--tl-line-width, 2px) / 2) !important;
+    translate: 0 -50% !important;
+    transform-origin: left center !important;
     clip-path: polygon(0 0, 100% 50%, 0 100%) !important;
+  }
+
+  /* Wrapped media is too narrow on a phone: stack it above the body */
+  .hse-tl__media--left,
+  .hse-tl__media--right {
+    float: none;
+    width: auto;
+    margin: 0 0 1rem;
   }
 
   /* First entry: add breathing room at top */

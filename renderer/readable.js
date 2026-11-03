@@ -116,11 +116,13 @@ const READERS = {
     return b.text ? [text(b.text)] : [];
   }),
 
+  // Inline media images print by default (they sit with the text);
+  // background images only when ticked, as elsewhere.
   'timeline': section => list((section.timeline_entries || []).map(e => ({
     title: e.heading,
     meta:  e.date,
     body:  e.body,
-  }))).concat((section.timeline_entries || []).flatMap(e => printImage(e.image))),
+  }))).concat((section.timeline_entries || []).flatMap(e => [...printImage(e.image), ...(e.media && (e.media.type || 'image') === 'image' ? printImage({ ...e.media, print_include: e.media.print_include !== false }) : [])])),
 
   // Arbitrary HTML can't be read reliably. Only its caption is used.
   'custom-html': section => section.custom_html?.caption

@@ -2008,13 +2008,13 @@
                                     </select>
                                   </div>
                                   <div class="form-group">
-                                    <label class="form-label">Marker &amp; line</label>
+                                    <label class="form-label">Marker, line &amp; backgrounds</label>
                                     <p class="form-hint">Leave a field blank to use the default (the story's primary colour).</p>
                                     <div id="tlStyle" style="display:flex;flex-direction:column;gap:0.5rem"></div>
                                   </div>
                                   <div class="form-group">
                                     <label class="form-label">Entries</label>
-                                    <p class="form-hint">Each entry shows as the user scrolls past it. Add a date, heading, body text and a background image or video.</p>
+                                    <p class="form-hint">Each entry shows as the user scrolls past it. Add a date, heading, body text and a background image or video. Open "Inline media" to put an image, video or embed with the text, and "Backgrounds" to give this entry its own date and text blocks.</p>
                                     <div id="timelineList"></div>
                                     <button type="button" class="tbtn tbtn--ghost" id="addTimelineEntryBtn" style="margin-top:0.5rem;width:100%;justify-content:center">+ Add entry</button>
                                   </div>
@@ -4634,9 +4634,16 @@ function initTimelineEditor(sectionIndex) {
 
   if (!section.timeline_entries) section.timeline_entries = [{}];
 
+  // Which per-entry panels are open, so a re-render keeps them open
+  const openPanels = new Set();
+  const panelSummary = 'cursor:pointer;font-family:var(--font-mono);font-size:0.6rem;letter-spacing:0.08em;text-transform:uppercase;color:var(--ink-3)';
+  const escAttr = v => String(v == null ? '' : v).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
+
   function renderEntries() {
     list.innerHTML = '';
     section.timeline_entries.forEach((entry, i) => {
+      const media = entry.media || {};
+      const mediaType = entry.media ? (media.type || 'image') : '';
       const item = document.createElement('div');
       item.className = 'block-item';
       item.innerHTML = `
@@ -4648,11 +4655,68 @@ function initTimelineEditor(sectionIndex) {
           <input class="form-input tl-date" data-i="${i}" placeholder="Date / label (e.g. 1987 or March 2020)" value="${entry.date || ''}">
           <input class="form-input tl-heading" data-i="${i}" placeholder="Heading" value="${entry.heading || ''}">
           <textarea class="form-textarea tl-body" data-i="${i}" placeholder="Body text…" rows="3">${entry.body || ''}</textarea>
-          <input class="form-input tl-img-url" id="tl-img-url-${sectionIndex}-${i}" data-image-field data-i="${i}" ${entry.image && entry.image.focal ? `data-existing-focal="${entry.image.focal}"` : ''} placeholder="Image URL https://…" value="${(entry.image && entry.image.url) || ''}">
+          <input class="form-input tl-img-url" id="tl-img-url-${sectionIndex}-${i}" data-image-field data-i="${i}" ${entry.image && entry.image.print_include ? 'data-print-include="true"' : ''} ${entry.image && entry.image.focal ? `data-existing-focal="${entry.image.focal}"` : ''} placeholder="Image URL https://…" value="${(entry.image && entry.image.url) || ''}">
           <input class="form-input tl-img-alt" data-i="${i}" placeholder="Image alt text" value="${(entry.image && entry.image.alt) || ''}">
           <input class="form-input tl-video-url" data-i="${i}" placeholder="Video URL .mp4 (overrides image on desktop)" value="${(entry.video && entry.video.url) || ''}">
           <input class="form-input tl-video-poster" data-i="${i}" placeholder="Video poster image URL (optional)" value="${(entry.video && entry.video.poster) || ''}">
+          <details class="tl-panel" data-panel="media"${openPanels.has(`${i}-media`) ? ' open' : ''}>
+            <summary style="${panelSummary}">Inline media${mediaType ? ` · ${mediaType}` : ''}</summary>
+            <div style="display:flex;flex-direction:column;gap:0.4rem;padding-top:0.4rem">
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.4rem">
+                <select class="form-select tl-media-type" aria-label="Inline media type">
+                  ${[['', 'None'], ['image', 'Image'], ['video', 'Video'], ['embed', 'Embed']].map(([v, l]) => `<option value="${v}"${mediaType === v ? ' selected' : ''}>${l}</option>`).join('')}
+                </select>
+                <select class="form-select tl-media-position" aria-label="Inline media position"${mediaType ? '' : ' disabled'}>
+                  ${[['above', 'Above the text'], ['below', 'Below the text'], ['left', 'Left, text wraps'], ['right', 'Right, text wraps']].map(([v, l]) => `<option value="${v}"${(media.position || 'above') === v ? ' selected' : ''}>${l}</option>`).join('')}
+                </select>
+              </div>
+              ${mediaType === 'image' ? `<input class="form-input tl-media-field" data-field="url" id="tl-media-url-${sectionIndex}-${i}" data-image-field${media.print_include !== false ? ' data-print-include="true"' : ''} placeholder="Image URL https://…" value="${escAttr(media.url)}">
+              <input class="form-input tl-media-field" data-field="alt" placeholder="Alt text" value="${escAttr(media.alt)}">` : ''}
+              ${mediaType === 'video' ? `<input class="form-input tl-media-field" data-field="url" placeholder="Video URL .mp4" value="${escAttr(media.url)}">
+              <input class="form-input tl-media-field" data-field="poster" placeholder="Poster image URL (optional)" value="${escAttr(media.poster)}">` : ''}
+              ${mediaType === 'embed' ? `<textarea class="form-textarea tl-media-field" data-field="html" rows="3" placeholder="Paste embed code (e.g. from YouTube, Vimeo, Flourish)…" style="font-family:var(--font-mono);font-size:0.7rem">${escAttr(media.html)}</textarea>
+              <input class="form-input tl-media-field" data-field="url" placeholder="…or a page URL to show in a frame" value="${escAttr(media.url)}">` : ''}
+              ${mediaType ? `<input class="form-input tl-media-field" data-field="caption" placeholder="Caption (optional)" value="${escAttr(media.caption)}">` : ''}
+            </div>
+          </details>
+          <details class="tl-panel" data-panel="bg"${openPanels.has(`${i}-bg`) ? ' open' : ''}>
+            <summary style="${panelSummary}">Backgrounds${entry.date_bg || entry.text_bg ? ' · custom' : ''}</summary>
+            <div class="tl-bg-rows" style="display:flex;flex-direction:column;gap:0.5rem;padding-top:0.4rem"></div>
+          </details>
         </div>`;
+
+      const bgRows = item.querySelector('.tl-bg-rows');
+      bgRows.appendChild(tlBgRow(section.timeline_entries[i], 'date_bg', 'Date block', section.timeline_date_bg));
+      bgRows.appendChild(tlBgRow(section.timeline_entries[i], 'text_bg', 'Text block', section.timeline_text_bg));
+
+      item.querySelectorAll('.tl-panel').forEach(panel => {
+        panel.addEventListener('toggle', () => {
+          const k = `${i}-${panel.dataset.panel}`;
+          if (panel.open) openPanels.add(k); else openPanels.delete(k);
+        });
+      });
+      item.querySelector('.tl-media-type').addEventListener('change', e => {
+        const type = e.target.value;
+        if (!type) delete section.timeline_entries[i].media;
+        else section.timeline_entries[i].media = { ...(section.timeline_entries[i].media || {}), type };
+        openPanels.add(`${i}-media`);
+        scheduleAutosave();
+        renderEntriesAndInit();
+      });
+      item.querySelector('.tl-media-position').addEventListener('change', e => {
+        if (!section.timeline_entries[i].media) return;
+        section.timeline_entries[i].media.position = e.target.value;
+        scheduleAutosave();
+      });
+      item.querySelectorAll('.tl-media-field').forEach(input => {
+        input.addEventListener('input', () => {
+          const m = section.timeline_entries[i].media;
+          if (!m) return;
+          if (input.value.trim() === '') delete m[input.dataset.field];
+          else m[input.dataset.field] = input.value;
+          scheduleAutosave();
+        });
+      });
 
       item.querySelector('.tl-date').addEventListener('input', e => { section.timeline_entries[i].date = e.target.value; scheduleAutosave(); });
       item.querySelector('.tl-heading').addEventListener('input', e => { section.timeline_entries[i].heading = e.target.value; scheduleAutosave(); });
@@ -4682,6 +4746,7 @@ function initTimelineEditor(sectionIndex) {
       if (delBtn) {
         delBtn.addEventListener('click', () => {
           section.timeline_entries.splice(i, 1);
+          openPanels.clear();
           scheduleAutosave();
           renderEntriesAndInit();
         });
@@ -4694,13 +4759,25 @@ function initTimelineEditor(sectionIndex) {
   function renderEntriesAndInit() {
     renderEntries();
     if (window.initImageFields) {
-      initImageFields(projectId, (fieldId, url, focal) => {
+      initImageFields(projectId, (fieldId, url, focal, focalPath, printInclude) => {
+        // Inline media: prints unless unticked
+        const mediaMatch = fieldId.match(/^tl-media-url-\d+-(\d+)$/);
+        if (mediaMatch) {
+          const m = section.timeline_entries[parseInt(mediaMatch[1])]?.media;
+          if (!m) return;
+          if (printInclude === false) m.print_include = false;
+          else delete m.print_include;
+          scheduleAutosave();
+          return;
+        }
         const match = fieldId.match(/^tl-img-url-\d+-(\d+)$/);
         if (!match) return;
         const idx = parseInt(match[1]);
         if (!section.timeline_entries[idx]) return;
         if (!section.timeline_entries[idx].image) section.timeline_entries[idx].image = {};
         section.timeline_entries[idx].image.focal = focal === '50% 50%' ? undefined : focal;
+        if (printInclude) section.timeline_entries[idx].image.print_include = true;
+        else delete section.timeline_entries[idx].image.print_include;
         scheduleAutosave();
       }, list);
     }
@@ -4787,6 +4864,74 @@ function initTimelineStyle(section) {
       set(swatch.dataset.swatch, swatch.value);
     });
   });
+
+  const bgHead = document.createElement('p');
+  bgHead.className = 'form-hint';
+  bgHead.style.margin = '0.4rem 0 0';
+  bgHead.textContent = 'Backgrounds for every entry (each entry can override these):';
+  box.appendChild(bgHead);
+  box.appendChild(tlBgRow(section, 'timeline_date_bg', 'Date block'));
+  box.appendChild(tlBgRow(section, 'timeline_text_bg', 'Text block'));
+}
+
+// Colour + opacity controls for a timeline background block, stored as
+// target[key] = { color, opacity }. `inherit` is the section default an
+// entry falls back to: shown as the placeholder, and cleared back to it.
+function tlBgRow(target, key, text, inherit) {
+  const hex = v => /^#[0-9a-f]{6}$/i.test(v || '') ? v : '#000000';
+  const inh = inherit || {};
+  const wrap = document.createElement('div');
+  wrap.style.cssText = 'display:flex;flex-direction:column;gap:0.3rem;min-width:0';
+  wrap.innerHTML = `
+    <span style="font-family:var(--font-mono);font-size:0.6rem;letter-spacing:0.08em;text-transform:uppercase;color:var(--ink-3)">${text}</span>
+    <div style="display:flex;flex-direction:column;gap:0.3rem">
+      <div class="form-color-row" style="grid-template-columns:28px 1fr auto">
+        <input type="color" class="form-color-swatch" data-bg-swatch aria-label="${text} colour picker">
+        <input class="form-input" data-bg-color style="min-width:0">
+        <button type="button" class="tbtn tbtn--ghost" data-bg-clear title="${inherit ? 'Use the section setting' : 'No background'}" style="padding:0 0.5rem">✕</button>
+      </div>
+      <label style="display:flex;align-items:center;gap:0.4rem;font-family:var(--font-mono);font-size:0.6rem;color:var(--ink-3)">
+        Opacity
+        <input type="range" min="0" max="100" step="1" data-bg-opacity style="flex:1;min-width:0" aria-label="${text} opacity">
+        <span data-bg-readout style="min-width:4.5rem;text-align:right"></span>
+      </label>
+    </div>`;
+
+  const swatch  = wrap.querySelector('[data-bg-swatch]');
+  const color   = wrap.querySelector('[data-bg-color]');
+  const range   = wrap.querySelector('[data-bg-opacity]');
+  const readout = wrap.querySelector('[data-bg-readout]');
+
+  const show = () => {
+    const own = target[key] || {};
+    color.value = own.color || '';
+    color.placeholder = inh.color ? `${inh.color} (section)` : 'None';
+    swatch.value = hex(own.color || inh.color);
+    const ownOp = own.opacity != null;
+    const op = ownOp ? own.opacity : inh.opacity != null ? inh.opacity : 100;
+    range.value = op;
+    readout.textContent = `${op}%${!ownOp && inherit && inh.color ? ' (section)' : ''}`;
+  };
+  const write = (field, value) => {
+    const bg = { ...(target[key] || {}) };
+    if (value === '' || value == null) delete bg[field];
+    else bg[field] = value;
+    if (Object.keys(bg).length) target[key] = bg;
+    else delete target[key];
+    scheduleAutosave();
+    show();
+  };
+
+  color.addEventListener('change', () => write('color', color.value.trim()));
+  swatch.addEventListener('input', () => write('color', swatch.value));
+  range.addEventListener('input', () => write('opacity', Number(range.value)));
+  wrap.querySelector('[data-bg-clear]').addEventListener('click', () => {
+    delete target[key];
+    scheduleAutosave();
+    show();
+  });
+  show();
+  return wrap;
 }
 
 // ── Text blocks editor ───────────────────────────────────────────
