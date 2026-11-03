@@ -1,6 +1,7 @@
 'use strict';
 const fs   = require('fs');
 const path = require('path');
+const crypto = require('crypto');
 const { buildPwaHeadTags } = require('../pwa');
 
 /**
@@ -46,6 +47,24 @@ function renderPlausibleScript(config) {
  * @param {string} basePath  - root-relative base path, e.g. '/opera-voices-2026'
  * @returns {string} HTML string
  */
+// Engine CSS and JS are served with a day-long cache and fixed names, so
+// after an engine update a returning reader's browser (and the story's
+// service worker, which precaches through that cache) would pair new HTML
+// with yesterday's runtime.js and stylesheets. A short hash of each file's
+// contents, added as ?v=, makes every changed file a new URL.
+const ENGINE_ROOT = path.join(__dirname, '../..');
+function assetVersion(file) {
+  try {
+    return crypto.createHash('sha1').update(fs.readFileSync(path.join(ENGINE_ROOT, file))).digest('hex').slice(0, 8);
+  } catch (e) {
+    return '';
+  }
+}
+function versioned(url, file) {
+  const v = assetVersion(file);
+  return v ? `${url}?v=${v}` : url;
+}
+
 function renderHead(meta, config, title, basePath, staging, heroImageUrl, canonicalUrl) {
   const pageTitle = title
     ? `${title} — ${meta.title}`
@@ -79,8 +98,8 @@ function renderHead(meta, config, title, basePath, staging, heroImageUrl, canoni
     ? '/' + basePath.replace(/^\//, '').replace(/\/$/, '')
     : '';
 
-  const css = (file) => base ? `${base}/${file}` : file;
-  const js  = (file) => base ? `${base}/${file}` : file;
+  const css = (file) => versioned(base ? `${base}/${file}` : file, file);
+  const js  = (file) => versioned(base ? `${base}/${file}` : file, file);
 
   // Staging builds get noindex to prevent search engine indexing
   const robotsMeta = staging

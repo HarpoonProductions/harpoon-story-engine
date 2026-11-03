@@ -85,6 +85,17 @@ console.log('\n── Timeline marker and line ───────────
   assert('Unsafe colour value is dropped', !hostile.includes('background:url'));
 }
 
+// ── Engine asset versions ────────────────────────────────────────
+// Engine CSS/JS are cached for a day under fixed names; a content hash
+// in the URL stops new HTML being paired with an old runtime.js.
+console.log('\n── Engine asset versions ─────────────────────────────');
+{
+  const { renderHead } = require('./renderer/shell/head');
+  const head = renderHead({ title: 'T', project_id: 'v' }, {}, 'T', 'staging/v', false);
+  assert('runtime.js carries a content version', /src="\/staging\/v\/js\/runtime\.js\?v=[0-9a-f]{8}"/.test(head));
+  assert('base.css carries a content version', /href="\/staging\/v\/css\/base\.css\?v=[0-9a-f]{8}"/.test(head));
+}
+
 // ── Timeline direction ───────────────────────────────────────────
 console.log('\n── Timeline direction ────────────────────────────────');
 {
