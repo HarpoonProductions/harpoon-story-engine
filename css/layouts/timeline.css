@@ -220,27 +220,27 @@
 .hse-tl__date {
   display: block;
   font-family: var(--hse-font-mono);
-  font-size: var(--hse-font-size-micro, 0.7rem);
+  font-size: calc(var(--hse-font-size-micro, 0.7rem) * var(--tl-text-scale, 1));
   letter-spacing: var(--hse-tracking-md, 0.1em);
   text-transform: uppercase;
-  color: var(--hse-accent);
+  color: var(--tl-text-color, var(--hse-accent));
   margin-bottom: 0.6rem;
 }
 
 .hse-tl__heading {
   font-family: var(--hse-font-display);
-  font-size: clamp(1.4rem, 2.8vw, 2.1rem);
+  font-size: calc(clamp(1.4rem, 2.8vw, 2.1rem) * var(--tl-text-scale, 1));
   line-height: var(--hse-leading-snug, 1.2);
-  color: var(--hse-warm, #fff);
+  color: var(--tl-text-color, var(--hse-warm, #fff));
   margin: 0 0 0.9rem;
   font-weight: 400;
 }
 
 .hse-tl__body {
   font-family: var(--hse-font-body, var(--hse-font-display));
-  font-size: clamp(0.9rem, 1.5vw, 1.05rem);
+  font-size: calc(clamp(0.9rem, 1.5vw, 1.05rem) * var(--tl-text-scale, 1));
   line-height: var(--hse-leading-loose, 1.65);
-  color: var(--hse-warm-3, rgba(255,255,255,0.65));
+  color: var(--tl-text-color, var(--hse-warm-3, rgba(255,255,255,0.65)));
   margin: 0;
 }
 
@@ -295,7 +295,7 @@
   font-family: var(--hse-font-mono);
   font-size: var(--hse-font-size-micro, 0.7rem);
   line-height: 1.4;
-  color: var(--hse-warm-3, rgba(255,255,255,0.65));
+  color: var(--tl-text-color, var(--hse-warm-3, rgba(255,255,255,0.65)));
   margin-top: 0.4rem;
 }
 
@@ -401,7 +401,6 @@
   .hse-section--timeline[data-direction="horizontal"] {
     --tl-line-y: 24vh;
     --tl-card-w: clamp(280px, 30vw, 420px);
-    --tl-card-gap: clamp(3rem, 6vw, 6rem);
     height: calc(100vh + var(--tl-count, 1) * 70vh);
   }
   .hse-section--timeline[data-direction="horizontal"][data-align="right"]     { --tl-line-y: 76vh; }
@@ -421,7 +420,7 @@
     width: max-content;
     height: 100%;
     margin-top: 0;
-    padding: 0 var(--hse-page-pad);
+    padding: 0;
     box-sizing: border-box;
     will-change: transform;
   }
@@ -444,24 +443,24 @@
     );
   }
 
-  /* Each entry is a column on the track; its panel sits --tl-gap below
-     the line (side "left") or above it (side "right") */
+  /* Each entry has a screen-wide column on the track (--tl-col-w, set by
+     js/runtime.js), so only one is in view at a time; its panel sits
+     --tl-gap below the line (side "left") or above it (side "right") */
   [data-direction="horizontal"] .hse-tl__entry {
     display: block;
     flex: none;
-    width: var(--tl-card-w);
+    width: var(--tl-col-w, 100vw);
     height: 100%;
     min-height: 0;
     padding: 0;
-    margin-right: var(--tl-card-gap);
+    margin: 0;
   }
-  [data-direction="horizontal"] .hse-tl__entry:last-child { margin-right: 0; }
 
   [data-direction="horizontal"] .hse-tl__entry[data-side] .hse-tl__entry-inner {
     position: absolute;
-    left: 0;
-    right: 0;
-    width: auto;
+    left: var(--hse-page-pad);
+    right: auto;
+    width: var(--tl-card-w);
     max-width: none;
     margin: 0;
   }
@@ -611,5 +610,34 @@
     translate: 0 -50%;
     transform-origin: left center;
     clip-path: polygon(0 0, 100% 50%, 0 100%);
+  }
+}
+
+/* ── Two columns when an entry is too tall for the screen ─────────
+   js/runtime.js adds .is-wide when a panel won't fit the space it has:
+   the panel widens and its text flows into two columns. Desktop only. */
+
+@media (min-width: 769px) {
+  .hse-tl__entry.is-wide .hse-tl__entry-inner {
+    max-width: min(900px, calc(100vw - var(--tl-spine-inset) - var(--tl-gap) - 2 * var(--hse-page-pad)));
+  }
+  [data-direction="horizontal"] .hse-tl__entry.is-wide {
+    --tl-card-w: min(900px, calc(var(--tl-col-w, 100vw) - 2 * var(--hse-page-pad)));
+  }
+  [data-direction="horizontal"] .hse-tl__entry.is-wider {
+    --tl-card-w: calc(var(--tl-col-w, 100vw) - 2 * var(--hse-page-pad));
+  }
+  .is-wide.is-wider .hse-tl__text { column-count: 3; }
+  .is-stepped .hse-tl__entry.is-wide {
+    --tl-card-w: min(860px, 62vw);
+  }
+  .is-wide .hse-tl__text {
+    column-count: 2;
+    column-gap: 2.5rem;
+  }
+  .is-wide .hse-tl__heading,
+  .is-wide .hse-tl__media--above,
+  .is-wide .hse-tl__media--below {
+    column-span: all;
   }
 }

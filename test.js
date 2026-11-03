@@ -142,6 +142,10 @@ console.log('\n── Timeline media and backgrounds ─────────
   assertContains('Section date background', bg, '<span class="hse-tl__date has-bg" style="background:#ffcc00">');
   assertContains('Marker drops level with a date block', bg, 'data-date-bg');
   assertContains('Entry text background', bg, '<div class="hse-tl__text has-bg" style="background:rgba(0,34,68,0.7)">');
+  const txt = one({ text_bg: { text_size: 'large' } }, { timeline_text_bg: { text_color: '#112233', text_size: 'small' }, timeline_date_bg: { text_color: 'navy' } });
+  assertContains('Text colour and entry size on the text block', txt, '<div class="hse-tl__text" style="--tl-text-color:#112233;--tl-text-scale:1.2">');
+  assertContains('Date text colour without a background', txt, '<span class="hse-tl__date" style="--tl-text-color:navy">');
+  assert('Medium on an entry resets the section size', !one({ text_bg: { text_size: 'medium' } }, { timeline_text_bg: { text_size: 'large' } }).includes('--tl-text-scale'));
   const off = one({ date_bg: { opacity: 0 } }, { timeline_date_bg: { color: '#ffcc00' } });
   assert('An entry can switch the section block off', !off.includes('has-bg'));
 }

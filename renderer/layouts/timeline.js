@@ -25,8 +25,9 @@ const { escHtml } = require('../shell/head');
  *   timeline_marker_color {string}  CSS colour (default: the story accent)
  *   timeline_line_color   {string}  CSS colour (default: the story accent, half opacity)
  *   timeline_line_width   {number}  px (default: 2)
- *   timeline_date_bg      {object}  { color, opacity } background block behind each date
- *   timeline_text_bg      {object}  { color, opacity } background block behind heading + body
+ *   timeline_date_bg      {object}  { color, opacity, text_color, text_size } the block
+ *                                   behind each date (text_size: small | large | xlarge)
+ *   timeline_text_bg      {object}  the same for the heading + body block
  *   timeline_entries {Array}   array of entry objects:
  *     entry.date     {string}  e.g. "1987" or "March 2020"
  *     entry.heading  {string}
@@ -73,6 +74,23 @@ function blockBg(sectionBg, entryBg) {
     return opacity === 100 ? color : `rgba(${r},${g},${b},${+(opacity / 100).toFixed(2)})`;
   }
   return opacity === 100 ? color : `color-mix(in srgb, ${color} ${opacity}%, transparent)`;
+}
+
+// Text colour and size for a block, with the same entry-over-section
+// rule. Returns the inline style declarations (background included).
+const TEXT_SIZES = { small: '0.85', large: '1.2', xlarge: '1.45' };
+function blockStyle(sectionBg, entryBg) {
+  const s = sectionBg || {};
+  const e = entryBg || {};
+  const bg = blockBg(s, e);
+  const color = cssColor(e.text_color) || cssColor(s.text_color);
+  const size = TEXT_SIZES[e.text_size] || (e.text_size ? null : TEXT_SIZES[s.text_size]);
+  const style = [
+    bg ? `background:${bg}` : null,
+    color ? `--tl-text-color:${color}` : null,
+    size ? `--tl-text-scale:${size}` : null,
+  ].filter(Boolean).join(';');
+  return { bg, style };
 }
 
 const MEDIA_POSITIONS = ['above', 'below', 'left', 'right'];
@@ -170,8 +188,10 @@ function renderTimeline(section) {
     }
 
     // Date and text are separate blocks so each can carry its own background
-    const dateBg = blockBg(section.timeline_date_bg, entry.date_bg);
-    const textBg = blockBg(section.timeline_text_bg, entry.text_bg);
+    const dateBlock = blockStyle(section.timeline_date_bg, entry.date_bg);
+    const textBlock = blockStyle(section.timeline_text_bg, entry.text_bg);
+    const dateBg = dateBlock.bg;
+    const textBg = textBlock.bg;
     const media  = mediaHtml(entry.media);
     const heading = entry.heading ? `<h3 class="hse-tl__heading">${escHtml(entry.heading)}</h3>` : '';
     const body    = entry.body    ? `<p class="hse-tl__body">${escHtml(entry.body)}</p>` : '';
@@ -189,8 +209,8 @@ function renderTimeline(section) {
       ${thumbHtml}
       <div class="hse-tl__entry-inner"${dateBg && entry.date ? ' data-date-bg' : ''}>
         ${markerHtml}
-        ${entry.date ? `<span class="hse-tl__date${dateBg ? ' has-bg' : ''}"${dateBg ? ` style="background:${escHtml(dateBg)}"` : ''}>${escHtml(entry.date)}</span>` : ''}
-        ${hasText ? `<div class="hse-tl__text${textBg ? ' has-bg' : ''}"${textBg ? ` style="background:${escHtml(textBg)}"` : ''}>
+        ${entry.date ? `<span class="hse-tl__date${dateBg ? ' has-bg' : ''}"${dateBlock.style ? ` style="${escHtml(dateBlock.style)}"` : ''}>${escHtml(entry.date)}</span>` : ''}
+        ${hasText ? `<div class="hse-tl__text${textBg ? ' has-bg' : ''}"${textBlock.style ? ` style="${escHtml(textBlock.style)}"` : ''}>
           ${textParts.filter(Boolean).join('\n          ')}
         </div>` : ''}
       </div>
@@ -226,4 +246,4 @@ function renderTimeline(section) {
 </section>`;
 }
 
-module.exports = { renderTimeline, blockBg };
+module.exports = { renderTimeline, blockBg, blockStyle };
