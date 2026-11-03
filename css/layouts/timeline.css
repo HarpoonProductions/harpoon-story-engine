@@ -508,7 +508,7 @@
    js/runtime.js measures the entries, positions them along the path,
    draws the line as SVG and adds .is-stepped; without it (phones,
    reduced motion, no JS) the section is an ordinary vertical timeline.
-   Across runs put the text below the line, down runs to its right. */
+   Across runs put the text below the line, down and up runs to its right. */
 
 @media (min-width: 769px) {
   .hse-section--timeline.is-stepped {
@@ -574,23 +574,39 @@
     bottom: auto;
     translate: -50% -50%;
   }
-  .is-stepped [data-run="down"] .hse-tl__marker {
+  .is-stepped [data-run="down"] .hse-tl__marker,
+  .is-stepped [data-run="up"] .hse-tl__marker {
     left: calc(-1 * var(--tl-gap));
     right: auto;
     top: 0.55rem;
     bottom: auto;
     translate: -50% -50%;
   }
-  .is-stepped [data-run="down"] [data-date-bg] > .hse-tl__marker { top: calc(0.55rem + 0.4rem); }
+  /* An across panel reached by climbing sits above its line */
+  .is-stepped [data-run="across"][data-hang="above"] .hse-tl__marker {
+    top: auto;
+    bottom: calc(-1 * var(--tl-gap));
+    translate: -50% 50%;
+  }
+  .is-stepped [data-run="down"] [data-date-bg] > .hse-tl__marker,
+  .is-stepped [data-run="up"] [data-date-bg] > .hse-tl__marker { top: calc(0.55rem + 0.4rem); }
 
-  /* Triangles: base on the line, pointing down (across) or right (down) */
+  /* Triangles: base on the line, pointing down (across) or right (down, up) */
   .is-stepped[data-marker="triangle"] [data-run="across"] .hse-tl__marker {
     top: calc(-1 * var(--tl-gap) + var(--tl-line-width, 2px) / 2);
     translate: -50% 0;
     transform-origin: top center;
     clip-path: polygon(0 0, 100% 0, 50% 100%);
   }
-  .is-stepped[data-marker="triangle"] [data-run="down"] .hse-tl__marker {
+  .is-stepped[data-marker="triangle"] [data-run="across"][data-hang="above"] .hse-tl__marker {
+    top: auto;
+    bottom: calc(-1 * var(--tl-gap) + var(--tl-line-width, 2px) / 2);
+    translate: -50% 0;
+    transform-origin: bottom center;
+    clip-path: polygon(50% 0, 100% 100%, 0 100%);
+  }
+  .is-stepped[data-marker="triangle"] [data-run="down"] .hse-tl__marker,
+  .is-stepped[data-marker="triangle"] [data-run="up"] .hse-tl__marker {
     left: calc(-1 * var(--tl-gap) + var(--tl-line-width, 2px) / 2);
     translate: 0 -50%;
     transform-origin: left center;

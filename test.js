@@ -97,11 +97,11 @@ console.log('\n── Timeline direction ─────────────
   assertContains('Horizontal viewport wraps the track', h, '<div class="hse-tl__viewport">');
   assertContains('Entry count drives the scroll length', h, '--tl-count:2');
 
-  const st = renderTimeline({ id: 'tl', timeline_direction: 'stepped', timeline_entries: [{ heading: 'A' }, { heading: 'B' }, { heading: 'C', next: 'down' }, { heading: 'D', next: 'sideways' }] });
+  const st = renderTimeline({ id: 'tl', timeline_direction: 'stepped', timeline_entries: [{ heading: 'A' }, { heading: 'B' }, { heading: 'C', next: 'down' }, { heading: 'D', next: 'sideways' }, { heading: 'E', next: 'up' }] });
   assertContains('Stepped flag', st, 'data-direction="stepped"');
   assertContains('Stepped has the pinned viewport', st, '<div class="hse-tl__viewport">');
   assert('Stepped runs alternate by default, entry choice wins, bad value falls back',
-    JSON.stringify([...st.matchAll(/data-run="(\w+)"/g)].map(m => m[1])) === '["across","down","down","down"]');
+    JSON.stringify([...st.matchAll(/data-run="(\w+)"/g)].map(m => m[1])) === '["across","down","down","down","up"]');
   assert('Only stepped entries carry a run', !h.includes('data-run'));
 }
 

@@ -665,7 +665,7 @@
         });
       }
 
-      // Stepped: entries sit along a path that turns across or down after
+      // Stepped: entries sit along a path that turns across, down or up after
       // each one. Measure the panels, place them, draw the path as SVG, then
       // scrub one timeline that moves the camera along the path (pausing on
       // each entry) and draws the line as it goes. Rebuilt on resize.
@@ -683,31 +683,50 @@
           var nodes = [];
           var x = 0, y = 0;
 
-          entries.forEach(function (entry, i) {
-            var run    = entry.dataset.run || (i % 2 ? "down" : "across");
-            var inner  = entry.querySelector(".hse-tl__entry-inner");
+          // Each entry's run, and where its panel sits relative to its node:
+          // across hangs the panel below the line (marker 1rem in); down and
+          // up put it to the right, level with the date. Up straight after
+          // down, or down after up, would double back, so it goes across.
+          var runs = [], prevVertical = null;
+          var boxes = entries.map(function (entry, i) {
+            var run = entry.dataset.run || (i % 2 ? "down" : "across");
+            if ((run === "up" && prevVertical === "down") || (run === "down" && prevVertical === "up")) run = "across";
+            // An across run reached by climbing hangs its panel above the
+            // line, clear of the line coming up from below
+            var above = run === "across" && runs[i - 1] === "up";
+            prevVertical = run === "across" ? null : run;
+            runs.push(run);
+            entry.setAttribute("data-run", run);
+            if (above) entry.setAttribute("data-hang", "above");
+            else entry.removeAttribute("data-hang");
             var marker = entry.querySelector(".hse-tl__marker");
-            var h = inner.offsetHeight;
-            var w = entry.offsetWidth;
-            nodes.push({ x: x, y: y });
+            var h = entry.querySelector(".hse-tl__entry-inner").offsetHeight;
             if (run === "across") {
-              // line runs right; panel hangs below it, marker 1rem in
               var mx = marker ? marker.offsetLeft : 16;
-              entry.style.left = (x - mx) + "px";
-              entry.style.top  = (y + gap) + "px";
-              x = x - mx + w + room;
+              return { dx: -mx, dy: above ? -(gap + h) : gap, w: entry.offsetWidth, h: h };
+            }
+            var my = marker ? marker.offsetTop : 9;
+            return { dx: gap, dy: -my, w: entry.offsetWidth, h: h };
+          });
+
+          entries.forEach(function (entry, i) {
+            var b = boxes[i];
+            nodes.push({ x: x, y: y, run: runs[i] });
+            entry.style.left = (x + b.dx) + "px";
+            entry.style.top  = (y + b.dy) + "px";
+            if (runs[i] === "across") {
+              x = x + b.dx + b.w + room;
+            } else if (runs[i] === "down") {
+              y = y + b.dy + b.h + room;
             } else {
-              // line runs down; panel sits to its right, level with the date
-              var my = marker ? marker.offsetTop : 9;
-              entry.style.left = (x + gap) + "px";
-              entry.style.top  = (y - my) + "px";
-              y = y - my + h + room;
+              // up: the next panel ends a gap above this one
+              var nb = boxes[i + 1] || { dy: 0, h: 0 };
+              y = y + b.dy - room - (nb.dy + nb.h);
             }
           });
           // run the line a little past the last entry
           var last = nodes[nodes.length - 1];
-          var lastRun = entries[entries.length - 1].dataset.run || ((entries.length - 1) % 2 ? "down" : "across");
-          var tail = lastRun === "across" ? { x: last.x + 120, y: last.y } : { x: last.x, y: last.y + 120 };
+          var tail = { x: last.x + (last.run === "across" ? 120 : 0), y: last.y + (last.run === "down" ? 120 : last.run === "up" ? -120 : 0) };
 
           // Path
           var pts = nodes.concat([tail]);
@@ -730,11 +749,12 @@
           drawn.style.strokeDasharray = total + " " + total;
 
           // Camera: the current node sits at this point in the viewport
-          var ax = window.innerWidth * 0.3, ay = window.innerHeight * 0.32;
+          var ax = window.innerWidth * 0.3;
+          function ay(p) { return window.innerHeight * (p.run === "up" ? 0.55 : 0.32); }
           var times = [];
           var drawnLen = 0;
           tl = gsap.timeline({ paused: true });
-          tl.set(world, { x: ax - nodes[0].x, y: ay - nodes[0].y }, 0);
+          tl.set(world, { x: ax - nodes[0].x, y: ay(nodes[0]) - nodes[0].y }, 0);
           tl.set(drawn, { strokeDashoffset: total }, 0);
           nodes.forEach(function (p, i) {
             times.push(tl.duration());
@@ -746,7 +766,7 @@
             }
             var len = Math.abs(next.x - p.x) + Math.abs(next.y - p.y);
             drawnLen += len;
-            tl.to(world, { x: ax - next.x, y: ay - next.y, duration: len, ease: "none" });
+            tl.to(world, { x: ax - next.x, y: ay(next) - next.y, duration: len, ease: "none" });
             tl.to(drawn, { strokeDashoffset: total - drawnLen, duration: len, ease: "none" }, "<");
           });
 
@@ -779,7 +799,7 @@
           if (tl) { tl.kill(); tl = null; }
           if (svg) { svg.remove(); svg = null; }
           gsap.set(world, { clearProps: "transform" });
-          entries.forEach(function (e) { e.style.left = ""; e.style.top = ""; });
+          entries.forEach(function (e) { e.style.left = ""; e.style.top = ""; e.removeAttribute("data-hang"); });
           section.style.height = "";
           section.classList.remove("is-stepped");
         }

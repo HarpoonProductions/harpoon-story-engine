@@ -914,7 +914,7 @@
                   "print_include": { "type": "boolean" }
                 }
               },
-              "next": { "type": "string", "enum": ["across", "down"], "description": "Stepped timelines only: which way the path goes after this entry. Default alternates, across first." },
+              "next": { "type": "string", "enum": ["across", "down", "up"], "description": "Stepped timelines only: which way the path goes after this entry. Default alternates across and down. Up straight after down (or down after up) is treated as across, so the path never doubles back." },
               "date_bg": { "$ref": "#/definitions/timeline_block_bg" },
               "text_bg": { "$ref": "#/definitions/timeline_block_bg" }
             }

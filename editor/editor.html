@@ -2006,7 +2006,7 @@
                                       <option value="horizontal">Horizontal — entries slide sideways as you scroll</option>
                                       <option value="stepped">Stepped — the path turns across or down after each entry</option>
                                     </select>
-                                    <p class="form-hint">Horizontal and Stepped pin the section while the reader scrolls. For Stepped, choose "Then go" on each entry. Phones show the vertical layout.</p>
+                                    <p class="form-hint">Horizontal and Stepped pin the section while the reader scrolls. For Stepped, choose "Then go" on each entry (Up and Down need an Across between them). Phones show the vertical layout.</p>
                                   </div>
                                   <div class="form-group" id="tl-align-group">
                                     <label class="form-label" for="tl-align">Alignment</label>
@@ -4687,7 +4687,7 @@ function initTimelineEditor(sectionIndex) {
           ${section.timeline_direction === 'stepped' ? `<label style="display:grid;grid-template-columns:7rem 1fr;align-items:center;gap:0.5rem">
             <span style="${panelSummary};cursor:default">Then go</span>
             <select class="form-select tl-next" aria-label="Then go">
-              ${[['across', 'Across →'], ['down', 'Down ↓']].map(([v, l]) => `<option value="${v}"${(entry.next || (i % 2 ? 'down' : 'across')) === v ? ' selected' : ''}>${l}</option>`).join('')}
+              ${[['across', 'Across →'], ['down', 'Down ↓'], ['up', 'Up ↑']].map(([v, l]) => `<option value="${v}"${(entry.next || (i % 2 ? 'down' : 'across')) === v ? ' selected' : ''}>${l}</option>`).join('')}
             </select>
           </label>` : ''}
           <input class="form-input tl-date" data-i="${i}" placeholder="Date / label (e.g. 1987 or March 2020)" value="${entry.date || ''}">
