@@ -4928,19 +4928,34 @@ function tlBgRow(target, key, text, inherit) {
       <div class="form-color-row" style="grid-template-columns:28px 1fr auto">
         <input type="color" class="form-color-swatch" data-bg-swatch aria-label="${text} colour picker">
         <input class="form-input" data-bg-color style="min-width:0">
-        <button type="button" class="tbtn tbtn--ghost" data-bg-clear title="${inherit ? 'Use the section setting' : 'No background'}" style="padding:0 0.5rem">✕</button>
+        <button type="button" class="tbtn tbtn--ghost" data-bg-clear title="${inherit ? 'Use the section settings' : 'Clear background and text settings'}" style="padding:0 0.5rem">✕</button>
       </div>
       <label style="display:flex;align-items:center;gap:0.4rem;font-family:var(--font-mono);font-size:0.6rem;color:var(--ink-3)">
         Opacity
         <input type="range" min="0" max="100" step="1" data-bg-opacity style="flex:1;min-width:0" aria-label="${text} opacity">
         <span data-bg-readout style="min-width:4.5rem;text-align:right"></span>
       </label>
+      <div style="display:grid;grid-template-columns:auto 28px 1fr auto;align-items:center;gap:0.4rem">
+        <span style="font-family:var(--font-mono);font-size:0.6rem;color:var(--ink-3)">Text</span>
+        <input type="color" class="form-color-swatch" data-text-swatch aria-label="${text} text colour picker">
+        <input class="form-input" data-text-color style="min-width:0">
+        <select class="form-select" data-text-size aria-label="${text} text size" style="width:auto">
+          <option value="">Size</option>
+          <option value="small">Small</option>
+          <option value="medium">Medium</option>
+          <option value="large">Large</option>
+          <option value="xlarge">X-large</option>
+        </select>
+      </div>
     </div>`;
 
   const swatch  = wrap.querySelector('[data-bg-swatch]');
   const color   = wrap.querySelector('[data-bg-color]');
   const range   = wrap.querySelector('[data-bg-opacity]');
   const readout = wrap.querySelector('[data-bg-readout]');
+  const tSwatch = wrap.querySelector('[data-text-swatch]');
+  const tColor  = wrap.querySelector('[data-text-color]');
+  const tSize   = wrap.querySelector('[data-text-size]');
 
   const show = () => {
     const own = target[key] || {};
@@ -4951,6 +4966,11 @@ function tlBgRow(target, key, text, inherit) {
     const op = ownOp ? own.opacity : inh.opacity != null ? inh.opacity : 100;
     range.value = op;
     readout.textContent = `${op}%${!ownOp && inherit && inh.color ? ' (section)' : ''}`;
+    tColor.value = own.text_color || '';
+    tColor.placeholder = inh.text_color ? `${inh.text_color} (section)` : 'Default';
+    tSwatch.value = hex(own.text_color || inh.text_color || '#ffffff');
+    tSize.value = own.text_size || '';
+    tSize.options[0].textContent = inh.text_size ? `Size (section: ${inh.text_size})` : 'Size';
   };
   const write = (field, value) => {
     const bg = { ...(target[key] || {}) };
@@ -4965,6 +4985,9 @@ function tlBgRow(target, key, text, inherit) {
   color.addEventListener('change', () => write('color', color.value.trim()));
   swatch.addEventListener('input', () => write('color', swatch.value));
   range.addEventListener('input', () => write('opacity', Number(range.value)));
+  tColor.addEventListener('change', () => write('text_color', tColor.value.trim()));
+  tSwatch.addEventListener('input', () => write('text_color', tSwatch.value));
+  tSize.addEventListener('change', () => write('text_size', tSize.value));
   wrap.querySelector('[data-bg-clear]').addEventListener('click', () => {
     delete target[key];
     scheduleAutosave();

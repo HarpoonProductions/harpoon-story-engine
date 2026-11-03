@@ -253,10 +253,12 @@
   "definitions": {
     "timeline_block_bg": {
       "type": "object",
-      "description": "A background block in the timeline layout.",
+      "description": "A block in the timeline layout (the date, or the heading and body): background colour and opacity, text colour and size.",
       "properties": {
         "color": { "type": "string", "description": "Any CSS colour." },
-        "opacity": { "type": "number", "minimum": 0, "maximum": 100, "description": "Percent. Default 100." }
+        "opacity": { "type": "number", "minimum": 0, "maximum": 100, "description": "Percent. Default 100." },
+        "text_color": { "type": "string", "description": "Any CSS colour for the text in this block." },
+        "text_size": { "type": "string", "enum": ["small", "medium", "large", "xlarge"], "description": "Text size in this block. medium is the default." }
       }
     },
     "image": {

@@ -613,7 +613,39 @@
         else { video.pause(); }
       });
 
+      var desktop = window.matchMedia("(min-width: 769px)");
+      var NAV = 90; // clearance for the fixed header
+
+      // Too tall for the screen? Widen the panel and set its text in two
+      // columns (.is-wide) so the whole entry can be read without moving.
+      // `room(entry)` gives the height available to that entry's panel.
+      // `wider` allows a third column across the full screen width when two
+      // still aren't enough (horizontal, where the line can't move).
+      function fitEntries(room, wider) {
+        entries.forEach(function (entry) { entry.classList.remove("is-wide", "is-wider"); });
+        if (!desktop.matches) return;
+        entries.forEach(function (entry) {
+          var inner = entry.querySelector(".hse-tl__entry-inner");
+          if (!inner || inner.offsetHeight <= room(entry)) return;
+          entry.classList.add("is-wide");
+          if (wider && inner.offsetHeight > room(entry)) entry.classList.add("is-wider");
+        });
+      }
+
+      function onResize(fn) {
+        var timer;
+        function handler() { clearTimeout(timer); timer = setTimeout(fn, 200); }
+        window.addEventListener("resize", handler);
+        return function () { clearTimeout(timer); window.removeEventListener("resize", handler); };
+      }
+
       function setupVertical() {
+        // Alternate panels are half the page wide: no room for two columns
+        if (section.dataset.align !== "alternate" && !section.dataset.direction) {
+          var refit = function () { fitEntries(function () { return window.innerHeight - 160; }); };
+          refit();
+          onResize(function () { refit(); ScrollTrigger.refresh(); });
+        }
         entries.forEach(function (entry, i) {
           // Fade entry text in when it approaches the viewport centre
           ScrollTrigger.create({
@@ -635,102 +667,167 @@
         });
       }
 
-      // Horizontal: the section pins (CSS sticky) and scrolling slides the
-      // entry track sideways. Media follows scroll progress; entries fade
-      // in as they come on screen.
-      function setupHorizontal() {
-        var viewport = section.querySelector(".hse-tl__viewport");
-        var track    = section.querySelector(".hse-tl__phases");
-        var current  = -1;
-        function update(self) {
-          var index = Math.round(self.progress * (entries.length - 1));
-          if (index !== current) { current = index; activateLayer(index); }
-          var edge = window.innerWidth * 0.9;
-          entries.forEach(function (entry) {
-            entry.classList.toggle("is-visible", entry.getBoundingClientRect().left < edge);
-          });
-        }
-        gsap.to(track, {
-          x: function () { return -Math.max(0, track.offsetWidth - viewport.clientWidth); },
-          ease: "none",
-          scrollTrigger: {
+      // Pinned directions (horizontal, stepped) share one pattern: build a
+      // paused timeline that rests on each entry (`hold`) and moves to the
+      // next (`move`), size the section to it (1px of scroll per unit) and
+      // scrub it. The background changes half way through each move, as the
+      // old entry leaves and the new one arrives; an entry fades in as it
+      // starts to arrive.
+      function pinned(build, teardown) {
+        var tl, st, current;
+        function start() {
+          var plan = build(); // { tl, arrive: [time each entry is reached], moves: [move duration into each] }
+          tl = plan.tl;
+          section.style.height = (tl.duration() + window.innerHeight) + "px";
+          current = -1;
+          st = ScrollTrigger.create({
             trigger: section,
             start: "top top",
             end: "bottom bottom",
             scrub: 0.6,
-            invalidateOnRefresh: true,
-            onUpdate: update,
-            onRefresh: update,
-          },
+            animation: tl,
+            onUpdate: function () {
+              var t = tl.time();
+              var index = 0;
+              plan.arrive.forEach(function (time, i) {
+                if (t >= time - plan.moves[i] / 2) index = i;
+              });
+              if (index !== current) { current = index; activateLayer(index); }
+              entries.forEach(function (entry, i) {
+                entry.classList.toggle("is-visible", t >= plan.arrive[i] - plan.moves[i] * 0.85);
+              });
+            },
+          });
+          entries[0].classList.add("is-visible");
+          activateLayer(0);
+        }
+        function stop() {
+          if (st) { st.kill(); st = null; }
+          if (tl) { tl.kill(); tl = null; }
+          section.style.height = "";
+          teardown();
+        }
+        start();
+        ScrollTrigger.refresh();
+        var off = onResize(function () { stop(); start(); ScrollTrigger.refresh(); });
+        return function () { off(); stop(); };
+      }
+
+      // Horizontal: each entry has a whole screen width to itself, so only
+      // one is in view at a time; the track slides one screen per entry.
+      function setupHorizontal() {
+        var viewport = section.querySelector(".hse-tl__viewport");
+        var track    = section.querySelector(".hse-tl__phases");
+        var align    = section.dataset.align;
+        var lineY    = align === "right" ? 0.76 : align === "alternate" ? 0.5 : 0.24;
+
+        return pinned(function () {
+          var W = viewport.clientWidth, H = window.innerHeight;
+          section.style.setProperty("--tl-col-w", W + "px");
+          fitEntries(function (entry) {
+            var below = entry.dataset.side === "left";
+            return below ? H * (1 - lineY) - 32 - 40 : H * lineY - 32 - NAV;
+          }, true);
+          var hold = H * 0.35, move = H * 0.9;
+          var tl = gsap.timeline({ paused: true });
+          var arrive = [], moves = [];
+          tl.set(track, { x: 0 }, 0);
+          entries.forEach(function (entry, i) {
+            if (i) tl.to(track, { x: -i * W, duration: move, ease: "power1.inOut" });
+            arrive.push(tl.duration());
+            moves.push(i ? move : 0);
+            tl.to({}, { duration: hold });
+          });
+          return { tl: tl, arrive: arrive, moves: moves };
+        }, function () {
+          gsap.set(track, { clearProps: "transform" });
+          section.style.removeProperty("--tl-col-w");
+          entries.forEach(function (entry) { entry.classList.remove("is-wide", "is-wider"); });
         });
       }
 
-      // Stepped: entries sit along a path that turns across, down or up after
-      // each one. Measure the panels, place them, draw the path as SVG, then
-      // scrub one timeline that moves the camera along the path (pausing on
-      // each entry) and draws the line as it goes. Rebuilt on resize.
+      // Stepped: entries sit along a path that turns across, down or up
+      // after each one. Measure the panels, place them, draw the path as SVG
+      // and move the view along it. Each run lasts long enough that the last
+      // entry has left the screen before the next arrives, so one entry is
+      // in view at a time and the path turns only between entries.
       function setupStepped() {
-        var viewport = section.querySelector(".hse-tl__viewport");
-        var world    = section.querySelector(".hse-tl__phases");
+        var world = section.querySelector(".hse-tl__phases");
         var NS = "http://www.w3.org/2000/svg";
-        var tl, st, svg, resizeTimer;
+        var svg;
 
-        function build() {
+        return pinned(function () {
           section.classList.add("is-stepped");
+          var W = window.innerWidth, H = window.innerHeight;
           var gap  = parseFloat(getComputedStyle(section).getPropertyValue("--tl-gap")) || 32;
-          var room = 64;           // space between a panel and the next run of line
-          var hold = window.innerHeight * 0.35; // scroll spent resting on each entry
-          var nodes = [];
-          var x = 0, y = 0;
+          var room = 64;
+          var ax = W * 0.3;
 
-          // Each entry's run, and where its panel sits relative to its node:
-          // across hangs the panel below the line (marker 1rem in); down and
-          // up put it to the right, level with the date. Up straight after
-          // down, or down after up, would double back, so it goes across.
+          // Runs. Up straight after down, or down after up, would double
+          // back, so it goes across. An across run reached by climbing hangs
+          // its panel above the line, and the view sits low to show it.
           var runs = [], prevVertical = null;
-          var boxes = entries.map(function (entry, i) {
+          entries.forEach(function (entry, i) {
             var run = entry.dataset.run || (i % 2 ? "down" : "across");
             if ((run === "up" && prevVertical === "down") || (run === "down" && prevVertical === "up")) run = "across";
-            // An across run reached by climbing hangs its panel above the
-            // line, clear of the line coming up from below
-            var above = run === "across" && runs[i - 1] === "up";
             prevVertical = run === "across" ? null : run;
             runs.push(run);
             entry.setAttribute("data-run", run);
-            if (above) entry.setAttribute("data-hang", "above");
+            if (run === "across" && runs[i - 1] === "up") entry.setAttribute("data-hang", "above");
             else entry.removeAttribute("data-hang");
-            var marker = entry.querySelector(".hse-tl__marker");
-            var h = entry.querySelector(".hse-tl__entry-inner").offsetHeight;
-            if (run === "across") {
-              var mx = marker ? marker.offsetLeft : 16;
-              return { dx: -mx, dy: above ? -(gap + h) : gap, w: entry.offsetWidth, h: h };
-            }
-            var my = marker ? marker.offsetTop : 9;
-            return { dx: gap, dy: -my, w: entry.offsetWidth, h: h };
+          });
+          var anchorY = entries.map(function (entry) { return H * (entry.dataset.hang ? 0.72 : 0.3); });
+
+          fitEntries(function (entry) {
+            var i = entries.indexOf(entry);
+            if (runs[i] !== "across") return H - anchorY[i] - 40;
+            return entry.dataset.hang ? anchorY[i] - gap - NAV : H - anchorY[i] - gap - 40;
           });
 
-          entries.forEach(function (entry, i) {
+          // Each panel's box relative to its node (the point on the line)
+          var boxes = entries.map(function (entry, i) {
+            var marker = entry.querySelector(".hse-tl__marker");
+            var h = entry.querySelector(".hse-tl__entry-inner").offsetHeight;
+            var w = entry.offsetWidth;
+            if (runs[i] === "across") {
+              var mx = marker ? marker.offsetLeft : 16;
+              return { dx: -mx, dy: entry.dataset.hang ? -(gap + h) : gap, w: w, h: h };
+            }
+            var my = marker ? marker.offsetTop : 9;
+            return { dx: gap, dy: -my, w: w, h: h };
+          });
+
+          // A panel still too tall for its usual spot moves the line up (or,
+          // hanging above it, down) as far as it needs to fit on screen
+          anchorY = anchorY.map(function (ay, i) {
             var b = boxes[i];
+            if (b.dy < 0 && runs[i] === "across") return Math.min(H - 40, Math.max(ay, NAV - b.dy));
+            return Math.max(NAV - Math.min(0, b.dy), Math.min(ay, H - 40 - b.dy - b.h));
+          });
+
+          // Distance to the next node: far enough that the panels never
+          // overlap, the next panel is off screen while resting on this one,
+          // and this one is off screen once resting on the next.
+          var nodes = [], x = 0, y = 0;
+          entries.forEach(function (entry, i) {
+            var b = boxes[i], nb = boxes[i + 1], ay = anchorY[i], nay = anchorY[i + 1];
             nodes.push({ x: x, y: y, run: runs[i] });
             entry.style.left = (x + b.dx) + "px";
             entry.style.top  = (y + b.dy) + "px";
+            if (!nb) return;
             if (runs[i] === "across") {
-              x = x + b.dx + b.w + room;
+              x += Math.max(b.dx + b.w + room - nb.dx, W - ax - nb.dx + room, ax + b.dx + b.w + room);
             } else if (runs[i] === "down") {
-              y = y + b.dy + b.h + room;
+              y += Math.max(b.dy + b.h + room - nb.dy, H - ay - nb.dy + room, nay + b.dy + b.h + room);
             } else {
-              // up: the next panel ends a gap above this one
-              var nb = boxes[i + 1] || { dy: 0, h: 0 };
-              y = y + b.dy - room - (nb.dy + nb.h);
+              y -= Math.max(nb.dy + nb.h + room - b.dy, ay + nb.dy + nb.h + room, H - nay - b.dy + room);
             }
           });
-          // run the line a little past the last entry
           var last = nodes[nodes.length - 1];
           var tail = { x: last.x + (last.run === "across" ? 120 : 0), y: last.y + (last.run === "down" ? 120 : last.run === "up" ? -120 : 0) };
 
-          // Path
-          var pts = nodes.concat([tail]);
-          var d = pts.map(function (p, i) { return (i ? "L" : "M") + p.x + " " + p.y; }).join(" ");
+          // Path: a faint track, and a copy drawn on as the reader goes
+          var d = nodes.concat([tail]).map(function (p, i) { return (i ? "L" : "M") + p.x + " " + p.y; }).join(" ");
           if (svg) svg.remove();
           svg = document.createElementNS(NS, "svg");
           svg.setAttribute("class", "hse-tl__path");
@@ -748,87 +845,44 @@
           var total = drawn.getTotalLength();
           drawn.style.strokeDasharray = total + " " + total;
 
-          // Camera: the current node sits at this point in the viewport
-          var ax = window.innerWidth * 0.3;
-          function ay(p) { return window.innerHeight * (p.run === "up" ? 0.55 : 0.32); }
-          var times = [];
-          var drawnLen = 0;
-          tl = gsap.timeline({ paused: true });
-          tl.set(world, { x: ax - nodes[0].x, y: ay(nodes[0]) - nodes[0].y }, 0);
+          var hold = H * 0.35;
+          var tl = gsap.timeline({ paused: true });
+          var arrive = [], moves = [], drawnLen = 0;
+          tl.set(world, { x: ax - nodes[0].x, y: anchorY[0] - nodes[0].y }, 0);
           tl.set(drawn, { strokeDashoffset: total }, 0);
           nodes.forEach(function (p, i) {
-            times.push(tl.duration());
-            tl.to({}, { duration: hold });
-            var next = nodes[i + 1];
-            if (!next) {
-              tl.to(drawn, { strokeDashoffset: 0, duration: 120, ease: "none" });
-              return;
+            if (i) {
+              var prev = nodes[i - 1];
+              var len = Math.abs(p.x - prev.x) + Math.abs(p.y - prev.y);
+              drawnLen += len;
+              tl.to(world, { x: ax - p.x, y: anchorY[i] - p.y, duration: len, ease: "power1.inOut" });
+              tl.to(drawn, { strokeDashoffset: total - drawnLen, duration: len, ease: "power1.inOut" }, "<");
+              moves.push(len);
+            } else {
+              moves.push(0);
             }
-            var len = Math.abs(next.x - p.x) + Math.abs(next.y - p.y);
-            drawnLen += len;
-            tl.to(world, { x: ax - next.x, y: ay(next) - next.y, duration: len, ease: "none" });
-            tl.to(drawn, { strokeDashoffset: total - drawnLen, duration: len, ease: "none" }, "<");
+            arrive.push(tl.duration());
+            tl.to({}, { duration: hold });
           });
-
-          // One pixel of scroll per unit of timeline
-          section.style.height = (tl.duration() + window.innerHeight) + "px";
-
-          var current = -1;
-          st = ScrollTrigger.create({
-            trigger: section,
-            start: "top top",
-            end: "bottom bottom",
-            scrub: 0.6,
-            animation: tl,
-            onUpdate: function () {
-              var t = tl.time();
-              var index = 0;
-              times.forEach(function (time, i) { if (t >= time - hold) index = i; });
-              if (index !== current) { current = index; activateLayer(index); }
-              entries.forEach(function (entry, i) {
-                entry.classList.toggle("is-visible", times[i] <= t + hold * 1.5);
-              });
-            },
-          });
-          entries[0].classList.add("is-visible");
-          activateLayer(0);
-        }
-
-        function teardown() {
-          if (st) { st.kill(); st = null; }
-          if (tl) { tl.kill(); tl = null; }
+          tl.to(drawn, { strokeDashoffset: 0, duration: 120, ease: "none" });
+          return { tl: tl, arrive: arrive, moves: moves };
+        }, function () {
           if (svg) { svg.remove(); svg = null; }
           gsap.set(world, { clearProps: "transform" });
-          entries.forEach(function (e) { e.style.left = ""; e.style.top = ""; e.removeAttribute("data-hang"); });
-          section.style.height = "";
+          entries.forEach(function (e) {
+            e.style.left = ""; e.style.top = "";
+            e.removeAttribute("data-hang");
+            e.classList.remove("is-wide");
+          });
           section.classList.remove("is-stepped");
-        }
-
-        function onResize() {
-          clearTimeout(resizeTimer);
-          resizeTimer = setTimeout(function () {
-            teardown(); build(); ScrollTrigger.refresh();
-          }, 200);
-        }
-
-        build();
-        ScrollTrigger.refresh();
-        window.addEventListener("resize", onResize);
-        return function () {
-          clearTimeout(resizeTimer);
-          window.removeEventListener("resize", onResize);
-          teardown();
-        };
+        });
       }
 
-      if (section.dataset.direction === "stepped" && section.querySelector(".hse-tl__viewport")) {
-        var mmStep = gsap.matchMedia();
-        mmStep.add("(min-width: 769px)", setupStepped);
-        mmStep.add("(max-width: 768px)", setupVertical);
-      } else if (section.dataset.direction === "horizontal" && section.querySelector(".hse-tl__viewport")) {
+      var direction = section.querySelector(".hse-tl__viewport") ? section.dataset.direction : null;
+      if (direction === "stepped" || direction === "horizontal") {
         // Phones get the stacked vertical layout (css/layouts/timeline.css)
         var mm = gsap.matchMedia();
-        mm.add("(min-width: 769px)", setupHorizontal);
+        mm.add("(min-width: 769px)", direction === "stepped" ? setupStepped : setupHorizontal);
         mm.add("(max-width: 768px)", setupVertical);
       } else {
         setupVertical();
