@@ -11,12 +11,20 @@ Choose the **LTS** version for macOS. Install it like any other Mac app.
 
 **Step 2 — Get the Story Engine folder**
 
-You should have received a folder called `harpoon-story-engine`. Put it somewhere 
-you'll remember — your Desktop or Documents folder is fine.
+Download the Story Engine from this link:
+https://github.com/HarpoonProductions/harpoon-story-engine/archive/refs/heads/main.zip
+
+Double-click the downloaded zip to unpack it. You'll get a folder called
+`harpoon-story-engine-main`. Rename it to `harpoon-story-engine` and move it
+somewhere you'll remember — your Documents folder is fine. Keep it out of
+iCloud-synced folders if you can (the Desktop is often synced).
 
 **Step 3 — Add your credentials file**
 
-Giles will send you a file called `.env`. Drop it into the `harpoon-story-engine` folder.
+Giles will send you a file called `.env` (sometimes it arrives as `env.txt`;
+if so, rename it to `.env`). Drop it into the `harpoon-story-engine` folder.
+It holds the keys that let the editor save stories and publish them, so keep
+it private and don't forward it.
 
 > Note: `.env` files are hidden by default on Mac. To see hidden files in Finder,  
 > press **Cmd + Shift + .** (that's a full stop). Press it again to hide them.
