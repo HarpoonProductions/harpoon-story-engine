@@ -502,3 +502,98 @@
   .hse-section--timeline[data-direction="horizontal"].is-static { height: auto; }
   [data-direction="horizontal"].is-static .hse-tl__viewport { overflow-x: auto; }
 }
+
+/* ── Stepped direction ────────────────────────────────────────────
+   A path that turns across or down after each entry (entry.next).
+   js/runtime.js measures the entries, positions them along the path,
+   draws the line as SVG and adds .is-stepped; without it (phones,
+   reduced motion, no JS) the section is an ordinary vertical timeline.
+   Across runs put the text below the line, down runs to its right. */
+
+@media (min-width: 769px) {
+  .hse-section--timeline.is-stepped {
+    --tl-gap: 32px;
+    --tl-card-w: clamp(280px, 28vw, 400px);
+  }
+
+  .is-stepped .hse-tl__viewport {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    height: 100vh;
+    margin-top: -100vh;
+    overflow: hidden;
+  }
+
+  /* The world the camera moves across: entries are placed in it by JS */
+  .is-stepped .hse-tl__phases {
+    position: relative;
+    width: 0;
+    height: 0;
+    margin: 0;
+    will-change: transform;
+  }
+  .is-stepped .hse-tl__spine { display: none; }
+
+  .hse-tl__path {
+    position: absolute;
+    left: 0;
+    top: 0;
+    overflow: visible;
+    pointer-events: none;
+  }
+  .hse-tl__path path {
+    fill: none;
+    stroke: var(--tl-line-color, var(--hse-accent));
+    stroke-width: var(--tl-line-width, 2px);
+    stroke-linecap: square;
+  }
+  .hse-tl__path-track { opacity: calc(var(--tl-line-opacity, 0.5) * 0.35); }
+  .hse-tl__path-drawn { opacity: var(--tl-line-opacity, 0.5); }
+
+  .is-stepped .hse-tl__entry {
+    position: absolute;
+    display: block;
+    width: var(--tl-card-w);
+    min-height: 0;
+    padding: 0;
+    margin: 0;
+  }
+  .is-stepped .hse-tl__entry[data-side] .hse-tl__entry-inner {
+    width: auto;
+    max-width: none;
+    margin: 0;
+  }
+
+  /* Marker on the line: across runs 1rem in from the panel's left edge,
+     --tl-gap above it; down runs --tl-gap to its left, level with the date */
+  .is-stepped [data-run="across"] .hse-tl__marker {
+    left: 1rem;
+    right: auto;
+    top: calc(-1 * var(--tl-gap));
+    bottom: auto;
+    translate: -50% -50%;
+  }
+  .is-stepped [data-run="down"] .hse-tl__marker {
+    left: calc(-1 * var(--tl-gap));
+    right: auto;
+    top: 0.55rem;
+    bottom: auto;
+    translate: -50% -50%;
+  }
+  .is-stepped [data-run="down"] [data-date-bg] > .hse-tl__marker { top: calc(0.55rem + 0.4rem); }
+
+  /* Triangles: base on the line, pointing down (across) or right (down) */
+  .is-stepped[data-marker="triangle"] [data-run="across"] .hse-tl__marker {
+    top: calc(-1 * var(--tl-gap) + var(--tl-line-width, 2px) / 2);
+    translate: -50% 0;
+    transform-origin: top center;
+    clip-path: polygon(0 0, 100% 0, 50% 100%);
+  }
+  .is-stepped[data-marker="triangle"] [data-run="down"] .hse-tl__marker {
+    left: calc(-1 * var(--tl-gap) + var(--tl-line-width, 2px) / 2);
+    translate: 0 -50%;
+    transform-origin: left center;
+    clip-path: polygon(0 0, 100% 50%, 0 100%);
+  }
+}

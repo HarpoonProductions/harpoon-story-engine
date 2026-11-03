@@ -2004,10 +2004,11 @@
                                     <select class="form-select" id="tl-direction">
                                       <option value="vertical">Vertical — entries scroll down the page</option>
                                       <option value="horizontal">Horizontal — entries slide sideways as you scroll</option>
+                                      <option value="stepped">Stepped — the path turns across or down after each entry</option>
                                     </select>
-                                    <p class="form-hint">Horizontal pins the section while the reader scrolls. Phones show the vertical layout.</p>
+                                    <p class="form-hint">Horizontal and Stepped pin the section while the reader scrolls. For Stepped, choose "Then go" on each entry. Phones show the vertical layout.</p>
                                   </div>
-                                  <div class="form-group">
+                                  <div class="form-group" id="tl-align-group">
                                     <label class="form-label" for="tl-align">Alignment</label>
                                     <select class="form-select" id="tl-align">
                                       <option value="left">Left — text panel on the left</option>
@@ -4644,18 +4645,21 @@ function initTimelineEditor(sectionIndex) {
     horizontal: { left: 'Top — line at the top, text below', right: 'Bottom — line at the bottom, text above', alternate: 'Middle — text alternating above and below' },
   };
   const relabelAlign = dir => {
-    newAlignSelect.querySelectorAll('option').forEach(o => { o.textContent = alignLabels[dir][o.value]; });
+    // Stepped sets its own sides, so alignment only applies to the others
+    document.getElementById('tl-align-group').style.display = dir === 'stepped' ? 'none' : '';
+    if (alignLabels[dir]) newAlignSelect.querySelectorAll('option').forEach(o => { o.textContent = alignLabels[dir][o.value]; });
   };
   const dirSelect = document.getElementById('tl-direction');
   const newDirSelect = dirSelect.cloneNode(true);
   dirSelect.parentNode.replaceChild(newDirSelect, dirSelect);
-  newDirSelect.value = section.timeline_direction === 'horizontal' ? 'horizontal' : 'vertical';
+  newDirSelect.value = ['horizontal', 'stepped'].includes(section.timeline_direction) ? section.timeline_direction : 'vertical';
   relabelAlign(newDirSelect.value);
   newDirSelect.addEventListener('change', e => {
-    if (e.target.value === 'horizontal') section.timeline_direction = 'horizontal';
-    else delete section.timeline_direction;
+    if (e.target.value === 'vertical') delete section.timeline_direction;
+    else section.timeline_direction = e.target.value;
     relabelAlign(e.target.value);
     scheduleAutosave();
+    renderEntriesAndInit(); // shows or hides each entry's "Then go"
   });
 
   initTimelineStyle(section);
@@ -4680,6 +4684,12 @@ function initTimelineEditor(sectionIndex) {
           ${i > 0 ? `<button type="button" class="block-item__delete" data-i="${i}" title="Remove entry">✕</button>` : ''}
         </div>
         <div style="padding:0.5rem;display:flex;flex-direction:column;gap:0.4rem">
+          ${section.timeline_direction === 'stepped' ? `<label style="display:grid;grid-template-columns:7rem 1fr;align-items:center;gap:0.5rem">
+            <span style="${panelSummary};cursor:default">Then go</span>
+            <select class="form-select tl-next" aria-label="Then go">
+              ${[['across', 'Across →'], ['down', 'Down ↓']].map(([v, l]) => `<option value="${v}"${(entry.next || (i % 2 ? 'down' : 'across')) === v ? ' selected' : ''}>${l}</option>`).join('')}
+            </select>
+          </label>` : ''}
           <input class="form-input tl-date" data-i="${i}" placeholder="Date / label (e.g. 1987 or March 2020)" value="${entry.date || ''}">
           <input class="form-input tl-heading" data-i="${i}" placeholder="Heading" value="${entry.heading || ''}">
           <textarea class="form-textarea tl-body" data-i="${i}" placeholder="Body text…" rows="3">${entry.body || ''}</textarea>
@@ -4746,6 +4756,8 @@ function initTimelineEditor(sectionIndex) {
         });
       });
 
+      const nextSel = item.querySelector('.tl-next');
+      if (nextSel) nextSel.addEventListener('change', e => { section.timeline_entries[i].next = e.target.value; scheduleAutosave(); });
       item.querySelector('.tl-date').addEventListener('input', e => { section.timeline_entries[i].date = e.target.value; scheduleAutosave(); });
       item.querySelector('.tl-heading').addEventListener('input', e => { section.timeline_entries[i].heading = e.target.value; scheduleAutosave(); });
       item.querySelector('.tl-body').addEventListener('input', e => { section.timeline_entries[i].body = e.target.value; scheduleAutosave(); });
