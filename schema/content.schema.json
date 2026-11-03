@@ -842,9 +842,9 @@
         },
         "timeline_direction": {
           "type": "string",
-          "enum": ["vertical", "horizontal"],
+          "enum": ["vertical", "horizontal", "stepped"],
           "default": "vertical",
-          "description": "Used by timeline layout. Horizontal pins the section and slides the entries sideways as the reader scrolls (phones keep the vertical layout)."
+          "description": "Used by timeline layout. Horizontal pins the section and slides the entries sideways as the reader scrolls. Stepped pins it and travels a path that turns across or down after each entry (see entry next). Phones keep the vertical layout."
         },
         "timeline_align": {
           "type": "string",
@@ -914,6 +914,7 @@
                   "print_include": { "type": "boolean" }
                 }
               },
+              "next": { "type": "string", "enum": ["across", "down", "up"], "description": "Stepped timelines only: which way the path goes after this entry. Default alternates across and down. Up straight after down (or down after up) is treated as across, so the path never doubles back." },
               "date_bg": { "$ref": "#/definitions/timeline_block_bg" },
               "text_bg": { "$ref": "#/definitions/timeline_block_bg" }
             }

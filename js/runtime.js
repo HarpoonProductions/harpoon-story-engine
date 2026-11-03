@@ -665,7 +665,167 @@
         });
       }
 
-      if (section.dataset.direction === "horizontal" && section.querySelector(".hse-tl__viewport")) {
+      // Stepped: entries sit along a path that turns across, down or up after
+      // each one. Measure the panels, place them, draw the path as SVG, then
+      // scrub one timeline that moves the camera along the path (pausing on
+      // each entry) and draws the line as it goes. Rebuilt on resize.
+      function setupStepped() {
+        var viewport = section.querySelector(".hse-tl__viewport");
+        var world    = section.querySelector(".hse-tl__phases");
+        var NS = "http://www.w3.org/2000/svg";
+        var tl, st, svg, resizeTimer;
+
+        function build() {
+          section.classList.add("is-stepped");
+          var gap  = parseFloat(getComputedStyle(section).getPropertyValue("--tl-gap")) || 32;
+          var room = 64;           // space between a panel and the next run of line
+          var hold = window.innerHeight * 0.35; // scroll spent resting on each entry
+          var nodes = [];
+          var x = 0, y = 0;
+
+          // Each entry's run, and where its panel sits relative to its node:
+          // across hangs the panel below the line (marker 1rem in); down and
+          // up put it to the right, level with the date. Up straight after
+          // down, or down after up, would double back, so it goes across.
+          var runs = [], prevVertical = null;
+          var boxes = entries.map(function (entry, i) {
+            var run = entry.dataset.run || (i % 2 ? "down" : "across");
+            if ((run === "up" && prevVertical === "down") || (run === "down" && prevVertical === "up")) run = "across";
+            // An across run reached by climbing hangs its panel above the
+            // line, clear of the line coming up from below
+            var above = run === "across" && runs[i - 1] === "up";
+            prevVertical = run === "across" ? null : run;
+            runs.push(run);
+            entry.setAttribute("data-run", run);
+            if (above) entry.setAttribute("data-hang", "above");
+            else entry.removeAttribute("data-hang");
+            var marker = entry.querySelector(".hse-tl__marker");
+            var h = entry.querySelector(".hse-tl__entry-inner").offsetHeight;
+            if (run === "across") {
+              var mx = marker ? marker.offsetLeft : 16;
+              return { dx: -mx, dy: above ? -(gap + h) : gap, w: entry.offsetWidth, h: h };
+            }
+            var my = marker ? marker.offsetTop : 9;
+            return { dx: gap, dy: -my, w: entry.offsetWidth, h: h };
+          });
+
+          entries.forEach(function (entry, i) {
+            var b = boxes[i];
+            nodes.push({ x: x, y: y, run: runs[i] });
+            entry.style.left = (x + b.dx) + "px";
+            entry.style.top  = (y + b.dy) + "px";
+            if (runs[i] === "across") {
+              x = x + b.dx + b.w + room;
+            } else if (runs[i] === "down") {
+              y = y + b.dy + b.h + room;
+            } else {
+              // up: the next panel ends a gap above this one
+              var nb = boxes[i + 1] || { dy: 0, h: 0 };
+              y = y + b.dy - room - (nb.dy + nb.h);
+            }
+          });
+          // run the line a little past the last entry
+          var last = nodes[nodes.length - 1];
+          var tail = { x: last.x + (last.run === "across" ? 120 : 0), y: last.y + (last.run === "down" ? 120 : last.run === "up" ? -120 : 0) };
+
+          // Path
+          var pts = nodes.concat([tail]);
+          var d = pts.map(function (p, i) { return (i ? "L" : "M") + p.x + " " + p.y; }).join(" ");
+          if (svg) svg.remove();
+          svg = document.createElementNS(NS, "svg");
+          svg.setAttribute("class", "hse-tl__path");
+          svg.setAttribute("aria-hidden", "true");
+          svg.setAttribute("width", "1");
+          svg.setAttribute("height", "1");
+          ["hse-tl__path-track", "hse-tl__path-drawn"].forEach(function (cls) {
+            var path = document.createElementNS(NS, "path");
+            path.setAttribute("class", cls);
+            path.setAttribute("d", d);
+            svg.appendChild(path);
+          });
+          world.insertBefore(svg, world.firstChild);
+          var drawn = svg.querySelector(".hse-tl__path-drawn");
+          var total = drawn.getTotalLength();
+          drawn.style.strokeDasharray = total + " " + total;
+
+          // Camera: the current node sits at this point in the viewport
+          var ax = window.innerWidth * 0.3;
+          function ay(p) { return window.innerHeight * (p.run === "up" ? 0.55 : 0.32); }
+          var times = [];
+          var drawnLen = 0;
+          tl = gsap.timeline({ paused: true });
+          tl.set(world, { x: ax - nodes[0].x, y: ay(nodes[0]) - nodes[0].y }, 0);
+          tl.set(drawn, { strokeDashoffset: total }, 0);
+          nodes.forEach(function (p, i) {
+            times.push(tl.duration());
+            tl.to({}, { duration: hold });
+            var next = nodes[i + 1];
+            if (!next) {
+              tl.to(drawn, { strokeDashoffset: 0, duration: 120, ease: "none" });
+              return;
+            }
+            var len = Math.abs(next.x - p.x) + Math.abs(next.y - p.y);
+            drawnLen += len;
+            tl.to(world, { x: ax - next.x, y: ay(next) - next.y, duration: len, ease: "none" });
+            tl.to(drawn, { strokeDashoffset: total - drawnLen, duration: len, ease: "none" }, "<");
+          });
+
+          // One pixel of scroll per unit of timeline
+          section.style.height = (tl.duration() + window.innerHeight) + "px";
+
+          var current = -1;
+          st = ScrollTrigger.create({
+            trigger: section,
+            start: "top top",
+            end: "bottom bottom",
+            scrub: 0.6,
+            animation: tl,
+            onUpdate: function () {
+              var t = tl.time();
+              var index = 0;
+              times.forEach(function (time, i) { if (t >= time - hold) index = i; });
+              if (index !== current) { current = index; activateLayer(index); }
+              entries.forEach(function (entry, i) {
+                entry.classList.toggle("is-visible", times[i] <= t + hold * 1.5);
+              });
+            },
+          });
+          entries[0].classList.add("is-visible");
+          activateLayer(0);
+        }
+
+        function teardown() {
+          if (st) { st.kill(); st = null; }
+          if (tl) { tl.kill(); tl = null; }
+          if (svg) { svg.remove(); svg = null; }
+          gsap.set(world, { clearProps: "transform" });
+          entries.forEach(function (e) { e.style.left = ""; e.style.top = ""; e.removeAttribute("data-hang"); });
+          section.style.height = "";
+          section.classList.remove("is-stepped");
+        }
+
+        function onResize() {
+          clearTimeout(resizeTimer);
+          resizeTimer = setTimeout(function () {
+            teardown(); build(); ScrollTrigger.refresh();
+          }, 200);
+        }
+
+        build();
+        ScrollTrigger.refresh();
+        window.addEventListener("resize", onResize);
+        return function () {
+          clearTimeout(resizeTimer);
+          window.removeEventListener("resize", onResize);
+          teardown();
+        };
+      }
+
+      if (section.dataset.direction === "stepped" && section.querySelector(".hse-tl__viewport")) {
+        var mmStep = gsap.matchMedia();
+        mmStep.add("(min-width: 769px)", setupStepped);
+        mmStep.add("(max-width: 768px)", setupVertical);
+      } else if (section.dataset.direction === "horizontal" && section.querySelector(".hse-tl__viewport")) {
         // Phones get the stacked vertical layout (css/layouts/timeline.css)
         var mm = gsap.matchMedia();
         mm.add("(min-width: 769px)", setupHorizontal);

@@ -9,9 +9,12 @@ const { escHtml } = require('../shell/head');
  * Each entry activates its corresponding media layer as it scrolls into view.
  *
  * Section fields:
- *   timeline_direction {string} 'vertical' | 'horizontal'      (default: 'vertical')
+ *   timeline_direction {string} 'vertical' | 'horizontal' | 'stepped'  (default: 'vertical')
  *                              Horizontal pins the section and scrolls the entries
- *                              sideways; phones get the stacked vertical layout.
+ *                              sideways. Stepped pins it and travels a path that
+ *                              turns across or down after each entry (entry.next);
+ *                              js/runtime.js lays it out. Phones get the stacked
+ *                              vertical layout, as does stepped without JS.
  *   timeline_align   {string}  'left' | 'right' | 'alternate'  (default: 'left')
  *                              Horizontal reads these as line at the top (text
  *                              below), at the bottom (text above), or in the
@@ -33,6 +36,8 @@ const { escHtml } = require('../shell/head');
  *     entry.media    {object}  inline media shown with the text:
  *                              { type: 'image'|'video'|'embed', url, alt, caption, poster,
  *                                html (embed code), position: 'above'|'below'|'left'|'right' }
+ *     entry.next     {string}  stepped only: 'across' | 'down' | 'up', the way the path
+ *                              goes after this entry (default: alternating, across first)
  *     entry.date_bg  {object}  { color, opacity } overrides timeline_date_bg for this entry
  *     entry.text_bg  {object}  { color, opacity } overrides timeline_text_bg for this entry
  *
@@ -103,6 +108,7 @@ function renderTimeline(section) {
   const icon    = section.timeline_marker === 'icon' && section.timeline_marker_icon;
   const marker  = icon ? 'icon' : section.timeline_marker === 'triangle' ? 'triangle' : 'dot';
   const horizontal = section.timeline_direction === 'horizontal';
+  const stepped    = section.timeline_direction === 'stepped';
 
   // Marker and line settings become custom properties on the section;
   // css/layouts/timeline.css falls back to the story accent for any not set.
@@ -176,7 +182,10 @@ function renderTimeline(section) {
       : [heading, media.html, body];
     const hasText = heading || body || media.html;
 
-    return `<div class="hse-tl__entry" data-index="${i}" data-side="${escHtml(side)}">
+    // Stepped: which way the path runs from this entry
+    const run = !stepped ? '' : ['across', 'down', 'up'].includes(entry.next) ? entry.next : (i % 2 === 0 ? 'across' : 'down');
+
+    return `<div class="hse-tl__entry" data-index="${i}" data-side="${escHtml(side)}"${run ? ` data-run="${run}"` : ''}>
       ${thumbHtml}
       <div class="hse-tl__entry-inner"${dateBg && entry.date ? ' data-date-bg' : ''}>
         ${markerHtml}
@@ -192,8 +201,8 @@ function renderTimeline(section) {
   class="hse-section hse-section--timeline"
   id="${escHtml(section.id)}"
   data-layout="timeline"
-  data-align="${escHtml(align)}"${horizontal ? `
-  data-direction="horizontal"` : ''}
+  data-align="${escHtml(align)}"${horizontal || stepped ? `
+  data-direction="${stepped ? 'stepped' : 'horizontal'}"` : ''}
   data-marker="${marker}"${vars ? `
   style="${escHtml(vars)}"` : ''}
   data-entry-count="${entries.length}">
@@ -206,12 +215,12 @@ function renderTimeline(section) {
     </div>
   </div>
 
-  <!-- Scrolling entries -->${horizontal ? `
+  <!-- Scrolling entries -->${horizontal || stepped ? `
   <div class="hse-tl__viewport">` : ''}
   <div class="hse-tl__phases">
     <div class="hse-tl__spine" aria-hidden="true"></div>
     ${entriesHtml}
-  </div>${horizontal ? `
+  </div>${horizontal || stepped ? `
   </div>` : ''}
 
 </section>`;
