@@ -641,3 +641,40 @@
     column-span: all;
   }
 }
+
+/* ── Stepped diagonals (rise ↗, fall ↘) ───────────────────────────
+   The line slopes at 30°; the panel sits off the corner of the line,
+   below-right of a rise and above-right of a fall. The marker sits on the
+   line --tl-gap out from that corner; a triangle turns to point square
+   off the slope at its text, its base on the line. */
+
+@media (min-width: 769px) {
+  .is-stepped [data-run="rise"] .hse-tl__marker,
+  .is-stepped [data-run="fall"] .hse-tl__marker {
+    left: calc(-1 * var(--tl-gap));
+    right: auto;
+    top: calc(-1 * var(--tl-gap));
+    bottom: auto;
+    translate: -50% -50%;
+  }
+  .is-stepped [data-run="fall"] .hse-tl__marker {
+    top: auto;
+    bottom: calc(-1 * var(--tl-gap));
+    translate: -50% 50%;
+  }
+
+  .is-stepped[data-marker="triangle"] [data-run="rise"] .hse-tl__marker,
+  .is-stepped[data-marker="triangle"] [data-run="fall"] .hse-tl__marker {
+    translate: none;
+    transform-origin: left center;
+    clip-path: polygon(0 0, 100% 50%, 0 100%);
+  }
+  .is-stepped[data-marker="triangle"] [data-run="rise"] .hse-tl__marker {
+    margin-top: calc(var(--tl-marker-size, 14px) / -2);
+    rotate: 60deg;
+  }
+  .is-stepped[data-marker="triangle"] [data-run="fall"] .hse-tl__marker {
+    margin-bottom: calc(var(--tl-marker-size, 14px) / -2);
+    rotate: -60deg;
+  }
+}

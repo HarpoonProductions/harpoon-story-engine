@@ -4687,7 +4687,7 @@ function initTimelineEditor(sectionIndex) {
           ${section.timeline_direction === 'stepped' ? `<label style="display:grid;grid-template-columns:7rem 1fr;align-items:center;gap:0.5rem">
             <span style="${panelSummary};cursor:default">Then go</span>
             <select class="form-select tl-next" aria-label="Then go">
-              ${[['across', 'Across →'], ['down', 'Down ↓'], ['up', 'Up ↑']].map(([v, l]) => `<option value="${v}"${(entry.next || (i % 2 ? 'down' : 'across')) === v ? ' selected' : ''}>${l}</option>`).join('')}
+              ${[['across', 'Across →'], ['down', 'Down ↓'], ['up', 'Up ↑'], ['rise', 'Up ↗'], ['fall', 'Down ↘']].map(([v, l]) => `<option value="${v}"${(entry.next || (i % 2 ? 'down' : 'across')) === v ? ' selected' : ''}>${l}</option>`).join('')}
             </select>
           </label>` : ''}
           <input class="form-input tl-date" data-i="${i}" placeholder="Date / label (e.g. 1987 or March 2020)" value="${entry.date || ''}">
