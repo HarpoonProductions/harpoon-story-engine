@@ -85,6 +85,47 @@ console.log('\n── Timeline marker and line ───────────
   assert('Unsafe colour value is dropped', !hostile.includes('background:url'));
 }
 
+// ── Timeline inline media and background blocks ──────────────────
+console.log('\n── Timeline media and backgrounds ────────────────────');
+{
+  const { renderTimeline, blockBg } = require('./renderer/layouts/timeline');
+  const one = (entry, extra) => renderTimeline({ id: 'tl', timeline_entries: [{ date: '1987', heading: 'H', body: 'B', ...entry }], ...extra });
+
+  const plain = one({});
+  assertContains('Heading and body sit in a text block', plain, '<div class="hse-tl__text">');
+  assert('No background blocks by default', !plain.includes('has-bg') && !plain.includes('data-date-bg'));
+
+  const img = one({ media: { type: 'image', url: 'https://example.com/a.jpg', alt: 'A', caption: 'Cap', position: 'left' } });
+  assertContains('Inline image', img, '<img src="https://example.com/a.jpg" alt="A" loading="lazy">');
+  assertContains('Wrapped media floats left', img, 'hse-tl__media--left');
+  assertContains('Caption', img, '<figcaption>Cap</figcaption>');
+  assert('Wrapped media sits between heading and body', img.indexOf('hse-tl__heading') < img.indexOf('hse-tl__media') && img.indexOf('hse-tl__media') < img.indexOf('hse-tl__body'));
+  const below = one({ media: { type: 'image', url: 'x.jpg', position: 'below' } });
+  assert('Media below comes after the body', below.indexOf('hse-tl__body') < below.indexOf('hse-tl__media'));
+  const above = one({ media: { type: 'image', url: 'x.jpg', position: 'sideways' } });
+  assert('Unknown position falls back to above', above.includes('hse-tl__media--above') && above.indexOf('hse-tl__media') < above.indexOf('hse-tl__heading'));
+  assertContains('Inline video has controls', one({ media: { type: 'video', url: 'v.mp4' } }), '<video controls playsinline');
+  assertContains('Embed code is used as given', one({ media: { type: 'embed', html: '<iframe src="https://player.vimeo.com/x"></iframe>' } }), '<div class="hse-tl__embed"><iframe src="https://player.vimeo.com/x"></iframe></div>');
+  assertContains('Embed URL becomes a frame', one({ media: { type: 'embed', url: 'https://example.com/chart' } }), '<iframe src="https://example.com/chart"');
+  assert('Media without a URL renders nothing', !one({ media: { type: 'image' } }).includes('hse-tl__media'));
+
+  assert('Hex colour at 50% becomes rgba', blockBg({ color: '#ff0000', opacity: 50 }) === 'rgba(255,0,0,0.5)');
+  assert('Short hex expands', blockBg({ color: '#fff', opacity: 25 }) === 'rgba(255,255,255,0.25)');
+  assert('Full opacity keeps the colour', blockBg({ color: '#123456' }) === '#123456');
+  assert('Named colour uses color-mix', blockBg({ color: 'navy', opacity: 40 }) === 'color-mix(in srgb, navy 40%, transparent)');
+  assert('Zero opacity means no block', blockBg({ color: '#000', opacity: 0 }) === null);
+  assert('Entry opacity overrides the section, colour inherited', blockBg({ color: '#000000', opacity: 80 }, { opacity: 30 }) === 'rgba(0,0,0,0.3)');
+  assert('No colour means no block', blockBg({ opacity: 50 }) === null);
+  assert('Unsafe background colour is dropped', blockBg({ color: 'red;x:url(y)' }) === null);
+
+  const bg = one({ text_bg: { color: '#002244', opacity: 70 } }, { timeline_date_bg: { color: '#ffcc00' } });
+  assertContains('Section date background', bg, '<span class="hse-tl__date has-bg" style="background:#ffcc00">');
+  assertContains('Marker drops level with a date block', bg, 'data-date-bg');
+  assertContains('Entry text background', bg, '<div class="hse-tl__text has-bg" style="background:rgba(0,34,68,0.7)">');
+  const off = one({ date_bg: { opacity: 0 } }, { timeline_date_bg: { color: '#ffcc00' } });
+  assert('An entry can switch the section block off', !off.includes('has-bg'));
+}
+
 // ── Print, PDF and audio coverage ────────────────────────────────
 // Every layout must say what it contains in words (renderer/readable.js),
 // or its text silently disappears from the print page, PDF and narration.
@@ -114,12 +155,14 @@ console.log('\n── Print, PDF and audio coverage ─────────�
       { id: 'c', layout: 'reveal-crossfade', crossfade_phases: [{ text: 'Crossfade phase text' }] },
     ],
   };
+  sample.sections[1].timeline_entries.push({ heading: 'Inline', media: { type: 'image', url: 'https://example.com/inline.jpg' } });
   const printHtml = renderPrint(sample);
   const pdfHtml   = renderPdf(sample);
   const ssml      = buildAudioScript(sample);
   assertContains('Print includes ticked image',   printHtml, 'keep.jpg');
   assertAbsent('Print omits unticked image',      printHtml, 'drop.jpg');
   assertContains('PDF includes ticked image',     pdfHtml,   'keep.jpg');
+  assertContains('Print includes timeline inline image', printHtml, 'inline.jpg');
   assertAbsent('PDF omits unticked image',        pdfHtml,   'drop.jpg');
   assertContains('Print includes timeline text',  printHtml, 'Timeline body text');
   assertContains('PDF includes timeline text',    pdfHtml,   'Timeline body text');

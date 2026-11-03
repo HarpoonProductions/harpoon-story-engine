@@ -251,6 +251,14 @@
     }
   },
   "definitions": {
+    "timeline_block_bg": {
+      "type": "object",
+      "description": "A background block in the timeline layout.",
+      "properties": {
+        "color": { "type": "string", "description": "Any CSS colour." },
+        "opacity": { "type": "number", "minimum": 0, "maximum": 100, "description": "Percent. Default 100." }
+      }
+    },
     "image": {
       "type": "object",
       "description": "Reusable image block",
@@ -868,6 +876,14 @@
           "maximum": 16,
           "description": "Used by timeline layout. Line thickness in px. Default 2."
         },
+        "timeline_date_bg": {
+          "$ref": "#/definitions/timeline_block_bg",
+          "description": "Used by timeline layout. Background block behind every entry's date. Entries can override it with date_bg."
+        },
+        "timeline_text_bg": {
+          "$ref": "#/definitions/timeline_block_bg",
+          "description": "Used by timeline layout. Background block behind every entry's heading and body. Entries can override it with text_bg."
+        },
         "timeline_entries": {
           "type": "array",
           "items": {
@@ -877,7 +893,23 @@
               "heading": { "type": "string" },
               "body": { "type": "string" },
               "image": { "type": "object" },
-              "video": { "type": "object" }
+              "video": { "type": "object" },
+              "media": {
+                "type": "object",
+                "description": "Inline image, video or embed shown with the entry's text.",
+                "properties": {
+                  "type": { "type": "string", "enum": ["image", "video", "embed"] },
+                  "url": { "type": "string" },
+                  "alt": { "type": "string" },
+                  "caption": { "type": "string" },
+                  "poster": { "type": "string" },
+                  "html": { "type": "string", "description": "Embed code (trusted HTML), used when type is embed." },
+                  "position": { "type": "string", "enum": ["above", "below", "left", "right"], "default": "above", "description": "Above or below the text, or floated left/right with the body wrapping round it." },
+                  "print_include": { "type": "boolean" }
+                }
+              },
+              "date_bg": { "$ref": "#/definitions/timeline_block_bg" },
+              "text_bg": { "$ref": "#/definitions/timeline_block_bg" }
             }
           },
           "description": "Used by timeline layout. Each entry's image or video (video wins if both are set) fills the sticky canvas while the entry is in view."
