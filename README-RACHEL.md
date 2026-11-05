@@ -31,10 +31,20 @@ it private and don't forward it.
 
 **Step 4 — Run setup**
 
-Double-click `setup.command` inside the folder. 
+macOS blocks scripts downloaded from the internet ("Apple could not verify
+it is free of malware"). Unblock the folder first: open Terminal (Cmd + Space,
+type Terminal), paste this line and press Return:
 
-If Mac asks "are you sure you want to open this?" — right-click it instead, 
-choose Open, then click Open again. You only need to do this once.
+    xattr -dr com.apple.quarantine ~/Documents/harpoon-story-engine
+
+(If you put the folder somewhere other than Documents, change that part of the
+path. You can also type `xattr -dr com.apple.quarantine ` and drag the folder
+into the Terminal window.) You only need to do this once.
+
+Then double-click `setup.command` inside the folder.
+
+If you already saw the malware warning, click Done (not Move to Bin), unblock
+the folder as above, and try again.
 
 The setup links the folder to GitHub and installs everything the Story Engine needs.
 It takes about a minute. If your Mac offers to install "command line developer tools",

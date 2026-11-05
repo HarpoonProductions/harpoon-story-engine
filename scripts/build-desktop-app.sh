@@ -38,6 +38,25 @@ if [ ! -d "$SRC" ]; then
   node node_modules/electron/install.js
 fi
 
+# Under Node.js 26, Electron's installer downloads the zip but its unzip
+# step stops after the first few files and still reports success, so
+# Electron.app never appears. Unpack the downloaded zip with macOS's own
+# ditto instead.
+if [ ! -d "$SRC" ]; then
+  echo "  Unpacking Electron..."
+  ELECTRON_VERSION=$(node -p "require('./node_modules/electron/package.json').version")
+  if [ "$(sysctl -n hw.optional.arm64 2>/dev/null)" = "1" ]; then ARCH=arm64; else ARCH=x64; fi
+  ZIP=$(find "${electron_config_cache:-$HOME/Library/Caches/electron}" \
+    -name "electron-v$ELECTRON_VERSION-darwin-$ARCH.zip" 2>/dev/null | head -1)
+  if [ -z "$ZIP" ]; then
+    echo "  ✗ Couldn't find the downloaded Electron zip"
+    exit 1
+  fi
+  rm -rf node_modules/electron/dist
+  ditto -x -k "$ZIP" node_modules/electron/dist
+  printf '%s' "Electron.app/Contents/MacOS/Electron" > node_modules/electron/path.txt
+fi
+
 # An older checkout keeps a launcher app in git at the same path. Leave it be.
 if git ls-files --error-unmatch "$DEST" >/dev/null 2>&1; then
   exit 0
