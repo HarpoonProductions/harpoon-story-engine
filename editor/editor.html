@@ -2008,6 +2008,15 @@
                                     </select>
                                     <p class="form-hint">Horizontal and Stepped pin the section while the reader scrolls. For Stepped, choose "Then go" on each entry (Up and Down need an Across between them). Phones show the vertical layout.</p>
                                   </div>
+                                  <div class="form-group" id="tl-step-side-group" style="display:none">
+                                    <label class="form-label" for="tl-step-side">Line position</label>
+                                    <select class="form-select" id="tl-step-side">
+                                      <option value="start">Top / left — text below or to the right of the line</option>
+                                      <option value="end">Bottom / right — text above or to the left of the line</option>
+                                      <option value="alternate">Alternating — text swaps sides each entry</option>
+                                    </select>
+                                    <p class="form-hint">Applies to Across, Up and Down runs. An Across entry straight after a Down keeps its text below the line, so the line never runs through it.</p>
+                                  </div>
                                   <div class="form-group" id="tl-align-group">
                                     <label class="form-label" for="tl-align">Alignment</label>
                                     <select class="form-select" id="tl-align">
@@ -4640,6 +4649,17 @@ function initTimelineEditor(sectionIndex) {
     scheduleAutosave();
   });
 
+  // Stepped: which side of the line the text sits
+  const stepSideSelect = document.getElementById('tl-step-side');
+  const newStepSideSelect = stepSideSelect.cloneNode(true);
+  stepSideSelect.parentNode.replaceChild(newStepSideSelect, stepSideSelect);
+  newStepSideSelect.value = ['end', 'alternate'].includes(section.timeline_step_side) ? section.timeline_step_side : 'start';
+  newStepSideSelect.addEventListener('change', e => {
+    if (e.target.value === 'start') delete section.timeline_step_side;
+    else section.timeline_step_side = e.target.value;
+    scheduleAutosave();
+  });
+
   // Direction; alignment reads as top/bottom/middle when horizontal
   const alignLabels = {
     vertical:   { left: 'Left — text panel on the left', right: 'Right — text panel on the right', alternate: 'Alternate — left/right alternating' },
@@ -4648,6 +4668,7 @@ function initTimelineEditor(sectionIndex) {
   const relabelAlign = dir => {
     // Stepped sets its own sides, so alignment only applies to the others
     document.getElementById('tl-align-group').style.display = dir === 'stepped' ? 'none' : '';
+    document.getElementById('tl-step-side-group').style.display = dir === 'stepped' ? '' : 'none';
     if (alignLabels[dir]) newAlignSelect.querySelectorAll('option').forEach(o => { o.textContent = alignLabels[dir][o.value]; });
   };
   const dirSelect = document.getElementById('tl-direction');

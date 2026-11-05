@@ -842,7 +842,10 @@
           var W = window.innerWidth, H = window.innerHeight;
           var gap  = parseFloat(getComputedStyle(section).getPropertyValue("--tl-gap")) || 32;
           var room = 64;
-          var ax = W * 0.3;
+          // Which side of the line the panels sit: timeline_step_side
+          // "end" puts them above (across) or left (up, down) instead of
+          // below or right; "alternate" swaps every other entry
+          var stepSide = section.dataset.stepSide;
 
           // Runs. Up straight after down, or down after up, would double
           // back, so it goes across. An across run reached by climbing hangs
@@ -850,25 +853,36 @@
           // Diagonals (rise ↗, fall ↘) slope at SLOPE; their panel sits off
           // the line's corner, below-right of a rise and above-right of a fall.
           var SLOPE = Math.tan(30 * Math.PI / 180);
-          var runs = [], prevVertical = null;
+          // An interstitial with its line hidden is centred on the screen
+          var centred = entries.map(function (e) { return e.dataset.line === "hide"; });
+          var runs = [], prevVertical = null, flip = [];
           entries.forEach(function (entry, i) {
             var run = entry.dataset.run || (i % 2 ? "down" : "across");
             if ((run === "up" && prevVertical === "down") || (run === "down" && prevVertical === "up")) run = "across";
             prevVertical = run === "up" || run === "down" ? run : null;
             runs.push(run);
             entry.setAttribute("data-run", run);
-            if (run === "across" && runs[i - 1] === "up") entry.setAttribute("data-hang", "above");
+            var swap = !centred[i] && (stepSide === "end" || (stepSide === "alternate" && i % 2 === 1));
+            // Across: above the line, unless the line comes down into it
+            // (it would cross the panel). Up and down: left of the line.
+            // Diagonals keep their corner.
+            if (run === "across" && (runs[i - 1] === "up" || (swap && runs[i - 1] !== "down"))) entry.setAttribute("data-hang", "above");
             else entry.removeAttribute("data-hang");
+            flip.push(swap && (run === "up" || run === "down"));
+            if (flip[i]) entry.setAttribute("data-flip", "left");
+            else entry.removeAttribute("data-flip");
           });
-          // An interstitial with its line hidden is centred on the screen
-          var centred = entries.map(function (e) { return e.dataset.line === "hide"; });
+          // Where the line sits across the screen: left of centre, or right
+          // of it when the panel is on its left
+          var axs = flip.map(function (f) { return W * (f ? 0.7 : 0.3); });
           // Panels that sit above their line
-          var above = runs.map(function (run, i) { return !centred[i] && (run === "fall" || !!entries[i].dataset.hang); });
+          var above = runs.map(function (run, i) { return !centred[i] && (run === "fall" || !!entries[i].dataset.hang || (flip[i] && run === "up")); });
           var anchorY = above.map(function (a, i) { return H * (centred[i] ? 0.5 : a ? 0.72 : 0.3); });
 
           fitEntries(function (entry) {
             var i = entries.indexOf(entry);
             if (centred[i]) return H - NAV - 80;
+            if (flip[i] && runs[i] === "up") return anchorY[i] - gap - NAV;
             if (runs[i] === "up" || runs[i] === "down") return H - anchorY[i] - 40;
             return above[i] ? anchorY[i] - gap - NAV : H - anchorY[i] - gap - 40;
           });
@@ -878,7 +892,9 @@
             var marker = entry.querySelector(".hse-tl__marker");
             var h = entry.querySelector(".hse-tl__entry-inner").offsetHeight;
             var w = entry.offsetWidth;
-            if (centred[i]) return { dx: W / 2 - ax - w / 2, dy: -h / 2, w: w, h: h };
+            if (centred[i]) return { dx: W / 2 - axs[i] - w / 2, dy: -h / 2, w: w, h: h };
+            // Left of the line: below where it turns (down) or above it (up)
+            if (flip[i]) return { dx: -(gap + w), dy: runs[i] === "up" ? -(gap + h) : gap, w: w, h: h };
             if (runs[i] === "rise") return { dx: gap, dy: gap, w: w, h: h };
             if (runs[i] === "fall") return { dx: gap, dy: -(gap + h), w: w, h: h };
             if (runs[i] === "across") {
@@ -919,7 +935,7 @@
             // reader moves on from the text and sees them on their own
             var extra = (slideCounts[i] - 1) * runVec(runs[i]).D;
             if (runs[i] === "across" || runs[i] === "rise" || runs[i] === "fall") {
-              var step = Math.max(b.dx + b.w + room - nb.dx, W - ax - nb.dx + room, ax + b.dx + b.w + room) + extra;
+              var step = Math.max(b.dx + b.w + room - nb.dx, W - axs[i] - nb.dx + room, axs[i + 1] + b.dx + b.w + room) + extra;
               x += step;
               if (runs[i] === "rise") y -= step * SLOPE;
               if (runs[i] === "fall") y += step * SLOPE;
@@ -938,13 +954,13 @@
           // along the way to the next node (or past the last one)
           var stops = [];
           nodes.forEach(function (p, i) {
-            stops.push({ x: p.x, y: p.y, ay: anchorY[i], entry: i, node: true });
+            stops.push({ x: p.x, y: p.y, ay: anchorY[i], ax: axs[i], entry: i, node: true });
             var n = slideCounts[i];
             for (var k = 1; k < n; k++) {
               var q = nodes[i + 1];
               stops.push(q
-                ? { x: p.x + (q.x - p.x) * k / n, y: p.y + (q.y - p.y) * k / n, ay: anchorY[i] + (anchorY[i + 1] - anchorY[i]) * k / n, entry: i }
-                : { x: p.x + lv.x * lv.D * k, y: p.y + lv.y * lv.D * k, ay: anchorY[i], entry: i });
+                ? { x: p.x + (q.x - p.x) * k / n, y: p.y + (q.y - p.y) * k / n, ay: anchorY[i] + (anchorY[i + 1] - anchorY[i]) * k / n, ax: axs[i] + (axs[i + 1] - axs[i]) * k / n, entry: i }
+                : { x: p.x + lv.x * lv.D * k, y: p.y + lv.y * lv.D * k, ay: anchorY[i], ax: axs[i], entry: i });
             }
           });
 
@@ -994,7 +1010,7 @@
           var hold = H * 0.35;
           var tl = gsap.timeline({ paused: true });
           var arrive = [], moves = [], slideTimes = entries.map(function () { return []; });
-          tl.set(world, { x: ax - stops[0].x, y: stops[0].ay - stops[0].y }, 0);
+          tl.set(world, { x: stops[0].ax - stops[0].x, y: stops[0].ay - stops[0].y }, 0);
           segs.forEach(function (seg) { if (seg) tl.set(seg.el, { strokeDashoffset: seg.len }, 0); });
           stops.forEach(function (p, j) {
             if (j) {
@@ -1002,7 +1018,7 @@
               var len = Math.hypot(p.x - prev.x, p.y - prev.y);
               // The segment being travelled: into the next node, or the tail
               var seg = segs[prev.entry + 1];
-              tl.to(world, { x: ax - p.x, y: p.ay - p.y, duration: len, ease: "power1.inOut" });
+              tl.to(world, { x: p.ax - p.x, y: p.ay - p.y, duration: len, ease: "power1.inOut" });
               if (seg) tl.to(seg.el, { strokeDashoffset: dashAt(seg, p), duration: len, ease: "power1.inOut" }, "<");
               if (p.node) moves.push(len);
               else slideTimes[p.entry].push(tl.duration() - len / 2);
@@ -1023,6 +1039,7 @@
           entries.forEach(function (e) {
             e.style.left = ""; e.style.top = "";
             e.removeAttribute("data-hang");
+            e.removeAttribute("data-flip");
             e.classList.remove("is-wide");
           });
           section.classList.remove("is-stepped");
