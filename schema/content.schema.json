@@ -848,6 +848,12 @@
           "default": "vertical",
           "description": "Used by timeline layout. Horizontal pins the section and slides the entries sideways as the reader scrolls. Stepped pins it and travels a path that turns across or down after each entry (see entry next). Phones keep the vertical layout."
         },
+        "timeline_step_side": {
+          "type": "string",
+          "enum": ["start", "end", "alternate"],
+          "default": "start",
+          "description": "Stepped timelines only: which side of the line the text sits. start = line above the text (across) or to its left (up, down); end = line below it or to its right; alternate = every other entry swaps. An across entry reached by a downward run keeps its text below the line, and diagonals keep their corner."
+        },
         "timeline_align": {
           "type": "string",
           "enum": ["left", "right", "alternate"],

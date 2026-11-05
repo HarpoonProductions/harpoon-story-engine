@@ -114,6 +114,13 @@ console.log('\n── Timeline direction ─────────────
   assert('Stepped runs alternate by default, entry choice wins, bad value falls back',
     JSON.stringify([...st.matchAll(/data-run="(\w+)"/g)].map(m => m[1])) === '["across","down","down","down","up","rise","fall"]');
   assert('Only stepped entries carry a run', !h.includes('data-run'));
+  assert('Stepped line position is opt-in', !st.includes('data-step-side'));
+  const stEnd = renderTimeline({ id: 'tl', timeline_direction: 'stepped', timeline_step_side: 'end', timeline_entries: entries });
+  assertContains('Stepped line position end', stEnd, 'data-step-side="end"');
+  const stAlt = renderTimeline({ id: 'tl', timeline_direction: 'stepped', timeline_step_side: 'alternate', timeline_entries: entries });
+  assertContains('Stepped line position alternate', stAlt, 'data-step-side="alternate"');
+  assert('Line position only applies to stepped', !renderTimeline({ id: 'tl', timeline_direction: 'horizontal', timeline_step_side: 'end', timeline_entries: entries }).includes('data-step-side')
+    && !renderTimeline({ id: 'tl', timeline_direction: 'stepped', timeline_step_side: 'middle', timeline_entries: entries }).includes('data-step-side'));
 }
 
 // ── Timeline extra images and chapter cards ──────────────────────

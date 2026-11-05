@@ -15,6 +15,10 @@ const { escHtml } = require('../shell/head');
  *                              turns across or down after each entry (entry.next);
  *                              js/runtime.js lays it out. Phones get the stacked
  *                              vertical layout, as does stepped without JS.
+ *   timeline_step_side {string} stepped only: 'start' | 'end' | 'alternate' (default: 'start').
+ *                              Start: line above the text on across runs, left of it on
+ *                              up/down runs. End: line below / to the right. Alternate:
+ *                              every other entry swaps.
  *   timeline_align   {string}  'left' | 'right' | 'alternate'  (default: 'left')
  *                              Horizontal reads these as line at the top (text
  *                              below), at the bottom (text above), or in the
@@ -292,7 +296,8 @@ function renderTimeline(section) {
   id="${escHtml(section.id)}"
   data-layout="timeline"
   data-align="${escHtml(align)}"${horizontal || stepped ? `
-  data-direction="${stepped ? 'stepped' : 'horizontal'}"` : ''}
+  data-direction="${stepped ? 'stepped' : 'horizontal'}"` : ''}${stepped && ['end', 'alternate'].includes(section.timeline_step_side) ? `
+  data-step-side="${section.timeline_step_side}"` : ''}
   data-marker="${marker}"${vars ? `
   style="${escHtml(vars)}"` : ''}
   data-entry-count="${entries.length}">

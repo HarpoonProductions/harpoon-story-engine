@@ -802,3 +802,23 @@
 @media (max-width: 768px) {
   .hse-tl__entry--interstitial .hse-tl__entry-inner { padding: 1.5rem 0 !important; }
 }
+
+/* ── Stepped: text on the other side of the line ──────────────────
+   timeline_step_side end/alternate (js/runtime.js sets data-flip on up
+   and down runs whose panel sits left of the line; across runs reuse
+   data-hang="above"). The marker sits on the line to the panel's right. */
+
+@media (min-width: 769px) {
+  .is-stepped [data-run][data-flip] .hse-tl__marker {
+    left: auto;
+    right: calc(-1 * var(--tl-gap));
+    translate: 50% -50%;
+  }
+  .is-stepped[data-marker="triangle"] [data-run][data-flip] .hse-tl__marker {
+    left: auto;
+    right: calc(-1 * var(--tl-gap) + var(--tl-line-width, 2px) / 2);
+    translate: 0 -50%;
+    transform-origin: right center;
+    clip-path: polygon(100% 0, 0 50%, 100% 100%);
+  }
+}
