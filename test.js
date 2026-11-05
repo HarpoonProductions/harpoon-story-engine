@@ -116,6 +116,36 @@ console.log('\n── Timeline direction ─────────────
   assert('Only stepped entries carry a run', !h.includes('data-run'));
 }
 
+// ── Timeline extra images and chapter cards ──────────────────────
+console.log('\n── Timeline extra images and chapter cards ───────────');
+{
+  const { renderTimeline } = require('./renderer/layouts/timeline');
+  const single = renderTimeline({ id: 'tl', timeline_entries: [{ heading: 'A', image: { url: 'a.jpg' } }] });
+  assert('One background keeps the plain layer', single.includes('data-type="image"') && !single.includes('hse-tl__slide') && !single.includes('data-slides'));
+
+  const g = renderTimeline({ id: 'tl', timeline_entries: [{ heading: 'A', image: { url: 'a.jpg' },
+    images: [{ url: 'b.jpg', caption: 'Second', focal: '20% 30%' }, { url: '' }, { url: 'c.jpg' }], images_transition: 'push' }] });
+  assertContains('Gallery layer', g, 'data-type="gallery" data-transition="push" data-slides="3"');
+  assert('A slide per image, blank URLs skipped', (g.match(/class="hse-tl__slide[ "]/g) || []).length === 3);
+  assertContains('First slide shows first', g, 'class="hse-tl__slide is-current"');
+  assertContains('Slide caption', g, '<span class="hse-tl__slide-caption">Second</span>');
+  assertContains('Slide focal point', g, 'background-position:20% 30%');
+  assertContains('Entry knows its stops', g, 'data-slides="3">');
+  assertContains('Phones get the extra images under the text', g, 'class="hse-tl__more"');
+  const fade = renderTimeline({ id: 'tl', timeline_entries: [{ heading: 'A', images: [{ url: 'b.jpg' }], images_transition: 'wipe' }] });
+  assertContains('Unknown transition fades', fade, 'data-transition="fade"');
+
+  const c = renderTimeline({ id: 'tl', timeline_direction: 'stepped', timeline_entries: [{ date: '1979', heading: 'A' },
+    { kind: 'interstitial', date: 'ignored', heading: 'The 1980s', body: 'A new decade', line: 'hide', image: { url: 'd.jpg' } }, { date: '1981', heading: 'B' }] });
+  assertContains('Chapter card', c, 'hse-tl__entry--interstitial');
+  assertContains('Chapter card can hide the line', c, 'data-kind="interstitial" data-line="hide"');
+  assertContains('Chapter card title', c, '<h2 class="hse-tl__heading">The 1980s</h2>');
+  const card = c.slice(c.indexOf('hse-tl__entry--interstitial'), c.indexOf('data-index="2"'));
+  assert('Chapter card has no date or marker', !card.includes('hse-tl__marker') && !c.includes('ignored'));
+  assert('Chapter card still has a run on stepped', /data-kind="interstitial"[^>]*data-run="down"/.test(c));
+  assertContains('Chapter card has its own background layer', c, "background-image:url('d.jpg')");
+}
+
 // ── Timeline inline media and background blocks ──────────────────
 console.log('\n── Timeline media and backgrounds ────────────────────');
 {

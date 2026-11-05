@@ -588,29 +588,73 @@
 
       if (!entries.length) return;
 
-      // Activate a media layer (fade in image, play/pause videos)
-      function activateLayer(index) {
+      // Activate a media layer (fade in image, play/pause videos). An entry
+      // with several backgrounds has a slide per image in its layer: `slide`
+      // picks the one showing (earlier ones are marked passed, for push).
+      function activateLayer(index, slide) {
         layers.forEach(function (layer, i) {
           var active = i === index;
           layer.classList.toggle("is-active", active);
-          var video = layer.querySelector("video[data-tl-video]");
-          if (video) {
-            if (active) {
+          var slides = layer.querySelectorAll(".hse-tl__slide");
+          if (active && slides.length) {
+            var k = Math.max(0, Math.min(slides.length - 1, slide || 0));
+            slides.forEach(function (s, j) {
+              s.classList.toggle("is-current", j === k);
+              s.classList.toggle("is-past", j < k);
+            });
+          }
+          layer.querySelectorAll("video[data-tl-video]").forEach(function (video) {
+            var slideEl = video.closest(".hse-tl__slide");
+            if (active && (!slideEl || slideEl.classList.contains("is-current"))) {
               video.play().catch(function () {});
             } else {
               video.pause();
-              video.currentTime = 0;
+              if (!active) video.currentTime = 0;
             }
-          }
+          });
         });
+      }
+
+      // Number of backgrounds per entry, and the layer for an entry
+      var slideCounts = entries.map(function (entry) { return parseInt(entry.dataset.slides, 10) || 1; });
+      // Pinned: time spent on an entry — a hold per background, with a
+      // swap between each
+      function dwell(i, hold, swap) { return hold + (slideCounts[i] - 1) * (hold + swap); }
+
+      // Push: the next image comes in from the way the reader is travelling
+      function setPush(dirs) {
+        layers.forEach(function (layer, i) {
+          if (layer.dataset.transition !== "push") return;
+          if (dirs && dirs[i]) layer.setAttribute("data-push", dirs[i]);
+          else layer.removeAttribute("data-push");
+        });
+      }
+
+      // Hide the line through interstitials marked data-line="hide".
+      // `span(entry)` gives [start, end] along the line in px; the line is
+      // masked between them, fading over a short distance at each end.
+      var spine = section.querySelector(".hse-tl__spine");
+      function maskSpine(span, axis) {
+        if (!spine) return;
+        var hidden = entries.filter(function (e) { return e.dataset.line === "hide"; });
+        if (!hidden.length || !span) { spine.style.maskImage = spine.style.webkitMaskImage = ""; return; }
+        var F = 40, stops = ["#000 0px"];
+        hidden.forEach(function (e) {
+          var r = span(e);
+          stops.push("#000 " + (r[0] - F) + "px", "transparent " + r[0] + "px", "transparent " + r[1] + "px", "#000 " + (r[1] + F) + "px");
+        });
+        stops.push("#000 100%");
+        var mask = "linear-gradient(to " + (axis === "x" ? "right" : "bottom") + ", " + stops.join(", ") + ")";
+        spine.style.maskImage = spine.style.webkitMaskImage = mask;
       }
 
       // Ensure only the first video plays on load
       layers.forEach(function (layer, i) {
-        var video = layer.querySelector("video[data-tl-video]");
-        if (!video) return;
-        if (i === 0) { video.play().catch(function () {}); }
-        else { video.pause(); }
+        layer.querySelectorAll("video[data-tl-video]").forEach(function (video) {
+          var slideEl = video.closest(".hse-tl__slide");
+          if (i === 0 && (!slideEl || slideEl.classList.contains("is-current"))) { video.play().catch(function () {}); }
+          else { video.pause(); }
+        });
       });
 
       var desktop = window.matchMedia("(min-width: 769px)");
@@ -646,6 +690,13 @@
           refit();
           onResize(function () { refit(); ScrollTrigger.refresh(); });
         }
+        setPush(null);
+        var remask = function () {
+          maskSpine(function (e) { return [e.offsetTop, e.offsetTop + e.offsetHeight]; }, "y");
+        };
+        remask();
+        onResize(remask);
+        var slideOf = slideCounts.map(function () { return 0; });
         entries.forEach(function (entry, i) {
           // Fade entry text in when it approaches the viewport centre
           ScrollTrigger.create({
@@ -661,8 +712,13 @@
             trigger: entry,
             start: "top 55%",
             end: "bottom 55%",
-            onEnter:     function () { activateLayer(i); },
-            onEnterBack: function () { activateLayer(i); },
+            onEnter:     function () { activateLayer(i, slideOf[i]); },
+            onEnterBack: function () { activateLayer(i, slideOf[i]); },
+            // Several backgrounds: share the entry's length between them
+            onUpdate: slideCounts[i] > 1 ? function (self) {
+              var k = Math.min(slideCounts[i] - 1, Math.floor(self.progress * slideCounts[i]));
+              if (k !== slideOf[i]) { slideOf[i] = k; activateLayer(i, k); }
+            } : undefined,
           });
         });
       }
@@ -676,7 +732,7 @@
       function pinned(build, teardown) {
         var tl, st, current;
         function start() {
-          var plan = build(); // { tl, arrive: [time each entry is reached], moves: [move duration into each] }
+          var plan = build(); // { tl, arrive: [time each entry is reached], moves: [move duration into each], hold, swap }
           tl = plan.tl;
           section.style.height = (tl.duration() + window.innerHeight) + "px";
           current = -1;
@@ -692,14 +748,18 @@
               plan.arrive.forEach(function (time, i) {
                 if (t >= time - plan.moves[i] / 2) index = i;
               });
-              if (index !== current) { current = index; activateLayer(index); }
+              // Extra backgrounds change half way through each swap
+              var slide = Math.max(0, Math.min(slideCounts[index] - 1,
+                Math.floor((t - plan.arrive[index] + plan.swap / 2) / (plan.hold + plan.swap))));
+              var key = index + ":" + slide;
+              if (key !== current) { current = key; activateLayer(index, slide); }
               entries.forEach(function (entry, i) {
                 entry.classList.toggle("is-visible", t >= plan.arrive[i] - plan.moves[i] * 0.85);
               });
             },
           });
           entries[0].classList.add("is-visible");
-          activateLayer(0);
+          activateLayer(0, 0);
         }
         function stop() {
           if (st) { st.kill(); st = null; }
@@ -725,10 +785,13 @@
           var W = viewport.clientWidth, H = window.innerHeight;
           section.style.setProperty("--tl-col-w", W + "px");
           fitEntries(function (entry) {
+            if (entry.dataset.kind === "interstitial") return H - NAV - 80;
             var below = entry.dataset.side === "left";
             return below ? H * (1 - lineY) - 32 - 40 : H * lineY - 32 - NAV;
           }, true);
-          var hold = H * 0.35, move = H * 0.9;
+          setPush(layers.map(function () { return "left"; }));
+          maskSpine(function (e) { return [e.offsetLeft, e.offsetLeft + e.offsetWidth]; }, "x");
+          var hold = H * 0.35, move = H * 0.9, swap = H * 0.35;
           var tl = gsap.timeline({ paused: true });
           var arrive = [], moves = [];
           tl.set(track, { x: 0 }, 0);
@@ -736,10 +799,12 @@
             if (i) tl.to(track, { x: -i * W, duration: move, ease: "power1.inOut" });
             arrive.push(tl.duration());
             moves.push(i ? move : 0);
-            tl.to({}, { duration: hold });
+            tl.to({}, { duration: dwell(i, hold, swap) });
           });
-          return { tl: tl, arrive: arrive, moves: moves };
+          return { tl: tl, arrive: arrive, moves: moves, hold: hold, swap: swap };
         }, function () {
+          setPush(null);
+          maskSpine(null);
           gsap.set(track, { clearProps: "transform" });
           section.style.removeProperty("--tl-col-w");
           entries.forEach(function (entry) { entry.classList.remove("is-wide", "is-wider"); });
@@ -779,12 +844,15 @@
             if (run === "across" && runs[i - 1] === "up") entry.setAttribute("data-hang", "above");
             else entry.removeAttribute("data-hang");
           });
+          // An interstitial with its line hidden is centred on the screen
+          var centred = entries.map(function (e) { return e.dataset.line === "hide"; });
           // Panels that sit above their line
-          var above = runs.map(function (run, i) { return run === "fall" || !!entries[i].dataset.hang; });
-          var anchorY = above.map(function (a) { return H * (a ? 0.72 : 0.3); });
+          var above = runs.map(function (run, i) { return !centred[i] && (run === "fall" || !!entries[i].dataset.hang); });
+          var anchorY = above.map(function (a, i) { return H * (centred[i] ? 0.5 : a ? 0.72 : 0.3); });
 
           fitEntries(function (entry) {
             var i = entries.indexOf(entry);
+            if (centred[i]) return H - NAV - 80;
             if (runs[i] === "up" || runs[i] === "down") return H - anchorY[i] - 40;
             return above[i] ? anchorY[i] - gap - NAV : H - anchorY[i] - gap - 40;
           });
@@ -794,6 +862,7 @@
             var marker = entry.querySelector(".hse-tl__marker");
             var h = entry.querySelector(".hse-tl__entry-inner").offsetHeight;
             var w = entry.offsetWidth;
+            if (centred[i]) return { dx: W / 2 - ax - w / 2, dy: -h / 2, w: w, h: h };
             if (runs[i] === "rise") return { dx: gap, dy: gap, w: w, h: h };
             if (runs[i] === "fall") return { dx: gap, dy: -(gap + h), w: w, h: h };
             if (runs[i] === "across") {
@@ -808,6 +877,7 @@
           // hanging above it, down) as far as it needs to fit on screen
           anchorY = anchorY.map(function (ay, i) {
             var b = boxes[i];
+            if (centred[i]) return ay;
             if (above[i]) return Math.min(H - 40, Math.max(ay, NAV - b.dy));
             return Math.max(NAV - Math.min(0, b.dy), Math.min(ay, H - 40 - b.dy - b.h));
           });
@@ -840,48 +910,61 @@
             y: last.y + (last.run === "down" ? 120 : last.run === "up" ? -120 : last.run === "rise" ? -120 * SLOPE : last.run === "fall" ? 120 * SLOPE : 0),
           };
 
-          // Path: a faint track, and a copy drawn on as the reader goes
-          var d = nodes.concat([tail]).map(function (p, i) { return (i ? "L" : "M") + p.x + " " + p.y; }).join(" ");
+          // Path: a faint track, and a copy drawn on as the reader goes.
+          // One path per segment, so the line can skip the segments into and
+          // out of an interstitial that hides it.
           if (svg) svg.remove();
           svg = document.createElementNS(NS, "svg");
           svg.setAttribute("class", "hse-tl__path");
           svg.setAttribute("aria-hidden", "true");
           svg.setAttribute("width", "1");
           svg.setAttribute("height", "1");
-          ["hse-tl__path-track", "hse-tl__path-drawn"].forEach(function (cls) {
-            var path = document.createElementNS(NS, "path");
-            path.setAttribute("class", cls);
-            path.setAttribute("d", d);
-            svg.appendChild(path);
+          var points = nodes.concat([tail]);
+          var segs = points.map(function (p, k) {
+            if (!k || centred[k - 1] || centred[k]) return null;
+            var a = points[k - 1], d = "M" + a.x + " " + a.y + " L" + p.x + " " + p.y;
+            var drawnPath;
+            ["hse-tl__path-track", "hse-tl__path-drawn"].forEach(function (cls) {
+              var path = document.createElementNS(NS, "path");
+              path.setAttribute("class", cls);
+              path.setAttribute("d", d);
+              svg.appendChild(path);
+              drawnPath = path;
+            });
+            var len = Math.hypot(p.x - a.x, p.y - a.y);
+            drawnPath.style.strokeDasharray = len + " " + len;
+            return { el: drawnPath, len: len };
           });
           world.insertBefore(svg, world.firstChild);
-          var drawn = svg.querySelector(".hse-tl__path-drawn");
-          var total = drawn.getTotalLength();
-          drawn.style.strokeDasharray = total + " " + total;
 
-          var hold = H * 0.35;
+          // Push transitions come in from the way the path goes next
+          setPush(runs.map(function (run) { return run === "down" ? "up" : run === "up" ? "down" : "left"; }));
+
+          var hold = H * 0.35, swap = H * 0.35;
           var tl = gsap.timeline({ paused: true });
-          var arrive = [], moves = [], drawnLen = 0;
+          var arrive = [], moves = [];
           tl.set(world, { x: ax - nodes[0].x, y: anchorY[0] - nodes[0].y }, 0);
-          tl.set(drawn, { strokeDashoffset: total }, 0);
+          segs.forEach(function (seg) { if (seg) tl.set(seg.el, { strokeDashoffset: seg.len }, 0); });
           nodes.forEach(function (p, i) {
             if (i) {
               var prev = nodes[i - 1];
               var len = Math.hypot(p.x - prev.x, p.y - prev.y);
-              drawnLen += len;
               tl.to(world, { x: ax - p.x, y: anchorY[i] - p.y, duration: len, ease: "power1.inOut" });
-              tl.to(drawn, { strokeDashoffset: total - drawnLen, duration: len, ease: "power1.inOut" }, "<");
+              if (segs[i]) tl.to(segs[i].el, { strokeDashoffset: 0, duration: len, ease: "power1.inOut" }, "<");
               moves.push(len);
             } else {
               moves.push(0);
             }
             arrive.push(tl.duration());
-            tl.to({}, { duration: hold });
+            tl.to({}, { duration: dwell(i, hold, swap) });
           });
-          tl.to(drawn, { strokeDashoffset: 0, duration: 120, ease: "none" });
-          return { tl: tl, arrive: arrive, moves: moves };
+          var tailSeg = segs[segs.length - 1];
+          if (tailSeg) tl.to(tailSeg.el, { strokeDashoffset: 0, duration: 120, ease: "none" });
+          else tl.to({}, { duration: 120 });
+          return { tl: tl, arrive: arrive, moves: moves, hold: hold, swap: swap };
         }, function () {
           if (svg) { svg.remove(); svg = null; }
+          setPush(null);
           gsap.set(world, { clearProps: "transform" });
           entries.forEach(function (e) {
             e.style.left = ""; e.style.top = "";
