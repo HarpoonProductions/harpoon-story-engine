@@ -278,6 +278,48 @@
     margin: 0 !important;
   }
 
+  /* ── Scroll carousel — every card's text, stacked ─────────────────
+     On screen JS copies one card's text at a time into .hse-sc__text;
+     in print each card shows its own (hidden) text instead. */
+
+  .hse-section--scroll-carousel,
+  .hse-sc__sticky,
+  .hse-sc__viewport {
+    height: auto !important;
+    position: static !important;
+    overflow: visible !important;
+  }
+
+  .hse-sc__track {
+    display: block !important;
+    width: auto !important;
+    transform: none !important;
+  }
+
+  .hse-sc__card {
+    display: block !important;
+    width: auto !important;
+    min-height: 0 !important;
+    opacity: 1 !important;
+    transform: none !important;
+    margin: 0 0 4mm !important;
+    break-inside: avoid;
+  }
+
+  .hse-sc__number {
+    position: static !important;
+  }
+
+  .hse-sc__content {
+    display: block !important;
+  }
+
+  .hse-sc__text,
+  .hse-sc__controls,
+  .hse-sc__progress-wrap {
+    display: none !important;
+  }
+
   /* ── Toggle panels + accordions — expand all ────────────────────── */
 
   .hse-toggle__panel,

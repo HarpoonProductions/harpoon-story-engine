@@ -515,6 +515,14 @@ console.log('\nEvery word on screen is read');
     assert(`${name}: print, PDF and audio read every word it shows` + (missing.length ? ` (missing ${missing.join(', ')})` : ''), missing.length === 0);
     const stale = [...new Set(readText.match(MARK) || [])].filter(m => !html.includes(m));
     assert(`${name}: reads nothing it doesn't show` + (stale.length ? ` (${stale.join(', ')})` : ''), stale.length === 0);
+    if (name === 'timeline') {
+      const chapter = read.items.find(i => i.kind === 'heading' && i.text === 'QQTLCHAPTER');
+      assert('timeline: a chapter card is read as a heading, not an entry', !!chapter && !JSON.stringify(read.items.filter(i => i.kind === 'items')).includes('QQTLCHAPTER'));
+    }
+    if (['default', 'stackable-cards', 'cascading-slides'].includes(name)) {
+      const withTag = read.items.find(i => i.kind === 'items' && i.items.some(c => /TAG/.test(c.meta || '')));
+      assert(`${name}: a card's tag is read with its title`, !!withTag);
+    }
     for (const [m, why] of Object.entries(notRead)) {
       if (/^Known gap/i.test(why)) console.log(`  – ${name}: ${m} not read. ${why}`);
     }

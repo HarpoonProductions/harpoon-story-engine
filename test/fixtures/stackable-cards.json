@@ -30,10 +30,7 @@
           "title": "QQSTACKT2",
           "body": "QQSTACKB2"
         }
-      ],
-      "_not_read": {
-        "QQSTACKTAG1": "Known gap: card tags are not read in print, PDF or audio yet (follow-up fix)."
-      }
+      ]
     }
   ]
 }
