@@ -846,6 +846,7 @@
           // "end" puts them above (across) or left (up, down) instead of
           // below or right; "alternate" swaps every other entry
           var stepSide = section.dataset.stepSide;
+          var pole = section.dataset.lineStyle === "scaffold";
 
           // Runs. Up straight after down, or down after up, would double
           // back, so it goes across; a leftward run straight after a
@@ -1015,17 +1016,19 @@
             }
             var sx = a.x + (p.x - a.x) * (full ? from / full : 0), sy = a.y + (p.y - a.y) * (full ? from / full : 0);
             var d = "M" + sx + " " + sy + " L" + p.x + " " + p.y;
-            var drawnPath;
-            ["hse-tl__path-track", "hse-tl__path-drawn"].forEach(function (cls) {
+            // A scaffold pole is three strokes, shaded towards the middle
+            var classes = ["hse-tl__path-track", "hse-tl__path-drawn"];
+            if (pole) classes.push("hse-tl__path-drawn is-pole-mid", "hse-tl__path-drawn is-pole-hi");
+            var len = full - from;
+            var drawn = [];
+            classes.forEach(function (cls, n) {
               var path = document.createElementNS(NS, "path");
               path.setAttribute("class", cls);
               path.setAttribute("d", d);
               svg.appendChild(path);
-              drawnPath = path;
+              if (n) { path.style.strokeDasharray = len + " " + len; drawn.push(path); }
             });
-            var len = full - from;
-            drawnPath.style.strokeDasharray = len + " " + len;
-            return { el: drawnPath, len: len, from: from, start: a };
+            return { el: drawn, len: len, from: from, start: a };
           });
           world.insertBefore(svg, world.firstChild);
           // How much of a segment is drawn with the camera at point c

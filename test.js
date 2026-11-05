@@ -117,6 +117,11 @@ console.log('\n── Timeline direction ─────────────
   const lf = renderTimeline({ id: 'tl', timeline_direction: 'stepped', timeline_entries: [{ heading: 'A', next: 'left' }, { heading: 'B', next: 'rise-left' }, { heading: 'C', next: 'fall-left' }] });
   assert('Leftward runs', JSON.stringify([...lf.matchAll(/data-run="([\w-]+)"/g)].map(m => m[1])) === '["left","rise-left","fall-left"]');
   assert('Stepped line position is opt-in', !st.includes('data-step-side'));
+  const pole = renderTimeline({ id: 'tl', timeline_line_style: 'scaffold', timeline_entries: entries });
+  assert('Scaffold line style', pole.includes('data-line-style="scaffold"') && pole.includes('data-marker="clamp"') && pole.includes('--tl-line-width:14px'));
+  assert('Scaffold keeps a chosen marker', renderTimeline({ id: 'tl', timeline_line_style: 'scaffold', timeline_marker: 'triangle', timeline_entries: entries }).includes('data-marker="triangle"')
+    && renderTimeline({ id: 'tl', timeline_line_style: 'scaffold', timeline_marker: 'dot', timeline_line_width: 6, timeline_entries: entries }).includes('--tl-line-width:6px'));
+  assert('Plain line by default', !vertical.includes('data-line-style') && vertical.includes('data-marker="dot"'));
   const sw = renderTimeline({ id: 'tl', timeline_direction: 'stepped', timeline_entries: [{ heading: 'A', swap_side: true }, { heading: 'B' }] });
   assert('Per-entry side swap', (sw.match(/ data-swap/g) || []).length === 1);
   assert('Side swap only on stepped', !renderTimeline({ id: 'tl', timeline_entries: [{ heading: 'A', swap_side: true }] }).includes('data-swap'));

@@ -895,3 +895,89 @@
     rotate: 60deg;
   }
 }
+
+/* ── Line style: scaffold pole ────────────────────────────────────
+   timeline_line_style "scaffold": the line is a galvanised tube (shaded
+   across its width so it reads as round), it starts on a base plate,
+   and markers are clamp fittings sitting on the pole. The stepped path
+   gets the same shading from three stacked strokes (js/runtime.js). */
+
+.hse-section--timeline[data-line-style="scaffold"] {
+  --tl-pole-dark: #5d6369;
+  --tl-pole-mid: #a7adb2;
+  --tl-pole-light: #eef1f3;
+  --tl-pole: linear-gradient(to right, var(--tl-pole-dark) 0%, var(--tl-pole-mid) 28%, var(--tl-pole-light) 46%, var(--tl-pole-mid) 64%, var(--tl-pole-dark) 100%);
+  --tl-line-opacity: 1;
+}
+
+[data-line-style="scaffold"] .hse-tl__spine {
+  background: var(--tl-pole);
+  opacity: 1;
+  box-shadow: 0 0 6px rgba(0, 0, 0, 0.35);
+}
+/* Base plate where the pole starts */
+[data-line-style="scaffold"] .hse-tl__spine::before {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 0;
+  width: calc(var(--tl-line-width, 14px) * 3);
+  height: calc(var(--tl-line-width, 14px) * 0.6);
+  translate: -50% 0;
+  border-radius: 3px;
+  background:
+    radial-gradient(circle at 18% 50%, #3f4448 0 14%, transparent 16%),
+    radial-gradient(circle at 82% 50%, #3f4448 0 14%, transparent 16%),
+    linear-gradient(to bottom, var(--tl-pole-light), var(--tl-pole-mid) 55%, var(--tl-pole-dark));
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.45);
+}
+
+/* Clamp fitting: a block wrapped round the pole, with a bolt */
+[data-marker="clamp"] .hse-tl__marker {
+  width: calc(var(--tl-line-width, 14px) + 12px);
+  height: calc(var(--tl-line-width, 14px) + 12px);
+  border-radius: 4px;
+  background:
+    radial-gradient(circle at 50% 50%, #3f4448 0 16%, #d5d9dc 18% 25%, transparent 27%),
+    linear-gradient(135deg, var(--tl-pole-light, #eef1f3) 0%, var(--tl-pole-mid, #a7adb2) 45%, var(--tl-pole-dark, #5d6369) 100%);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.55), inset 0 0 0 1px rgba(0, 0, 0, 0.25);
+  opacity: 0.85;
+}
+[data-marker="clamp"] .is-visible .hse-tl__marker { opacity: 1; }
+/* A date with a background block drops the marker; a clamp stays put */
+[data-marker="clamp"] [data-date-bg] > .hse-tl__marker { top: 0.55rem; }
+
+@media (min-width: 769px) {
+  [data-direction="horizontal"][data-line-style="scaffold"] .hse-tl__spine {
+    background: linear-gradient(to bottom, var(--tl-pole-dark) 0%, var(--tl-pole-mid) 28%, var(--tl-pole-light) 46%, var(--tl-pole-mid) 64%, var(--tl-pole-dark) 100%);
+  }
+  [data-direction="horizontal"][data-line-style="scaffold"] .hse-tl__spine::before {
+    left: 0;
+    top: 50%;
+    width: calc(var(--tl-line-width, 14px) * 0.6);
+    height: calc(var(--tl-line-width, 14px) * 3);
+    translate: 0 -50%;
+    background:
+      radial-gradient(circle at 50% 18%, #3f4448 0 14%, transparent 16%),
+      radial-gradient(circle at 50% 82%, #3f4448 0 14%, transparent 16%),
+      linear-gradient(to right, var(--tl-pole-light), var(--tl-pole-mid) 55%, var(--tl-pole-dark));
+  }
+
+  /* Stepped: three strokes per segment, dark to light towards the middle */
+  [data-line-style="scaffold"] .hse-tl__path-track { opacity: 0.25; stroke: var(--tl-pole-mid); }
+  [data-line-style="scaffold"] .hse-tl__path-drawn {
+    opacity: 1;
+    stroke: var(--tl-pole-dark);
+    filter: drop-shadow(0 0 3px rgba(0, 0, 0, 0.35));
+  }
+  [data-line-style="scaffold"] .hse-tl__path-drawn.is-pole-mid {
+    stroke: var(--tl-pole-mid);
+    stroke-width: calc(var(--tl-line-width, 14px) * 0.55);
+    filter: none;
+  }
+  [data-line-style="scaffold"] .hse-tl__path-drawn.is-pole-hi {
+    stroke: var(--tl-pole-light);
+    stroke-width: calc(var(--tl-line-width, 14px) * 0.18);
+    filter: none;
+  }
+}
