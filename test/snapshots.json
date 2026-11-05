@@ -25,10 +25,10 @@
     "index.html": "ccc64eb14a494184",
     "ios-install-banner.js": "14c815cf66164f92",
     "manifest.json": "21c25dc5c008a68a",
-    "print/index.html": "1f3583c6b713b7a9",
+    "print/index.html": "0353f527fe6566f7",
     "sw.js": "e022215cfa0e91c3",
-    "pdf.html": "46464d907a514639",
-    "audio.ssml": "83310bc45a191aa3"
+    "pdf.html": "7e59ec002fc07434",
+    "audio.ssml": "ed27d0da54166d52"
   },
   "harpoon-test-2026": {
     "content.json": "6a06bb68b39a2086",
@@ -54,16 +54,16 @@
   "imperial-2026-about": {
     "content.json": "82dd54a7697066b7",
     "index.html": "cceb0de2bf5d9a65",
-    "print/index.html": "1afd18ea37d5f2ed",
-    "pdf.html": "08cf7a2b88cbe0e5",
-    "audio.ssml": "68ba54813df50890"
+    "print/index.html": "303e7f842b19072e",
+    "pdf.html": "bfaafc59a9e2e72f",
+    "audio.ssml": "8136023ea82abb2f"
   },
   "imperial-2026-alumni": {
     "content.json": "0fc7e6a3a4af6de3",
     "index.html": "76d617b327aafe25",
-    "print/index.html": "14769962f62bf496",
-    "pdf.html": "05dfda97c40bba63",
-    "audio.ssml": "dcd41779422965a7"
+    "print/index.html": "8f773c1178a93d73",
+    "pdf.html": "85567d7cb428a502",
+    "audio.ssml": "dafff33d23476806"
   },
   "imperial-2026-awardees": {
     "content.json": "ae5e26b6e661d7b1",
@@ -105,10 +105,10 @@
     "index.html": "bea56057914cf62d",
     "ios-install-banner.js": "14c815cf66164f92",
     "manifest.json": "4b9f6a59e32ec39e",
-    "print/index.html": "67547ab9216ce488",
+    "print/index.html": "c3d7f22dc3462ef3",
     "sw.js": "cb8963b768f06a34",
-    "pdf.html": "fb15cc78263146de",
-    "audio.ssml": "c63d414de5c7192e"
+    "pdf.html": "2c302e009b488d5b",
+    "audio.ssml": "cf4e9bd9cac71dfc"
   },
   "speed-dial-2026": {
     "content.json": "5efc098bb51cdac8",
@@ -136,27 +136,27 @@
     "index.html": "bc7c746ded759a3d",
     "ios-install-banner.js": "14c815cf66164f92",
     "manifest.json": "21c25dc5c008a68a",
-    "print/index.html": "1f3583c6b713b7a9",
+    "print/index.html": "0353f527fe6566f7",
     "sw.js": "e1f74c238029d6ba",
-    "pdf.html": "f6f1b3631e51d6c3",
-    "audio.ssml": "83310bc45a191aa3"
+    "pdf.html": "fa831052d94342bf",
+    "audio.ssml": "ed27d0da54166d52"
   },
   "examples/opera-example": {
     "content.json": "1b798f3478c4753e",
     "index.html": "acd1559586d1d6c3",
     "ios-install-banner.js": "14c815cf66164f92",
     "manifest.json": "4b9f6a59e32ec39e",
-    "print/index.html": "c641213051a21e85",
+    "print/index.html": "c479808e7e20bf00",
     "sw.js": "ca2a00333657b663",
-    "pdf.html": "8af56c9cf9121f8f",
-    "audio.ssml": "562ff19361424230"
+    "pdf.html": "95384735b536915f",
+    "audio.ssml": "0d59e4dd37591e8a"
   },
   "test/fixtures/cascading-slides": {
-    "content.json": "29c0b59d90691d03",
+    "content.json": "06eccd2486bc72f8",
     "index.html": "1da99c5abef40ad9",
-    "print/index.html": "441b23d59be21178",
-    "pdf.html": "07c9e06e816da26c",
-    "audio.ssml": "7b95597d62a6f46b"
+    "print/index.html": "d026c8b349746f03",
+    "pdf.html": "bc4cb39e1ff3001e",
+    "audio.ssml": "d184ada7c8fc1a17"
   },
   "test/fixtures/cinema-reveal": {
     "content.json": "e2b441467520d715",
@@ -173,11 +173,11 @@
     "audio.ssml": "d00003e4f5da3f6c"
   },
   "test/fixtures/default": {
-    "content.json": "d84f5c1ee9b291bb",
+    "content.json": "a1fa01a5841286fb",
     "index.html": "f64fb98a6b54e050",
-    "print/index.html": "e5863b8224e84e32",
-    "pdf.html": "84d5d0f8daaf263f",
-    "audio.ssml": "347dbdb33adca285"
+    "print/index.html": "e8554e7c687d54c2",
+    "pdf.html": "67702c8748d28657",
+    "audio.ssml": "524bc285518d81ca"
   },
   "test/fixtures/frame-scrubber": {
     "content.json": "e9b96c056e693e01",
@@ -229,11 +229,11 @@
     "audio.ssml": "ae199b5e1e0cd49b"
   },
   "test/fixtures/stackable-cards": {
-    "content.json": "550c686f4aef5d71",
+    "content.json": "eef7c6c6bc3b9bb6",
     "index.html": "e6e6c91a3d46c758",
-    "print/index.html": "33b9eb96cebc8792",
-    "pdf.html": "4e5e6437897db142",
-    "audio.ssml": "57aa6429487c6836"
+    "print/index.html": "486f769278f6c66f",
+    "pdf.html": "27eb2dbb7504b88c",
+    "audio.ssml": "ea54aa7596605297"
   },
   "test/fixtures/sticky-steps": {
     "content.json": "48e005e3b81b2ff7",
@@ -252,8 +252,8 @@
   "test/fixtures/timeline": {
     "content.json": "4a90a556766c9aa0",
     "index.html": "2297572e0b669180",
-    "print/index.html": "a18144aeb8ff204b",
-    "pdf.html": "93518c11c7386a59",
+    "print/index.html": "73908e6fe04bcc5b",
+    "pdf.html": "5cecf9bfc7a15bb8",
     "audio.ssml": "1d80bff3fc9c7170"
   },
   "test/fixtures/two-column": {

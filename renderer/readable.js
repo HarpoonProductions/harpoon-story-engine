@@ -118,11 +118,25 @@ const READERS = {
 
   // Inline media images print by default (they sit with the text);
   // background images only when ticked, as elsewhere.
-  'timeline': section => list((section.timeline_entries || []).map(e => ({
-    title: e.heading,
-    meta:  e.date,
-    body:  e.body,
-  }))).concat((section.timeline_entries || []).flatMap(e => [...printImage(e.image), ...(Array.isArray(e.images) ? e.images.flatMap(im => printImage(im)) : []), ...(e.media && (e.media.type || 'image') === 'image' ? printImage({ ...e.media, print_include: e.media.print_include !== false }) : [])])),
+  // A chapter card (kind: interstitial) is read as a heading that
+  // introduces the entries after it, not as one more entry.
+  'timeline': section => {
+    const entries = section.timeline_entries || [];
+    const out = [];
+    let group = [];
+    for (const e of entries) {
+      if (e.kind === 'interstitial') {
+        out.push(...list(group));
+        group = [];
+        if (e.heading) out.push({ kind: 'heading', text: e.heading, level: 3 });
+        if (e.body) out.push(text(e.body));
+      } else {
+        group.push({ title: e.heading, meta: e.date, body: e.body });
+      }
+    }
+    out.push(...list(group));
+    return out.concat(entries.flatMap(e => [...printImage(e.image), ...(Array.isArray(e.images) ? e.images.flatMap(im => printImage(im)) : []), ...(e.media && (e.media.type || 'image') === 'image' ? printImage({ ...e.media, print_include: e.media.print_include !== false }) : [])]));
+  },
 
   // Arbitrary HTML can't be read reliably. Only its caption is used.
   'custom-html': section => section.custom_html?.caption
@@ -202,7 +216,9 @@ function panels(arr, titleOf) {
 
 function cards(arr) {
   return [
-    ...list((arr || []).map(c => ({ title: c.title || c.tag, body: c.body }))),
+    // The tag is the small label above a card's title (a year, a
+    // category); with no title it stands in as the title.
+    ...list((arr || []).map(c => ({ title: c.title || c.tag, meta: c.title ? c.tag : undefined, body: c.body }))),
     ...(arr || []).flatMap(c => printImage(c.image)),
   ];
 }
