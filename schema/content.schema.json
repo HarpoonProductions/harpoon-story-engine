@@ -940,6 +940,7 @@
               "line": { "type": "string", "enum": ["show", "hide"], "default": "show", "description": "Interstitials only: hide the line through this card and pick it up again after." },
               "next": { "type": "string", "enum": ["across", "down", "up", "rise", "fall", "left", "rise-left", "fall-left"], "description": "Stepped timelines only: which way the path goes after this entry. across and left are horizontal; rise/fall go diagonally up/down to the right, rise-left/fall-left to the left. Default alternates across and down. A run that would double back is changed: up straight after down (or down after up) becomes across, and a leftward run straight after a rightward one (or the reverse) becomes down." },
               "subheading": { "type": "string", "description": "Interstitials only: a second heading shown under the title." },
+              "swap_side": { "type": "boolean", "description": "Stepped timelines only: put this entry's text on the other side of the line from the section's line position, as an exception (for example to keep it off a strong part of the background). The usual limits still apply: an across entry straight after a down run stays below the line, one after an up run stays above, and diagonals keep their corner." },
               "date_bg": { "$ref": "#/definitions/timeline_block_bg" },
               "text_bg": { "$ref": "#/definitions/timeline_block_bg" }
             }

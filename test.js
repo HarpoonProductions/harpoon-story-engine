@@ -117,6 +117,9 @@ console.log('\n── Timeline direction ─────────────
   const lf = renderTimeline({ id: 'tl', timeline_direction: 'stepped', timeline_entries: [{ heading: 'A', next: 'left' }, { heading: 'B', next: 'rise-left' }, { heading: 'C', next: 'fall-left' }] });
   assert('Leftward runs', JSON.stringify([...lf.matchAll(/data-run="([\w-]+)"/g)].map(m => m[1])) === '["left","rise-left","fall-left"]');
   assert('Stepped line position is opt-in', !st.includes('data-step-side'));
+  const sw = renderTimeline({ id: 'tl', timeline_direction: 'stepped', timeline_entries: [{ heading: 'A', swap_side: true }, { heading: 'B' }] });
+  assert('Per-entry side swap', (sw.match(/ data-swap/g) || []).length === 1);
+  assert('Side swap only on stepped', !renderTimeline({ id: 'tl', timeline_entries: [{ heading: 'A', swap_side: true }] }).includes('data-swap'));
   const stEnd = renderTimeline({ id: 'tl', timeline_direction: 'stepped', timeline_step_side: 'end', timeline_entries: entries });
   assertContains('Stepped line position end', stEnd, 'data-step-side="end"');
   const stAlt = renderTimeline({ id: 'tl', timeline_direction: 'stepped', timeline_step_side: 'alternate', timeline_entries: entries });
