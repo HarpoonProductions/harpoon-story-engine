@@ -1,0 +1,35 @@
+{
+  "meta": {
+    "title": "Contract fixture: sticky-steps",
+    "project_id": "fixture-sticky-steps",
+    "token_set": "default",
+    "last_saved": "2026-11-05T00:00:00Z"
+  },
+  "cover": {
+    "headline": "Fixture sticky-steps"
+  },
+  "sections": [
+    {
+      "id": "fx-sticky-steps",
+      "layout": "sticky-steps",
+      "title": "QQSTICKYTITLE",
+      "intro": "QQSTEPINTRO words.",
+      "sticky_steps": [
+        {
+          "title": "QQSTEPT1",
+          "body": "QQSTEPB1",
+          "image": {
+            "url": "https://example.com/qqstepimg1.jpg",
+            "alt": "QQSTEPIMG1ALT",
+            "caption": "QQSTEPIMG1CAP",
+            "print_include": true
+          }
+        },
+        {
+          "title": "QQSTEPT2",
+          "body": "QQSTEPB2"
+        }
+      ]
+    }
+  ]
+}

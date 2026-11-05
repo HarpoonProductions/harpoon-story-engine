@@ -1,0 +1,49 @@
+{
+  "meta": {
+    "title": "Contract fixture: split-reveal",
+    "project_id": "fixture-split-reveal",
+    "token_set": "default",
+    "last_saved": "2026-11-05T00:00:00Z"
+  },
+  "cover": {
+    "headline": "Fixture split-reveal"
+  },
+  "sections": [
+    {
+      "id": "fx-split-reveal",
+      "layout": "split-reveal",
+      "title": "QQSPLITRTITLE",
+      "split_reveal": {
+        "heading": "QQSRHEAD",
+        "heading_em": "QQSRHEADEM",
+        "image": {
+          "url": "https://example.com/qqsrimg.jpg",
+          "alt": "QQSRIMGALT",
+          "caption": "QQSRIMGCAP",
+          "print_include": true
+        },
+        "blocks": [
+          {
+            "type": "text",
+            "text": "QQSRTEXT1"
+          },
+          {
+            "type": "image-row",
+            "images": [
+              {
+                "url": "https://example.com/qqsrrow1.jpg",
+                "alt": "QQSRROW1ALT",
+                "caption": "QQSRROW1CAP",
+                "print_include": true
+              }
+            ]
+          },
+          {
+            "type": "text",
+            "text": "QQSRTEXT2"
+          }
+        ]
+      }
+    }
+  ]
+}

@@ -150,5 +150,117 @@
     "sw.js": "ca2a00333657b663",
     "pdf.html": "8af56c9cf9121f8f",
     "audio.ssml": "562ff19361424230"
+  },
+  "test/fixtures/cascading-slides": {
+    "content.json": "29c0b59d90691d03",
+    "index.html": "1da99c5abef40ad9",
+    "print/index.html": "441b23d59be21178",
+    "pdf.html": "07c9e06e816da26c",
+    "audio.ssml": "7b95597d62a6f46b"
+  },
+  "test/fixtures/cinema-reveal": {
+    "content.json": "e2b441467520d715",
+    "index.html": "92a04713aa4f6ee9",
+    "print/index.html": "c928aa86d5cb7628",
+    "pdf.html": "fd6edd02ece300e8",
+    "audio.ssml": "a2c0bd8b9acda424"
+  },
+  "test/fixtures/custom-html": {
+    "content.json": "9edee98f11124591",
+    "index.html": "98ffe40628758754",
+    "print/index.html": "88e62098d9687732",
+    "pdf.html": "6cde10528caae06f",
+    "audio.ssml": "d00003e4f5da3f6c"
+  },
+  "test/fixtures/default": {
+    "content.json": "d84f5c1ee9b291bb",
+    "index.html": "f64fb98a6b54e050",
+    "print/index.html": "e5863b8224e84e32",
+    "pdf.html": "84d5d0f8daaf263f",
+    "audio.ssml": "347dbdb33adca285"
+  },
+  "test/fixtures/frame-scrubber": {
+    "content.json": "e9b96c056e693e01",
+    "index.html": "2b9381328a3b6c49",
+    "print/index.html": "fa20e1704f3d4c9b",
+    "pdf.html": "239309ce835a6bbd",
+    "audio.ssml": "08915bc0a99ec001"
+  },
+  "test/fixtures/fullbleed-quote": {
+    "content.json": "20f7c72375f4a3a3",
+    "index.html": "9de11957b50f9e6b",
+    "print/index.html": "af9db26def0c3556",
+    "pdf.html": "4fc165ac3fc0e960",
+    "audio.ssml": "6ca438a30782aea4"
+  },
+  "test/fixtures/panoramic-scroll": {
+    "content.json": "4843a694ecc7ae12",
+    "index.html": "2aa302c22d9383af",
+    "print/index.html": "8b9fb7bb056d4761",
+    "pdf.html": "9029007334a8954b",
+    "audio.ssml": "be42bfacaa81e9d1"
+  },
+  "test/fixtures/parallax": {
+    "content.json": "d76f32c362ce053e",
+    "index.html": "60ad3e1aa10ae34d",
+    "print/index.html": "fb167244c6daaba3",
+    "pdf.html": "73ebec4a07aa1268",
+    "audio.ssml": "3e53b85c923da9d4"
+  },
+  "test/fixtures/reveal-crossfade": {
+    "content.json": "608fa431d573dee3",
+    "index.html": "9cc8e401376b1627",
+    "print/index.html": "6315ed83a507d4e0",
+    "pdf.html": "8bed23410a432595",
+    "audio.ssml": "222f93f5eebe8b9d"
+  },
+  "test/fixtures/scroll-carousel": {
+    "content.json": "ad30c5c24bf341b3",
+    "index.html": "136a5449dc01c0cb",
+    "print/index.html": "04a7f99aa5b29d4d",
+    "pdf.html": "8dcc8c5ee8efea42",
+    "audio.ssml": "268bb9d7b72cee2a"
+  },
+  "test/fixtures/split-reveal": {
+    "content.json": "8f9183d397d7c890",
+    "index.html": "415e1dcae915bc91",
+    "print/index.html": "31fe9d8a0078325b",
+    "pdf.html": "f5cc8703e5d64c4c",
+    "audio.ssml": "ae199b5e1e0cd49b"
+  },
+  "test/fixtures/stackable-cards": {
+    "content.json": "550c686f4aef5d71",
+    "index.html": "e6e6c91a3d46c758",
+    "print/index.html": "33b9eb96cebc8792",
+    "pdf.html": "4e5e6437897db142",
+    "audio.ssml": "57aa6429487c6836"
+  },
+  "test/fixtures/sticky-steps": {
+    "content.json": "48e005e3b81b2ff7",
+    "index.html": "4ba62546ee3afc1a",
+    "print/index.html": "7dd0f20529027fdc",
+    "pdf.html": "0c12de5cfcf60eb2",
+    "audio.ssml": "fc1a7555a6bed9bc"
+  },
+  "test/fixtures/text": {
+    "content.json": "ded335bd30bfe269",
+    "index.html": "da5e3101ce06d18d",
+    "print/index.html": "646397423b4d8bc9",
+    "pdf.html": "75c376c59a260d98",
+    "audio.ssml": "1907e451c48995b9"
+  },
+  "test/fixtures/timeline": {
+    "content.json": "4a90a556766c9aa0",
+    "index.html": "2297572e0b669180",
+    "print/index.html": "a18144aeb8ff204b",
+    "pdf.html": "93518c11c7386a59",
+    "audio.ssml": "1d80bff3fc9c7170"
+  },
+  "test/fixtures/two-column": {
+    "content.json": "2ca9e36435fe26a6",
+    "index.html": "ba135da6d28bc1be",
+    "print/index.html": "0a5c7fe73aacc82e",
+    "pdf.html": "87470a17d563cc31",
+    "audio.ssml": "119f461b4e02c40c"
   }
 }

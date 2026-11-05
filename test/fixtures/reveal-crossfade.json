@@ -1,0 +1,41 @@
+{
+  "meta": {
+    "title": "Contract fixture: reveal-crossfade",
+    "project_id": "fixture-reveal-crossfade",
+    "token_set": "default",
+    "last_saved": "2026-11-05T00:00:00Z"
+  },
+  "cover": {
+    "headline": "Fixture reveal-crossfade"
+  },
+  "sections": [
+    {
+      "id": "fx-reveal-crossfade",
+      "layout": "reveal-crossfade",
+      "title": "QQREVEALTITLE",
+      "crossfade_images": [
+        {
+          "url": "https://example.com/qqcfimg1.jpg",
+          "alt": "QQCFIMG1ALT",
+          "caption": "QQCFIMG1CAP",
+          "print_include": true
+        },
+        {
+          "url": "https://example.com/qqcfimg2.jpg",
+          "alt": "QQCFIMG2ALT",
+          "caption": "QQCFIMG2CAP",
+          "print_include": true
+        }
+      ],
+      "crossfade_phases": [
+        {
+          "text": "QQCFP1",
+          "attribution": "QQCFA1"
+        },
+        {
+          "text": "QQCFP2"
+        }
+      ]
+    }
+  ]
+}

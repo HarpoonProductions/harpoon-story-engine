@@ -1,0 +1,33 @@
+{
+  "meta": {
+    "title": "Contract fixture: panoramic-scroll",
+    "project_id": "fixture-panoramic-scroll",
+    "token_set": "default",
+    "last_saved": "2026-11-05T00:00:00Z"
+  },
+  "cover": {
+    "headline": "Fixture panoramic-scroll"
+  },
+  "sections": [
+    {
+      "id": "fx-panoramic-scroll",
+      "layout": "panoramic-scroll",
+      "title": "QQPANORATITLE",
+      "panoramic_image": {
+        "url": "https://example.com/qqpanimg.jpg",
+        "alt": "QQPANIMGALT",
+        "caption": "QQPANIMGCAP",
+        "print_include": true
+      },
+      "panoramic_panels": [
+        {
+          "text": "QQPANT1",
+          "attribution": "QQPANA1"
+        },
+        {
+          "text": "QQPANT2"
+        }
+      ]
+    }
+  ]
+}

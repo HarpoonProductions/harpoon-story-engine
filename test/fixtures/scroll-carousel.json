@@ -1,0 +1,35 @@
+{
+  "meta": {
+    "title": "Contract fixture: scroll-carousel",
+    "project_id": "fixture-scroll-carousel",
+    "token_set": "default",
+    "last_saved": "2026-11-05T00:00:00Z"
+  },
+  "cover": {
+    "headline": "Fixture scroll-carousel"
+  },
+  "sections": [
+    {
+      "id": "fx-scroll-carousel",
+      "layout": "scroll-carousel",
+      "title": "QQSCROLLTITLE",
+      "intro": "QQCARINTRO words.",
+      "carousel_cards": [
+        {
+          "number": "QQCARN1",
+          "text": "QQCART1",
+          "image": {
+            "url": "https://example.com/qqcarimg1.jpg",
+            "alt": "QQCARIMG1ALT",
+            "caption": "QQCARIMG1CAP",
+            "print_include": true
+          }
+        },
+        {
+          "number": "QQCARN2",
+          "text": "QQCART2"
+        }
+      ]
+    }
+  ]
+}

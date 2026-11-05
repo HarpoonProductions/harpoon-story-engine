@@ -1,0 +1,55 @@
+{
+  "meta": {
+    "title": "Contract fixture: timeline",
+    "project_id": "fixture-timeline",
+    "token_set": "default",
+    "last_saved": "2026-11-05T00:00:00Z"
+  },
+  "cover": {
+    "headline": "Fixture timeline"
+  },
+  "sections": [
+    {
+      "id": "fx-timeline",
+      "layout": "timeline",
+      "title": "QQTIMELITITLE",
+      "timeline_entries": [
+        {
+          "date": "QQTLDATE1",
+          "heading": "QQTLHEAD1",
+          "body": "QQTLBODY1",
+          "image": {
+            "url": "https://example.com/qqtlbg1.jpg",
+            "alt": "QQTLBG1ALT",
+            "caption": "QQTLBG1CAP",
+            "print_include": true
+          },
+          "images": [
+            {
+              "url": "https://example.com/qqtlextra1.jpg",
+              "alt": "QQTLEXTRA1ALT",
+              "caption": "QQTLEXTRA1CAP",
+              "print_include": true
+            }
+          ]
+        },
+        {
+          "kind": "interstitial",
+          "heading": "QQTLCHAPTER",
+          "body": "QQTLCHAPBODY"
+        },
+        {
+          "date": "QQTLDATE2",
+          "heading": "QQTLHEAD2",
+          "body": "QQTLBODY2",
+          "media": {
+            "type": "image",
+            "url": "https://example.com/m.jpg",
+            "alt": "QQTLMEDIAALT",
+            "caption": "QQTLMEDIACAP"
+          }
+        }
+      ]
+    }
+  ]
+}

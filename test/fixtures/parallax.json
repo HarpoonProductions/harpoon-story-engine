@@ -1,0 +1,35 @@
+{
+  "meta": {
+    "title": "Contract fixture: parallax",
+    "project_id": "fixture-parallax",
+    "token_set": "default",
+    "last_saved": "2026-11-05T00:00:00Z"
+  },
+  "cover": {
+    "headline": "Fixture parallax"
+  },
+  "sections": [
+    {
+      "id": "fx-parallax",
+      "layout": "parallax",
+      "title": "QQPARALLTITLE",
+      "intro": "QQPARINTRO words.",
+      "hero_image": {
+        "url": "https://example.com/qqparhero.jpg",
+        "alt": "QQPARHEROALT",
+        "caption": "QQPARHEROCAP",
+        "print_include": true
+      },
+      "pull_quote": {
+        "text": "QQPARPQ",
+        "attribution": "QQPARPQATTR"
+      },
+      "stat_block": [
+        {
+          "value": "7",
+          "label": "QQPARSTATLABEL"
+        }
+      ]
+    }
+  ]
+}

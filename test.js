@@ -480,6 +480,47 @@ console.log('\nLayout registry');
   }
 }
 
+// ── Every word on screen is read (Section Contract R10) ──────────
+// Each layout has a sample story in test/fixtures/<layout>.json whose
+// words are unique markers (QQ…). Every marker the page shows as text
+// must also come out of the layout's reader, which is what the printable
+// page, the PDF and the audio all use. A word that deliberately isn't
+// read is listed in the section's "_not_read" with the reason.
+// The reverse holds too: a reader may not read text the page doesn't
+// show (leftovers from switching layouts). The section title and ticked
+// print images are exempt: every output heads a section with its title,
+// and a printed image keeps its caption.
+console.log('\nEvery word on screen is read');
+{
+  const { LAYOUTS } = require('./renderer/layouts/registry');
+  const { renderSection } = require('./renderer/index');
+  const { readSection } = require('./renderer/readable');
+  const MARK = /QQ[A-Z0-9]+/g;
+  for (const name of Object.keys(LAYOUTS)) {
+    if (name === 'cover') continue; // read by each output's own cover code
+    const file = path.join(__dirname, 'test/fixtures', `${name}.json`);
+    assert(`${name}: has a sample in test/fixtures/${name}.json`, fs.existsSync(file));
+    if (!fs.existsSync(file)) continue;
+    const story = JSON.parse(fs.readFileSync(file, 'utf8'));
+    assert(`${name}: sample passes the schema`, validate(story).length === 0);
+    const section = story.sections.find(s => s.layout === name);
+    const notRead = section._not_read || {};
+    const html = renderSection(JSON.parse(JSON.stringify(section)), story.meta);
+    const shown = new Set(html.replace(/<(script|style)\b[\s\S]*?<\/\1>/g, ' ').replace(/<[^>]*>/g, ' ').match(MARK) || []);
+    const read = readSection(JSON.parse(JSON.stringify(section)));
+    const readText = JSON.stringify([read.intro, read.items.filter(i => i.kind !== 'image')]);
+    const readAll = JSON.stringify(read);
+
+    const missing = [...shown].filter(m => !readAll.includes(m) && !notRead[m]);
+    assert(`${name}: print, PDF and audio read every word it shows` + (missing.length ? ` (missing ${missing.join(', ')})` : ''), missing.length === 0);
+    const stale = [...new Set(readText.match(MARK) || [])].filter(m => !html.includes(m));
+    assert(`${name}: reads nothing it doesn't show` + (stale.length ? ` (${stale.join(', ')})` : ''), stale.length === 0);
+    for (const [m, why] of Object.entries(notRead)) {
+      if (/^Known gap/i.test(why)) console.log(`  – ${name}: ${m} not read. ${why}`);
+    }
+  }
+}
+
 // ── Existing stories unchanged (Section Contract R14) ────────────
 // Every story in projects/, examples/ and test/fixtures/ must render
 // exactly as recorded in test/snapshots.json: page, printable page, PDF
