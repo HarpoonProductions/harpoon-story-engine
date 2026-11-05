@@ -678,3 +678,137 @@
     rotate: -60deg;
   }
 }
+
+/* ── Extra images within an entry ─────────────────────────────────
+   An entry with more than one background holds a slide per image in its
+   layer; js/runtime.js marks the one showing (.is-current) and those
+   already passed (.is-past) as the reader scrolls, and sets data-push on
+   the layer to the direction of travel. Fade crossfades; push slides
+   the next image in. */
+
+.hse-tl__layer[data-type="gallery"] { overflow: hidden; }
+
+.hse-tl__slide {
+  position: absolute;
+  inset: 0;
+  background-size: cover;
+  background-position: center;
+  opacity: 0;
+  transition: opacity 0.9s ease;
+}
+.hse-tl__slide.is-current { opacity: 1; }
+
+.hse-tl__layer[data-transition="push"] .hse-tl__slide {
+  opacity: 1;
+  transform: translateY(100%);
+  transition: transform 0.9s cubic-bezier(0.65, 0, 0.35, 1);
+}
+.hse-tl__layer[data-transition="push"] .hse-tl__slide.is-past    { transform: translateY(-100%); }
+.hse-tl__layer[data-transition="push"][data-push="left"] .hse-tl__slide         { transform: translateX(100%); }
+.hse-tl__layer[data-transition="push"][data-push="left"] .hse-tl__slide.is-past { transform: translateX(-100%); }
+.hse-tl__layer[data-transition="push"][data-push="down"] .hse-tl__slide         { transform: translateY(-100%); }
+.hse-tl__layer[data-transition="push"][data-push="down"] .hse-tl__slide.is-past { transform: translateY(100%); }
+.hse-tl__layer[data-transition="push"] .hse-tl__slide.is-current { transform: none; }
+
+.hse-tl__slide-caption {
+  position: absolute;
+  right: var(--hse-page-pad);
+  bottom: 1.25rem;
+  max-width: 40ch;
+  font-family: var(--hse-font-mono);
+  font-size: var(--hse-font-size-micro, 0.7rem);
+  line-height: 1.4;
+  text-align: right;
+  color: var(--hse-warm-3, rgba(255,255,255,0.75));
+  z-index: 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hse-tl__slide { transition: none !important; }
+}
+
+/* Phones: no background canvas, so the extra images follow the text */
+.hse-tl__more { display: none; }
+
+@media (min-width: 769px) {
+  /* Vertical: the entry grows by a screen per extra image and its text
+     stays put (sticky) while the images change behind it */
+  .hse-section--timeline:not(.is-stepped):not([data-direction="horizontal"]) .hse-tl__entry[data-slides] {
+    align-items: flex-start;
+    padding-top: 28vh;
+    min-height: calc(100vh + (var(--tl-slides, 2) - 1) * 80vh);
+    box-sizing: border-box;
+  }
+  .hse-section--timeline:not(.is-stepped):not([data-direction="horizontal"]) .hse-tl__entry[data-slides] .hse-tl__entry-inner {
+    position: sticky;
+    top: 28vh;
+  }
+  .hse-tl__entry[data-slides="2"] { --tl-slides: 2; }
+  .hse-tl__entry[data-slides="3"] { --tl-slides: 3; }
+  .hse-tl__entry[data-slides="4"] { --tl-slides: 4; }
+  .hse-tl__entry[data-slides="5"] { --tl-slides: 5; }
+  .hse-tl__entry[data-slides="6"] { --tl-slides: 6; }
+  .hse-tl__entry[data-slides="7"] { --tl-slides: 7; }
+  .hse-tl__entry[data-slides="8"] { --tl-slides: 8; }
+}
+
+@media (max-width: 768px) {
+  .hse-tl__more {
+    display: block;
+    width: 100%;
+    margin-top: 1rem;
+    padding-left: calc(var(--tl-spine-inset) + var(--tl-gap) - var(--hse-page-pad));
+    box-sizing: border-box;
+  }
+  .hse-tl__more .hse-tl__thumb { margin: 0 0 0.4rem; }
+  .hse-tl__thumb-caption {
+    display: block;
+    margin-bottom: 1rem;
+    font-family: var(--hse-font-mono);
+    font-size: var(--hse-font-size-micro, 0.7rem);
+    color: var(--hse-warm-3, rgba(255,255,255,0.65));
+  }
+}
+
+/* ── Interstitial (chapter card) ──────────────────────────────────
+   A heading and body between entries, over its own background, with no
+   date or marker. Centred on the screen; the line can run through it or
+   be hidden for its length (data-line="hide": js/runtime.js masks it). */
+
+.hse-tl__entry--interstitial .hse-tl__heading {
+  font-size: calc(clamp(2.2rem, 5.5vw, 4.2rem) * var(--tl-text-scale, 1));
+  line-height: 1.05;
+  margin-bottom: 1rem;
+}
+.hse-tl__entry--interstitial .hse-tl__body {
+  font-size: calc(clamp(1rem, 1.7vw, 1.25rem) * var(--tl-text-scale, 1));
+}
+.hse-tl__entry--interstitial .hse-tl__text.has-bg { padding: 2rem 2.5rem; }
+
+@media (min-width: 769px) {
+  /* Vertical */
+  .hse-section--timeline .hse-tl__entry--interstitial { justify-content: center; }
+  .hse-section--timeline .hse-tl__entry--interstitial .hse-tl__entry-inner {
+    box-sizing: border-box;
+    width: min(760px, calc(100% - 2 * var(--hse-page-pad)));
+    max-width: none;
+    margin: 0 auto;
+    text-align: center;
+  }
+
+  /* Horizontal: centred in its screen-wide column */
+  [data-direction="horizontal"] .hse-tl__entry--interstitial .hse-tl__entry-inner {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    translate: -50% -50%;
+  }
+
+  /* Stepped: a wider card, placed by js/runtime.js */
+  .is-stepped .hse-tl__entry--interstitial { width: min(760px, 64vw); }
+  .is-stepped .hse-tl__entry--interstitial .hse-tl__entry-inner { width: auto; margin: 0; }
+}
+
+@media (max-width: 768px) {
+  .hse-tl__entry--interstitial .hse-tl__entry-inner { padding: 1.5rem 0 !important; }
+}

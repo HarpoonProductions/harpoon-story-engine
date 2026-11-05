@@ -2026,6 +2026,7 @@
                                     <p class="form-hint">Each entry shows as the user scrolls past it. Add a date, heading, body text and a background image or video. Open "Inline media" to put an image, video or embed with the text, and "Backgrounds" to give this entry its own date and text blocks.</p>
                                     <div id="timelineList"></div>
                                     <button type="button" class="tbtn tbtn--ghost" id="addTimelineEntryBtn" style="margin-top:0.5rem;width:100%;justify-content:center">+ Add entry</button>
+                                    <button type="button" class="tbtn tbtn--ghost" id="addTimelineChapterBtn" style="margin-top:0.35rem;width:100%;justify-content:center" title="A heading card between entries, such as a new decade">+ Add chapter card</button>
                                   </div>
                                 </div>
 
@@ -4676,12 +4677,18 @@ function initTimelineEditor(sectionIndex) {
     section.timeline_entries.forEach((entry, i) => {
       const media = entry.media || {};
       const mediaType = entry.media ? (media.type || 'image') : '';
+      const chapter = entry.kind === 'interstitial';
+      const extras = Array.isArray(entry.images) ? entry.images : [];
       const item = document.createElement('div');
       item.className = 'block-item';
       item.innerHTML = `
         <div class="block-item__header">
-          <span style="font-family:var(--font-mono);font-size:0.6rem;letter-spacing:0.1em;color:var(--ink-3)">ENTRY ${i + 1}</span>
-          ${i > 0 ? `<button type="button" class="block-item__delete" data-i="${i}" title="Remove entry">✕</button>` : ''}
+          <span style="font-family:var(--font-mono);font-size:0.6rem;letter-spacing:0.1em;color:var(--ink-3)">${chapter ? 'CHAPTER CARD' : 'ENTRY'} ${i + 1}</span>
+          <span style="display:flex;gap:0.25rem;align-items:center">
+            ${i > 0 ? `<button type="button" class="block-item__delete tl-move" data-dir="-1" title="Move up">↑</button>` : ''}
+            ${i < section.timeline_entries.length - 1 ? `<button type="button" class="block-item__delete tl-move" data-dir="1" title="Move down">↓</button>` : ''}
+            ${i > 0 ? `<button type="button" class="block-item__delete tl-remove" data-i="${i}" title="Remove entry">✕</button>` : ''}
+          </span>
         </div>
         <div style="padding:0.5rem;display:flex;flex-direction:column;gap:0.4rem">
           ${section.timeline_direction === 'stepped' ? `<label style="display:grid;grid-template-columns:7rem 1fr;align-items:center;gap:0.5rem">
@@ -4690,14 +4697,42 @@ function initTimelineEditor(sectionIndex) {
               ${[['across', 'Across →'], ['down', 'Down ↓'], ['up', 'Up ↑'], ['rise', 'Up ↗'], ['fall', 'Down ↘']].map(([v, l]) => `<option value="${v}"${(entry.next || (i % 2 ? 'down' : 'across')) === v ? ' selected' : ''}>${l}</option>`).join('')}
             </select>
           </label>` : ''}
-          <input class="form-input tl-date" data-i="${i}" placeholder="Date / label (e.g. 1987 or March 2020)" value="${entry.date || ''}">
-          <input class="form-input tl-heading" data-i="${i}" placeholder="Heading" value="${entry.heading || ''}">
+          ${chapter ? `<label style="display:grid;grid-template-columns:7rem 1fr;align-items:center;gap:0.5rem">
+            <span style="${panelSummary};cursor:default">Line</span>
+            <select class="form-select tl-line" aria-label="Line through this card">
+              <option value="show"${entry.line !== 'hide' ? ' selected' : ''}>Keep drawing</option>
+              <option value="hide"${entry.line === 'hide' ? ' selected' : ''}>Hide here, pick up after</option>
+            </select>
+          </label>` : `<input class="form-input tl-date" data-i="${i}" placeholder="Date / label (e.g. 1987 or March 2020)" value="${entry.date || ''}">`}
+          <input class="form-input tl-heading" data-i="${i}" placeholder="${chapter ? 'Title (e.g. The 1980s)' : 'Heading'}" value="${entry.heading || ''}">
           <textarea class="form-textarea tl-body" data-i="${i}" placeholder="Body text…" rows="3">${entry.body || ''}</textarea>
           <input class="form-input tl-img-url" id="tl-img-url-${sectionIndex}-${i}" data-image-field data-i="${i}" ${entry.image && entry.image.print_include ? 'data-print-include="true"' : ''} ${entry.image && entry.image.focal ? `data-existing-focal="${entry.image.focal}"` : ''} placeholder="Image URL https://…" value="${(entry.image && entry.image.url) || ''}">
           <input class="form-input tl-img-alt" data-i="${i}" placeholder="Image alt text" value="${(entry.image && entry.image.alt) || ''}">
           <input class="form-input tl-video-url" data-i="${i}" placeholder="Video URL .mp4 (overrides image on desktop)" value="${(entry.video && entry.video.url) || ''}">
           <input class="form-input tl-video-poster" data-i="${i}" placeholder="Video poster image URL (optional)" value="${(entry.video && entry.video.poster) || ''}">
-          <details class="tl-panel" data-panel="media"${openPanels.has(`${i}-media`) ? ' open' : ''}>
+          <details class="tl-panel" data-panel="more"${openPanels.has(`${i}-more`) ? ' open' : ''}>
+            <summary style="${panelSummary}">More background images${extras.length ? ` · ${extras.length}` : ''}</summary>
+            <div style="display:flex;flex-direction:column;gap:0.5rem;padding-top:0.4rem">
+              <label style="display:grid;grid-template-columns:7rem 1fr;align-items:center;gap:0.5rem">
+                <span style="${panelSummary};cursor:default">Change by</span>
+                <select class="form-select tl-images-transition" aria-label="How the images change">
+                  <option value="fade"${entry.images_transition !== 'push' ? ' selected' : ''}>Fade</option>
+                  <option value="push"${entry.images_transition === 'push' ? ' selected' : ''}>Push</option>
+                </select>
+              </label>
+              ${extras.map((im, k) => `<div class="tl-extra" data-k="${k}" style="display:flex;flex-direction:column;gap:0.3rem;padding:0.4rem;border:1px solid var(--rule, rgba(0,0,0,0.12));border-radius:4px">
+                <div style="display:flex;justify-content:space-between;align-items:center">
+                  <span style="${panelSummary};cursor:default">Image ${k + 2}</span>
+                  <button type="button" class="block-item__delete tl-extra-del" title="Remove image">✕</button>
+                </div>
+                <input class="form-input tl-extra-field" data-field="url" id="tl-extra-url-${sectionIndex}-${i}-${k}" data-image-field ${im.print_include ? 'data-print-include="true"' : ''} ${im.focal ? `data-existing-focal="${escAttr(im.focal)}"` : ''} placeholder="Image URL https://…" value="${escAttr(im.url)}">
+                <input class="form-input tl-extra-field" data-field="alt" placeholder="Alt text" value="${escAttr(im.alt)}">
+                <input class="form-input tl-extra-field" data-field="caption" placeholder="Caption (optional)" value="${escAttr(im.caption)}">
+              </div>`).join('')}
+              <button type="button" class="tbtn tbtn--ghost tl-extra-add" style="justify-content:center">+ Add image</button>
+            </div>
+          </details>
+          ${chapter ? '' : `<details class="tl-panel" data-panel="media"${openPanels.has(`${i}-media`) ? ' open' : ''}>
             <summary style="${panelSummary}">Inline media${mediaType ? ` · ${mediaType}` : ''}</summary>
             <div style="display:flex;flex-direction:column;gap:0.4rem;padding-top:0.4rem">
               <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.4rem">
@@ -4716,7 +4751,7 @@ function initTimelineEditor(sectionIndex) {
               <input class="form-input tl-media-field" data-field="url" placeholder="…or a page URL to show in a frame" value="${escAttr(media.url)}">` : ''}
               ${mediaType ? `<input class="form-input tl-media-field" data-field="caption" placeholder="Caption (optional)" value="${escAttr(media.caption)}">` : ''}
             </div>
-          </details>
+          </details>`}
           <details class="tl-panel" data-panel="bg"${openPanels.has(`${i}-bg`) ? ' open' : ''}>
             <summary style="${panelSummary}">Backgrounds${entry.date_bg || entry.text_bg ? ' · custom' : ''}</summary>
             <div class="tl-bg-rows" style="display:flex;flex-direction:column;gap:0.5rem;padding-top:0.4rem"></div>
@@ -4724,7 +4759,7 @@ function initTimelineEditor(sectionIndex) {
         </div>`;
 
       const bgRows = item.querySelector('.tl-bg-rows');
-      bgRows.appendChild(tlBgRow(section.timeline_entries[i], 'date_bg', 'Date block', section.timeline_date_bg));
+      if (!chapter) bgRows.appendChild(tlBgRow(section.timeline_entries[i], 'date_bg', 'Date block', section.timeline_date_bg));
       bgRows.appendChild(tlBgRow(section.timeline_entries[i], 'text_bg', 'Text block', section.timeline_text_bg));
 
       item.querySelectorAll('.tl-panel').forEach(panel => {
@@ -4733,7 +4768,44 @@ function initTimelineEditor(sectionIndex) {
           if (panel.open) openPanels.add(k); else openPanels.delete(k);
         });
       });
-      item.querySelector('.tl-media-type').addEventListener('change', e => {
+      const lineSel = item.querySelector('.tl-line');
+      if (lineSel) lineSel.addEventListener('change', e => {
+        if (e.target.value === 'hide') section.timeline_entries[i].line = 'hide';
+        else delete section.timeline_entries[i].line;
+        scheduleAutosave();
+      });
+      item.querySelector('.tl-images-transition').addEventListener('change', e => {
+        if (e.target.value === 'push') section.timeline_entries[i].images_transition = 'push';
+        else delete section.timeline_entries[i].images_transition;
+        scheduleAutosave();
+      });
+      item.querySelector('.tl-extra-add').addEventListener('click', () => {
+        const en = section.timeline_entries[i];
+        en.images = (Array.isArray(en.images) ? en.images : []).concat([{ url: '' }]);
+        openPanels.add(`${i}-more`);
+        scheduleAutosave();
+        renderEntriesAndInit();
+      });
+      item.querySelectorAll('.tl-extra').forEach(row => {
+        const k = parseInt(row.dataset.k);
+        row.querySelector('.tl-extra-del').addEventListener('click', () => {
+          const en = section.timeline_entries[i];
+          en.images.splice(k, 1);
+          if (!en.images.length) delete en.images;
+          scheduleAutosave();
+          renderEntriesAndInit();
+        });
+        row.querySelectorAll('.tl-extra-field').forEach(input => {
+          input.addEventListener('input', () => {
+            const im = section.timeline_entries[i].images[k];
+            if (input.value.trim() === '' && input.dataset.field !== 'url') delete im[input.dataset.field];
+            else im[input.dataset.field] = input.value;
+            scheduleAutosave();
+          });
+        });
+      });
+      const mediaTypeSel = item.querySelector('.tl-media-type');
+      if (mediaTypeSel) mediaTypeSel.addEventListener('change', e => {
         const type = e.target.value;
         if (!type) delete section.timeline_entries[i].media;
         else section.timeline_entries[i].media = { ...(section.timeline_entries[i].media || {}), type };
@@ -4741,7 +4813,8 @@ function initTimelineEditor(sectionIndex) {
         scheduleAutosave();
         renderEntriesAndInit();
       });
-      item.querySelector('.tl-media-position').addEventListener('change', e => {
+      const mediaPosSel = item.querySelector('.tl-media-position');
+      if (mediaPosSel) mediaPosSel.addEventListener('change', e => {
         if (!section.timeline_entries[i].media) return;
         section.timeline_entries[i].media.position = e.target.value;
         scheduleAutosave();
@@ -4758,7 +4831,8 @@ function initTimelineEditor(sectionIndex) {
 
       const nextSel = item.querySelector('.tl-next');
       if (nextSel) nextSel.addEventListener('change', e => { section.timeline_entries[i].next = e.target.value; scheduleAutosave(); });
-      item.querySelector('.tl-date').addEventListener('input', e => { section.timeline_entries[i].date = e.target.value; scheduleAutosave(); });
+      const dateInput = item.querySelector('.tl-date');
+      if (dateInput) dateInput.addEventListener('input', e => { section.timeline_entries[i].date = e.target.value; scheduleAutosave(); });
       item.querySelector('.tl-heading').addEventListener('input', e => { section.timeline_entries[i].heading = e.target.value; scheduleAutosave(); });
       item.querySelector('.tl-body').addEventListener('input', e => { section.timeline_entries[i].body = e.target.value; scheduleAutosave(); });
       item.querySelector('.tl-img-url').addEventListener('input', e => {
@@ -4782,7 +4856,17 @@ function initTimelineEditor(sectionIndex) {
         scheduleAutosave();
       });
 
-      const delBtn = item.querySelector('.block-item__delete');
+      item.querySelectorAll('.tl-move').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const j = i + parseInt(btn.dataset.dir);
+          const arr = section.timeline_entries;
+          [arr[i], arr[j]] = [arr[j], arr[i]];
+          openPanels.clear();
+          scheduleAutosave();
+          renderEntriesAndInit();
+        });
+      });
+      const delBtn = item.querySelector('.tl-remove');
       if (delBtn) {
         delBtn.addEventListener('click', () => {
           section.timeline_entries.splice(i, 1);
@@ -4810,6 +4894,16 @@ function initTimelineEditor(sectionIndex) {
           scheduleAutosave();
           return;
         }
+        // Extra background images: focal point
+        const extraMatch = fieldId.match(/^tl-extra-url-\d+-(\d+)-(\d+)$/);
+        if (extraMatch) {
+          const im = section.timeline_entries[parseInt(extraMatch[1])]?.images?.[parseInt(extraMatch[2])];
+          if (!im) return;
+          if (!focal || focal === '50% 50%') delete im.focal; else im.focal = focal;
+          if (printInclude) im.print_include = true; else delete im.print_include;
+          scheduleAutosave();
+          return;
+        }
         const match = fieldId.match(/^tl-img-url-\d+-(\d+)$/);
         if (!match) return;
         const idx = parseInt(match[1]);
@@ -4834,6 +4928,16 @@ function initTimelineEditor(sectionIndex) {
     scheduleAutosave();
     renderEntriesAndInit();
     const inputs = list.querySelectorAll('.tl-date');
+    if (inputs.length) inputs[inputs.length - 1].focus();
+  });
+  const chapterBtn = document.getElementById('addTimelineChapterBtn');
+  const newChapterBtn = chapterBtn.cloneNode(true);
+  chapterBtn.parentNode.replaceChild(newChapterBtn, chapterBtn);
+  newChapterBtn.addEventListener('click', () => {
+    section.timeline_entries.push({ kind: 'interstitial' });
+    scheduleAutosave();
+    renderEntriesAndInit();
+    const inputs = list.querySelectorAll('.tl-heading');
     if (inputs.length) inputs[inputs.length - 1].focus();
   });
 }

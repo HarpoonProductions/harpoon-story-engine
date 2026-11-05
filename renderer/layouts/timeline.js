@@ -42,6 +42,13 @@ const { escHtml } = require('../shell/head');
  *                              goes after this entry (default: alternating, across first)
  *     entry.date_bg  {object}  { color, opacity } overrides timeline_date_bg for this entry
  *     entry.text_bg  {object}  { color, opacity } overrides timeline_text_bg for this entry
+ *     entry.images   {Array}   more backgrounds after image/video: [{ url, focal, alt, caption }].
+ *                              Each adds a scroll stop; the text stays while they change.
+ *     entry.images_transition {string} 'fade' | 'push' (default: 'fade'). Push slides the
+ *                              next image in from the direction of travel.
+ *     entry.kind     {string}  'interstitial' makes a chapter card (heading, body, background)
+ *                              with no date or marker
+ *     entry.line     {string}  interstitial only: 'hide' gaps the line through it
  *
  * @param {object} section
  * @returns {string} HTML
@@ -121,6 +128,32 @@ function mediaHtml(media) {
   };
 }
 
+// One background: the entry's video, else its image, else nothing.
+function backgroundHtml(entry, cls, autoplay) {
+  if (entry.video && entry.video.url) {
+    const poster = entry.video.poster ? ` poster="${escHtml(entry.video.poster)}"` : '';
+    return `<div class="${cls}" data-type="video">
+        <video class="hse-tl__video"${autoplay ? ' autoplay' : ''} muted loop playsinline${poster} data-tl-video>
+          <source src="${escHtml(entry.video.url)}" type="video/mp4">
+        </video>
+      </div>`;
+  }
+  if (entry.image && entry.image.url) {
+    const focal = entry.image.focal ? `background-position:${escHtml(entry.image.focal)};` : '';
+    return `<div class="${cls}"
+        style="background-image:url('${escHtml(entry.image.url)}');${focal}"
+        role="img"
+        aria-label="${escHtml(entry.image.alt || '')}"
+        data-type="image"></div>`;
+  }
+  return `<div class="${cls}" data-type="empty"></div>`;
+}
+
+// The extra background images of an entry, with a usable URL
+function extraImages(entry) {
+  return Array.isArray(entry.images) ? entry.images.filter(im => im && typeof im.url === 'string' && im.url.trim()) : [];
+}
+
 function renderTimeline(section) {
   const entries = section.timeline_entries || [];
   const align   = section.timeline_align   || 'left';
@@ -149,27 +182,40 @@ function renderTimeline(section) {
   const canvasHtml = entries.map((entry, i) => {
     const isFirst  = i === 0;
     const baseClass = `hse-tl__layer hse-tl__layer--${i}${isFirst ? ' is-active' : ''}`;
-
-    if (entry.video && entry.video.url) {
-      const poster = entry.video.poster ? ` poster="${escHtml(entry.video.poster)}"` : '';
-      return `<div class="${baseClass}" data-index="${i}" data-type="video">
+    const extras = extraImages(entry);
+    if (!extras.length) {
+      // A single background: the layer is the image (unchanged markup)
+      if (entry.video && entry.video.url) {
+        const poster = entry.video.poster ? ` poster="${escHtml(entry.video.poster)}"` : '';
+        return `<div class="${baseClass}" data-index="${i}" data-type="video">
         <video class="hse-tl__video"${isFirst ? ' autoplay' : ''} muted loop playsinline${poster} data-tl-video>
           <source src="${escHtml(entry.video.url)}" type="video/mp4">
         </video>
       </div>`;
-    }
-
-    if (entry.image && entry.image.url) {
-      const focal = entry.image.focal ? `background-position:${escHtml(entry.image.focal)};` : '';
-      return `<div class="${baseClass}"
+      }
+      if (entry.image && entry.image.url) {
+        const focal = entry.image.focal ? `background-position:${escHtml(entry.image.focal)};` : '';
+        return `<div class="${baseClass}"
         style="background-image:url('${escHtml(entry.image.url)}');${focal}"
         role="img"
         aria-label="${escHtml(entry.image.alt || '')}"
         data-index="${i}"
         data-type="image"></div>`;
+      }
+      return `<div class="${baseClass}" data-index="${i}" data-type="empty"></div>`;
     }
 
-    return `<div class="${baseClass}" data-index="${i}" data-type="empty"></div>`;
+    // Several: the layer holds a slide per image; js/runtime.js moves
+    // through them while the entry's text stays in view
+    const transition = entry.images_transition === 'push' ? 'push' : 'fade';
+    const slides = [backgroundHtml(entry, 'hse-tl__slide is-current', isFirst)].concat(extras.map(im => {
+      const caption = im.caption ? `<span class="hse-tl__slide-caption">${escHtml(im.caption)}</span>` : '';
+      const focal = im.focal ? `background-position:${escHtml(im.focal)};` : '';
+      return `<div class="hse-tl__slide" style="background-image:url('${escHtml(im.url)}');${focal}" role="img" aria-label="${escHtml(im.alt || '')}" data-type="image">${caption}</div>`;
+    }));
+    return `<div class="${baseClass}" data-index="${i}" data-type="gallery" data-transition="${transition}" data-slides="${slides.length}">
+      ${slides.join('\n      ')}
+    </div>`;
   }).join('\n');
 
   // ── Text entries ─────────────────────────────────────────────────
@@ -206,7 +252,30 @@ function renderTimeline(section) {
     // Stepped: which way the path runs from this entry
     const run = !stepped ? '' : ['across', 'down', 'up', 'rise', 'fall'].includes(entry.next) ? entry.next : (i % 2 === 0 ? 'across' : 'down');
 
-    return `<div class="hse-tl__entry" data-index="${i}" data-side="${escHtml(side)}"${run ? ` data-run="${run}"` : ''}>
+    // Extra backgrounds: a scroll stop each (data-slides); phones, which
+    // have no background canvas, show them as pictures under the text
+    const extras = extraImages(entry);
+    const slidesAttr = extras.length ? ` data-slides="${extras.length + 1}"` : '';
+    const moreHtml = extras.length ? `
+      <div class="hse-tl__more" aria-hidden="true">${extras.map(im => {
+        const focal = im.focal ? `background-position:${escHtml(im.focal)};` : '';
+        return `<div class="hse-tl__thumb" style="background-image:url('${escHtml(im.url)}');${focal}"></div>${im.caption ? `<span class="hse-tl__thumb-caption">${escHtml(im.caption)}</span>` : ''}`;
+      }).join('')}</div>` : '';
+
+    // Interstitial: a chapter card between entries — no date, no marker
+    if (entry.kind === 'interstitial') {
+      const title = entry.heading ? `<h2 class="hse-tl__heading">${escHtml(entry.heading)}</h2>` : '';
+      return `<div class="hse-tl__entry hse-tl__entry--interstitial" data-index="${i}" data-kind="interstitial"${entry.line === 'hide' ? ' data-line="hide"' : ''}${run ? ` data-run="${run}"` : ''}${slidesAttr}>
+      ${thumbHtml}
+      <div class="hse-tl__entry-inner">
+        ${title || body ? `<div class="hse-tl__text${textBg ? ' has-bg' : ''}"${textBlock.style ? ` style="${escHtml(textBlock.style)}"` : ''}>
+          ${[title, body].filter(Boolean).join('\n          ')}
+        </div>` : ''}
+      </div>${moreHtml}
+    </div>`;
+    }
+
+    return `<div class="hse-tl__entry" data-index="${i}" data-side="${escHtml(side)}"${run ? ` data-run="${run}"` : ''}${slidesAttr}>
       ${thumbHtml}
       <div class="hse-tl__entry-inner"${dateBg && entry.date ? ' data-date-bg' : ''}>
         ${markerHtml}
@@ -214,7 +283,7 @@ function renderTimeline(section) {
         ${hasText ? `<div class="hse-tl__text${textBg ? ' has-bg' : ''}"${textBlock.style ? ` style="${escHtml(textBlock.style)}"` : ''}>
           ${textParts.filter(Boolean).join('\n          ')}
         </div>` : ''}
-      </div>
+      </div>${moreHtml}
     </div>`;
   }).join('\n');
 

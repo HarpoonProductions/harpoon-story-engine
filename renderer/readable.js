@@ -122,7 +122,7 @@ const READERS = {
     title: e.heading,
     meta:  e.date,
     body:  e.body,
-  }))).concat((section.timeline_entries || []).flatMap(e => [...printImage(e.image), ...(e.media && (e.media.type || 'image') === 'image' ? printImage({ ...e.media, print_include: e.media.print_include !== false }) : [])])),
+  }))).concat((section.timeline_entries || []).flatMap(e => [...printImage(e.image), ...(Array.isArray(e.images) ? e.images.flatMap(im => printImage(im)) : []), ...(e.media && (e.media.type || 'image') === 'image' ? printImage({ ...e.media, print_include: e.media.print_include !== false }) : [])])),
 
   // Arbitrary HTML can't be read reliably. Only its caption is used.
   'custom-html': section => section.custom_html?.caption

@@ -916,6 +916,22 @@
                   "print_include": { "type": "boolean" }
                 }
               },
+              "images": {
+                "type": "array",
+                "description": "More backgrounds after image/video. Each adds a scroll stop; the entry's text stays in view while they change.",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "url": { "type": "string" },
+                    "focal": { "type": "string" },
+                    "alt": { "type": "string" },
+                    "caption": { "type": "string" }
+                  }
+                }
+              },
+              "images_transition": { "type": "string", "enum": ["fade", "push"], "default": "fade", "description": "How the extra backgrounds change: crossfade, or slide in from the direction of travel." },
+              "kind": { "type": "string", "enum": ["entry", "interstitial"], "default": "entry", "description": "interstitial: a chapter card between entries (heading, body, background), with no date or marker." },
+              "line": { "type": "string", "enum": ["show", "hide"], "default": "show", "description": "Interstitials only: hide the line through this card and pick it up again after." },
               "next": { "type": "string", "enum": ["across", "down", "up", "rise", "fall"], "description": "Stepped timelines only: which way the path goes after this entry (rise and fall are diagonals, up and down to the right). Default alternates across and down. Up straight after down (or down after up) is treated as across, so the path never doubles back." },
               "date_bg": { "$ref": "#/definitions/timeline_block_bg" },
               "text_bg": { "$ref": "#/definitions/timeline_block_bg" }
