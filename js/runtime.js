@@ -617,9 +617,6 @@
 
       // Number of backgrounds per entry, and the layer for an entry
       var slideCounts = entries.map(function (entry) { return parseInt(entry.dataset.slides, 10) || 1; });
-      // Pinned: time spent on an entry — a hold per background, with a
-      // swap between each
-      function dwell(i, hold, swap) { return hold + (slideCounts[i] - 1) * (hold + swap); }
 
       // Push: the next image comes in from the way the reader is travelling
       function setPush(dirs) {
@@ -630,18 +627,24 @@
         });
       }
 
-      // Hide the line through interstitials marked data-line="hide".
-      // `span(entry)` gives [start, end] along the line in px; the line is
-      // masked between them, fading over a short distance at each end.
+      // Hide the line into interstitials marked data-line="hide": it stops
+      // after the entry before and picks up again at the card's text
+      // panel. `axis` is "y" (vertical) or "x" (horizontal); null clears it.
       var spine = section.querySelector(".hse-tl__spine");
-      function maskSpine(span, axis) {
+      function maskSpine(axis) {
         if (!spine) return;
         var hidden = entries.filter(function (e) { return e.dataset.line === "hide"; });
-        if (!hidden.length || !span) { spine.style.maskImage = spine.style.webkitMaskImage = ""; return; }
+        if (!hidden.length || !axis) { spine.style.maskImage = spine.style.webkitMaskImage = ""; return; }
+        var base = spine.getBoundingClientRect();
         var F = 40, stops = ["#000 0px"];
         hidden.forEach(function (e) {
-          var r = span(e);
-          stops.push("#000 " + (r[0] - F) + "px", "transparent " + r[0] + "px", "transparent " + r[1] + "px", "#000 " + (r[1] + F) + "px");
+          var er = e.getBoundingClientRect();
+          var inner = e.querySelector(".hse-tl__entry-inner");
+          var ir = inner ? inner.getBoundingClientRect() : er;
+          var a = axis === "x" ? er.left - base.left : er.top - base.top;
+          var b = axis === "x" ? ir.left - base.left : ir.top - base.top;
+          b = Math.max(a + F, b);
+          stops.push("#000 " + (a - F) + "px", "transparent " + a + "px", "transparent " + (b - F) + "px", "#000 " + b + "px");
         });
         stops.push("#000 100%");
         var mask = "linear-gradient(to " + (axis === "x" ? "right" : "bottom") + ", " + stops.join(", ") + ")";
@@ -692,7 +695,7 @@
         }
         setPush(null);
         var remask = function () {
-          maskSpine(function (e) { return [e.offsetTop, e.offsetTop + e.offsetHeight]; }, "y");
+          maskSpine("y");
         };
         remask();
         onResize(remask);
@@ -714,9 +717,14 @@
             end: "bottom 55%",
             onEnter:     function () { activateLayer(i, slideOf[i]); },
             onEnterBack: function () { activateLayer(i, slideOf[i]); },
-            // Several backgrounds: share the entry's length between them
-            onUpdate: slideCounts[i] > 1 ? function (self) {
-              var k = Math.min(slideCounts[i] - 1, Math.floor(self.progress * slideCounts[i]));
+            // Several backgrounds: the first stays while the text is read;
+            // once the text has scrolled off the top, the next one shows,
+            // then another each screen (the entry has room for them)
+            onUpdate: slideCounts[i] > 1 ? function () {
+              var inner = entry.querySelector(".hse-tl__entry-inner");
+              var H = window.innerHeight, edge = H * 0.15;
+              var bottom = inner.getBoundingClientRect().bottom;
+              var k = bottom > edge ? 0 : Math.min(slideCounts[i] - 1, 1 + Math.floor((edge - bottom) / H));
               if (k !== slideOf[i]) { slideOf[i] = k; activateLayer(i, k); }
             } : undefined,
           });
@@ -732,7 +740,7 @@
       function pinned(build, teardown) {
         var tl, st, current;
         function start() {
-          var plan = build(); // { tl, arrive: [time each entry is reached], moves: [move duration into each], hold, swap }
+          var plan = build(); // { tl, arrive: [time each entry is reached], moves: [move duration into each], slideTimes: [per entry, time each extra background shows] }
           tl = plan.tl;
           section.style.height = (tl.duration() + window.innerHeight) + "px";
           current = -1;
@@ -748,9 +756,8 @@
               plan.arrive.forEach(function (time, i) {
                 if (t >= time - plan.moves[i] / 2) index = i;
               });
-              // Extra backgrounds change half way through each swap
-              var slide = Math.max(0, Math.min(slideCounts[index] - 1,
-                Math.floor((t - plan.arrive[index] + plan.swap / 2) / (plan.hold + plan.swap))));
+              // Extra backgrounds change half way into each move past the text
+              var slide = plan.slideTimes[index].filter(function (time) { return t >= time; }).length;
               var key = index + ":" + slide;
               if (key !== current) { current = key; activateLayer(index, slide); }
               entries.forEach(function (entry, i) {
@@ -790,18 +797,27 @@
             return below ? H * (1 - lineY) - 32 - 40 : H * lineY - 32 - NAV;
           }, true);
           setPush(layers.map(function () { return "left"; }));
-          maskSpine(function (e) { return [e.offsetLeft, e.offsetLeft + e.offsetWidth]; }, "x");
-          var hold = H * 0.35, move = H * 0.9, swap = H * 0.35;
+          maskSpine("x");
+          // An entry with extra backgrounds is a screen wider for each: the
+          // text slides away and the images follow on their own
+          var hold = H * 0.35, move = H * 0.9;
           var tl = gsap.timeline({ paused: true });
-          var arrive = [], moves = [];
+          var arrive = [], moves = [], slideTimes = [];
           tl.set(track, { x: 0 }, 0);
           entries.forEach(function (entry, i) {
-            if (i) tl.to(track, { x: -i * W, duration: move, ease: "power1.inOut" });
+            var left = entry.offsetLeft;
+            if (i) tl.to(track, { x: -left, duration: move, ease: "power1.inOut" });
             arrive.push(tl.duration());
             moves.push(i ? move : 0);
-            tl.to({}, { duration: dwell(i, hold, swap) });
+            tl.to({}, { duration: hold });
+            slideTimes.push([]);
+            for (var k = 1; k < slideCounts[i]; k++) {
+              tl.to(track, { x: -(left + k * W), duration: move, ease: "power1.inOut" });
+              slideTimes[i].push(tl.duration() - move / 2);
+              tl.to({}, { duration: hold });
+            }
           });
-          return { tl: tl, arrive: arrive, moves: moves, hold: hold, swap: swap };
+          return { tl: tl, arrive: arrive, moves: moves, slideTimes: slideTimes };
         }, function () {
           setPush(null);
           maskSpine(null);
@@ -882,6 +898,13 @@
             return Math.max(NAV - Math.min(0, b.dy), Math.min(ay, H - 40 - b.dy - b.h));
           });
 
+          // Unit of travel for a run (x-based runs move a screen width per
+          // unit, up and down a screen height)
+          function runVec(run) {
+            if (run === "down") return { x: 0, y: 1, D: H };
+            if (run === "up") return { x: 0, y: -1, D: H };
+            return { x: 1, y: run === "rise" ? -SLOPE : run === "fall" ? SLOPE : 0, D: W };
+          }
           // Distance to the next node: far enough that the panels never
           // overlap, the next panel is off screen while resting on this one,
           // and this one is off screen once resting on the next.
@@ -892,27 +915,42 @@
             entry.style.left = (x + b.dx) + "px";
             entry.style.top  = (y + b.dy) + "px";
             if (!nb) return;
+            // Extra backgrounds: a screen more travel for each, so the
+            // reader moves on from the text and sees them on their own
+            var extra = (slideCounts[i] - 1) * runVec(runs[i]).D;
             if (runs[i] === "across" || runs[i] === "rise" || runs[i] === "fall") {
-              var step = Math.max(b.dx + b.w + room - nb.dx, W - ax - nb.dx + room, ax + b.dx + b.w + room);
+              var step = Math.max(b.dx + b.w + room - nb.dx, W - ax - nb.dx + room, ax + b.dx + b.w + room) + extra;
               x += step;
               if (runs[i] === "rise") y -= step * SLOPE;
               if (runs[i] === "fall") y += step * SLOPE;
             } else if (runs[i] === "down") {
-              y += Math.max(b.dy + b.h + room - nb.dy, H - ay - nb.dy + room, nay + b.dy + b.h + room);
+              y += Math.max(b.dy + b.h + room - nb.dy, H - ay - nb.dy + room, nay + b.dy + b.h + room) + extra;
             } else {
-              y -= Math.max(nb.dy + nb.h + room - b.dy, ay + nb.dy + nb.h + room, H - nay - b.dy + room);
+              y -= Math.max(nb.dy + nb.h + room - b.dy, ay + nb.dy + nb.h + room, H - nay - b.dy + room) + extra;
             }
           });
-          var last = nodes[nodes.length - 1];
-          var flat = last.run === "across" || last.run === "rise" || last.run === "fall";
-          var tail = {
-            x: last.x + (flat ? 120 : 0),
-            y: last.y + (last.run === "down" ? 120 : last.run === "up" ? -120 : last.run === "rise" ? -120 * SLOPE : last.run === "fall" ? 120 * SLOPE : 0),
-          };
+          var last = nodes[nodes.length - 1], lastN = slideCounts[nodes.length - 1];
+          var lv = runVec(last.run);
+          var tailUnits = (lastN - 1) * lv.D + 120;
+          var tail = { x: last.x + lv.x * tailUnits, y: last.y + lv.y * tailUnits };
+
+          // Camera stops: each node, then a stop per extra background spread
+          // along the way to the next node (or past the last one)
+          var stops = [];
+          nodes.forEach(function (p, i) {
+            stops.push({ x: p.x, y: p.y, ay: anchorY[i], entry: i, node: true });
+            var n = slideCounts[i];
+            for (var k = 1; k < n; k++) {
+              var q = nodes[i + 1];
+              stops.push(q
+                ? { x: p.x + (q.x - p.x) * k / n, y: p.y + (q.y - p.y) * k / n, ay: anchorY[i] + (anchorY[i + 1] - anchorY[i]) * k / n, entry: i }
+                : { x: p.x + lv.x * lv.D * k, y: p.y + lv.y * lv.D * k, ay: anchorY[i], entry: i });
+            }
+          });
 
           // Path: a faint track, and a copy drawn on as the reader goes.
-          // One path per segment, so the line can skip the segments into and
-          // out of an interstitial that hides it.
+          // One path per segment. Into an interstitial that hides the line
+          // there is none; out of one, the line starts at the card's edge.
           if (svg) svg.remove();
           svg = document.createElementNS(NS, "svg");
           svg.setAttribute("class", "hse-tl__path");
@@ -921,8 +959,16 @@
           svg.setAttribute("height", "1");
           var points = nodes.concat([tail]);
           var segs = points.map(function (p, k) {
-            if (!k || centred[k - 1] || centred[k]) return null;
-            var a = points[k - 1], d = "M" + a.x + " " + a.y + " L" + p.x + " " + p.y;
+            if (!k || centred[k]) return null;
+            var a = points[k - 1], full = Math.hypot(p.x - a.x, p.y - a.y);
+            var from = 0;
+            if (centred[k - 1]) {
+              var bx = boxes[k - 1], v = runVec(runs[k - 1]);
+              var units = v.x ? bx.dx + bx.w + 24 : v.y > 0 ? bx.dy + bx.h + 24 : 24 - bx.dy;
+              from = Math.min(full, Math.max(0, units) * Math.hypot(v.x, v.y));
+            }
+            var sx = a.x + (p.x - a.x) * (full ? from / full : 0), sy = a.y + (p.y - a.y) * (full ? from / full : 0);
+            var d = "M" + sx + " " + sy + " L" + p.x + " " + p.y;
             var drawnPath;
             ["hse-tl__path-track", "hse-tl__path-drawn"].forEach(function (cls) {
               var path = document.createElementNS(NS, "path");
@@ -931,37 +977,45 @@
               svg.appendChild(path);
               drawnPath = path;
             });
-            var len = Math.hypot(p.x - a.x, p.y - a.y);
+            var len = full - from;
             drawnPath.style.strokeDasharray = len + " " + len;
-            return { el: drawnPath, len: len };
+            return { el: drawnPath, len: len, from: from, start: a };
           });
           world.insertBefore(svg, world.firstChild);
+          // How much of a segment is drawn with the camera at point c
+          function dashAt(seg, c) {
+            var dist = Math.hypot(c.x - seg.start.x, c.y - seg.start.y);
+            return seg.len - Math.max(0, Math.min(seg.len, dist - seg.from));
+          }
 
           // Push transitions come in from the way the path goes next
           setPush(runs.map(function (run) { return run === "down" ? "up" : run === "up" ? "down" : "left"; }));
 
-          var hold = H * 0.35, swap = H * 0.35;
+          var hold = H * 0.35;
           var tl = gsap.timeline({ paused: true });
-          var arrive = [], moves = [];
-          tl.set(world, { x: ax - nodes[0].x, y: anchorY[0] - nodes[0].y }, 0);
+          var arrive = [], moves = [], slideTimes = entries.map(function () { return []; });
+          tl.set(world, { x: ax - stops[0].x, y: stops[0].ay - stops[0].y }, 0);
           segs.forEach(function (seg) { if (seg) tl.set(seg.el, { strokeDashoffset: seg.len }, 0); });
-          nodes.forEach(function (p, i) {
-            if (i) {
-              var prev = nodes[i - 1];
+          stops.forEach(function (p, j) {
+            if (j) {
+              var prev = stops[j - 1];
               var len = Math.hypot(p.x - prev.x, p.y - prev.y);
-              tl.to(world, { x: ax - p.x, y: anchorY[i] - p.y, duration: len, ease: "power1.inOut" });
-              if (segs[i]) tl.to(segs[i].el, { strokeDashoffset: 0, duration: len, ease: "power1.inOut" }, "<");
-              moves.push(len);
+              // The segment being travelled: into the next node, or the tail
+              var seg = segs[prev.entry + 1];
+              tl.to(world, { x: ax - p.x, y: p.ay - p.y, duration: len, ease: "power1.inOut" });
+              if (seg) tl.to(seg.el, { strokeDashoffset: dashAt(seg, p), duration: len, ease: "power1.inOut" }, "<");
+              if (p.node) moves.push(len);
+              else slideTimes[p.entry].push(tl.duration() - len / 2);
             } else {
               moves.push(0);
             }
-            arrive.push(tl.duration());
-            tl.to({}, { duration: dwell(i, hold, swap) });
+            if (p.node) arrive.push(tl.duration());
+            tl.to({}, { duration: hold });
           });
           var tailSeg = segs[segs.length - 1];
           if (tailSeg) tl.to(tailSeg.el, { strokeDashoffset: 0, duration: 120, ease: "none" });
           else tl.to({}, { duration: 120 });
-          return { tl: tl, arrive: arrive, moves: moves, hold: hold, swap: swap };
+          return { tl: tl, arrive: arrive, moves: moves, slideTimes: slideTimes };
         }, function () {
           if (svg) { svg.remove(); svg = null; }
           setPush(null);

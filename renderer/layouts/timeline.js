@@ -255,7 +255,7 @@ function renderTimeline(section) {
     // Extra backgrounds: a scroll stop each (data-slides); phones, which
     // have no background canvas, show them as pictures under the text
     const extras = extraImages(entry);
-    const slidesAttr = extras.length ? ` data-slides="${extras.length + 1}"` : '';
+    const slidesAttr = extras.length ? ` data-slides="${extras.length + 1}" style="--tl-slides:${extras.length + 1}"` : '';
     const moreHtml = extras.length ? `
       <div class="hse-tl__more" aria-hidden="true">${extras.map(im => {
         const focal = im.focal ? `background-position:${escHtml(im.focal)};` : '';
