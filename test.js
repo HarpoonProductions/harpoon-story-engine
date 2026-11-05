@@ -437,6 +437,36 @@ console.log('\nFrozen engine versions');
   }
 }
 
+// ── Existing stories unchanged (Section Contract R14) ────────────
+// Every story in projects/, examples/ and test/fixtures/ must render
+// exactly as recorded in test/snapshots.json: page, printable page, PDF
+// and audio. A change that is meant to alter stories refreshes the record
+// with `npm run snapshots:update`, and its PR says which stories change.
+console.log('\nExisting stories unchanged');
+{
+  const snapshots = require('./scripts/story-snapshots');
+  const stories = snapshots.repoStories();
+  const expected = snapshots.readSnapshots();
+  const actual = await snapshots.fingerprints(stories, snapshots.engineAt(null));
+  const all = snapshots.compare(expected, actual);
+  // A story whose content.json was edited is an editorial change, not an
+  // engine one: it can't be compared, so it doesn't fail a content push.
+  for (const c of all.filter(c => c.change === 'content edited')) {
+    console.log(`  – ${c.id}: content edited, not compared (refresh with npm run snapshots:update)`);
+  }
+  const changes = all.filter(c => c.change !== 'content edited');
+  for (const { id } of stories) {
+    const mine = changes.filter(c => c.id === id);
+    assert(`${id} renders as before` + (mine.length ? ` (${mine.map(c => `${c.file} ${c.change}`).join(', ')})` : ''), mine.length === 0);
+  }
+  const gone = changes.filter(c => !stories.some(s => s.id === c.id));
+  assert('No recorded story is missing' + (gone.length ? ` (${[...new Set(gone.map(c => c.id))].join(', ')})` : ''), gone.length === 0);
+  if (changes.length) {
+    console.log('  See what changed:   npm run snapshots:diff');
+    console.log('  If it is intended:  npm run snapshots:update, and say so in the PR');
+  }
+}
+
 })().then(() => {
   // ── Summary ─────────────────────────────────────────────────────
   console.log(`\n${'─'.repeat(52)}`);
