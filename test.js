@@ -198,10 +198,8 @@ console.log('\n── Print, PDF and audio coverage ─────────�
 {
   const schema = JSON.parse(fs.readFileSync(path.join(__dirname, 'schema/content.schema.json'), 'utf8'));
   const schemaLayouts = schema.definitions.section.properties.layout.enum;
-  const indexSrc = fs.readFileSync(path.join(__dirname, 'renderer/index.js'), 'utf8');
-  const switchSrc = indexSrc.slice(indexSrc.indexOf('function renderSectionHtml'));
-  const rendererLayouts = [...switchSrc.slice(0, switchSrc.indexOf('default:')).matchAll(/case\s+["']([^"']+)["']/g)]
-    .map(m => m[1]);
+  const { LAYOUTS } = require('./renderer/layouts/registry');
+  const rendererLayouts = Object.keys(LAYOUTS);
   for (const layout of new Set([...schemaLayouts, ...rendererLayouts])) {
     assert(`Layout "${layout}" has a reader in renderer/readable.js`, hasReader(layout));
   }
@@ -434,6 +432,51 @@ console.log('\nFrozen engine versions');
     } finally {
       fs.rmSync(tmpBase, { recursive: true, force: true });
     }
+  }
+}
+
+// ── Layout registry (Section Contract) ───────────────────────────
+// Every layout is one entry in renderer/layouts/registry.js, and every
+// part of the engine that has to know about it must. Each failure here
+// names the file a new layout still needs. See docs/section-contract.md.
+console.log('\nLayout registry');
+{
+  const { LAYOUTS, extraLayoutCss } = require('./renderer/layouts/registry');
+  const schema = JSON.parse(fs.readFileSync(path.join(__dirname, 'schema/content.schema.json'), 'utf8'));
+  const schemaLayouts = schema.definitions.section.properties.layout.enum;
+  const runtimeSrc = fs.readFileSync(path.join(__dirname, 'js/runtime.js'), 'utf8');
+  const editorSrc = fs.readFileSync(path.join(__dirname, 'editor/editor.html'), 'utf8');
+  const headSrc = fs.readFileSync(path.join(__dirname, 'renderer/shell/head.js'), 'utf8');
+  const extra = new Set(extraLayoutCss());
+
+  for (const layout of schemaLayouts) {
+    assert(`Schema layout "${layout}" is in the registry`, Object.prototype.hasOwnProperty.call(LAYOUTS, layout));
+  }
+  for (const [name, entry] of Object.entries(LAYOUTS)) {
+    assert(`${name}: has a render function`, typeof entry.render === 'function');
+    if (entry.css) {
+      assert(`${name}: stylesheet ${entry.css} exists`, fs.existsSync(path.join(__dirname, entry.css)));
+      assert(`${name}: stylesheet is linked from the page`,
+        extra.has(entry.css) || headSrc.includes(`css('${entry.css}')`));
+    }
+    if (entry.runtime) {
+      for (const fn of [entry.runtime.setup, entry.runtime.reducedMotion].filter(Boolean)) {
+        assert(`${name}: js/runtime.js defines ${fn}()`, new RegExp(`function ${fn}\\s*\\(`).test(runtimeSrc));
+        assert(`${name}: js/runtime.js calls ${fn}()`, (runtimeSrc.match(new RegExp(`\\b${fn}\\(\\)`, 'g')) || []).length >= 2);
+      }
+    }
+    assert(`${name}: the editor offers it`, editorSrc.includes(`<option value="${name}"`));
+  }
+
+  // Rendering a section of each layout keeps everything inside one
+  // <section data-layout> root (rule R1).
+  for (const name of Object.keys(LAYOUTS)) {
+    if (name === 'cover') continue;
+    const html = require('./renderer/index').renderSection({ id: `reg-${name}`, layout: name, title: 'T' }, {}).trim();
+    const opens = (html.match(/<section\b/g) || []).length;
+    const root = html.replace(/^<!--[\s\S]*?-->\s*/, '');
+    assert(`${name}: renders one <section data-layout="${name}"> root`,
+      root.startsWith('<section') && root.includes(`data-layout="${name}"`) && root.trimEnd().endsWith('</section>') && opens === 1);
   }
 }
 
