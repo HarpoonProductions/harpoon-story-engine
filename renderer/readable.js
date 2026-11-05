@@ -129,6 +129,7 @@ const READERS = {
         out.push(...list(group));
         group = [];
         if (e.heading) out.push({ kind: 'heading', text: e.heading, level: 3 });
+        if (e.subheading) out.push({ kind: 'heading', text: e.subheading, level: 4 });
         if (e.body) out.push(text(e.body));
       } else {
         group.push({ title: e.heading, meta: e.date, body: e.body });

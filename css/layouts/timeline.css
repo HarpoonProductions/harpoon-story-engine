@@ -708,6 +708,8 @@
 .hse-tl__layer[data-transition="push"][data-push="left"] .hse-tl__slide.is-past { transform: translateX(-100%); }
 .hse-tl__layer[data-transition="push"][data-push="down"] .hse-tl__slide         { transform: translateY(-100%); }
 .hse-tl__layer[data-transition="push"][data-push="down"] .hse-tl__slide.is-past { transform: translateY(100%); }
+.hse-tl__layer[data-transition="push"][data-push="right"] .hse-tl__slide         { transform: translateX(-100%); }
+.hse-tl__layer[data-transition="push"][data-push="right"] .hse-tl__slide.is-past { transform: translateX(100%); }
 .hse-tl__layer[data-transition="push"] .hse-tl__slide.is-current { transform: none; }
 
 .hse-tl__slide-caption {
@@ -770,6 +772,14 @@
   line-height: 1.05;
   margin-bottom: 1rem;
 }
+.hse-tl__subheading {
+  font-family: var(--hse-font-display);
+  font-size: calc(clamp(1.15rem, 2.2vw, 1.6rem) * var(--tl-text-scale, 1));
+  line-height: 1.25;
+  font-style: italic;
+  color: var(--tl-text-color, var(--hse-warm, #fff));
+  margin: -0.25rem 0 1rem;
+}
 .hse-tl__entry--interstitial .hse-tl__body {
   font-size: calc(clamp(1rem, 1.7vw, 1.25rem) * var(--tl-text-scale, 1));
 }
@@ -820,5 +830,68 @@
     translate: 0 -50%;
     transform-origin: right center;
     clip-path: polygon(100% 0, 0 50%, 100% 100%);
+  }
+}
+
+/* ── Stepped: leftward runs (left ←, rise-left ↖, fall-left ↙) ─────
+   Mirror images of across, rise and fall: the panel extends left from
+   its node and the marker sits near the panel's right edge. */
+
+@media (min-width: 769px) {
+  .is-stepped [data-run="left"] .hse-tl__marker {
+    left: auto;
+    right: 1rem;
+    top: calc(-1 * var(--tl-gap));
+    bottom: auto;
+    translate: 50% -50%;
+  }
+  .is-stepped [data-run="left"][data-hang="above"] .hse-tl__marker {
+    top: auto;
+    bottom: calc(-1 * var(--tl-gap));
+    translate: 50% 50%;
+  }
+  .is-stepped[data-marker="triangle"] [data-run="left"] .hse-tl__marker {
+    left: auto;
+    right: 1rem;
+    top: calc(-1 * var(--tl-gap) + var(--tl-line-width, 2px) / 2);
+    translate: 50% 0;
+    transform-origin: top center;
+    clip-path: polygon(0 0, 100% 0, 50% 100%);
+  }
+  .is-stepped[data-marker="triangle"] [data-run="left"][data-hang="above"] .hse-tl__marker {
+    top: auto;
+    bottom: calc(-1 * var(--tl-gap) + var(--tl-line-width, 2px) / 2);
+    transform-origin: bottom center;
+    clip-path: polygon(50% 0, 100% 100%, 0 100%);
+  }
+
+  .is-stepped [data-run="rise-left"] .hse-tl__marker,
+  .is-stepped [data-run="fall-left"] .hse-tl__marker {
+    left: auto;
+    right: calc(-1 * var(--tl-gap));
+    top: calc(-1 * var(--tl-gap));
+    bottom: auto;
+    translate: 50% -50%;
+  }
+  .is-stepped [data-run="fall-left"] .hse-tl__marker {
+    top: auto;
+    bottom: calc(-1 * var(--tl-gap));
+    translate: 50% 50%;
+  }
+  .is-stepped[data-marker="triangle"] [data-run="rise-left"] .hse-tl__marker,
+  .is-stepped[data-marker="triangle"] [data-run="fall-left"] .hse-tl__marker {
+    left: auto;
+    right: calc(-1 * var(--tl-gap));
+    translate: none;
+    transform-origin: right center;
+    clip-path: polygon(100% 0, 0 50%, 100% 100%);
+  }
+  .is-stepped[data-marker="triangle"] [data-run="rise-left"] .hse-tl__marker {
+    margin-top: calc(var(--tl-marker-size, 14px) / -2);
+    rotate: -60deg;
+  }
+  .is-stepped[data-marker="triangle"] [data-run="fall-left"] .hse-tl__marker {
+    margin-bottom: calc(var(--tl-marker-size, 14px) / -2);
+    rotate: 60deg;
   }
 }

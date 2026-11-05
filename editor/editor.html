@@ -2006,7 +2006,7 @@
                                       <option value="horizontal">Horizontal — entries slide sideways as you scroll</option>
                                       <option value="stepped">Stepped — the path turns across or down after each entry</option>
                                     </select>
-                                    <p class="form-hint">Horizontal and Stepped pin the section while the reader scrolls. For Stepped, choose "Then go" on each entry (Up and Down need an Across between them). Phones show the vertical layout.</p>
+                                    <p class="form-hint">Horizontal and Stepped pin the section while the reader scrolls. For Stepped, choose "Then go" on each entry (Up and Down need a sideways run between them, and Left and Right need an Up or Down). Phones show the vertical layout.</p>
                                   </div>
                                   <div class="form-group" id="tl-step-side-group" style="display:none">
                                     <label class="form-label" for="tl-step-side">Line position</label>
@@ -4715,7 +4715,7 @@ function initTimelineEditor(sectionIndex) {
           ${section.timeline_direction === 'stepped' ? `<label style="display:grid;grid-template-columns:7rem 1fr;align-items:center;gap:0.5rem">
             <span style="${panelSummary};cursor:default">Then go</span>
             <select class="form-select tl-next" aria-label="Then go">
-              ${[['across', 'Across →'], ['down', 'Down ↓'], ['up', 'Up ↑'], ['rise', 'Up ↗'], ['fall', 'Down ↘']].map(([v, l]) => `<option value="${v}"${(entry.next || (i % 2 ? 'down' : 'across')) === v ? ' selected' : ''}>${l}</option>`).join('')}
+              ${[['across', 'Right →'], ['left', 'Left ←'], ['down', 'Down ↓'], ['up', 'Up ↑'], ['rise', 'Up right ↗'], ['rise-left', 'Up left ↖'], ['fall', 'Down right ↘'], ['fall-left', 'Down left ↙']].map(([v, l]) => `<option value="${v}"${(entry.next || (i % 2 ? 'down' : 'across')) === v ? ' selected' : ''}>${l}</option>`).join('')}
             </select>
           </label>` : ''}
           ${chapter ? `<label style="display:grid;grid-template-columns:7rem 1fr;align-items:center;gap:0.5rem">
@@ -4726,6 +4726,7 @@ function initTimelineEditor(sectionIndex) {
             </select>
           </label>` : `<input class="form-input tl-date" data-i="${i}" placeholder="Date / label (e.g. 1987 or March 2020)" value="${entry.date || ''}">`}
           <input class="form-input tl-heading" data-i="${i}" placeholder="${chapter ? 'Title (e.g. The 1980s)' : 'Heading'}" value="${entry.heading || ''}">
+          ${chapter ? `<input class="form-input tl-subheading" data-i="${i}" placeholder="Second heading (optional)" value="${escAttr(entry.subheading)}">` : ''}
           <textarea class="form-textarea tl-body" data-i="${i}" placeholder="Body text…" rows="3">${entry.body || ''}</textarea>
           <input class="form-input tl-img-url" id="tl-img-url-${sectionIndex}-${i}" data-image-field data-i="${i}" ${entry.image && entry.image.print_include ? 'data-print-include="true"' : ''} ${entry.image && entry.image.focal ? `data-existing-focal="${entry.image.focal}"` : ''} placeholder="Image URL https://…" value="${(entry.image && entry.image.url) || ''}">
           <input class="form-input tl-img-alt" data-i="${i}" placeholder="Image alt text" value="${(entry.image && entry.image.alt) || ''}">
@@ -4855,6 +4856,12 @@ function initTimelineEditor(sectionIndex) {
       const dateInput = item.querySelector('.tl-date');
       if (dateInput) dateInput.addEventListener('input', e => { section.timeline_entries[i].date = e.target.value; scheduleAutosave(); });
       item.querySelector('.tl-heading').addEventListener('input', e => { section.timeline_entries[i].heading = e.target.value; scheduleAutosave(); });
+      const subInput = item.querySelector('.tl-subheading');
+      if (subInput) subInput.addEventListener('input', e => {
+        if (e.target.value.trim()) section.timeline_entries[i].subheading = e.target.value;
+        else delete section.timeline_entries[i].subheading;
+        scheduleAutosave();
+      });
       item.querySelector('.tl-body').addEventListener('input', e => { section.timeline_entries[i].body = e.target.value; scheduleAutosave(); });
       item.querySelector('.tl-img-url').addEventListener('input', e => {
         if (!section.timeline_entries[i].image) section.timeline_entries[i].image = {};

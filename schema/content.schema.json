@@ -938,7 +938,8 @@
               "images_transition": { "type": "string", "enum": ["fade", "push"], "default": "fade", "description": "How the extra backgrounds change: crossfade, or slide in from the direction of travel." },
               "kind": { "type": "string", "enum": ["entry", "interstitial"], "default": "entry", "description": "interstitial: a chapter card between entries (heading, body, background), with no date or marker." },
               "line": { "type": "string", "enum": ["show", "hide"], "default": "show", "description": "Interstitials only: hide the line through this card and pick it up again after." },
-              "next": { "type": "string", "enum": ["across", "down", "up", "rise", "fall"], "description": "Stepped timelines only: which way the path goes after this entry (rise and fall are diagonals, up and down to the right). Default alternates across and down. Up straight after down (or down after up) is treated as across, so the path never doubles back." },
+              "next": { "type": "string", "enum": ["across", "down", "up", "rise", "fall", "left", "rise-left", "fall-left"], "description": "Stepped timelines only: which way the path goes after this entry. across and left are horizontal; rise/fall go diagonally up/down to the right, rise-left/fall-left to the left. Default alternates across and down. A run that would double back is changed: up straight after down (or down after up) becomes across, and a leftward run straight after a rightward one (or the reverse) becomes down." },
+              "subheading": { "type": "string", "description": "Interstitials only: a second heading shown under the title." },
               "date_bg": { "$ref": "#/definitions/timeline_block_bg" },
               "text_bg": { "$ref": "#/definitions/timeline_block_bg" }
             }

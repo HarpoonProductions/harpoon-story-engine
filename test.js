@@ -114,6 +114,8 @@ console.log('\n── Timeline direction ─────────────
   assert('Stepped runs alternate by default, entry choice wins, bad value falls back',
     JSON.stringify([...st.matchAll(/data-run="(\w+)"/g)].map(m => m[1])) === '["across","down","down","down","up","rise","fall"]');
   assert('Only stepped entries carry a run', !h.includes('data-run'));
+  const lf = renderTimeline({ id: 'tl', timeline_direction: 'stepped', timeline_entries: [{ heading: 'A', next: 'left' }, { heading: 'B', next: 'rise-left' }, { heading: 'C', next: 'fall-left' }] });
+  assert('Leftward runs', JSON.stringify([...lf.matchAll(/data-run="([\w-]+)"/g)].map(m => m[1])) === '["left","rise-left","fall-left"]');
   assert('Stepped line position is opt-in', !st.includes('data-step-side'));
   const stEnd = renderTimeline({ id: 'tl', timeline_direction: 'stepped', timeline_step_side: 'end', timeline_entries: entries });
   assertContains('Stepped line position end', stEnd, 'data-step-side="end"');
@@ -147,6 +149,9 @@ console.log('\n── Timeline extra images and chapter cards ──────
   assertContains('Chapter card', c, 'hse-tl__entry--interstitial');
   assertContains('Chapter card can hide the line', c, 'data-kind="interstitial" data-line="hide"');
   assertContains('Chapter card title', c, '<h2 class="hse-tl__heading">The 1980s</h2>');
+  const sub = renderTimeline({ id: 'tl', timeline_entries: [{ kind: 'interstitial', heading: 'The 1980s', subheading: 'A new decade' }, { heading: 'A', subheading: 'ignored on entries' }] });
+  assertContains('Chapter card second heading', sub, '<p class="hse-tl__subheading">A new decade</p>');
+  assert('Only chapter cards show a second heading', !sub.includes('ignored on entries'));
   const card = c.slice(c.indexOf('hse-tl__entry--interstitial'), c.indexOf('data-index="2"'));
   assert('Chapter card has no date or marker', !card.includes('hse-tl__marker') && !c.includes('ignored'));
   assert('Chapter card still has a run on stepped', /data-kind="interstitial"[^>]*data-run="down"/.test(c));

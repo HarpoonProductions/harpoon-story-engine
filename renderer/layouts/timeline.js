@@ -41,7 +41,8 @@ const { escHtml } = require('../shell/head');
  *     entry.media    {object}  inline media shown with the text:
  *                              { type: 'image'|'video'|'embed', url, alt, caption, poster,
  *                                html (embed code), position: 'above'|'below'|'left'|'right' }
- *     entry.next     {string}  stepped only: 'across' | 'down' | 'up' | 'rise' (↗) | 'fall' (↘),
+ *     entry.next     {string}  stepped only: 'across' | 'down' | 'up' | 'rise' (↗) | 'fall' (↘)
+ *                              | 'left' | 'rise-left' (↖) | 'fall-left' (↙),
  *                              the way the path
  *                              goes after this entry (default: alternating, across first)
  *     entry.date_bg  {object}  { color, opacity } overrides timeline_date_bg for this entry
@@ -53,6 +54,7 @@ const { escHtml } = require('../shell/head');
  *     entry.kind     {string}  'interstitial' makes a chapter card (heading, body, background)
  *                              with no date or marker
  *     entry.line     {string}  interstitial only: 'hide' gaps the line through it
+ *     entry.subheading {string} interstitial only: a second heading under the title
  *
  * @param {object} section
  * @returns {string} HTML
@@ -254,7 +256,7 @@ function renderTimeline(section) {
     const hasText = heading || body || media.html;
 
     // Stepped: which way the path runs from this entry
-    const run = !stepped ? '' : ['across', 'down', 'up', 'rise', 'fall'].includes(entry.next) ? entry.next : (i % 2 === 0 ? 'across' : 'down');
+    const run = !stepped ? '' : ['across', 'down', 'up', 'rise', 'fall', 'left', 'rise-left', 'fall-left'].includes(entry.next) ? entry.next : (i % 2 === 0 ? 'across' : 'down');
 
     // Extra backgrounds: a scroll stop each (data-slides); phones, which
     // have no background canvas, show them as pictures under the text
@@ -269,11 +271,12 @@ function renderTimeline(section) {
     // Interstitial: a chapter card between entries — no date, no marker
     if (entry.kind === 'interstitial') {
       const title = entry.heading ? `<h2 class="hse-tl__heading">${escHtml(entry.heading)}</h2>` : '';
+      const subtitle = entry.subheading ? `<p class="hse-tl__subheading">${escHtml(entry.subheading)}</p>` : '';
       return `<div class="hse-tl__entry hse-tl__entry--interstitial" data-index="${i}" data-kind="interstitial"${entry.line === 'hide' ? ' data-line="hide"' : ''}${run ? ` data-run="${run}"` : ''}${slidesAttr}>
       ${thumbHtml}
       <div class="hse-tl__entry-inner">
-        ${title || body ? `<div class="hse-tl__text${textBg ? ' has-bg' : ''}"${textBlock.style ? ` style="${escHtml(textBlock.style)}"` : ''}>
-          ${[title, body].filter(Boolean).join('\n          ')}
+        ${title || subtitle || body ? `<div class="hse-tl__text${textBg ? ' has-bg' : ''}"${textBlock.style ? ` style="${escHtml(textBlock.style)}"` : ''}>
+          ${[title, subtitle, body].filter(Boolean).join('\n          ')}
         </div>` : ''}
       </div>${moreHtml}
     </div>`;

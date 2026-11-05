@@ -36,6 +36,7 @@
         {
           "kind": "interstitial",
           "heading": "QQTLCHAPTER",
+          "subheading": "QQTLCHAPSUB",
           "body": "QQTLCHAPBODY"
         },
         {
