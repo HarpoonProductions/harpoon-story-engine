@@ -130,7 +130,7 @@ console.log('\n── Timeline extra images and chapter cards ──────
   assertContains('First slide shows first', g, 'class="hse-tl__slide is-current"');
   assertContains('Slide caption', g, '<span class="hse-tl__slide-caption">Second</span>');
   assertContains('Slide focal point', g, 'background-position:20% 30%');
-  assertContains('Entry knows its stops', g, 'data-slides="3">');
+  assertContains('Entry knows its stops', g, 'data-slides="3" style="--tl-slides:3">');
   assertContains('Phones get the extra images under the text', g, 'class="hse-tl__more"');
   const fade = renderTimeline({ id: 'tl', timeline_entries: [{ heading: 'A', images: [{ url: 'b.jpg' }], images_transition: 'wipe' }] });
   assertContains('Unknown transition fades', fade, 'data-transition="fade"');

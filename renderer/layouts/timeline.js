@@ -43,7 +43,7 @@ const { escHtml } = require('../shell/head');
  *     entry.date_bg  {object}  { color, opacity } overrides timeline_date_bg for this entry
  *     entry.text_bg  {object}  { color, opacity } overrides timeline_text_bg for this entry
  *     entry.images   {Array}   more backgrounds after image/video: [{ url, focal, alt, caption }].
- *                              Each adds a scroll stop; the text stays while they change.
+ *                              Each adds a scroll stop after the text has moved on.
  *     entry.images_transition {string} 'fade' | 'push' (default: 'fade'). Push slides the
  *                              next image in from the direction of travel.
  *     entry.kind     {string}  'interstitial' makes a chapter card (heading, body, background)
@@ -255,7 +255,7 @@ function renderTimeline(section) {
     // Extra backgrounds: a scroll stop each (data-slides); phones, which
     // have no background canvas, show them as pictures under the text
     const extras = extraImages(entry);
-    const slidesAttr = extras.length ? ` data-slides="${extras.length + 1}"` : '';
+    const slidesAttr = extras.length ? ` data-slides="${extras.length + 1}" style="--tl-slides:${extras.length + 1}"` : '';
     const moreHtml = extras.length ? `
       <div class="hse-tl__more" aria-hidden="true">${extras.map(im => {
         const focal = im.focal ? `background-position:${escHtml(im.focal)};` : '';
