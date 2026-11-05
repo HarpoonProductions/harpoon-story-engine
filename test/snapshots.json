@@ -22,7 +22,7 @@
   },
   "cricket-test-nation-2026": {
     "content.json": "cc37cff7693016bc",
-    "index.html": "ccc64eb14a494184",
+    "index.html": "863c94a0414093f5",
     "ios-install-banner.js": "14c815cf66164f92",
     "manifest.json": "21c25dc5c008a68a",
     "print/index.html": "0353f527fe6566f7",
@@ -102,7 +102,7 @@
   },
   "opera-voices-2026": {
     "content.json": "bb06314296b71298",
-    "index.html": "bea56057914cf62d",
+    "index.html": "ffd95b4f51f82528",
     "ios-install-banner.js": "14c815cf66164f92",
     "manifest.json": "4b9f6a59e32ec39e",
     "print/index.html": "c3d7f22dc3462ef3",
@@ -133,7 +133,7 @@
   },
   "examples/cricket-example": {
     "content.json": "687902307f030568",
-    "index.html": "bc7c746ded759a3d",
+    "index.html": "d16c91aac4145d2d",
     "ios-install-banner.js": "14c815cf66164f92",
     "manifest.json": "21c25dc5c008a68a",
     "print/index.html": "0353f527fe6566f7",
@@ -143,7 +143,7 @@
   },
   "examples/opera-example": {
     "content.json": "1b798f3478c4753e",
-    "index.html": "acd1559586d1d6c3",
+    "index.html": "bea01820cbe7b3f2",
     "ios-install-banner.js": "14c815cf66164f92",
     "manifest.json": "4b9f6a59e32ec39e",
     "print/index.html": "c479808e7e20bf00",
@@ -174,7 +174,7 @@
   },
   "test/fixtures/default": {
     "content.json": "a1fa01a5841286fb",
-    "index.html": "f64fb98a6b54e050",
+    "index.html": "b14247c76a699fbe",
     "print/index.html": "e8554e7c687d54c2",
     "pdf.html": "67702c8748d28657",
     "audio.ssml": "524bc285518d81ca"

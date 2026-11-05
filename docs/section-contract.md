@@ -16,9 +16,9 @@ A rule only counts when a test checks it. The **Checked** column says where; "pl
 | R8 Declared network only | Load nothing from undeclared hosts | planned |
 | R9 Content in fields | Take every word from the content, nothing hard-coded | human review |
 | R10 Readable | Have a reader that returns every word shown on screen | `test.js` Every word on screen is read |
-| R11 Phone floor | Work at 320px wide with no sideways scroll | planned |
-| R12 Reduced motion | Show all its text when motion is turned off | planned |
-| R13 Prints from the live page | Show all its text under Ctrl+P | planned |
+| R11 Phone floor | Work at 320px wide with no sideways scroll | `test.js` Phone, reduced motion and Ctrl+P |
+| R12 Reduced motion | Show all its text when motion is turned off | `test.js` Phone, reduced motion and Ctrl+P |
+| R13 Prints from the live page | Show all its text under Ctrl+P | `test.js` Phone, reduced motion and Ctrl+P |
 | R14 Existing stories unchanged | Leave existing stories rendering exactly as before, unless the change is opt-in | `test.js` Existing stories unchanged |
 
 ## Adding a layout
@@ -33,6 +33,7 @@ A rule only counts when a test checks it. The **Checked** column says where; "pl
     - a sample story in `test/fixtures/<name>.json`, every word a unique `QQ…` marker
 3. If a word on screen deliberately isn't read aloud or printed, list it in the sample section's `_not_read` with the reason.
 4. Run `npm run snapshots:update` to record the new sample.
+5. The browser checks open the sample in headless Chrome (`node scripts/browser-checks.js <name>` runs just one). If a word doesn't print or doesn't show with motion off, fix it in `css/print.css` or the layout's `prefers-reduced-motion` CSS.
 
 ## Changing a layout
 

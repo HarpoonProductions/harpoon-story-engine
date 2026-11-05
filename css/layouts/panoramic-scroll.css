@@ -269,7 +269,11 @@
     padding: var(--hse-space-md) var(--hse-page-pad);
     max-width: none;
   }
-  .hse-pan__text-item:not(.is-active) { display: none; }
+  /* Every panel's text shows, one under another */
+  .hse-pan__texts {
+    position: relative;
+    inset: auto;
+  }
   .hse-pan__gradient,
   .hse-pan__progress { display: none; }
 }
