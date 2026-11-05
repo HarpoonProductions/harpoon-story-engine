@@ -4717,7 +4717,11 @@ function initTimelineEditor(sectionIndex) {
             <select class="form-select tl-next" aria-label="Then go">
               ${[['across', 'Right →'], ['left', 'Left ←'], ['down', 'Down ↓'], ['up', 'Up ↑'], ['rise', 'Up right ↗'], ['rise-left', 'Up left ↖'], ['fall', 'Down right ↘'], ['fall-left', 'Down left ↙']].map(([v, l]) => `<option value="${v}"${(entry.next || (i % 2 ? 'down' : 'across')) === v ? ' selected' : ''}>${l}</option>`).join('')}
             </select>
-          </label>` : ''}
+          </label>
+          ${chapter ? '' : `<label style="display:flex;align-items:center;gap:0.5rem;font-size:0.8rem" title="An exception to the section's line position, e.g. to keep the text off a strong part of the background">
+            <input type="checkbox" class="tl-swap-side"${entry.swap_side ? ' checked' : ''}>
+            Text on the other side of the line
+          </label>`}` : ''}
           ${chapter ? `<label style="display:grid;grid-template-columns:7rem 1fr;align-items:center;gap:0.5rem">
             <span style="${panelSummary};cursor:default">Line</span>
             <select class="form-select tl-line" aria-label="Line through this card">
@@ -4853,6 +4857,12 @@ function initTimelineEditor(sectionIndex) {
 
       const nextSel = item.querySelector('.tl-next');
       if (nextSel) nextSel.addEventListener('change', e => { section.timeline_entries[i].next = e.target.value; scheduleAutosave(); });
+      const swapBox = item.querySelector('.tl-swap-side');
+      if (swapBox) swapBox.addEventListener('change', e => {
+        if (e.target.checked) section.timeline_entries[i].swap_side = true;
+        else delete section.timeline_entries[i].swap_side;
+        scheduleAutosave();
+      });
       const dateInput = item.querySelector('.tl-date');
       if (dateInput) dateInput.addEventListener('input', e => { section.timeline_entries[i].date = e.target.value; scheduleAutosave(); });
       item.querySelector('.tl-heading').addEventListener('input', e => { section.timeline_entries[i].heading = e.target.value; scheduleAutosave(); });

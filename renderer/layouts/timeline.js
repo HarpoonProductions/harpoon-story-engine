@@ -55,6 +55,8 @@ const { escHtml } = require('../shell/head');
  *                              with no date or marker
  *     entry.line     {string}  interstitial only: 'hide' gaps the line through it
  *     entry.subheading {string} interstitial only: a second heading under the title
+ *     entry.swap_side {boolean} stepped only: put this entry's text on the other side of
+ *                              the line from timeline_step_side
  *
  * @param {object} section
  * @returns {string} HTML
@@ -282,7 +284,7 @@ function renderTimeline(section) {
     </div>`;
     }
 
-    return `<div class="hse-tl__entry" data-index="${i}" data-side="${escHtml(side)}"${run ? ` data-run="${run}"` : ''}${slidesAttr}>
+    return `<div class="hse-tl__entry" data-index="${i}" data-side="${escHtml(side)}"${run ? ` data-run="${run}"` : ''}${run && entry.swap_side === true ? ' data-swap' : ''}${slidesAttr}>
       ${thumbHtml}
       <div class="hse-tl__entry-inner"${dateBg && entry.date ? ' data-date-bg' : ''}>
         ${markerHtml}

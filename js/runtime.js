@@ -868,7 +868,8 @@
             prevVertical = run === "up" || run === "down" ? run : null;
             runs.push(run);
             entry.setAttribute("data-run", run);
-            var swap = !centred[i] && (stepSide === "end" || (stepSide === "alternate" && i % 2 === 1));
+            // An entry can ask for the other side as an exception (data-swap)
+            var swap = !centred[i] && ((stepSide === "end" || (stepSide === "alternate" && i % 2 === 1)) !== entry.hasAttribute("data-swap"));
             // Across and left: above the line, unless the line comes down
             // into it (it would cross the panel). Up and down: left of the
             // line. Diagonals keep their corner.
