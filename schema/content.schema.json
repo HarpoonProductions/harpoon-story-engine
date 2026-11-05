@@ -862,9 +862,9 @@
         },
         "timeline_marker": {
           "type": "string",
-          "enum": ["dot", "triangle", "icon"],
+          "enum": ["dot", "triangle", "icon", "clamp"],
           "default": "dot",
-          "description": "Used by timeline layout. Shape of the marker on the line. icon uses timeline_marker_icon."
+          "description": "Used by timeline layout. Shape of the marker on the line. icon uses timeline_marker_icon. clamp is a scaffold fitting (the default when timeline_line_style is scaffold)."
         },
         "timeline_marker_icon": {
           "type": "string",
@@ -883,6 +883,12 @@
         "timeline_line_color": {
           "type": "string",
           "description": "Used by timeline layout. Line colour (any CSS colour). Default: the story's primary colour at half strength."
+        },
+        "timeline_line_style": {
+          "type": "string",
+          "enum": ["plain", "scaffold"],
+          "default": "plain",
+          "description": "Used by timeline layout. scaffold draws the line as a galvanised scaffold pole (14px unless timeline_line_width is set) with clamp fittings for markers; it ignores the line colour."
         },
         "timeline_line_width": {
           "type": "number",

@@ -17,6 +17,7 @@
 
 (function () {
   "use strict";
+  var fittingIds = 0; // unique ids for scaffold fitting gradients
 
   // ── 1. Bootstrap + motion preference ──────────────────────────────
 
@@ -835,6 +836,71 @@
       function setupStepped() {
         var world = section.querySelector(".hse-tl__phases");
         var NS = "http://www.w3.org/2000/svg";
+        // Scaffold fittings (galvanised castings) for the stepped path.
+        // Each is a round boss at the node plus an arm per direction the
+        // pole leaves it, with a grub-screw boss on each arm. Arms are drawn
+        // along +x and rotated, so their shading runs across the tube.
+        function scaffoldFittings(svg, nodes, runs, segs, centred, runVec, lw) {
+          var uid = "hse-sf" + (++fittingIds);
+          var defs = document.createElementNS(NS, "defs");
+          defs.innerHTML =
+            '<radialGradient id="' + uid + '-boss" cx=".4" cy=".35" r=".7">' +
+              '<stop offset="0" stop-color="#f4f6f7"/><stop offset=".6" stop-color="#c9ced2"/>' +
+              '<stop offset="1" stop-color="#868c91"/></radialGradient>' +
+            // One lit, mottled surface over the whole casting, so the
+            // hub and arms read as a single piece with no seams
+            '<filter id="' + uid + '-cast" x="-15%" y="-15%" width="130%" height="130%" color-interpolation-filters="sRGB">' +
+              '<feGaussianBlur in="SourceAlpha" stdDeviation="' + (lw * 0.42) + '" result="b"/>' +
+              '<feDiffuseLighting in="b" surfaceScale="7" diffuseConstant="1.2" lighting-color="#fff" result="d">' +
+                '<feDistantLight azimuth="225" elevation="50"/></feDiffuseLighting>' +
+              '<feSpecularLighting in="b" surfaceScale="7" specularConstant=".55" specularExponent="16" lighting-color="#fff" result="sp">' +
+                '<feDistantLight azimuth="225" elevation="50"/></feSpecularLighting>' +
+              '<feComposite in="SourceGraphic" in2="d" operator="arithmetic" k1="1" result="lit"/>' +
+              '<feComposite in="lit" in2="sp" operator="arithmetic" k2="1" k3=".6" result="shine"/>' +
+              '<feTurbulence type="fractalNoise" baseFrequency="1.2" numOctaves="2" seed="7" result="n"/>' +
+              '<feColorMatrix in="n" type="matrix" values="0 0 0 0 .3  0 0 0 0 .32  0 0 0 0 .34  0 0 0 -0.9 0.5" result="g"/>' +
+              '<feMerge result="all"><feMergeNode in="shine"/><feMergeNode in="g"/></feMerge>' +
+              '<feComposite in="all" in2="SourceAlpha" operator="in"/></filter>' +
+            '<filter id="' + uid + '-shadow" x="-30%" y="-30%" width="160%" height="160%">' +
+              '<feDropShadow dx="0" dy="1.5" stdDeviation="2" flood-opacity=".5"/></filter>';
+          svg.appendChild(defs);
+          var w = lw * 1.9, L = lw * 2.15, r = w / 2, metal = "#dde0e3";
+          function el(tag, attrs, parent) {
+            var e = document.createElementNS(NS, tag);
+            for (var a in attrs) e.setAttribute(a, attrs[a]);
+            if (parent) parent.appendChild(e);
+            return e;
+          }
+          function angle(v, back) { return Math.atan2(back ? -v.y : v.y, back ? -v.x : v.x) * 180 / Math.PI; }
+          return nodes.map(function (p, k) {
+            if (centred[k]) return null;
+            var arms = [];
+            if (k && segs[k]) arms.push(angle(runVec(runs[k - 1]), true));
+            if (k === nodes.length - 1 || segs[k + 1]) arms.push(angle(runVec(runs[k])));
+            if (!arms.length) return null;
+            var g = el("g", { "class": "hse-tl__fitting", transform: "translate(" + p.x + " " + p.y + ")" }, svg);
+            var body = el("g", { filter: "url(#" + uid + "-shadow)" }, g);
+            var cast = el("g", { filter: "url(#" + uid + "-cast)" }, body);
+            el("circle", { r: r, fill: metal }, cast);
+            arms.forEach(function (a) {
+              var arm = el("g", { transform: "rotate(" + a + ")" }, cast);
+              el("rect", { x: 0, y: -r, width: L * 0.5, height: w, fill: metal }, arm);
+              el("rect", { x: 0, y: -r, width: L, height: w, rx: lw * 0.18, fill: metal }, arm);
+              // Lip where the casting ends on the tube
+              el("rect", { x: L - lw * 0.16, y: -r + 0.5, width: lw * 0.16, height: w - 1, rx: lw * 0.08, fill: "#000", opacity: 0.18 }, arm);
+            });
+            arms.forEach(function (a) {
+              var t = a * Math.PI / 180, d = L * 0.58;
+              var b = el("g", { transform: "translate(" + (Math.cos(t) * d) + " " + (Math.sin(t) * d) + ")" }, g);
+              el("circle", { r: lw * 0.5, fill: "url(#" + uid + "-boss)", stroke: "#7d8388", "stroke-width": 0.6 }, b);
+              el("circle", { r: lw * 0.31, fill: "#d3d7da", stroke: "#5f656a", "stroke-width": 0.8 }, b);
+              var hex = [], hr = lw * 0.17;
+              for (var n = 0; n < 6; n++) hex.push((Math.cos(n * Math.PI / 3) * hr).toFixed(2) + "," + (Math.sin(n * Math.PI / 3) * hr).toFixed(2));
+              el("polygon", { points: hex.join(" "), fill: "#16191b" }, b);
+            });
+            return g;
+          });
+        }
         var svg;
 
         return pinned(function () {
@@ -846,6 +912,7 @@
           // "end" puts them above (across) or left (up, down) instead of
           // below or right; "alternate" swaps every other entry
           var stepSide = section.dataset.stepSide;
+          var pole = section.dataset.lineStyle === "scaffold";
 
           // Runs. Up straight after down, or down after up, would double
           // back, so it goes across; a leftward run straight after a
@@ -1015,18 +1082,25 @@
             }
             var sx = a.x + (p.x - a.x) * (full ? from / full : 0), sy = a.y + (p.y - a.y) * (full ? from / full : 0);
             var d = "M" + sx + " " + sy + " L" + p.x + " " + p.y;
-            var drawnPath;
-            ["hse-tl__path-track", "hse-tl__path-drawn"].forEach(function (cls) {
+            // A scaffold pole is three strokes, shaded towards the middle
+            var classes = ["hse-tl__path-track", "hse-tl__path-drawn"];
+            if (pole) classes.push("hse-tl__path-drawn is-pole-mid", "hse-tl__path-drawn is-pole-hi");
+            var len = full - from;
+            var drawn = [];
+            classes.forEach(function (cls, n) {
               var path = document.createElementNS(NS, "path");
               path.setAttribute("class", cls);
               path.setAttribute("d", d);
               svg.appendChild(path);
-              drawnPath = path;
+              if (n) { path.style.strokeDasharray = len + " " + len; drawn.push(path); }
             });
-            var len = full - from;
-            drawnPath.style.strokeDasharray = len + " " + len;
-            return { el: drawnPath, len: len, from: from, start: a };
+            return { el: drawn, len: len, from: from, start: a };
           });
+          // Scaffold: a cast fitting at each node, with an arm along the
+          // pole each way it goes (an elbow at a turn, a sleeve on a
+          // straight), drawn over the pole and revealed as the line arrives
+          var fits = pole ? scaffoldFittings(svg, nodes, runs, segs, centred, runVec,
+            parseFloat(getComputedStyle(section).getPropertyValue("--tl-line-width")) || 14) : [];
           world.insertBefore(svg, world.firstChild);
           // How much of a segment is drawn with the camera at point c
           function dashAt(seg, c) {
@@ -1042,6 +1116,7 @@
           var arrive = [], moves = [], slideTimes = entries.map(function () { return []; });
           tl.set(world, { x: stops[0].ax - stops[0].x, y: stops[0].ay - stops[0].y }, 0);
           segs.forEach(function (seg) { if (seg) tl.set(seg.el, { strokeDashoffset: seg.len }, 0); });
+          fits.forEach(function (f, k) { if (f && k) tl.set(f, { opacity: 0 }, 0); });
           stops.forEach(function (p, j) {
             if (j) {
               var prev = stops[j - 1];
@@ -1050,6 +1125,7 @@
               var seg = segs[prev.entry + 1];
               tl.to(world, { x: p.ax - p.x, y: p.ay - p.y, duration: len, ease: "power1.inOut" });
               if (seg) tl.to(seg.el, { strokeDashoffset: dashAt(seg, p), duration: len, ease: "power1.inOut" }, "<");
+              if (p.node && fits[p.entry]) tl.to(fits[p.entry], { opacity: 1, duration: len * 0.12 }, "<" + len * 0.88);
               if (p.node) moves.push(len);
               else slideTimes[p.entry].push(tl.duration() - len / 2);
             } else {

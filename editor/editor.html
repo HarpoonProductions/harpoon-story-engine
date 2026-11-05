@@ -4988,7 +4988,7 @@ function initTimelineStyle(section) {
   const hex = v => /^#[0-9a-f]{6}$/i.test(v || '') ? v : '#000000';
   const row = 'display:grid;grid-template-columns:7rem 1fr;align-items:center;gap:0.5rem';
   const label = 'font-family:var(--font-mono);font-size:0.6rem;letter-spacing:0.08em;text-transform:uppercase;color:var(--ink-3)';
-  const marker = section.timeline_marker || 'dot';
+  const marker = section.timeline_marker || (section.timeline_line_style === 'scaffold' ? 'clamp' : 'dot');
 
   const colourRow = (key, text) => `
     <div style="${row}">
@@ -5011,6 +5011,7 @@ function initTimelineStyle(section) {
         <option value="dot"${marker === 'dot' ? ' selected' : ''}>Dot</option>
         <option value="triangle"${marker === 'triangle' ? ' selected' : ''}>Triangle</option>
         <option value="icon"${marker === 'icon' ? ' selected' : ''}>Custom icon</option>
+        <option value="clamp"${marker === 'clamp' ? ' selected' : ''}>Scaffold clamp</option>
       </select>
     </div>
     <div style="${row};display:${marker === 'icon' ? 'grid' : 'none'}" data-icon-row>
@@ -5019,6 +5020,13 @@ function initTimelineStyle(section) {
     </div>
     ${numberRow('timeline_marker_size', 'Marker size px', 4, 64, 14)}
     ${colourRow('timeline_marker_color', 'Marker colour')}
+    <div style="${row}">
+      <span style="${label}">Line style</span>
+      <select class="form-select" data-key="timeline_line_style">
+        <option value=""${section.timeline_line_style !== 'scaffold' ? ' selected' : ''}>Plain line</option>
+        <option value="scaffold"${section.timeline_line_style === 'scaffold' ? ' selected' : ''}>Scaffold pole (clamps as markers)</option>
+      </select>
+    </div>
     ${colourRow('timeline_line_color', 'Line colour')}
     ${numberRow('timeline_line_width', 'Line px', 1, 16, 2)}`;
 

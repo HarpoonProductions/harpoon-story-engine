@@ -28,7 +28,10 @@ const { escHtml } = require('../shell/head');
  *   timeline_marker_size  {number}  px (default: 12)
  *   timeline_marker_color {string}  CSS colour (default: the story accent)
  *   timeline_line_color   {string}  CSS colour (default: the story accent, half opacity)
- *   timeline_line_width   {number}  px (default: 2)
+ *   timeline_line_width   {number}  px (default: 2; 14 for scaffold)
+ *   timeline_line_style   {string}  'plain' | 'scaffold' (default: 'plain'). Scaffold draws
+ *                                   a galvanised pole with clamp fittings as markers
+ *                                   (timeline_marker 'clamp', the default for it)
  *   timeline_date_bg      {object}  { color, opacity, text_color, text_size } the block
  *                                   behind each date (text_size: small | large | xlarge)
  *   timeline_text_bg      {object}  the same for the heading + body block
@@ -166,7 +169,11 @@ function renderTimeline(section) {
   const entries = section.timeline_entries || [];
   const align   = section.timeline_align   || 'left';
   const icon    = section.timeline_marker === 'icon' && section.timeline_marker_icon;
-  const marker  = icon ? 'icon' : section.timeline_marker === 'triangle' ? 'triangle' : 'dot';
+  // Line style: 'scaffold' draws the line as a galvanised scaffold pole, and
+  // the markers (unless a triangle or icon is chosen) as clamp fittings
+  const scaffold = section.timeline_line_style === 'scaffold';
+  const marker  = icon ? 'icon' : section.timeline_marker === 'triangle' ? 'triangle'
+    : section.timeline_marker === 'clamp' || (scaffold && section.timeline_marker !== 'dot') ? 'clamp' : 'dot';
   const horizontal = section.timeline_direction === 'horizontal';
   const stepped    = section.timeline_direction === 'stepped';
 
@@ -176,7 +183,7 @@ function renderTimeline(section) {
   const vars = [
     ['--tl-marker-size',  px(section.timeline_marker_size, 4, 64)],
     ['--tl-marker-color', cssColor(section.timeline_marker_color)],
-    ['--tl-line-width',   px(section.timeline_line_width, 1, 16)],
+    ['--tl-line-width',   px(section.timeline_line_width, 1, 16) || (scaffold ? '14px' : null)],
     ['--tl-line-color',   lineColor],
     ['--tl-line-opacity', lineColor ? '1' : null],
     ['--tl-count',        horizontal ? String(entries.length) : null],
@@ -303,7 +310,8 @@ function renderTimeline(section) {
   data-align="${escHtml(align)}"${horizontal || stepped ? `
   data-direction="${stepped ? 'stepped' : 'horizontal'}"` : ''}${stepped && ['end', 'alternate'].includes(section.timeline_step_side) ? `
   data-step-side="${section.timeline_step_side}"` : ''}
-  data-marker="${marker}"${vars ? `
+  data-marker="${marker}"${scaffold ? `
+  data-line-style="scaffold"` : ''}${vars ? `
   style="${escHtml(vars)}"` : ''}
   data-entry-count="${entries.length}">
 

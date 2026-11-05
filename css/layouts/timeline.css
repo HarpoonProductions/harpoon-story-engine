@@ -895,3 +895,103 @@
     rotate: 60deg;
   }
 }
+
+/* ── Line style: scaffold pole ────────────────────────────────────
+   timeline_line_style "scaffold": the line is a galvanised tube (shaded
+   across its width so it reads as round), it starts on a base plate,
+   and markers are clamp fittings sitting on the pole. The stepped path
+   gets the same shading from three stacked strokes (js/runtime.js). */
+
+.hse-section--timeline[data-line-style="scaffold"] {
+  --tl-pole-dark: #5d6369;
+  --tl-pole-mid: #a7adb2;
+  --tl-pole-light: #eef1f3;
+  --tl-pole: linear-gradient(to right, var(--tl-pole-dark) 0%, var(--tl-pole-mid) 28%, var(--tl-pole-light) 46%, var(--tl-pole-mid) 64%, var(--tl-pole-dark) 100%);
+  --tl-line-opacity: 1;
+}
+
+[data-line-style="scaffold"] .hse-tl__spine {
+  background: var(--tl-pole);
+  opacity: 1;
+  box-shadow: 0 0 6px rgba(0, 0, 0, 0.35);
+}
+/* Base plate where the pole starts */
+[data-line-style="scaffold"] .hse-tl__spine::before {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 0;
+  width: calc(var(--tl-line-width, 14px) * 3);
+  height: calc(var(--tl-line-width, 14px) * 0.6);
+  translate: -50% 0;
+  border-radius: 3px;
+  background:
+    radial-gradient(circle at 18% 50%, #3f4448 0 14%, transparent 16%),
+    radial-gradient(circle at 82% 50%, #3f4448 0 14%, transparent 16%),
+    linear-gradient(to bottom, var(--tl-pole-light), var(--tl-pole-mid) 55%, var(--tl-pole-dark));
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.45);
+}
+
+/* Clamp fitting: a cast sleeve coupler round the pole, with two grub
+   screws (drawn as SVG to match the stepped fittings in js/runtime.js) */
+.hse-section--timeline {
+  --tl-sleeve-v: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 66'%3E%3Cdefs%3E%3CradialGradient id='b' cx='.4' cy='.35' r='.7'%3E%3Cstop offset='0' stop-color='%23f4f6f7'/%3E%3Cstop offset='.6' stop-color='%23c9ced2'/%3E%3Cstop offset='1' stop-color='%23868c91'/%3E%3C/radialGradient%3E%3Cfilter id='c' x='-15%25' y='-15%25' width='130%25' height='130%25' color-interpolation-filters='sRGB'%3E%3CfeGaussianBlur in='SourceAlpha' stdDeviation='5.9' result='b'/%3E%3CfeDiffuseLighting in='b' surfaceScale='7' diffuseConstant='1.2' lighting-color='%23fff' result='d'%3E%3CfeDistantLight azimuth='225' elevation='50'/%3E%3C/feDiffuseLighting%3E%3CfeSpecularLighting in='b' surfaceScale='7' specularConstant='.55' specularExponent='16' lighting-color='%23fff' result='sp'%3E%3CfeDistantLight azimuth='225' elevation='50'/%3E%3C/feSpecularLighting%3E%3CfeComposite in='SourceGraphic' in2='d' operator='arithmetic' k1='1' result='lit'/%3E%3CfeComposite in='lit' in2='sp' operator='arithmetic' k2='1' k3='.6' result='shine'/%3E%3CfeTurbulence type='fractalNoise' baseFrequency='1.2' numOctaves='2' seed='7' result='n'/%3E%3CfeColorMatrix in='n' type='matrix' values='0 0 0 0 .3 0 0 0 0 .32 0 0 0 0 .34 0 0 0 -0.9 0.5' result='g'/%3E%3CfeMerge result='all'%3E%3CfeMergeNode in='shine'/%3E%3CfeMergeNode in='g'/%3E%3C/feMerge%3E%3CfeComposite in='all' in2='SourceAlpha' operator='in'/%3E%3C/filter%3E%3C/defs%3E%3Crect x='3' y='3' width='26' height='60' rx='3' fill='%23dde0e3' filter='url(%23c)'/%3E%3Ccircle cx='16' cy='17' r='7' fill='url(%23b)' stroke='%237d8388' stroke-width='.6'/%3E%3Ccircle cx='16' cy='17' r='4.3' fill='%23d3d7da' stroke='%235f656a' stroke-width='.8'/%3E%3Cpolygon points='18.38%2C17.00 17.19%2C19.06 14.81%2C19.06 13.62%2C17.00 14.81%2C14.94 17.19%2C14.94' fill='%2316191b'/%3E%3Ccircle cx='16' cy='52' r='7' fill='url(%23b)' stroke='%237d8388' stroke-width='.6'/%3E%3Ccircle cx='16' cy='52' r='4.3' fill='%23d3d7da' stroke='%235f656a' stroke-width='.8'/%3E%3Cpolygon points='18.38%2C52.00 17.19%2C54.06 14.81%2C54.06 13.62%2C52.00 14.81%2C49.94 17.19%2C49.94' fill='%2316191b'/%3E%3C/svg%3E");
+  --tl-sleeve-h: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 66 32'%3E%3Cg transform='translate(66 0) rotate(90)'%3E%3Cdefs%3E%3CradialGradient id='b' cx='.4' cy='.35' r='.7'%3E%3Cstop offset='0' stop-color='%23f4f6f7'/%3E%3Cstop offset='.6' stop-color='%23c9ced2'/%3E%3Cstop offset='1' stop-color='%23868c91'/%3E%3C/radialGradient%3E%3Cfilter id='c' x='-15%25' y='-15%25' width='130%25' height='130%25' color-interpolation-filters='sRGB'%3E%3CfeGaussianBlur in='SourceAlpha' stdDeviation='5.9' result='b'/%3E%3CfeDiffuseLighting in='b' surfaceScale='7' diffuseConstant='1.2' lighting-color='%23fff' result='d'%3E%3CfeDistantLight azimuth='225' elevation='50'/%3E%3C/feDiffuseLighting%3E%3CfeSpecularLighting in='b' surfaceScale='7' specularConstant='.55' specularExponent='16' lighting-color='%23fff' result='sp'%3E%3CfeDistantLight azimuth='225' elevation='50'/%3E%3C/feSpecularLighting%3E%3CfeComposite in='SourceGraphic' in2='d' operator='arithmetic' k1='1' result='lit'/%3E%3CfeComposite in='lit' in2='sp' operator='arithmetic' k2='1' k3='.6' result='shine'/%3E%3CfeTurbulence type='fractalNoise' baseFrequency='1.2' numOctaves='2' seed='7' result='n'/%3E%3CfeColorMatrix in='n' type='matrix' values='0 0 0 0 .3 0 0 0 0 .32 0 0 0 0 .34 0 0 0 -0.9 0.5' result='g'/%3E%3CfeMerge result='all'%3E%3CfeMergeNode in='shine'/%3E%3CfeMergeNode in='g'/%3E%3C/feMerge%3E%3CfeComposite in='all' in2='SourceAlpha' operator='in'/%3E%3C/filter%3E%3C/defs%3E%3Crect x='3' y='3' width='26' height='60' rx='3' fill='%23dde0e3' filter='url(%23c)'/%3E%3Ccircle cx='16' cy='17' r='7' fill='url(%23b)' stroke='%237d8388' stroke-width='.6'/%3E%3Ccircle cx='16' cy='17' r='4.3' fill='%23d3d7da' stroke='%235f656a' stroke-width='.8'/%3E%3Cpolygon points='18.38%2C17.00 17.19%2C19.06 14.81%2C19.06 13.62%2C17.00 14.81%2C14.94 17.19%2C14.94' fill='%2316191b'/%3E%3Ccircle cx='16' cy='52' r='7' fill='url(%23b)' stroke='%237d8388' stroke-width='.6'/%3E%3Ccircle cx='16' cy='52' r='4.3' fill='%23d3d7da' stroke='%235f656a' stroke-width='.8'/%3E%3Cpolygon points='18.38%2C52.00 17.19%2C54.06 14.81%2C54.06 13.62%2C52.00 14.81%2C49.94 17.19%2C49.94' fill='%2316191b'/%3E%3C/g%3E%3C/svg%3E");
+}
+[data-marker="clamp"] .hse-tl__marker {
+  width: calc(var(--tl-line-width, 14px) * 2.3);
+  height: calc(var(--tl-line-width, 14px) * 4.7);
+  background: var(--tl-sleeve-v) center / 100% 100% no-repeat;
+  filter: drop-shadow(0 1.5px 2px rgba(0, 0, 0, 0.5));
+  opacity: 0.85;
+}
+[data-marker="clamp"] .is-visible .hse-tl__marker { opacity: 1; }
+/* A date with a background block drops the marker; a clamp stays put */
+[data-marker="clamp"] [data-date-bg] > .hse-tl__marker { top: 0.55rem; }
+
+@media (min-width: 769px) {
+  [data-direction="horizontal"][data-line-style="scaffold"] .hse-tl__spine {
+    background: linear-gradient(to bottom, var(--tl-pole-dark) 0%, var(--tl-pole-mid) 28%, var(--tl-pole-light) 46%, var(--tl-pole-mid) 64%, var(--tl-pole-dark) 100%);
+  }
+  [data-direction="horizontal"][data-marker="clamp"] .hse-tl__marker {
+    width: calc(var(--tl-line-width, 14px) * 4.7);
+    height: calc(var(--tl-line-width, 14px) * 2.3);
+    background-image: var(--tl-sleeve-h);
+  }
+  [data-direction="horizontal"][data-line-style="scaffold"] .hse-tl__spine::before {
+    left: 0;
+    top: 50%;
+    width: calc(var(--tl-line-width, 14px) * 0.6);
+    height: calc(var(--tl-line-width, 14px) * 3);
+    translate: 0 -50%;
+    background:
+      radial-gradient(circle at 50% 18%, #3f4448 0 14%, transparent 16%),
+      radial-gradient(circle at 50% 82%, #3f4448 0 14%, transparent 16%),
+      linear-gradient(to right, var(--tl-pole-light), var(--tl-pole-mid) 55%, var(--tl-pole-dark));
+  }
+
+  /* Stepped: three strokes per segment, dark to light towards the middle */
+  [data-line-style="scaffold"] .hse-tl__path-track { opacity: 0.25; stroke: var(--tl-pole-mid); }
+  [data-line-style="scaffold"] .hse-tl__path-drawn {
+    opacity: 1;
+    stroke: var(--tl-pole-dark);
+    filter: drop-shadow(0 0 3px rgba(0, 0, 0, 0.35));
+  }
+  [data-line-style="scaffold"] .hse-tl__path-drawn.is-pole-mid {
+    stroke: var(--tl-pole-mid);
+    stroke-width: calc(var(--tl-line-width, 14px) * 0.55);
+    filter: none;
+  }
+  [data-line-style="scaffold"] .hse-tl__path-drawn.is-pole-hi {
+    stroke: var(--tl-pole-light);
+    stroke-width: calc(var(--tl-line-width, 14px) * 0.18);
+    filter: none;
+  }
+}
+
+/* Stepped scaffold: the fittings drawn on the path (js/runtime.js) are
+   the joints, so a clamp marker would sit on top of one */
+@media (min-width: 769px) {
+  .is-stepped[data-line-style="scaffold"][data-marker="clamp"] .hse-tl__marker { visibility: hidden; }
+  .hse-tl__fitting { pointer-events: none; }
+}
