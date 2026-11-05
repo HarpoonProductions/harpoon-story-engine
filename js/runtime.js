@@ -848,41 +848,54 @@
           var stepSide = section.dataset.stepSide;
 
           // Runs. Up straight after down, or down after up, would double
-          // back, so it goes across. An across run reached by climbing hangs
-          // its panel above the line, and the view sits low to show it.
-          // Diagonals (rise ↗, fall ↘) slope at SLOPE; their panel sits off
-          // the line's corner, below-right of a rise and above-right of a fall.
+          // back, so it goes across; a leftward run straight after a
+          // rightward one (or the reverse) goes down instead. An across or
+          // left run reached by climbing hangs its panel above the line, and
+          // the view sits low to show it. Diagonals (rise ↗, fall ↘ and
+          // their leftward mirrors ↖ ↙) slope at SLOPE; their panel sits off
+          // the line's corner, below a rise and above a fall.
           var SLOPE = Math.tan(30 * Math.PI / 180);
+          var RIGHTWARD = { across: 1, rise: 1, fall: 1 };
+          var LEFTWARD = { left: 1, "rise-left": 1, "fall-left": 1 };
           // An interstitial with its line hidden is centred on the screen
           var centred = entries.map(function (e) { return e.dataset.line === "hide"; });
-          var runs = [], prevVertical = null, flip = [];
+          var runs = [], prevVertical = null, flip = [], shifted = [];
           entries.forEach(function (entry, i) {
             var run = entry.dataset.run || (i % 2 ? "down" : "across");
+            var prev = runs[i - 1];
             if ((run === "up" && prevVertical === "down") || (run === "down" && prevVertical === "up")) run = "across";
+            if ((LEFTWARD[run] && RIGHTWARD[prev]) || (RIGHTWARD[run] && LEFTWARD[prev])) run = "down";
             prevVertical = run === "up" || run === "down" ? run : null;
             runs.push(run);
             entry.setAttribute("data-run", run);
             var swap = !centred[i] && (stepSide === "end" || (stepSide === "alternate" && i % 2 === 1));
-            // Across: above the line, unless the line comes down into it
-            // (it would cross the panel). Up and down: left of the line.
-            // Diagonals keep their corner.
-            if (run === "across" && (runs[i - 1] === "up" || (swap && runs[i - 1] !== "down"))) entry.setAttribute("data-hang", "above");
+            // Across and left: above the line, unless the line comes down
+            // into it (it would cross the panel). Up and down: left of the
+            // line. Diagonals keep their corner.
+            var flat = run === "across" || run === "left";
+            if (flat && (prev === "up" || (swap && prev !== "down"))) entry.setAttribute("data-hang", "above");
             else entry.removeAttribute("data-hang");
-            flip.push(swap && (run === "up" || run === "down"));
+            var vertical = run === "up" || run === "down";
+            flip.push(swap && vertical);
             if (flip[i]) entry.setAttribute("data-flip", "left");
             else entry.removeAttribute("data-flip");
+            // An up or down panel on the side the line arrives from moves
+            // clear of it: below the turn (down) or above it (up)
+            shifted.push(vertical && (flip[i] || !!LEFTWARD[prev]));
           });
-          // Where the line sits across the screen: left of centre, or right
-          // of it when the panel is on its left
-          var axs = flip.map(function (f) { return W * (f ? 0.7 : 0.3); });
+          // Where the node sits across the screen: left of centre, or right
+          // of it when the panel is on its left or the path heads left
+          var axs = runs.map(function (run, i) { return W * (flip[i] || LEFTWARD[run] ? 0.7 : 0.3); });
           // Panels that sit above their line
-          var above = runs.map(function (run, i) { return !centred[i] && (run === "fall" || !!entries[i].dataset.hang || (flip[i] && run === "up")); });
+          var above = runs.map(function (run, i) {
+            return !centred[i] && (run === "fall" || run === "fall-left" || !!entries[i].dataset.hang || (shifted[i] && run === "up"));
+          });
           var anchorY = above.map(function (a, i) { return H * (centred[i] ? 0.5 : a ? 0.72 : 0.3); });
 
           fitEntries(function (entry) {
             var i = entries.indexOf(entry);
             if (centred[i]) return H - NAV - 80;
-            if (flip[i] && runs[i] === "up") return anchorY[i] - gap - NAV;
+            if (shifted[i] && runs[i] === "up") return anchorY[i] - gap - NAV;
             if (runs[i] === "up" || runs[i] === "down") return H - anchorY[i] - 40;
             return above[i] ? anchorY[i] - gap - NAV : H - anchorY[i] - gap - 40;
           });
@@ -892,17 +905,26 @@
             var marker = entry.querySelector(".hse-tl__marker");
             var h = entry.querySelector(".hse-tl__entry-inner").offsetHeight;
             var w = entry.offsetWidth;
+            var run = runs[i];
             if (centred[i]) return { dx: W / 2 - axs[i] - w / 2, dy: -h / 2, w: w, h: h };
-            // Left of the line: below where it turns (down) or above it (up)
-            if (flip[i]) return { dx: -(gap + w), dy: runs[i] === "up" ? -(gap + h) : gap, w: w, h: h };
-            if (runs[i] === "rise") return { dx: gap, dy: gap, w: w, h: h };
-            if (runs[i] === "fall") return { dx: gap, dy: -(gap + h), w: w, h: h };
-            if (runs[i] === "across") {
-              var mx = marker ? marker.offsetLeft : 16;
-              return { dx: -mx, dy: entry.dataset.hang ? -(gap + h) : gap, w: w, h: h };
+            if (run === "up" || run === "down") {
+              var dx = flip[i] ? -(gap + w) : gap;
+              if (shifted[i]) return { dx: dx, dy: run === "up" ? -(gap + h) : gap, w: w, h: h };
+              var my = marker ? marker.offsetTop : 9;
+              return { dx: dx, dy: -my, w: w, h: h };
             }
-            var my = marker ? marker.offsetTop : 9;
-            return { dx: gap, dy: -my, w: w, h: h };
+            if (run === "rise") return { dx: gap, dy: gap, w: w, h: h };
+            if (run === "fall") return { dx: gap, dy: -(gap + h), w: w, h: h };
+            if (run === "rise-left") return { dx: -(gap + w), dy: gap, w: w, h: h };
+            if (run === "fall-left") return { dx: -(gap + w), dy: -(gap + h), w: w, h: h };
+            var dy = entry.dataset.hang ? -(gap + h) : gap;
+            if (run === "left") {
+              // The marker sits 1rem in from the panel's right edge
+              var mr = marker ? marker.offsetLeft + marker.offsetWidth : w - 16;
+              return { dx: -mr, dy: dy, w: w, h: h };
+            }
+            var mx = marker ? marker.offsetLeft : 16;
+            return { dx: -mx, dy: dy, w: w, h: h };
           });
 
           // A panel still too tall for its usual spot moves the line up (or,
@@ -919,7 +941,9 @@
           function runVec(run) {
             if (run === "down") return { x: 0, y: 1, D: H };
             if (run === "up") return { x: 0, y: -1, D: H };
-            return { x: 1, y: run === "rise" ? -SLOPE : run === "fall" ? SLOPE : 0, D: W };
+            var sx = LEFTWARD[run] ? -1 : 1;
+            var sy = run === "rise" || run === "rise-left" ? -SLOPE : run === "fall" || run === "fall-left" ? SLOPE : 0;
+            return { x: sx, y: sy, D: W };
           }
           // Distance to the next node: far enough that the panels never
           // overlap, the next panel is off screen while resting on this one,
@@ -934,11 +958,16 @@
             // Extra backgrounds: a screen more travel for each, so the
             // reader moves on from the text and sees them on their own
             var extra = (slideCounts[i] - 1) * runVec(runs[i]).D;
-            if (runs[i] === "across" || runs[i] === "rise" || runs[i] === "fall") {
-              var step = Math.max(b.dx + b.w + room - nb.dx, W - axs[i] - nb.dx + room, axs[i + 1] + b.dx + b.w + room) + extra;
+            var v = runVec(runs[i]), step;
+            if (RIGHTWARD[runs[i]]) {
+              step = Math.max(b.dx + b.w + room - nb.dx, W - axs[i] - nb.dx + room, axs[i + 1] + b.dx + b.w + room) + extra;
               x += step;
-              if (runs[i] === "rise") y -= step * SLOPE;
-              if (runs[i] === "fall") y += step * SLOPE;
+              y += step * v.y;
+            } else if (LEFTWARD[runs[i]]) {
+              // Mirror image: the next panel clears this one to the left
+              step = Math.max(nb.dx + nb.w + room - b.dx, axs[i] + nb.dx + nb.w + room, W - axs[i + 1] - b.dx + room) + extra;
+              x -= step;
+              y += step * v.y;
             } else if (runs[i] === "down") {
               y += Math.max(b.dy + b.h + room - nb.dy, H - ay - nb.dy + room, nay + b.dy + b.h + room) + extra;
             } else {
@@ -980,7 +1009,7 @@
             var from = 0;
             if (centred[k - 1]) {
               var bx = boxes[k - 1], v = runVec(runs[k - 1]);
-              var units = v.x ? bx.dx + bx.w + 24 : v.y > 0 ? bx.dy + bx.h + 24 : 24 - bx.dy;
+              var units = v.x > 0 ? bx.dx + bx.w + 24 : v.x < 0 ? 24 - bx.dx : v.y > 0 ? bx.dy + bx.h + 24 : 24 - bx.dy;
               from = Math.min(full, Math.max(0, units) * Math.hypot(v.x, v.y));
             }
             var sx = a.x + (p.x - a.x) * (full ? from / full : 0), sy = a.y + (p.y - a.y) * (full ? from / full : 0);
@@ -1005,7 +1034,7 @@
           }
 
           // Push transitions come in from the way the path goes next
-          setPush(runs.map(function (run) { return run === "down" ? "up" : run === "up" ? "down" : "left"; }));
+          setPush(runs.map(function (run) { return run === "down" ? "up" : run === "up" ? "down" : LEFTWARD[run] ? "right" : "left"; }));
 
           var hold = H * 0.35;
           var tl = gsap.timeline({ paused: true });
