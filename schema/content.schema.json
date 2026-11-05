@@ -918,7 +918,7 @@
               },
               "images": {
                 "type": "array",
-                "description": "More backgrounds after image/video. Each adds a scroll stop; the entry's text stays in view while they change.",
+                "description": "More backgrounds after image/video. Each adds a scroll stop after the entry's text has moved on, before the next entry.",
                 "items": {
                   "type": "object",
                   "properties": {

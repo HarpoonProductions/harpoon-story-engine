@@ -43,7 +43,7 @@ const { escHtml } = require('../shell/head');
  *     entry.date_bg  {object}  { color, opacity } overrides timeline_date_bg for this entry
  *     entry.text_bg  {object}  { color, opacity } overrides timeline_text_bg for this entry
  *     entry.images   {Array}   more backgrounds after image/video: [{ url, focal, alt, caption }].
- *                              Each adds a scroll stop; the text stays while they change.
+ *                              Each adds a scroll stop after the text has moved on.
  *     entry.images_transition {string} 'fade' | 'push' (default: 'fade'). Push slides the
  *                              next image in from the direction of travel.
  *     entry.kind     {string}  'interstitial' makes a chapter card (heading, body, background)
