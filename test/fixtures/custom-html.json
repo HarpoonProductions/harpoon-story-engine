@@ -1,0 +1,25 @@
+{
+  "meta": {
+    "title": "Contract fixture: custom-html",
+    "project_id": "fixture-custom-html",
+    "token_set": "default",
+    "last_saved": "2026-11-05T00:00:00Z"
+  },
+  "cover": {
+    "headline": "Fixture custom-html"
+  },
+  "sections": [
+    {
+      "id": "fx-custom-html",
+      "layout": "custom-html",
+      "title": "QQCUSTOMTITLE",
+      "custom_html": {
+        "html": "<div>QQHTMLINNER</div>",
+        "caption": "QQHTMLCAP"
+      },
+      "_not_read": {
+        "QQHTMLINNER": "Arbitrary HTML cannot be read reliably; only its caption is (Contract §7: custom sections declare alternates instead)."
+      }
+    }
+  ]
+}

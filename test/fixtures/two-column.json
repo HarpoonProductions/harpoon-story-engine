@@ -1,0 +1,41 @@
+{
+  "meta": {
+    "title": "Contract fixture: two-column",
+    "project_id": "fixture-two-column",
+    "token_set": "default",
+    "last_saved": "2026-11-05T00:00:00Z"
+  },
+  "cover": {
+    "headline": "Fixture two-column"
+  },
+  "sections": [
+    {
+      "id": "fx-two-column",
+      "layout": "two-column",
+      "title": "QQTWOCOLTITLE",
+      "intro": "QQTWOINTRO words.",
+      "two_column": {
+        "blocks": [
+          {
+            "type": "text",
+            "text": "QQTWOTEXT1"
+          },
+          {
+            "type": "image",
+            "url": "https://example.com/qqtwoimg.jpg",
+            "alt": "QQTWOIMGALT",
+            "caption": "QQTWOIMGCAP",
+            "print_include": true
+          },
+          {
+            "type": "column-break"
+          },
+          {
+            "type": "text",
+            "text": "QQTWOTEXT2"
+          }
+        ]
+      }
+    }
+  ]
+}

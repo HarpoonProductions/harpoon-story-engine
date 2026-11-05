@@ -65,7 +65,18 @@ function versioned(url, file) {
   return v ? `${url}?v=${v}` : url;
 }
 
-function renderHead(meta, config, title, basePath, staging, heroImageUrl, canonicalUrl) {
+// Stylesheets of layouts registered after the hand-written links above
+// (renderer/layouts/registry.js), linked only on pages that use that
+// layout, so adding a layout leaves every existing page unchanged.
+// Required here, not at the top: the layouts themselves require this file.
+function extraLayoutLinks(css, usedLayouts) {
+  const { extraLayoutCss } = require('../layouts/registry');
+  return extraLayoutCss(usedLayouts)
+    .map(file => `  <link rel="stylesheet" href="${css(file)}">\n`)
+    .join('');
+}
+
+function renderHead(meta, config, title, basePath, staging, heroImageUrl, canonicalUrl, usedLayouts) {
   const pageTitle = title
     ? `${title} — ${meta.title}`
     : meta.title;
@@ -204,7 +215,7 @@ function renderHead(meta, config, title, basePath, staging, heroImageUrl, canoni
   <link rel="stylesheet" href="${css('css/layouts/split-reveal.css')}">
   <link rel="stylesheet" href="${css('css/layouts/timeline.css')}">
   <link rel="stylesheet" href="${css('css/layouts/two-column.css')}">
-
+${extraLayoutLinks(css, usedLayouts)}
   <!-- Print stylesheet — media=print so it never affects screen rendering -->
   <link rel="stylesheet" href="${css('css/print.css')}" media="print">
 

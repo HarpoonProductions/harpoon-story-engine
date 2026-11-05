@@ -1,0 +1,39 @@
+{
+  "meta": {
+    "title": "Contract fixture: stackable-cards",
+    "project_id": "fixture-stackable-cards",
+    "token_set": "default",
+    "last_saved": "2026-11-05T00:00:00Z"
+  },
+  "cover": {
+    "headline": "Fixture stackable-cards"
+  },
+  "sections": [
+    {
+      "id": "fx-stackable-cards",
+      "layout": "stackable-cards",
+      "title": "QQSTACKATITLE",
+      "intro": "QQSTACKINTRO words.",
+      "cards": [
+        {
+          "title": "QQSTACKT1",
+          "body": "QQSTACKB1",
+          "tag": "QQSTACKTAG1",
+          "image": {
+            "url": "https://example.com/qqstackimg1.jpg",
+            "alt": "QQSTACKIMG1ALT",
+            "caption": "QQSTACKIMG1CAP",
+            "print_include": true
+          }
+        },
+        {
+          "title": "QQSTACKT2",
+          "body": "QQSTACKB2"
+        }
+      ],
+      "_not_read": {
+        "QQSTACKTAG1": "Known gap: card tags are not read in print, PDF or audio yet (follow-up fix)."
+      }
+    }
+  ]
+}

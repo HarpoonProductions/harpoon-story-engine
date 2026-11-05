@@ -198,10 +198,8 @@ console.log('\n── Print, PDF and audio coverage ─────────�
 {
   const schema = JSON.parse(fs.readFileSync(path.join(__dirname, 'schema/content.schema.json'), 'utf8'));
   const schemaLayouts = schema.definitions.section.properties.layout.enum;
-  const indexSrc = fs.readFileSync(path.join(__dirname, 'renderer/index.js'), 'utf8');
-  const switchSrc = indexSrc.slice(indexSrc.indexOf('function renderSectionHtml'));
-  const rendererLayouts = [...switchSrc.slice(0, switchSrc.indexOf('default:')).matchAll(/case\s+["']([^"']+)["']/g)]
-    .map(m => m[1]);
+  const { LAYOUTS } = require('./renderer/layouts/registry');
+  const rendererLayouts = Object.keys(LAYOUTS);
   for (const layout of new Set([...schemaLayouts, ...rendererLayouts])) {
     assert(`Layout "${layout}" has a reader in renderer/readable.js`, hasReader(layout));
   }
@@ -434,6 +432,122 @@ console.log('\nFrozen engine versions');
     } finally {
       fs.rmSync(tmpBase, { recursive: true, force: true });
     }
+  }
+}
+
+// ── Layout registry (Section Contract) ───────────────────────────
+// Every layout is one entry in renderer/layouts/registry.js, and every
+// part of the engine that has to know about it must. Each failure here
+// names the file a new layout still needs. See docs/section-contract.md.
+console.log('\nLayout registry');
+{
+  const { LAYOUTS, extraLayoutCss } = require('./renderer/layouts/registry');
+  const schema = JSON.parse(fs.readFileSync(path.join(__dirname, 'schema/content.schema.json'), 'utf8'));
+  const schemaLayouts = schema.definitions.section.properties.layout.enum;
+  const runtimeSrc = fs.readFileSync(path.join(__dirname, 'js/runtime.js'), 'utf8');
+  const editorSrc = fs.readFileSync(path.join(__dirname, 'editor/editor.html'), 'utf8');
+  const headSrc = fs.readFileSync(path.join(__dirname, 'renderer/shell/head.js'), 'utf8');
+  const extra = new Set(extraLayoutCss());
+
+  for (const layout of schemaLayouts) {
+    assert(`Schema layout "${layout}" is in the registry`, Object.prototype.hasOwnProperty.call(LAYOUTS, layout));
+  }
+  for (const [name, entry] of Object.entries(LAYOUTS)) {
+    assert(`${name}: has a render function`, typeof entry.render === 'function');
+    if (entry.css) {
+      assert(`${name}: stylesheet ${entry.css} exists`, fs.existsSync(path.join(__dirname, entry.css)));
+      assert(`${name}: stylesheet is linked from the page`,
+        extra.has(entry.css) || headSrc.includes(`css('${entry.css}')`));
+    }
+    if (entry.runtime) {
+      for (const fn of [entry.runtime.setup, entry.runtime.reducedMotion].filter(Boolean)) {
+        assert(`${name}: js/runtime.js defines ${fn}()`, new RegExp(`function ${fn}\\s*\\(`).test(runtimeSrc));
+        assert(`${name}: js/runtime.js calls ${fn}()`, (runtimeSrc.match(new RegExp(`\\b${fn}\\(\\)`, 'g')) || []).length >= 2);
+      }
+    }
+    assert(`${name}: the editor offers it`, editorSrc.includes(`<option value="${name}"`));
+  }
+
+  // Rendering a section of each layout keeps everything inside one
+  // <section data-layout> root (rule R1).
+  for (const name of Object.keys(LAYOUTS)) {
+    if (name === 'cover') continue;
+    const html = require('./renderer/index').renderSection({ id: `reg-${name}`, layout: name, title: 'T' }, {}).trim();
+    const opens = (html.match(/<section\b/g) || []).length;
+    const root = html.replace(/^<!--[\s\S]*?-->\s*/, '');
+    assert(`${name}: renders one <section data-layout="${name}"> root`,
+      root.startsWith('<section') && root.includes(`data-layout="${name}"`) && root.trimEnd().endsWith('</section>') && opens === 1);
+  }
+}
+
+// ── Every word on screen is read (Section Contract R10) ──────────
+// Each layout has a sample story in test/fixtures/<layout>.json whose
+// words are unique markers (QQ…). Every marker the page shows as text
+// must also come out of the layout's reader, which is what the printable
+// page, the PDF and the audio all use. A word that deliberately isn't
+// read is listed in the section's "_not_read" with the reason.
+// The reverse holds too: a reader may not read text the page doesn't
+// show (leftovers from switching layouts). The section title and ticked
+// print images are exempt: every output heads a section with its title,
+// and a printed image keeps its caption.
+console.log('\nEvery word on screen is read');
+{
+  const { LAYOUTS } = require('./renderer/layouts/registry');
+  const { renderSection } = require('./renderer/index');
+  const { readSection } = require('./renderer/readable');
+  const MARK = /QQ[A-Z0-9]+/g;
+  for (const name of Object.keys(LAYOUTS)) {
+    if (name === 'cover') continue; // read by each output's own cover code
+    const file = path.join(__dirname, 'test/fixtures', `${name}.json`);
+    assert(`${name}: has a sample in test/fixtures/${name}.json`, fs.existsSync(file));
+    if (!fs.existsSync(file)) continue;
+    const story = JSON.parse(fs.readFileSync(file, 'utf8'));
+    assert(`${name}: sample passes the schema`, validate(story).length === 0);
+    const section = story.sections.find(s => s.layout === name);
+    const notRead = section._not_read || {};
+    const html = renderSection(JSON.parse(JSON.stringify(section)), story.meta);
+    const shown = new Set(html.replace(/<(script|style)\b[\s\S]*?<\/\1>/g, ' ').replace(/<[^>]*>/g, ' ').match(MARK) || []);
+    const read = readSection(JSON.parse(JSON.stringify(section)));
+    const readText = JSON.stringify([read.intro, read.items.filter(i => i.kind !== 'image')]);
+    const readAll = JSON.stringify(read);
+
+    const missing = [...shown].filter(m => !readAll.includes(m) && !notRead[m]);
+    assert(`${name}: print, PDF and audio read every word it shows` + (missing.length ? ` (missing ${missing.join(', ')})` : ''), missing.length === 0);
+    const stale = [...new Set(readText.match(MARK) || [])].filter(m => !html.includes(m));
+    assert(`${name}: reads nothing it doesn't show` + (stale.length ? ` (${stale.join(', ')})` : ''), stale.length === 0);
+    for (const [m, why] of Object.entries(notRead)) {
+      if (/^Known gap/i.test(why)) console.log(`  – ${name}: ${m} not read. ${why}`);
+    }
+  }
+}
+
+// ── Existing stories unchanged (Section Contract R14) ────────────
+// Every story in projects/, examples/ and test/fixtures/ must render
+// exactly as recorded in test/snapshots.json: page, printable page, PDF
+// and audio. A change that is meant to alter stories refreshes the record
+// with `npm run snapshots:update`, and its PR says which stories change.
+console.log('\nExisting stories unchanged');
+{
+  const snapshots = require('./scripts/story-snapshots');
+  const stories = snapshots.repoStories();
+  const expected = snapshots.readSnapshots();
+  const actual = await snapshots.fingerprints(stories, snapshots.engineAt(null));
+  const all = snapshots.compare(expected, actual);
+  // A story whose content.json was edited is an editorial change, not an
+  // engine one: it can't be compared, so it doesn't fail a content push.
+  for (const c of all.filter(c => c.change === 'content edited')) {
+    console.log(`  – ${c.id}: content edited, not compared (refresh with npm run snapshots:update)`);
+  }
+  const changes = all.filter(c => c.change !== 'content edited');
+  for (const { id } of stories) {
+    const mine = changes.filter(c => c.id === id);
+    assert(`${id} renders as before` + (mine.length ? ` (${mine.map(c => `${c.file} ${c.change}`).join(', ')})` : ''), mine.length === 0);
+  }
+  const gone = changes.filter(c => !stories.some(s => s.id === c.id));
+  assert('No recorded story is missing' + (gone.length ? ` (${[...new Set(gone.map(c => c.id))].join(', ')})` : ''), gone.length === 0);
+  if (changes.length) {
+    console.log('  See what changed:   npm run snapshots:diff');
+    console.log('  If it is intended:  npm run snapshots:update, and say so in the PR');
   }
 }
 

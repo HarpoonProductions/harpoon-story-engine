@@ -1,0 +1,37 @@
+{
+  "meta": {
+    "title": "Contract fixture: frame-scrubber",
+    "project_id": "fixture-frame-scrubber",
+    "token_set": "default",
+    "last_saved": "2026-11-05T00:00:00Z"
+  },
+  "cover": {
+    "headline": "Fixture frame-scrubber"
+  },
+  "sections": [
+    {
+      "id": "fx-frame-scrubber",
+      "layout": "frame-scrubber",
+      "title": "QQFRAMESTITLE",
+      "scrubber": {
+        "base_url": "https://example.com/frames/",
+        "frame_count": 10,
+        "frame_prefix": "f",
+        "frame_digits": 3
+      },
+      "scrubber_panels": [
+        {
+          "frame_start": 1,
+          "frame_end": 5,
+          "text": "QQSCRT1",
+          "attribution": "QQSCRA1"
+        },
+        {
+          "frame_start": 6,
+          "frame_end": 10,
+          "text": "QQSCRT2"
+        }
+      ]
+    }
+  ]
+}

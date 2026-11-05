@@ -1,0 +1,38 @@
+{
+  "meta": {
+    "title": "Contract fixture: text",
+    "project_id": "fixture-text",
+    "token_set": "default",
+    "last_saved": "2026-11-05T00:00:00Z"
+  },
+  "cover": {
+    "headline": "Fixture text"
+  },
+  "sections": [
+    {
+      "id": "fx-text",
+      "layout": "text",
+      "title": "QQTEXTTITLE",
+      "intro": "QQTXTINTRO words.",
+      "blocks": [
+        {
+          "tag": "h2",
+          "text": "QQTXTH2"
+        },
+        {
+          "tag": "p",
+          "text": "QQTXTPARA body"
+        },
+        {
+          "tag": "blockquote",
+          "text": "QQTXTQUOTE"
+        },
+        {
+          "tag": "p",
+          "style": "lead",
+          "text": "QQTXTLEAD"
+        }
+      ]
+    }
+  ]
+}

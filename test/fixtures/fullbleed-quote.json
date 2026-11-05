@@ -1,0 +1,28 @@
+{
+  "meta": {
+    "title": "Contract fixture: fullbleed-quote",
+    "project_id": "fixture-fullbleed-quote",
+    "token_set": "default",
+    "last_saved": "2026-11-05T00:00:00Z"
+  },
+  "cover": {
+    "headline": "Fixture fullbleed-quote"
+  },
+  "sections": [
+    {
+      "id": "fx-fullbleed-quote",
+      "layout": "fullbleed-quote",
+      "title": "QQFULLBLTITLE",
+      "hero_image": {
+        "url": "https://example.com/qqfbqhero.jpg",
+        "alt": "QQFBQHEROALT",
+        "caption": "QQFBQHEROCAP",
+        "print_include": true
+      },
+      "pull_quote": {
+        "text": "QQFBQTEXT quote",
+        "attribution": "QQFBQATTR"
+      }
+    }
+  ]
+}

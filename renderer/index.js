@@ -8,23 +8,7 @@ const { renderNav } = require("./shell/nav");
 const { renderCover } = require("./render-cover");
 
 // Layout renderers — expand as each is built
-const { renderDefault } = require("./layouts/default");
-const { renderText }    = require("./layouts/text");
-const { renderStickySteps } = require("./layouts/sticky-steps");
-const { renderFullbleedQuote } = require("./layouts/fullbleed-quote");
-const { renderRevealCrossfade } = require("./layouts/reveal-crossfade");
-const { renderTimeline }        = require("./layouts/timeline");
-const { renderStackableCards } = require("./layouts/stackable-cards");
-const { renderParallax } = require("./layouts/parallax");
-const { renderCascadingSlides } = require("./layouts/cascading-slides");
-const { renderCustomHtml }     = require("./layouts/custom-html");
-const { renderScrollCarousel }  = require("./layouts/scroll-carousel");
-const { renderPanoramicScroll } = require("./layouts/panoramic-scroll");
-const { renderCinemaReveal }    = require("./layouts/cinema-reveal");
-const { renderFrameScrubber }   = require("./layouts/frame-scrubber");
-const { renderSplitReveal }     = require("./layouts/split-reveal");
-const { renderTwoColumn }       = require("./layouts/two-column");
-const { renderCoverLayout }     = require("./layouts/cover");
+const { getLayout } = require("./layouts/registry");
 const { renderPrint }           = require("./print-renderer");
 const { renderPdf }             = require("./pdf-renderer");
 const { renderGraduationGuide } = require("./kinds/graduation-guide");
@@ -213,7 +197,8 @@ function buildPage(meta, config, cover, sections, basePath, registryLogoUrl, gro
   const coverData    = coverSection || cover || {};
 
   const heroImageUrl = coverData.hero_image?.url || coverData.hero_video?.poster || null;
-  let head = renderHead(meta, config, null, basePath, false, heroImageUrl, canonicalUrl);
+  const usedLayouts = new Set(sections.map((s) => s.layout || "default"));
+  let head = renderHead(meta, config, null, basePath, false, heroImageUrl, canonicalUrl, usedLayouts);
 
   // A project with meta.group_id gets the graduation-guide kind's own
   // .gg-nav bar instead of the plain narrative nav, so it looks identical
@@ -367,45 +352,12 @@ function cssIdent(id) {
   return String(id).replace(/[^a-zA-Z0-9_-]/g, (c) => "\\" + c);
 }
 
+// Each layout's renderer comes from renderer/layouts/registry.js.
 function renderSectionHtml(section, layout) {
-  switch (layout) {
-    case "scroll-carousel":
-      return renderScrollCarousel(section);
-    case "panoramic-scroll":
-      return renderPanoramicScroll(section);
-    case "cinema-reveal":
-      return renderCinemaReveal(section);
-    case "frame-scrubber":
-      return renderFrameScrubber(section);
-    case "split-reveal":
-      return renderSplitReveal(section);
-    case "two-column":
-      return renderTwoColumn(section);
-    case "cover":
-      return renderCoverLayout(section);
-    case "custom-html":
-      return renderCustomHtml(section);
-    case "text":
-      return renderText(section);
-    case "default":
-      return renderDefault(section);
-    case "sticky-steps":
-      return renderStickySteps(section);
-    case "fullbleed-quote":
-      return renderFullbleedQuote(section);
-    case "reveal-crossfade":
-      return renderRevealCrossfade(section);
-    case "timeline":
-      return renderTimeline(section);
-    case "stackable-cards":
-      return renderStackableCards(section);
-    case "parallax":
-      return renderParallax(section);
-    case "cascading-slides":
-      return renderCascadingSlides(section);
-    default:
-      // Graceful stub for layouts not yet implemented
-      return `<!-- Section: ${section.id} | layout: ${layout} — renderer pending -->
+  const entry = getLayout(layout);
+  if (entry) return entry.render(section);
+  // Graceful stub for layouts not yet implemented
+  return `<!-- Section: ${section.id} | layout: ${layout} — renderer pending -->
 <section class="hse-section hse-section--stub" id="${section.id}" data-layout="${layout}">
   <div class="hse-inner">
     <p class="hse-eyebrow">${esc(section.nav_label || section.title || section.id)}</p>
@@ -413,7 +365,6 @@ function renderSectionHtml(section, layout) {
     <p class="hse-label" style="margin-top:1rem;opacity:0.4;">Layout renderer: ${layout} — coming soon</p>
   </div>
 </section>`;
-  }
 }
 
 // ── Body JavaScript ───────────────────────────────────────────────

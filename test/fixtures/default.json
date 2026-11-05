@@ -1,0 +1,64 @@
+{
+  "meta": {
+    "title": "Contract fixture: default",
+    "project_id": "fixture-default",
+    "token_set": "default",
+    "last_saved": "2026-11-05T00:00:00Z"
+  },
+  "cover": {
+    "headline": "Fixture default"
+  },
+  "sections": [
+    {
+      "id": "fx-default",
+      "layout": "default",
+      "title": "QQDEFAULTITLE",
+      "intro": "QQDEFINTRO opening words.",
+      "hero_image": {
+        "url": "https://example.com/qqdefhero.jpg",
+        "alt": "QQDEFHEROALT",
+        "caption": "QQDEFHEROCAP",
+        "print_include": true
+      },
+      "pull_quote": {
+        "text": "QQDEFPQ quote",
+        "attribution": "QQDEFPQATTR"
+      },
+      "stat_block": [
+        {
+          "value": "42",
+          "label": "QQDEFSTATLABEL"
+        }
+      ],
+      "toggle_panels": [
+        {
+          "label": "QQDEFTOGLABEL",
+          "body": "QQDEFTOGBODY"
+        }
+      ],
+      "accordion_items": [
+        {
+          "title": "QQDEFACCTITLE",
+          "body": "QQDEFACCBODY"
+        }
+      ],
+      "cards": [
+        {
+          "title": "QQDEFCARDTITLE",
+          "body": "QQDEFCARDBODY",
+          "tag": "QQDEFCARDTAG"
+        }
+      ],
+      "contributors": [
+        {
+          "name": "QQDEFCONNAME",
+          "title": "QQDEFCONTITLE",
+          "bio": "QQDEFCONBIO"
+        }
+      ],
+      "_not_read": {
+        "QQDEFCARDTAG": "Known gap: card tags are not read in print, PDF or audio yet (follow-up fix)."
+      }
+    }
+  ]
+}

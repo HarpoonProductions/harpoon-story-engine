@@ -1,0 +1,39 @@
+{
+  "meta": {
+    "title": "Contract fixture: cascading-slides",
+    "project_id": "fixture-cascading-slides",
+    "token_set": "default",
+    "last_saved": "2026-11-05T00:00:00Z"
+  },
+  "cover": {
+    "headline": "Fixture cascading-slides"
+  },
+  "sections": [
+    {
+      "id": "fx-cascading-slides",
+      "layout": "cascading-slides",
+      "title": "QQCASCADTITLE",
+      "intro": "QQCASCINTRO words.",
+      "cards": [
+        {
+          "title": "QQCASCT1",
+          "body": "QQCASCB1",
+          "tag": "QQCASCTAG1",
+          "image": {
+            "url": "https://example.com/qqcascimg1.jpg",
+            "alt": "QQCASCIMG1ALT",
+            "caption": "QQCASCIMG1CAP",
+            "print_include": true
+          }
+        },
+        {
+          "title": "QQCASCT2",
+          "body": "QQCASCB2"
+        }
+      ],
+      "_not_read": {
+        "QQCASCTAG1": "Known gap: card tags are not read in print, PDF or audio yet (follow-up fix)."
+      }
+    }
+  ]
+}

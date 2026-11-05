@@ -1,0 +1,24 @@
+{
+  "meta": {
+    "title": "Contract fixture: cinema-reveal",
+    "project_id": "fixture-cinema-reveal",
+    "token_set": "default",
+    "last_saved": "2026-11-05T00:00:00Z"
+  },
+  "cover": {
+    "headline": "Fixture cinema-reveal"
+  },
+  "sections": [
+    {
+      "id": "fx-cinema-reveal",
+      "layout": "cinema-reveal",
+      "title": "QQCINEMATITLE",
+      "intro": "QQCININTRO words.",
+      "cinema": {
+        "url": "https://example.com/film.mp4",
+        "caption": "QQCINCAP",
+        "poster": "https://example.com/poster.jpg"
+      }
+    }
+  ]
+}
