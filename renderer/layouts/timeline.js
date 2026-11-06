@@ -54,8 +54,9 @@ const { escHtml } = require('../shell/head');
  *                              or a video: { type: 'video', url, poster, alt, caption } (a .mp4/.webm/.mov
  *                              URL with no type also counts as video).
  *                              Each adds a scroll stop after the text has moved on.
- *     entry.images_transition {string} 'fade' | 'push' (default: 'fade'). Push slides the
- *                              next image in from the direction of travel.
+ *     entry.images_transition {string} 'fade' | 'push' | 'push-up' | 'push-down' | 'push-left' |
+ *                              'push-right' (default: 'fade'). Push slides the next image in from
+ *                              the direction of travel; push-<dir> always moves it that way.
  *     entry.kind     {string}  'interstitial' makes a chapter card (heading, body, background)
  *                              with no date or marker
  *     entry.line     {string}  interstitial only: 'hide' gaps the line through it
@@ -239,7 +240,11 @@ function renderTimeline(section) {
 
     // Several: the layer holds a slide per image; js/runtime.js moves
     // through them while the entry's text stays in view
-    const transition = entry.images_transition === 'push' ? 'push' : 'fade';
+    // push follows the way the reader travels; push-up/down/left/right
+    // always go that way (the new image moves in that direction)
+    const fixed = (String(entry.images_transition || '').match(/^push-(up|down|left|right)$/) || [])[1];
+    const transition = entry.images_transition === 'push' || fixed ? 'push' : 'fade';
+    const fixedAttr = fixed ? ` data-push="${fixed}" data-push-fixed="${fixed}"` : '';
     const slides = [backgroundHtml(entry, 'hse-tl__slide is-current', isFirst)].concat(extras.map(im => {
       if (isVideo(im)) {
         // Played by js/runtime.js while its slide is current
@@ -250,7 +255,7 @@ function renderTimeline(section) {
       const focal = im.focal ? `background-position:${escHtml(im.focal)};` : '';
       return `<div class="hse-tl__slide" style="background-image:url('${escHtml(im.url)}');${focal}" role="img" aria-label="${escHtml(im.alt || '')}" data-type="image">${slideCaption(im)}</div>`;
     }));
-    return `<div class="${baseClass}" data-index="${i}" data-type="gallery" data-transition="${transition}" data-slides="${slides.length}">
+    return `<div class="${baseClass}" data-index="${i}" data-type="gallery" data-transition="${transition}"${fixedAttr} data-slides="${slides.length}">
       ${slides.join('\n      ')}
     </div>`;
   }).join('\n');

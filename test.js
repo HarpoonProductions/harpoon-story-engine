@@ -166,6 +166,9 @@ console.log('\n── Timeline extra images and chapter cards ──────
   assertContains('Phones get the extra images under the text', g, 'class="hse-tl__more"');
   const fade = renderTimeline({ id: 'tl', timeline_entries: [{ heading: 'A', images: [{ url: 'b.jpg' }], images_transition: 'wipe' }] });
   assertContains('Unknown transition fades', fade, 'data-transition="fade"');
+  const pd = renderTimeline({ id: 'tl', timeline_entries: [{ heading: 'A', images: [{ url: 'b.jpg' }], images_transition: 'push-down' }] });
+  assertContains('Fixed push direction', pd, 'data-transition="push" data-push="down" data-push-fixed="down"');
+  assert('Plain push follows the journey', !g.includes('data-push-fixed'));
 
   const c = renderTimeline({ id: 'tl', timeline_direction: 'stepped', timeline_entries: [{ date: '1979', heading: 'A' },
     { kind: 'interstitial', date: 'ignored', heading: 'The 1980s', body: 'A new decade', line: 'hide', image: { url: 'd.jpg' } }, { date: '1981', heading: 'B' }] });

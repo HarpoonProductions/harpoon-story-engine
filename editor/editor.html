@@ -4774,7 +4774,7 @@ function initTimelineEditor(sectionIndex) {
                 <span style="${panelSummary};cursor:default">Change by</span>
                 <select class="form-select tl-images-transition" aria-label="How the images change">
                   <option value="fade"${entry.images_transition !== 'push' ? ' selected' : ''}>Fade</option>
-                  <option value="push"${entry.images_transition === 'push' ? ' selected' : ''}>Push</option>
+                  ${[['push', 'Push (follows the journey)'], ['push-up', 'Push up'], ['push-down', 'Push down'], ['push-left', 'Push left'], ['push-right', 'Push right']].map(([v, l]) => `<option value="${v}"${entry.images_transition === v ? ' selected' : ''}>${l}</option>`).join('')}
                 </select>
               </label>
               ${extras.map((im, k) => { const vid = im.type === 'video' || (!im.type && /\.(mp4|webm|mov|m4v)(?:[?#]|$)/i.test(im.url || '')); return `<div class="tl-extra" data-k="${k}" style="display:flex;flex-direction:column;gap:0.3rem;padding:0.4rem;border:1px solid var(--rule, rgba(0,0,0,0.12));border-radius:4px">
@@ -4840,7 +4840,7 @@ function initTimelineEditor(sectionIndex) {
         scheduleAutosave();
       });
       item.querySelector('.tl-images-transition').addEventListener('change', e => {
-        if (e.target.value === 'push') section.timeline_entries[i].images_transition = 'push';
+        if (e.target.value !== 'fade') section.timeline_entries[i].images_transition = e.target.value;
         else delete section.timeline_entries[i].images_transition;
         scheduleAutosave();
       });
