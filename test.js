@@ -147,6 +147,12 @@ console.log('\n── Timeline extra images and chapter cards ──────
   assertContains('First slide shows first', g, 'class="hse-tl__slide is-current"');
   assertContains('Slide caption', g, '<span class="hse-tl__slide-caption">Second</span>');
   assertContains('Slide focal point', g, 'background-position:20% 30%');
+  const cap1 = renderTimeline({ id: 'tl', timeline_entries: [{ heading: 'A', image: { url: 'a.jpg', caption: 'First <b>' } }] });
+  assertContains('First background caption', cap1, 'data-type="image"><span class="hse-tl__slide-caption">First &lt;b&gt;</span></div>');
+  const cap2 = renderTimeline({ id: 'tl', timeline_entries: [{ heading: 'A', image: { url: 'a.jpg', caption: 'One' }, images: [{ url: 'b.jpg' }] }] });
+  assertContains('First background caption in a gallery', cap2, 'class="hse-tl__slide is-current"');
+  assert('Gallery first slide has its caption', /is-current"[^>]*>[^<]*<span class="hse-tl__slide-caption">One<\/span>/.test(cap2.replace(/\s+/g, ' ')));
+  assert('No caption, no caption markup', !single.includes('slide-caption'));
   assertContains('Entry knows its stops', g, 'data-slides="3" style="--tl-slides:3">');
   assertContains('Phones get the extra images under the text', g, 'class="hse-tl__more"');
   const fade = renderTimeline({ id: 'tl', timeline_entries: [{ heading: 'A', images: [{ url: 'b.jpg' }], images_transition: 'wipe' }] });

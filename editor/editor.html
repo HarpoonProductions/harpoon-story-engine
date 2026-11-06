@@ -4764,6 +4764,7 @@ function initTimelineEditor(sectionIndex) {
           <textarea class="form-textarea tl-body" data-i="${i}" placeholder="Body text…" rows="3">${entry.body || ''}</textarea>
           <input class="form-input tl-img-url" id="tl-img-url-${sectionIndex}-${i}" data-image-field data-i="${i}" ${entry.image && entry.image.print_include ? 'data-print-include="true"' : ''} ${entry.image && entry.image.focal ? `data-existing-focal="${entry.image.focal}"` : ''} placeholder="Image URL https://…" value="${(entry.image && entry.image.url) || ''}">
           <input class="form-input tl-img-alt" data-i="${i}" placeholder="Image alt text" value="${(entry.image && entry.image.alt) || ''}">
+          <input class="form-input tl-img-caption" data-i="${i}" placeholder="Image caption (optional)" value="${escAttr(entry.image && entry.image.caption)}">
           <input class="form-input tl-video-url" data-i="${i}" placeholder="Video URL .mp4 (overrides image on desktop)" value="${(entry.video && entry.video.url) || ''}">
           <input class="form-input tl-video-poster" data-i="${i}" placeholder="Video poster image URL (optional)" value="${(entry.video && entry.video.poster) || ''}">
           <details class="tl-panel" data-panel="more"${openPanels.has(`${i}-more`) ? ' open' : ''}>
@@ -4911,6 +4912,11 @@ function initTimelineEditor(sectionIndex) {
       item.querySelector('.tl-img-alt').addEventListener('input', e => {
         if (!section.timeline_entries[i].image) section.timeline_entries[i].image = {};
         section.timeline_entries[i].image.alt = e.target.value;
+        scheduleAutosave();
+      });
+      item.querySelector('.tl-img-caption').addEventListener('input', e => {
+        if (!section.timeline_entries[i].image) section.timeline_entries[i].image = {};
+        section.timeline_entries[i].image.caption = e.target.value;
         scheduleAutosave();
       });
       item.querySelector('.tl-video-url').addEventListener('input', e => {
