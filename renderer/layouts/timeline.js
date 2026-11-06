@@ -39,7 +39,7 @@ const { escHtml } = require('../shell/head');
  *     entry.date     {string}  e.g. "1987" or "March 2020"
  *     entry.heading  {string}
  *     entry.body     {string}
- *     entry.image    {object}  { url, focal, alt }
+ *     entry.image    {object}  { url, focal, alt, caption } (caption shows over it, bottom right)
  *     entry.video    {object}  { url, poster }   — takes priority over image if both set
  *     entry.media    {object}  inline media shown with the text:
  *                              { type: 'image'|'video'|'embed', url, alt, caption, poster,
@@ -155,9 +155,14 @@ function backgroundHtml(entry, cls, autoplay) {
         style="background-image:url('${escHtml(entry.image.url)}');${focal}"
         role="img"
         aria-label="${escHtml(entry.image.alt || '')}"
-        data-type="image"></div>`;
+        data-type="image">${slideCaption(entry.image)}</div>`;
   }
   return `<div class="${cls}" data-type="empty"></div>`;
+}
+
+// A background image's caption, shown over it (bottom right)
+function slideCaption(im) {
+  return im && im.caption ? `<span class="hse-tl__slide-caption">${escHtml(im.caption)}</span>` : '';
 }
 
 // The extra background images of an entry, with a usable URL
@@ -215,7 +220,7 @@ function renderTimeline(section) {
         role="img"
         aria-label="${escHtml(entry.image.alt || '')}"
         data-index="${i}"
-        data-type="image"></div>`;
+        data-type="image">${slideCaption(entry.image)}</div>`;
       }
       return `<div class="${baseClass}" data-index="${i}" data-type="empty"></div>`;
     }
@@ -224,9 +229,8 @@ function renderTimeline(section) {
     // through them while the entry's text stays in view
     const transition = entry.images_transition === 'push' ? 'push' : 'fade';
     const slides = [backgroundHtml(entry, 'hse-tl__slide is-current', isFirst)].concat(extras.map(im => {
-      const caption = im.caption ? `<span class="hse-tl__slide-caption">${escHtml(im.caption)}</span>` : '';
       const focal = im.focal ? `background-position:${escHtml(im.focal)};` : '';
-      return `<div class="hse-tl__slide" style="background-image:url('${escHtml(im.url)}');${focal}" role="img" aria-label="${escHtml(im.alt || '')}" data-type="image">${caption}</div>`;
+      return `<div class="hse-tl__slide" style="background-image:url('${escHtml(im.url)}');${focal}" role="img" aria-label="${escHtml(im.alt || '')}" data-type="image">${slideCaption(im)}</div>`;
     }));
     return `<div class="${baseClass}" data-index="${i}" data-type="gallery" data-transition="${transition}" data-slides="${slides.length}">
       ${slides.join('\n      ')}
