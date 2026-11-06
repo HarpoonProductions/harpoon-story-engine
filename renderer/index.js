@@ -3,7 +3,7 @@
 const fs = require("fs");
 const path = require("path");
 
-const { renderHead, safeStyleText } = require("./shell/head");
+const { renderHead, safeStyleText, storyJsHtml } = require("./shell/head");
 const { renderNav } = require("./shell/nav");
 const { renderCover } = require("./render-cover");
 
@@ -282,7 +282,7 @@ ${sectionsHtml}
   color: var(--hse-warm-2);
 }
 </style>
-
+${storyJsHtml(meta.custom_js)}
 </body>
 </html>`;
 }

@@ -248,6 +248,40 @@ function storyCssHtml(css) {
 }
 
 /**
+ * Story-level custom JavaScript (meta.custom_js). Written at the very end of
+ * <body>, and run on DOMContentLoaded, which fires after every deferred
+ * engine script (GSAP, ScrollTrigger, js/runtime.js), so story code can use
+ * them and find every section in the DOM. Wrapped in a function so its
+ * variables stay out of the global scope (set window.x to share one), and in
+ * try/catch so a runtime error is logged instead of thrown. Like story CSS it
+ * adds nothing when empty, so stories without it render exactly as before.
+ * Only the screen story gets it: print, PDF and audio are built from
+ * readable.js and never load it.
+ */
+function storyJsHtml(code) {
+  if (!code || !String(code).trim()) return '';
+  return `<!-- Story custom JavaScript -->
+<script data-story-js>
+document.addEventListener('DOMContentLoaded', function () {
+  try {
+${safeScriptText(code)}
+  } catch (err) {
+    console.error('[Story custom JavaScript]', err);
+  }
+});
+</script>
+`;
+}
+
+/**
+ * Keep user JS from closing its own <script> tag early (or opening an HTML
+ * comment, which changes how the parser finds that closing tag).
+ */
+function safeScriptText(code) {
+  return String(code).replace(/<\/(script)/gi, '<\\/$1').replace(/<!--/g, '<\\!--');
+}
+
+/**
  * Keep user CSS from closing its own <style> tag early.
  */
 function safeStyleText(css) {
@@ -282,4 +316,4 @@ function parseVideoUrl(url) {
   return { type: 'iframe', embedUrl: url };
 }
 
-module.exports = { safeStyleText, storyCssHtml, renderHead, escHtml, resolveTokenStyle, renderPlausibleScript, parseVideoUrl };
+module.exports = { safeStyleText, storyCssHtml, storyJsHtml, renderHead, escHtml, resolveTokenStyle, renderPlausibleScript, parseVideoUrl };
