@@ -947,7 +947,8 @@
                     "poster": { "type": "string", "description": "Video only: still shown before the video loads." },
                     "focal": { "type": "string" },
                     "alt": { "type": "string" },
-                    "caption": { "type": "string" }
+                    "caption": { "type": "string" },
+                    "transition": { "type": "string", "enum": ["fade", "push", "push-up", "push-down", "push-left", "push-right"], "description": "How this background comes in, overriding the entry's images_transition. The background before it leaves to match." }
                   }
                 }
               },

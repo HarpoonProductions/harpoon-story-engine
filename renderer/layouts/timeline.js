@@ -57,6 +57,7 @@ const { escHtml } = require('../shell/head');
  *     entry.images_transition {string} 'fade' | 'push' | 'push-up' | 'push-down' | 'push-left' |
  *                              'push-right' (default: 'fade'). Push slides the next image in from
  *                              the direction of travel; push-<dir> always moves it that way.
+ *                              An image's own `transition` (same values) overrides it for that image.
  *     entry.kind     {string}  'interstitial' makes a chapter card (heading, body, background)
  *                              with no date or marker
  *     entry.line     {string}  interstitial only: 'hide' gaps the line through it
@@ -178,6 +179,13 @@ function videoType(url) {
   return ext && ext.toLowerCase() === 'webm' ? 'video/webm' : 'video/mp4';
 }
 
+// How an extra background comes in: fade, or push (dir null follows
+// the reader's travel; up/down/left/right always move that way)
+function slideTransition(t) {
+  const m = String(t || '').match(/^push(?:-(up|down|left|right))?$/);
+  return m ? { kind: 'push', dir: m[1] || null } : { kind: 'fade', dir: null };
+}
+
 // The extra background images of an entry, with a usable URL
 function extraImages(entry) {
   return Array.isArray(entry.images) ? entry.images.filter(im => im && typeof im.url === 'string' && im.url.trim()) : [];
@@ -240,11 +248,11 @@ function renderTimeline(section) {
 
     // Several: the layer holds a slide per image; js/runtime.js moves
     // through them while the entry's text stays in view
-    // push follows the way the reader travels; push-up/down/left/right
-    // always go that way (the new image moves in that direction)
-    const fixed = (String(entry.images_transition || '').match(/^push-(up|down|left|right)$/) || [])[1];
-    const transition = entry.images_transition === 'push' || fixed ? 'push' : 'fade';
-    const fixedAttr = fixed ? ` data-push="${fixed}" data-push-fixed="${fixed}"` : '';
+    // Each extra image comes in its own way (im.transition, else the
+    // entry's images_transition): data-in/data-dir on the slide, and the
+    // slide before it leaves to match (data-out/data-out-dir).
+    const ins = extras.map(im => slideTransition(im.transition || entry.images_transition));
+    const transition = slideTransition(entry.images_transition).kind;
     const slides = [backgroundHtml(entry, 'hse-tl__slide is-current', isFirst)].concat(extras.map(im => {
       if (isVideo(im)) {
         // Played by js/runtime.js while its slide is current
@@ -254,8 +262,13 @@ function renderTimeline(section) {
       }
       const focal = im.focal ? `background-position:${escHtml(im.focal)};` : '';
       return `<div class="hse-tl__slide" style="background-image:url('${escHtml(im.url)}');${focal}" role="img" aria-label="${escHtml(im.alt || '')}" data-type="image">${slideCaption(im)}</div>`;
-    }));
-    return `<div class="${baseClass}" data-index="${i}" data-type="gallery" data-transition="${transition}"${fixedAttr} data-slides="${slides.length}">
+    })).map((html, k) => {
+      const a = ins[k - 1], b = ins[k];
+      const attrs = (a ? ` data-in="${a.kind}"${a.dir ? ` data-dir="${a.dir}"` : ''}` : '')
+        + (b ? ` data-out="${b.kind}"${b.dir ? ` data-out-dir="${b.dir}"` : ''}` : '');
+      return html.replace(/^<div class="[^"]*"/, m => m + attrs);
+    });
+    return `<div class="${baseClass}" data-index="${i}" data-type="gallery" data-transition="${transition}" data-slides="${slides.length}">
       ${slides.join('\n      ')}
     </div>`;
   }).join('\n');

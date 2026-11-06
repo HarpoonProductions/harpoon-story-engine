@@ -684,7 +684,7 @@
    layer; js/runtime.js marks the one showing (.is-current) and those
    already passed (.is-past) as the reader scrolls, and sets data-push on
    the layer to the direction of travel. Fade crossfades; push slides
-   the next image in. */
+   the next image in, the way the reader travels or a chosen way. */
 
 .hse-tl__layer[data-type="gallery"] { overflow: hidden; }
 
@@ -694,23 +694,32 @@
   background-size: cover;
   background-position: center;
   opacity: 0;
-  transition: opacity 0.9s ease;
+  /* Where a pushed slide waits (--tl-in) and where it goes (--tl-out) */
+  --tl-in: translateY(100%);
+  --tl-out: translateY(-100%);
+  transition: opacity 0.9s ease, transform 0.9s cubic-bezier(0.65, 0, 0.35, 1);
 }
-.hse-tl__slide.is-current { opacity: 1; }
+/* Each slide comes in its own way (data-in, from the editor); the slide
+   before it leaves to match (data-out). A fade lands on top of the one
+   before, which stays put underneath. */
+.hse-tl__slide.is-current,
+.hse-tl__slide.is-past { opacity: 1; transform: none; }
+.hse-tl__slide[data-in="push"]:not(.is-current):not(.is-past) { opacity: 1; transform: var(--tl-in); }
+.hse-tl__slide.is-past[data-out="push"] { transform: var(--tl-out); }
 
-.hse-tl__layer[data-transition="push"] .hse-tl__slide {
-  opacity: 1;
-  transform: translateY(100%);
-  transition: transform 0.9s cubic-bezier(0.65, 0, 0.35, 1);
-}
-.hse-tl__layer[data-transition="push"] .hse-tl__slide.is-past    { transform: translateY(-100%); }
-.hse-tl__layer[data-transition="push"][data-push="left"] .hse-tl__slide         { transform: translateX(100%); }
-.hse-tl__layer[data-transition="push"][data-push="left"] .hse-tl__slide.is-past { transform: translateX(-100%); }
-.hse-tl__layer[data-transition="push"][data-push="down"] .hse-tl__slide         { transform: translateY(-100%); }
-.hse-tl__layer[data-transition="push"][data-push="down"] .hse-tl__slide.is-past { transform: translateY(100%); }
-.hse-tl__layer[data-transition="push"][data-push="right"] .hse-tl__slide         { transform: translateX(-100%); }
-.hse-tl__layer[data-transition="push"][data-push="right"] .hse-tl__slide.is-past { transform: translateX(100%); }
-.hse-tl__layer[data-transition="push"] .hse-tl__slide.is-current { transform: none; }
+/* Push that follows the journey: the layer's data-push (js/runtime.js) */
+.hse-tl__layer[data-push="left"] .hse-tl__slide  { --tl-in: translateX(100%);  --tl-out: translateX(-100%); }
+.hse-tl__layer[data-push="down"] .hse-tl__slide  { --tl-in: translateY(-100%); --tl-out: translateY(100%); }
+.hse-tl__layer[data-push="right"] .hse-tl__slide { --tl-in: translateX(-100%); --tl-out: translateX(100%); }
+/* Push in a chosen direction */
+.hse-tl__layer .hse-tl__slide[data-dir="up"]    { --tl-in: translateY(100%); }
+.hse-tl__layer .hse-tl__slide[data-dir="down"]  { --tl-in: translateY(-100%); }
+.hse-tl__layer .hse-tl__slide[data-dir="left"]  { --tl-in: translateX(100%); }
+.hse-tl__layer .hse-tl__slide[data-dir="right"] { --tl-in: translateX(-100%); }
+.hse-tl__layer .hse-tl__slide[data-out-dir="up"]    { --tl-out: translateY(-100%); }
+.hse-tl__layer .hse-tl__slide[data-out-dir="down"]  { --tl-out: translateY(100%); }
+.hse-tl__layer .hse-tl__slide[data-out-dir="left"]  { --tl-out: translateX(-100%); }
+.hse-tl__layer .hse-tl__slide[data-out-dir="right"] { --tl-out: translateX(100%); }
 
 .hse-tl__slide-caption {
   position: absolute;
