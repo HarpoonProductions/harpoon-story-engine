@@ -622,9 +622,7 @@
       // Push: the next image comes in from the way the reader is travelling
       function setPush(dirs) {
         layers.forEach(function (layer, i) {
-          if (layer.dataset.transition !== "push") return;
-          // A direction chosen in the editor always wins
-          if (layer.dataset.pushFixed) { layer.setAttribute("data-push", layer.dataset.pushFixed); return; }
+          if (layer.dataset.type !== "gallery") return;
           if (dirs && dirs[i]) layer.setAttribute("data-push", dirs[i]);
           else layer.removeAttribute("data-push");
         });

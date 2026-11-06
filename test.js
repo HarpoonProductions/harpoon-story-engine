@@ -155,7 +155,7 @@ console.log('\n── Timeline extra images and chapter cards ──────
   assert('No caption, no caption markup', !single.includes('slide-caption'));
   const vid = renderTimeline({ id: 'tl', timeline_entries: [{ heading: 'A', image: { url: 'a.jpg' },
     images: [{ type: 'video', url: 'v.mp4', poster: 'p.jpg', alt: 'Crew at work', caption: 'Moving' }, { url: 'w.webm' }, { type: 'image', url: 'x.mp4' }] }] });
-  assertContains('Extra video slide', vid, '<div class="hse-tl__slide" data-type="video"><video class="hse-tl__video" muted loop playsinline preload="metadata" poster="p.jpg" aria-label="Crew at work" data-tl-video><source src="v.mp4" type="video/mp4"></video><span class="hse-tl__slide-caption">Moving</span></div>');
+  assertContains('Extra video slide', vid, '<div class="hse-tl__slide" data-in="fade" data-out="fade" data-type="video"><video class="hse-tl__video" muted loop playsinline preload="metadata" poster="p.jpg" aria-label="Crew at work" data-tl-video><source src="v.mp4" type="video/mp4"></video><span class="hse-tl__slide-caption">Moving</span></div>');
   assertContains('Video recognised from its URL', vid, '<source src="w.webm" type="video/webm">');
   assert('type image wins over the URL', vid.includes("background-image:url('x.mp4')"));
   assertContains('Phones get the video under the text', vid, 'class="hse-tl__thumb hse-tl__thumb-video"');
@@ -167,8 +167,17 @@ console.log('\n── Timeline extra images and chapter cards ──────
   const fade = renderTimeline({ id: 'tl', timeline_entries: [{ heading: 'A', images: [{ url: 'b.jpg' }], images_transition: 'wipe' }] });
   assertContains('Unknown transition fades', fade, 'data-transition="fade"');
   const pd = renderTimeline({ id: 'tl', timeline_entries: [{ heading: 'A', images: [{ url: 'b.jpg' }], images_transition: 'push-down' }] });
-  assertContains('Fixed push direction', pd, 'data-transition="push" data-push="down" data-push-fixed="down"');
-  assert('Plain push follows the journey', !g.includes('data-push-fixed'));
+  assertContains('Fixed push direction', pd, 'data-in="push" data-dir="down"');
+  assertContains('Slide before leaves the same way', pd, 'class="hse-tl__slide is-current" data-out="push" data-out-dir="down"');
+  assert('Plain push follows the journey', g.includes('data-in="push"') && !g.includes('data-dir='));
+  const mix = renderTimeline({ id: 'tl', timeline_entries: [{ heading: 'A', image: { url: 'a.jpg' }, images_transition: 'push-up',
+    images: [{ url: 'b.jpg' }, { url: 'c.jpg', transition: 'fade' }, { url: 'd.jpg', transition: 'push-left' }] }] });
+  const ins = [...mix.matchAll(/class="hse-tl__slide[^"]*"((?: data-[a-z-]+="[a-z]+")*)/g)].map(m => m[1].trim());
+  assert('Per-image transitions', JSON.stringify(ins) === JSON.stringify([
+    'data-out="push" data-out-dir="up"',
+    'data-in="push" data-dir="up" data-out="fade"',
+    'data-in="fade" data-out="push" data-out-dir="left"',
+    'data-in="push" data-dir="left"']), JSON.stringify(ins));
 
   const c = renderTimeline({ id: 'tl', timeline_direction: 'stepped', timeline_entries: [{ date: '1979', heading: 'A' },
     { kind: 'interstitial', date: 'ignored', heading: 'The 1980s', body: 'A new decade', line: 'hide', image: { url: 'd.jpg' } }, { date: '1981', heading: 'B' }] });
@@ -196,9 +205,11 @@ console.log('\n── Timeline media and backgrounds ─────────
 
   const img = one({ media: { type: 'image', url: 'https://example.com/a.jpg', alt: 'A', caption: 'Cap', position: 'left' } });
   assertContains('Inline image', img, '<img src="https://example.com/a.jpg" alt="A" loading="lazy">');
-  assertContains('Wrapped media floats left', img, 'hse-tl__media--left');
+  assertContains('Side media sits left of the text box', img, 'class="hse-tl__row hse-tl__row--media-left"><figure class="hse-tl__media hse-tl__media--left"');
   assertContains('Caption', img, '<figcaption>Cap</figcaption>');
-  assert('Wrapped media sits between heading and body', img.indexOf('hse-tl__heading') < img.indexOf('hse-tl__media') && img.indexOf('hse-tl__media') < img.indexOf('hse-tl__body'));
+  assert('Side media is outside the text box', img.indexOf('hse-tl__media') < img.indexOf('hse-tl__text') && !/hse-tl__text[^]*hse-tl__media/.test(img));
+  const right = one({ media: { type: 'image', url: 'x.jpg', position: 'right' } });
+  assert('Right media follows the text box', /<\/div><figure class="hse-tl__media hse-tl__media--right"/.test(right) && right.includes('hse-tl__row--media-right'));
   const below = one({ media: { type: 'image', url: 'x.jpg', position: 'below' } });
   assert('Media below comes after the body', below.indexOf('hse-tl__body') < below.indexOf('hse-tl__media'));
   const above = one({ media: { type: 'image', url: 'x.jpg', position: 'sideways' } });
