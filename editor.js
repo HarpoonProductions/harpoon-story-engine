@@ -682,30 +682,50 @@ app.get("/api/groups/:groupId", async (req, res) => {
 });
 
 // Return CSS class names found in a rendered section (for the CSS override panel)
+// The cover always renders as <section id="hse-cover">, whatever its
+// section id, so that is the id its CSS selectors have to use.
+const COVER_ID = "hse-cover";
+
+async function loadContentForClasses(id) {
+  if (db.isConfigured()) return db.getProject(id);
+  const contentPath = path.join(PROJECTS_DIR, id, "content.json");
+  if (!fs.existsSync(contentPath)) return null;
+  return JSON.parse(fs.readFileSync(contentPath, "utf8"));
+}
+
+// Every class name in some rendered HTML, deduplicated and sorted
+function classesIn(html) {
+  const classRe = /class="([^"]+)"/g;
+  const seen = new Set();
+  let m;
+  while ((m = classRe.exec(html)) !== null) {
+    m[1].trim().split(/\s+/).forEach(c => { if (c) seen.add(c); });
+  }
+  return Array.from(seen).sort();
+}
+
 app.get("/api/project/:id/section/:index/classes", async (req, res) => {
   try {
-    let content;
-    if (db.isConfigured()) {
-      content = await db.getProject(req.params.id);
-    } else {
-      const contentPath = path.join(PROJECTS_DIR, req.params.id, "content.json");
-      if (!fs.existsSync(contentPath)) return res.status(404).json({ error: "Project not found" });
-      content = JSON.parse(fs.readFileSync(contentPath, "utf8"));
-    }
+    const content = await loadContentForClasses(req.params.id);
+    if (!content) return res.status(404).json({ error: "Project not found" });
     const section = content.sections[parseInt(req.params.index, 10)];
     if (!section) return res.status(404).json({ error: "Section not found" });
 
     const html = engineFor(content).renderSection(section);
+    const sectionId = section.layout === "cover" ? COVER_ID : section.id;
+    res.json({ sectionId, classes: classesIn(html) });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
 
-    // Extract every class name, deduplicate, sort by prefix
-    const classRe = /class="([^"]+)"/g;
-    const seen = new Set();
-    let m;
-    while ((m = classRe.exec(html)) !== null) {
-      m[1].trim().split(/\s+/).forEach(c => { if (c) seen.add(c); });
-    }
-    const classes = Array.from(seen).sort();
-    res.json({ sectionId: section.id, classes });
+// Classes of the original top-level cover (stories without a cover section)
+app.get("/api/project/:id/cover/classes", async (req, res) => {
+  try {
+    const content = await loadContentForClasses(req.params.id);
+    if (!content) return res.status(404).json({ error: "Project not found" });
+    const html = engineFor(content).renderSection({ ...(content.cover || {}), custom_css: undefined, layout: "cover" });
+    res.json({ sectionId: COVER_ID, classes: classesIn(html) });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

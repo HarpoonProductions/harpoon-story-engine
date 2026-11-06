@@ -277,6 +277,22 @@ for (const example of examples) {
   const selfScoped = await renderHtml({ ...base({ scope_section_css: true }), sections: [{ id: 'intro', layout: 'default', title: 'Intro', custom_css: '#intro .x { color: red; } #intro-2 .y {}' }] }, 'css-self');
   assertContains('Old-style #section selectors become :scope', selfScoped, ':scope .x { color: red; } #intro-2 .y {}');
   assert('Story CSS fields pass the schema', validate(base({ scope_section_css: true, custom_css: 'a{}' })).length === 0);
+
+  // The cover always renders as #hse-cover, so its CSS is scoped to that
+  const coverSection = (meta, css) => ({ ...base(meta), sections: [{ id: 'opening', layout: 'cover', headline: 'Hi', custom_css: css }] });
+  const coverScoped = await renderHtml(coverSection({ scope_section_css: true }, '#opening .hse-cover__headline { color: red; } #hse-cover { color: blue; } .hse-cover__body {}'), 'css-cover-section');
+  assertContains('Cover section CSS is scoped to #hse-cover', coverScoped, '@scope (#hse-cover) {\n:scope .hse-cover__headline { color: red; } :scope { color: blue; } .hse-cover__body {}\n}');
+  const coverOld = await renderHtml(coverSection({}, '#hse-cover .x { color: red; }'), 'css-cover-old');
+  assertContains('Older story keeps cover section CSS as written', coverOld, '<style data-section-override="opening">\n#hse-cover .x { color: red; }\n</style>');
+  const legacyCover = (meta, css) => ({ ...base(meta), cover: { headline: 'CSS', custom_css: css } });
+  const legacyScoped = await renderHtml(legacyCover({ scope_section_css: true }, '.hse-cover__headline { color: red; } </style><script>'), 'css-cover-legacy');
+  assertContains('Original cover CSS is scoped to #hse-cover', legacyScoped, '<style data-section-override="hse-cover">\n@scope (#hse-cover) {\n.hse-cover__headline { color: red; }');
+  assertAbsent('Original cover CSS cannot close its <style> tag', legacyScoped, '</style><script>');
+  assert('Original cover CSS follows the cover', legacyScoped.indexOf('data-section-override="hse-cover"') > legacyScoped.indexOf('id="hse-cover"') && legacyScoped.indexOf('data-section-override="hse-cover"') < legacyScoped.indexOf('<main'));
+  const legacyOld = await renderHtml(legacyCover({}, '#hse-cover .x {}'), 'css-cover-legacy-old');
+  assertContains('Older story keeps original cover CSS as written', legacyOld, '<style data-section-override="hse-cover">\n#hse-cover .x {}\n</style>');
+  assertAbsent('No cover CSS block when empty', legacy, 'data-section-override="hse-cover"');
+  assert('Cover CSS passes the schema', validate(legacyCover({ scope_section_css: true }, 'a{}')).length === 0);
 }
 
 // ── Frozen engine versions (engine-pin.js) ──────────────────────
