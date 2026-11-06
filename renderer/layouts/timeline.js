@@ -50,7 +50,9 @@ const { escHtml } = require('../shell/head');
  *                              goes after this entry (default: alternating, across first)
  *     entry.date_bg  {object}  { color, opacity } overrides timeline_date_bg for this entry
  *     entry.text_bg  {object}  { color, opacity } overrides timeline_text_bg for this entry
- *     entry.images   {Array}   more backgrounds after image/video: [{ url, focal, alt, caption }].
+ *     entry.images   {Array}   more backgrounds after image/video: [{ url, focal, alt, caption }],
+ *                              or a video: { type: 'video', url, poster, alt, caption } (a .mp4/.webm/.mov
+ *                              URL with no type also counts as video).
  *                              Each adds a scroll stop after the text has moved on.
  *     entry.images_transition {string} 'fade' | 'push' (default: 'fade'). Push slides the
  *                              next image in from the direction of travel.
@@ -165,6 +167,16 @@ function slideCaption(im) {
   return im && im.caption ? `<span class="hse-tl__slide-caption">${escHtml(im.caption)}</span>` : '';
 }
 
+// An extra background that is a video: type "video", or (with no type
+// given) a URL ending in a video file extension
+function isVideo(im) {
+  return im.type === 'video' || (!im.type && /\.(mp4|webm|mov|m4v)(?:[?#]|$)/i.test(im.url.trim()));
+}
+function videoType(url) {
+  const ext = (url.match(/\.(mp4|webm|mov|m4v)(?:[?#]|$)/i) || [])[1];
+  return ext && ext.toLowerCase() === 'webm' ? 'video/webm' : 'video/mp4';
+}
+
 // The extra background images of an entry, with a usable URL
 function extraImages(entry) {
   return Array.isArray(entry.images) ? entry.images.filter(im => im && typeof im.url === 'string' && im.url.trim()) : [];
@@ -229,6 +241,12 @@ function renderTimeline(section) {
     // through them while the entry's text stays in view
     const transition = entry.images_transition === 'push' ? 'push' : 'fade';
     const slides = [backgroundHtml(entry, 'hse-tl__slide is-current', isFirst)].concat(extras.map(im => {
+      if (isVideo(im)) {
+        // Played by js/runtime.js while its slide is current
+        const poster = im.poster ? ` poster="${escHtml(im.poster)}"` : '';
+        const label = im.alt ? ` aria-label="${escHtml(im.alt)}"` : '';
+        return `<div class="hse-tl__slide" data-type="video"><video class="hse-tl__video" muted loop playsinline preload="metadata"${poster}${label} data-tl-video><source src="${escHtml(im.url)}" type="${videoType(im.url)}"></video>${slideCaption(im)}</div>`;
+      }
       const focal = im.focal ? `background-position:${escHtml(im.focal)};` : '';
       return `<div class="hse-tl__slide" style="background-image:url('${escHtml(im.url)}');${focal}" role="img" aria-label="${escHtml(im.alt || '')}" data-type="image">${slideCaption(im)}</div>`;
     }));
@@ -277,6 +295,11 @@ function renderTimeline(section) {
     const slidesAttr = extras.length ? ` data-slides="${extras.length + 1}" style="--tl-slides:${extras.length + 1}"` : '';
     const moreHtml = extras.length ? `
       <div class="hse-tl__more" aria-hidden="true">${extras.map(im => {
+        const cap = im.caption ? `<span class="hse-tl__thumb-caption">${escHtml(im.caption)}</span>` : '';
+        if (isVideo(im)) {
+          const poster = im.poster ? ` poster="${escHtml(im.poster)}"` : '';
+          return `<video class="hse-tl__thumb hse-tl__thumb-video" muted loop playsinline autoplay preload="none"${poster}><source src="${escHtml(im.url)}" type="${videoType(im.url)}"></video>${cap}`;
+        }
         const focal = im.focal ? `background-position:${escHtml(im.focal)};` : '';
         return `<div class="hse-tl__thumb" style="background-image:url('${escHtml(im.url)}');${focal}"></div>${im.caption ? `<span class="hse-tl__thumb-caption">${escHtml(im.caption)}</span>` : ''}`;
       }).join('')}</div>` : '';

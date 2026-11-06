@@ -942,7 +942,9 @@
                 "items": {
                   "type": "object",
                   "properties": {
+                    "type": { "type": "string", "enum": ["image", "video"], "description": "video: plays muted and looping while it is on screen. With no type, a .mp4/.webm/.mov URL is treated as video." },
                     "url": { "type": "string" },
+                    "poster": { "type": "string", "description": "Video only: still shown before the video loads." },
                     "focal": { "type": "string" },
                     "alt": { "type": "string" },
                     "caption": { "type": "string" }

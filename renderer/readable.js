@@ -136,7 +136,7 @@ const READERS = {
       }
     }
     out.push(...list(group));
-    return out.concat(entries.flatMap(e => [...printImage(e.image), ...(Array.isArray(e.images) ? e.images.flatMap(im => printImage(im)) : []), ...(e.media && (e.media.type || 'image') === 'image' ? printImage({ ...e.media, print_include: e.media.print_include !== false }) : [])]));
+    return out.concat(entries.flatMap(e => [...printImage(e.image), ...(Array.isArray(e.images) ? e.images.filter(im => im && im.type !== 'video' && !/\.(mp4|webm|mov|m4v)(?:[?#]|$)/i.test(im.url || '')).flatMap(im => printImage(im)) : []), ...(e.media && (e.media.type || 'image') === 'image' ? printImage({ ...e.media, print_include: e.media.print_include !== false }) : [])]));
   },
 
   // Arbitrary HTML can't be read reliably. Only its caption is used.
