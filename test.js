@@ -565,6 +565,26 @@ console.log('\nEvery word on screen is read');
   }
 }
 
+// ── Phone, reduced motion and Ctrl+P (Section Contract R11–R13) ──
+// Each layout's sample, opened in headless Chrome: no sideways scroll at
+// 320px, every word showing with motion turned off, and every word on
+// paper when the live page is printed. Skipped, with a note, on a machine
+// with no browser (run `node scripts/browser-checks.js` there to see why).
+console.log('\nPhone, reduced motion and Ctrl+P');
+{
+  const { runBrowserChecks } = require('./scripts/browser-checks');
+  const results = await runBrowserChecks();
+  if (!results) {
+    console.log('  – no headless browser here, skipping (CI has one)');
+  } else {
+    for (const r of results) {
+      assert(`${r.name}: fits a 320px phone` + (r.phone.ok ? '' : ` (${r.phone.detail})`), r.phone.ok);
+      assert(`${r.name}: every word shows with motion off` + (r.reducedMotion.ok ? '' : ` (missing ${r.reducedMotion.missing.join(', ')})`), r.reducedMotion.ok);
+      assert(`${r.name}: every word prints with Ctrl+P` + (r.print.ok ? '' : ` (missing ${r.print.missing.join(', ')})`), r.print.ok);
+    }
+  }
+}
+
 // ── Existing stories unchanged (Section Contract R14) ────────────
 // Every story in projects/, examples/ and test/fixtures/ must render
 // exactly as recorded in test/snapshots.json: page, printable page, PDF
