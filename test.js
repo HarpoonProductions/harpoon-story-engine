@@ -153,10 +153,22 @@ console.log('\n── Timeline extra images and chapter cards ──────
   assertContains('First background caption in a gallery', cap2, 'class="hse-tl__slide is-current"');
   assert('Gallery first slide has its caption', /is-current"[^>]*>[^<]*<span class="hse-tl__slide-caption">One<\/span>/.test(cap2.replace(/\s+/g, ' ')));
   assert('No caption, no caption markup', !single.includes('slide-caption'));
+  const vid = renderTimeline({ id: 'tl', timeline_entries: [{ heading: 'A', image: { url: 'a.jpg' },
+    images: [{ type: 'video', url: 'v.mp4', poster: 'p.jpg', alt: 'Crew at work', caption: 'Moving' }, { url: 'w.webm' }, { type: 'image', url: 'x.mp4' }] }] });
+  assertContains('Extra video slide', vid, '<div class="hse-tl__slide" data-type="video"><video class="hse-tl__video" muted loop playsinline preload="metadata" poster="p.jpg" aria-label="Crew at work" data-tl-video><source src="v.mp4" type="video/mp4"></video><span class="hse-tl__slide-caption">Moving</span></div>');
+  assertContains('Video recognised from its URL', vid, '<source src="w.webm" type="video/webm">');
+  assert('type image wins over the URL', vid.includes("background-image:url('x.mp4')"));
+  assertContains('Phones get the video under the text', vid, 'class="hse-tl__thumb hse-tl__thumb-video"');
+  const { readSection } = require('./renderer/readable');
+  const rv = JSON.stringify(readSection({ layout: 'timeline', timeline_entries: [{ heading: 'A', images: [{ type: 'video', url: 'v.mp4', print_include: true }, { url: 'b.jpg', print_include: true }] }] }));
+  assert('Videos never print as images', !rv.includes('v.mp4') && rv.includes('b.jpg'));
   assertContains('Entry knows its stops', g, 'data-slides="3" style="--tl-slides:3">');
   assertContains('Phones get the extra images under the text', g, 'class="hse-tl__more"');
   const fade = renderTimeline({ id: 'tl', timeline_entries: [{ heading: 'A', images: [{ url: 'b.jpg' }], images_transition: 'wipe' }] });
   assertContains('Unknown transition fades', fade, 'data-transition="fade"');
+  const pd = renderTimeline({ id: 'tl', timeline_entries: [{ heading: 'A', images: [{ url: 'b.jpg' }], images_transition: 'push-down' }] });
+  assertContains('Fixed push direction', pd, 'data-transition="push" data-push="down" data-push-fixed="down"');
+  assert('Plain push follows the journey', !g.includes('data-push-fixed'));
 
   const c = renderTimeline({ id: 'tl', timeline_direction: 'stepped', timeline_entries: [{ date: '1979', heading: 'A' },
     { kind: 'interstitial', date: 'ignored', heading: 'The 1980s', body: 'A new decade', line: 'hide', image: { url: 'd.jpg' } }, { date: '1981', heading: 'B' }] });

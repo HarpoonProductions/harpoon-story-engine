@@ -4768,25 +4768,33 @@ function initTimelineEditor(sectionIndex) {
           <input class="form-input tl-video-url" data-i="${i}" placeholder="Video URL .mp4 (overrides image on desktop)" value="${(entry.video && entry.video.url) || ''}">
           <input class="form-input tl-video-poster" data-i="${i}" placeholder="Video poster image URL (optional)" value="${(entry.video && entry.video.poster) || ''}">
           <details class="tl-panel" data-panel="more"${openPanels.has(`${i}-more`) ? ' open' : ''}>
-            <summary style="${panelSummary}">More background images${extras.length ? ` · ${extras.length}` : ''}</summary>
+            <summary style="${panelSummary}">More backgrounds (images or video)${extras.length ? ` · ${extras.length}` : ''}</summary>
             <div style="display:flex;flex-direction:column;gap:0.5rem;padding-top:0.4rem">
               <label style="display:grid;grid-template-columns:7rem 1fr;align-items:center;gap:0.5rem">
                 <span style="${panelSummary};cursor:default">Change by</span>
                 <select class="form-select tl-images-transition" aria-label="How the images change">
                   <option value="fade"${entry.images_transition !== 'push' ? ' selected' : ''}>Fade</option>
-                  <option value="push"${entry.images_transition === 'push' ? ' selected' : ''}>Push</option>
+                  ${[['push', 'Push (follows the journey)'], ['push-up', 'Push up'], ['push-down', 'Push down'], ['push-left', 'Push left'], ['push-right', 'Push right']].map(([v, l]) => `<option value="${v}"${entry.images_transition === v ? ' selected' : ''}>${l}</option>`).join('')}
                 </select>
               </label>
-              ${extras.map((im, k) => `<div class="tl-extra" data-k="${k}" style="display:flex;flex-direction:column;gap:0.3rem;padding:0.4rem;border:1px solid var(--rule, rgba(0,0,0,0.12));border-radius:4px">
+              ${extras.map((im, k) => { const vid = im.type === 'video' || (!im.type && /\.(mp4|webm|mov|m4v)(?:[?#]|$)/i.test(im.url || '')); return `<div class="tl-extra" data-k="${k}" style="display:flex;flex-direction:column;gap:0.3rem;padding:0.4rem;border:1px solid var(--rule, rgba(0,0,0,0.12));border-radius:4px">
                 <div style="display:flex;justify-content:space-between;align-items:center">
-                  <span style="${panelSummary};cursor:default">Image ${k + 2}</span>
-                  <button type="button" class="block-item__delete tl-extra-del" title="Remove image">✕</button>
+                  <span style="${panelSummary};cursor:default">Background ${k + 2}</span>
+                  <span style="display:flex;gap:0.4rem;align-items:center">
+                    <select class="form-select tl-extra-type" aria-label="Image or video" style="width:auto;padding:0.15rem 0.4rem;font-size:0.75rem">
+                      <option value="image"${vid ? '' : ' selected'}>Image</option>
+                      <option value="video"${vid ? ' selected' : ''}>Video</option>
+                    </select>
+                    <button type="button" class="block-item__delete tl-extra-del" title="Remove">✕</button>
+                  </span>
                 </div>
-                <input class="form-input tl-extra-field" data-field="url" id="tl-extra-url-${sectionIndex}-${i}-${k}" data-image-field ${im.print_include ? 'data-print-include="true"' : ''} ${im.focal ? `data-existing-focal="${escAttr(im.focal)}"` : ''} placeholder="Image URL https://…" value="${escAttr(im.url)}">
-                <input class="form-input tl-extra-field" data-field="alt" placeholder="Alt text" value="${escAttr(im.alt)}">
+                ${vid ? `<input class="form-input tl-extra-field" data-field="url" placeholder="Video URL .mp4" value="${escAttr(im.url)}">
+                <input class="form-input tl-extra-field" data-field="poster" placeholder="Poster image URL (optional)" value="${escAttr(im.poster)}">
+                <input class="form-input tl-extra-field" data-field="alt" placeholder="Description for screen readers" value="${escAttr(im.alt)}">` : `<input class="form-input tl-extra-field" data-field="url" id="tl-extra-url-${sectionIndex}-${i}-${k}" data-image-field ${im.print_include ? 'data-print-include="true"' : ''} ${im.focal ? `data-existing-focal="${escAttr(im.focal)}"` : ''} placeholder="Image URL https://…" value="${escAttr(im.url)}">
+                <input class="form-input tl-extra-field" data-field="alt" placeholder="Alt text" value="${escAttr(im.alt)}">`}
                 <input class="form-input tl-extra-field" data-field="caption" placeholder="Caption (optional)" value="${escAttr(im.caption)}">
-              </div>`).join('')}
-              <button type="button" class="tbtn tbtn--ghost tl-extra-add" style="justify-content:center">+ Add image</button>
+              </div>`; }).join('')}
+              <button type="button" class="tbtn tbtn--ghost tl-extra-add" style="justify-content:center">+ Add image or video</button>
             </div>
           </details>
           ${chapter ? '' : `<details class="tl-panel" data-panel="media"${openPanels.has(`${i}-media`) ? ' open' : ''}>
@@ -4832,7 +4840,7 @@ function initTimelineEditor(sectionIndex) {
         scheduleAutosave();
       });
       item.querySelector('.tl-images-transition').addEventListener('change', e => {
-        if (e.target.value === 'push') section.timeline_entries[i].images_transition = 'push';
+        if (e.target.value !== 'fade') section.timeline_entries[i].images_transition = e.target.value;
         else delete section.timeline_entries[i].images_transition;
         scheduleAutosave();
       });
@@ -4849,6 +4857,14 @@ function initTimelineEditor(sectionIndex) {
           const en = section.timeline_entries[i];
           en.images.splice(k, 1);
           if (!en.images.length) delete en.images;
+          scheduleAutosave();
+          renderEntriesAndInit();
+        });
+        row.querySelector('.tl-extra-type').addEventListener('change', e => {
+          const im = section.timeline_entries[i].images[k];
+          im.type = e.target.value;
+          if (im.type === 'video') { delete im.focal; delete im.print_include; } else delete im.poster;
+          openPanels.add(`${i}-more`);
           scheduleAutosave();
           renderEntriesAndInit();
         });

@@ -995,3 +995,8 @@
   .is-stepped[data-line-style="scaffold"][data-marker="clamp"] .hse-tl__marker { visibility: hidden; }
   .hse-tl__fitting { pointer-events: none; }
 }
+
+/* Phones: an extra background that is a video plays under the text */
+@media (max-width: 768px) {
+  video.hse-tl__thumb-video { object-fit: cover; }
+}
