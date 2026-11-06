@@ -21,6 +21,10 @@
           "type": "string",
           "description": "Raw CSS for the whole story. Applied after the token set (theme) and before each section's own custom_css"
         },
+        "custom_js": {
+          "type": "string",
+          "description": "Raw JavaScript for the whole story. Runs once the page and the engine's own scripts have loaded (DOMContentLoaded). Screen story only: print, PDF and audio never run it"
+        },
         "scope_section_css": {
           "type": "boolean",
           "default": false,

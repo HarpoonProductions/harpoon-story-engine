@@ -1,6 +1,6 @@
 'use strict';
 
-const { escHtml, storyCssHtml, resolveTokenStyle, renderPlausibleScript, parseVideoUrl } = require('../shell/head');
+const { escHtml, storyCssHtml, storyJsHtml, resolveTokenStyle, renderPlausibleScript, parseVideoUrl } = require('../shell/head');
 const { buildPwaHeadTags } = require('../pwa');
 const { buildDropdown, buildDropdownItems, buildTopNavLinks, buildCeremonyDropdown, buildCeremonyLinks } = require('../shell/group-nav');
 
@@ -59,7 +59,7 @@ ${buildDemoGateScript(config?.demoPassword)}
 ${body}
 ${dataScript}
 <script defer src="${asset('js/graduation-guide-runtime.js')}"></script>
-</body>
+${storyJsHtml(meta.custom_js)}</body>
 </html>`;
 }
 

@@ -1290,6 +1290,20 @@
                             </div>
 
                             <div class="form-group">
+                                <label class="form-label" for="meta-custom-js">Custom JavaScript for this story</label>
+                                <textarea
+                                    class="css-override__editor"
+                                    id="meta-custom-js"
+                                    data-path="meta.custom_js"
+                                    spellcheck="false"
+                                    placeholder="// Runs once the page has loaded, e.g.&#10;// document.querySelectorAll('.hse-section').forEach(s => s.classList.add('is-ready'));"
+                                ></textarea>
+                                <p class="form-hint">
+                                    Runs on every page load of this story, after the engine's own scripts (GSAP and ScrollTrigger are available). The preview reloads to run it. It goes out with Publish and Export, but not into the print page, PDF or audio. Paste only code you trust: it runs for every reader.
+                                </p>
+                            </div>
+
+                            <div class="form-group">
                                 <label class="form-label" for="meta-heading-animation">Heading animation</label>
                                 <select class="form-select" id="meta-heading-animation" data-path="config.heading_animation">
                                     <option value="none">None</option>

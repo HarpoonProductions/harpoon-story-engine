@@ -405,6 +405,39 @@ for (const example of examples) {
   assert('Story CSS fields pass the schema', validate(base({ scope_section_css: true, custom_css: 'a{}' })).length === 0);
 }
 
+// ── Story custom JavaScript ─────────────────────────────────────
+{
+  console.log('\n── Story custom JavaScript ────────────────────────────');
+  const base = (meta) => ({
+    meta: { title: 'JS', project_id: 'js-test', ...meta },
+    cover: { headline: 'JS' },
+    sections: [{ id: 'intro', layout: 'default', title: 'Intro' }],
+  });
+  const renderHtml = async (content, name) => {
+    const dir = path.join(outputBase, name);
+    fs.mkdirSync(dir, { recursive: true });
+    await render(content, dir);
+    return fs.readFileSync(path.join(dir, 'index.html'), 'utf8');
+  };
+
+  const none = await renderHtml(base({}), 'js-none');
+  assertAbsent('No story JS block when empty', none, 'data-story-js');
+  assertContains('Story without JS keeps its old ending', none, '</style>\n\n</body>');
+  const blank = await renderHtml(base({ custom_js: '   \n ' }), 'js-blank');
+  assertAbsent('Whitespace-only story JS adds nothing', blank, 'data-story-js');
+
+  const code = "window.hseStoryJs = 1;\nconst s = '</script><b>x</b>'; // <!-- hi";
+  const withJs = await renderHtml(base({ custom_js: code }), 'js-on');
+  const block = withJs.slice(withJs.indexOf('<script data-story-js>'));
+  assertContains('Story JS rendered', block, 'window.hseStoryJs = 1;');
+  assertContains('Story JS waits for the engine scripts', block, "document.addEventListener('DOMContentLoaded'");
+  assert('Story JS cannot close its <script> tag', block.indexOf('</script>') > block.indexOf("<\\/script><b>x</b>"));
+  assertAbsent('Story JS cannot open an HTML comment', block.slice(0, block.indexOf('</script>')), '<!--');
+  assert('Story JS is the last thing in <body>', /<\/script>\s*<\/body>/.test(withJs) && withJs.lastIndexOf('data-story-js') > withJs.indexOf('hse-footer'));
+  assertAbsent('Print page never gets story JS', renderPrint(base({ custom_js: code })), 'hseStoryJs');
+  assert('Story JS field passes the schema', validate(base({ custom_js: 'console.log(1)' })).length === 0);
+}
+
 // ── Frozen engine versions (engine-pin.js) ──────────────────────
 // A story frozen to an engine commit is built from a copy of the repo at
 // that commit. Check the switch reads the freeze safely, and that a copy
