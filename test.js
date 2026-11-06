@@ -205,9 +205,11 @@ console.log('\n── Timeline media and backgrounds ─────────
 
   const img = one({ media: { type: 'image', url: 'https://example.com/a.jpg', alt: 'A', caption: 'Cap', position: 'left' } });
   assertContains('Inline image', img, '<img src="https://example.com/a.jpg" alt="A" loading="lazy">');
-  assertContains('Wrapped media floats left', img, 'hse-tl__media--left');
+  assertContains('Side media sits left of the text box', img, 'class="hse-tl__row hse-tl__row--media-left"><figure class="hse-tl__media hse-tl__media--left"');
   assertContains('Caption', img, '<figcaption>Cap</figcaption>');
-  assert('Wrapped media sits between heading and body', img.indexOf('hse-tl__heading') < img.indexOf('hse-tl__media') && img.indexOf('hse-tl__media') < img.indexOf('hse-tl__body'));
+  assert('Side media is outside the text box', img.indexOf('hse-tl__media') < img.indexOf('hse-tl__text') && !/hse-tl__text[^]*hse-tl__media/.test(img));
+  const right = one({ media: { type: 'image', url: 'x.jpg', position: 'right' } });
+  assert('Right media follows the text box', /<\/div><figure class="hse-tl__media hse-tl__media--right"/.test(right) && right.includes('hse-tl__row--media-right'));
   const below = one({ media: { type: 'image', url: 'x.jpg', position: 'below' } });
   assert('Media below comes after the body', below.indexOf('hse-tl__body') < below.indexOf('hse-tl__media'));
   const above = one({ media: { type: 'image', url: 'x.jpg', position: 'sideways' } });

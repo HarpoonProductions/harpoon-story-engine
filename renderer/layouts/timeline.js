@@ -297,12 +297,14 @@ function renderTimeline(section) {
     const media  = mediaHtml(entry.media);
     const heading = entry.heading ? `<h3 class="hse-tl__heading">${escHtml(entry.heading)}</h3>` : '';
     const body    = entry.body    ? `<p class="hse-tl__body">${escHtml(entry.body)}</p>` : '';
-    // Above: before the heading. Left/right: floated after the heading so
-    // the body wraps round it. Below: after the body.
+    // Above: before the heading. Below: after the body. Left/right: beside
+    // the text box, outside it (beneath it on phones), so the text keeps
+    // its full width.
+    const beside = media.position === 'left' || media.position === 'right';
     const textParts = media.position === 'above' ? [media.html, heading, body]
       : media.position === 'below' ? [heading, body, media.html]
-      : [heading, media.html, body];
-    const hasText = heading || body || media.html;
+      : [heading, body];
+    const hasText = heading || body || (!beside && media.html);
 
     // Stepped: which way the path runs from this entry
     const run = !stepped ? '' : ['across', 'down', 'up', 'rise', 'fall', 'left', 'rise-left', 'fall-left'].includes(entry.next) ? entry.next : (i % 2 === 0 ? 'across' : 'down');
@@ -341,9 +343,13 @@ function renderTimeline(section) {
       <div class="hse-tl__entry-inner"${dateBg && entry.date ? ' data-date-bg' : ''}>
         ${markerHtml}
         ${entry.date ? `<span class="hse-tl__date${dateBg ? ' has-bg' : ''}"${dateBlock.style ? ` style="${escHtml(dateBlock.style)}"` : ''}>${escHtml(entry.date)}</span>` : ''}
-        ${hasText ? `<div class="hse-tl__text${textBg ? ' has-bg' : ''}"${textBlock.style ? ` style="${escHtml(textBlock.style)}"` : ''}>
+        ${(() => {
+          const text = hasText ? `<div class="hse-tl__text${textBg ? ' has-bg' : ''}"${textBlock.style ? ` style="${escHtml(textBlock.style)}"` : ''}>
           ${textParts.filter(Boolean).join('\n          ')}
-        </div>` : ''}
+        </div>` : '';
+          if (!beside) return text;
+          return `<div class="hse-tl__row hse-tl__row--media-${media.position}">${media.position === 'left' ? media.html + text : text + media.html}</div>`;
+        })()}
       </div>${moreHtml}
     </div>`;
   }).join('\n');

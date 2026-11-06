@@ -252,7 +252,7 @@
 }
 
 .hse-tl__text {
-  display: flow-root; /* contains floated media */
+  display: flow-root;
 }
 .hse-tl__text.has-bg {
   padding: 1.25rem 1.5rem;
@@ -264,15 +264,22 @@
   margin: 0 0 1rem;
 }
 .hse-tl__media--below { margin: 1rem 0 0; }
-.hse-tl__media--left {
-  float: left;
-  width: 45%;
-  margin: 0.3rem 1.25rem 0.75rem 0;
+/* Left/right: beside the text box, not inside it. The panel widens by
+   the media's width so the text keeps its own. */
+.hse-section--timeline { --tl-media-w: clamp(200px, 24vw, 340px); }
+.hse-tl__entry-inner:has(> .hse-tl__row) { max-width: calc(440px + var(--tl-media-w) + 1.5rem); }
+.hse-tl__row {
+  display: flex;
+  align-items: flex-start;
+  gap: 1.5rem;
 }
-.hse-tl__media--right {
-  float: right;
-  width: 45%;
-  margin: 0.3rem 0 0.75rem 1.25rem;
+/* Where space is short (alternate's half-width panels) the media gives
+   way before the text does */
+.hse-tl__row > .hse-tl__text { flex: 1 1 280px; min-width: 240px; max-width: 440px; }
+.hse-tl__row > .hse-tl__media {
+  flex: 0 3 var(--tl-media-w);
+  min-width: 140px;
+  margin: 0;
 }
 
 .hse-tl__media img,
@@ -376,13 +383,10 @@
     clip-path: polygon(0 0, 100% 50%, 0 100%) !important;
   }
 
-  /* Wrapped media is too narrow on a phone: stack it above the body */
-  .hse-tl__media--left,
-  .hse-tl__media--right {
-    float: none;
-    width: auto;
-    margin: 0 0 1rem;
-  }
+  /* Phones: media beside the text goes beneath it */
+  .hse-tl__row { flex-direction: column; gap: 1rem; }
+  .hse-tl__row > .hse-tl__media { order: 1; flex: none; width: 100%; max-width: none; }
+  .hse-tl__row > .hse-tl__text { max-width: none; }
 
   /* First entry: add breathing room at top */
   .hse-tl__entry:first-child {
@@ -1008,4 +1012,14 @@
 /* Phones: an extra background that is a video plays under the text */
 @media (max-width: 768px) {
   video.hse-tl__thumb-video { object-fit: cover; }
+}
+
+/* Horizontal and stepped cards widen by the media beside the text */
+@media (min-width: 769px) {
+  [data-direction="horizontal"] .hse-tl__entry:not(.is-wide):has(.hse-tl__row) {
+    --tl-card-w: calc(clamp(280px, 30vw, 420px) + var(--tl-media-w) + 1.5rem);
+  }
+  .is-stepped .hse-tl__entry:not(.is-wide):has(.hse-tl__row) {
+    --tl-card-w: calc(clamp(280px, 28vw, 400px) + var(--tl-media-w) + 1.5rem);
+  }
 }
