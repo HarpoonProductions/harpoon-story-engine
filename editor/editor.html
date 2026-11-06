@@ -640,7 +640,7 @@
             }
 
             /* ── CSS Override panel ─────────────────────────────── */
-            #cssOverridePanel {
+            #cssOverridePanel, #coverCssPanel {
                 border: 1px solid var(--bg-3);
                 border-radius: 6px;
                 overflow: hidden;
@@ -667,7 +667,8 @@
                 transition: transform 0.2s ease;
                 color: var(--ink-3);
             }
-            #cssOverridePanel[open] .css-override__toggle::before {
+            #cssOverridePanel[open] .css-override__toggle::before,
+            #coverCssPanel[open] .css-override__toggle::before {
                 transform: rotate(90deg);
             }
             .css-override__body {
@@ -1627,6 +1628,17 @@
                                     placeholder="Produced by…"
                                 />
                             </div>
+
+                            <!-- CSS Override panel for the original cover -->
+                            <details id="coverCssPanel" class="css-override-panel" style="margin-top:1.5rem">
+                              <summary class="css-override__toggle">Override CSS for the cover</summary>
+                              <div class="css-override__body">
+                                <p class="form-hint">Click a class to insert it into the editor below. Applies on top of the story CSS. Use #hse-cover to target the cover.</p>
+                                <div id="coverCssClassChips" class="css-override__chips"></div>
+                                <textarea id="coverCssEditor" class="css-override__editor" spellcheck="false"></textarea>
+                                <p class="form-hint css-override__hint" id="coverCssHint"></p>
+                              </div>
+                            </details>
                             </div>
                         </div>
 
@@ -2571,6 +2583,7 @@
                     skipNextReload = true;
                 });
                 renderSectionList();
+                initCoverCssPanel();
                 setupGraduationGuideTab();
                 wireGroupMembers();
 
@@ -2879,11 +2892,14 @@
 
             // Mirrors renderer/index.js sectionCss(): scoped stories keep
             // section CSS inside the section
-            function scopedSectionCss(sectionId, css) {
+            // (the cover is scoped to #hse-cover, its element's real id)
+            function scopedSectionCss(sectionId, css, isCover) {
                 if (!content.meta || !content.meta.scope_section_css || !css.trim()) return css;
-                const id = CSS.escape(sectionId);
-                const self = new RegExp('#' + id.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '(?![\\w-])', 'g');
-                return '@scope (#' + id + ') {\n' + css.replace(self, ':scope') + '\n}';
+                const selfRe = (raw) => new RegExp('#' + CSS.escape(raw).replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '(?![\\w-])', 'g');
+                let out = css.replace(selfRe(sectionId), ':scope');
+                const scopeId = isCover ? 'hse-cover' : sectionId;
+                if (isCover) out = out.replace(selfRe(scopeId), ':scope');
+                return '@scope (#' + CSS.escape(scopeId) + ') {\n' + out + '\n}';
             }
 
             function injectCssIntoPreview(sectionId, css) {
@@ -6107,34 +6123,71 @@ function initBlocksEditor(sectionIndex) {
           rewire(bgScrollEl, v => { content.sections[sectionIndex].fbq_bg_scroll  = v; });
         }
 
-        function initCssOverridePanel(sectionIndex) {
-          const section   = content.sections[sectionIndex];
-          const panel     = document.getElementById('cssOverridePanel');
-          const chipsEl   = document.getElementById('cssClassChips');
-          const textarea  = document.getElementById('cssOverrideEditor');
-          const hint      = document.getElementById('cssOverrideHint');
+        // The cover always renders as <section id="hse-cover">, whatever the
+        // cover section's own id, so its CSS has to target #hse-cover
+        const COVER_ELEMENT_ID = 'hse-cover';
 
-          // Reset panel to closed state on each section open
+        function initCssOverridePanel(sectionIndex) {
+          const section = content.sections[sectionIndex];
+          const isCover = section.layout === 'cover';
+          wireCssPanel({
+            panel:     document.getElementById('cssOverridePanel'),
+            chipsEl:   document.getElementById('cssClassChips'),
+            textarea:  document.getElementById('cssOverrideEditor'),
+            hint:      document.getElementById('cssOverrideHint'),
+            overrideKey: section.id,
+            sectionId:   section.id,
+            elementId:   isCover ? COVER_ELEMENT_ID : section.id,
+            isCover,
+            get: () => content.sections[sectionIndex].custom_css,
+            set: (css) => { content.sections[sectionIndex].custom_css = css; },
+            classesUrl: (projectId) => `/api/project/${projectId}/section/${sectionIndex}/classes`,
+          });
+        }
+
+        // Stories that still use the original Cover tab (no cover section)
+        // keep the cover's CSS in cover.custom_css
+        function initCoverCssPanel() {
+          wireCssPanel({
+            panel:     document.getElementById('coverCssPanel'),
+            chipsEl:   document.getElementById('coverCssClassChips'),
+            textarea:  document.getElementById('coverCssEditor'),
+            hint:      document.getElementById('coverCssHint'),
+            overrideKey: COVER_ELEMENT_ID,
+            sectionId:   COVER_ELEMENT_ID,
+            elementId:   COVER_ELEMENT_ID,
+            isCover: true,
+            get: () => content.cover && content.cover.custom_css,
+            set: (css) => { if (!content.cover) content.cover = {}; content.cover.custom_css = css; },
+            classesUrl: (projectId) => `/api/project/${projectId}/cover/classes`,
+          });
+        }
+
+        function wireCssPanel(opts) {
+          const { panel, chipsEl, textarea, hint, overrideKey, sectionId, elementId, isCover } = opts;
+          if (!panel || !textarea) return;
+
+          // Reset panel to closed state on each open
           panel.removeAttribute('open');
           chipsEl.innerHTML = '';
-          textarea.value = section.custom_css || '';
+          textarea.value = opts.get() || '';
+          textarea.placeholder = `/* e.g. #${elementId} ${isCover ? '.hse-cover__headline { font-size: 5rem; }' : '.hse-inner { max-width: 900px; }'} */`;
           hint.textContent = '';
-
-          const sectionId = section.id;
 
           // Wire textarea → live inject + autosave + validation
           const oldFn = textarea._cssFn;
           if (oldFn) textarea.removeEventListener('input', oldFn);
           const cssFn = () => {
             const css = textarea.value || '';
-            content.sections[sectionIndex].custom_css = css || undefined;
+            opts.set(css || undefined);
             // Live-inject into preview iframes without reloading
-            injectCssIntoPreview(sectionId, scopedSectionCss(sectionId, css));
+            injectCssIntoPreview(overrideKey, scopedSectionCss(sectionId, css, isCover));
             // Validation: in older (unscoped) stories, warn if no selector
             // references this section's id, because the CSS would leak
             const stripped = css.replace(/\/\*[\s\S]*?\*\//g, '').trim();
-            if (stripped && !content.meta?.scope_section_css && !stripped.includes('#' + sectionId)) {
-              hint.textContent = '⚠ This story is older, so this CSS affects the whole story. Add #' + sectionId + ' to your selectors to keep it to this section.';
+            const targeted = stripped.includes('#' + elementId) || (!isCover && stripped.includes('#' + sectionId));
+            if (stripped && !content.meta?.scope_section_css && !targeted) {
+              hint.textContent = '⚠ This story is older, so this CSS affects the whole story. Add #' + elementId + ' to your selectors to keep it to ' + (isCover ? 'the cover.' : 'this section.');
               hint.style.color = '#e6a817';
             } else {
               hint.textContent = '';
@@ -6149,14 +6202,15 @@ function initBlocksEditor(sectionIndex) {
 
           // Load classes lazily when panel is first opened; scroll into view
           let classesLoaded = false;
-          panel.addEventListener('toggle', function onToggle() {
+          if (panel._toggleFn) panel.removeEventListener('toggle', panel._toggleFn);
+          panel._toggleFn = function onToggle() {
             if (!panel.open) return;
             setTimeout(() => panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' }), 50);
             if (classesLoaded) return;
             classesLoaded = true;
             hint.textContent = 'Loading classes…';
             const projectId = window.location.pathname.split('/').pop();
-            fetch(`/api/project/${projectId}/section/${sectionIndex}/classes`)
+            fetch(opts.classesUrl(projectId))
               .then(r => r.json())
               .then(data => {
                 hint.textContent = '';
@@ -6177,8 +6231,9 @@ function initBlocksEditor(sectionIndex) {
                   groups[prefix].push(cls);
                 });
 
+                const targetId = data.sectionId || elementId;
                 function insertChipSelector(cls) {
-                  const selector = `#${data.sectionId} .${cls}`;
+                  const selector = `#${targetId} .${cls}`;
                   const insertion = `${selector} {\n  \n}\n`;
                   const pos = textarea.selectionStart;
                   const before = textarea.value.slice(0, pos);
@@ -6203,14 +6258,15 @@ function initBlocksEditor(sectionIndex) {
                     chip.type = 'button';
                     chip.className = 'css-chip';
                     chip.textContent = '.' + cls;
-                    chip.title = `Insert: #${data.sectionId} .${cls}`;
+                    chip.title = `Insert: #${targetId} .${cls}`;
                     chip.addEventListener('click', () => insertChipSelector(cls));
                     chipsEl.appendChild(chip);
                   });
                 });
               })
               .catch(() => { hint.textContent = 'Could not load classes.'; });
-          });
+          };
+          panel.addEventListener('toggle', panel._toggleFn);
         }
 
         </script>

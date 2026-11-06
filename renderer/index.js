@@ -226,7 +226,7 @@ function buildPage(meta, config, cover, sections, basePath, registryLogoUrl, gro
   }
 
   // Legacy cover rendered before <main>; section-based cover renders inside it
-  const legacyCoverHtml = coverSection ? "" : renderCover(cover || {});
+  const legacyCoverHtml = coverSection ? "" : renderCover(cover || {}) + legacyCoverCss(cover, meta);
   const printHeaderHtml = renderPrintHeader(meta, coverData);
 
   // Sections: render each, or stub if renderer not yet built
@@ -337,10 +337,30 @@ function renderSection(section, meta) {
 // #<section-id> into :scope. Older stories are left exactly as
 // they were: their section CSS applies page-wide, and some of them rely
 // on that, so it only changes when someone turns the flag on.
+//
+// The cover is the exception: it is always <section id="hse-cover">,
+// whatever the cover section's own id is, so its CSS is scoped to
+// #hse-cover, and both "#hse-cover" and "#<section-id>" become :scope.
 function sectionCss(section, meta) {
   if (!meta || !meta.scope_section_css || !section.id) return section.custom_css;
   const id = cssIdent(section.id);
+  if (section.layout === "cover") {
+    const css = scopeSelf(scopeSelf(section.custom_css, id), COVER_ID);
+    return `@scope (#${COVER_ID}) {\n${css}\n}`;
+  }
   return `@scope (#${id}) {\n${scopeSelf(section.custom_css, id)}\n}`;
+}
+
+// The id the cover always renders with (renderer/render-cover.js)
+const COVER_ID = "hse-cover";
+
+// Stories that still use the original top-level cover object (not a
+// cover section) keep its CSS in cover.custom_css. It follows the cover
+// and works just like a section's CSS. Adds nothing when it is empty.
+function legacyCoverCss(cover, meta) {
+  if (!cover || !cover.custom_css || !cover.custom_css.trim()) return "";
+  const css = sectionCss({ id: COVER_ID, layout: "cover", custom_css: cover.custom_css }, meta);
+  return `\n<style data-section-override="${COVER_ID}">\n${safeStyleText(css)}\n</style>`;
 }
 
 function scopeSelf(css, id) {

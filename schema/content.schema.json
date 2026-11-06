@@ -239,6 +239,10 @@
         "colophon": {
           "type": "string",
           "description": "Footer credit line"
+        },
+        "custom_css": {
+          "type": "string",
+          "description": "Raw CSS for the cover. Kept inside the cover (#hse-cover) when meta.scope_section_css is true; otherwise it applies page-wide"
         }
       }
     },
