@@ -51,7 +51,7 @@ const { escHtml } = require('../shell/head');
  *     entry.date_bg  {object}  { color, opacity } overrides timeline_date_bg for this entry
  *     entry.text_bg  {object}  { color, opacity } overrides timeline_text_bg for this entry
  *     entry.images   {Array}   more backgrounds after image/video: [{ url, focal, alt, caption }],
- *                              or a video: { type: 'video', url, poster, alt, caption } (a .mp4/.webm/.mov
+ *                              or a video: { type: 'video', url, poster, alt, caption, loop } (a .mp4/.webm/.mov
  *                              URL with no type also counts as video).
  *                              Each adds a scroll stop after the text has moved on.
  *     entry.images_transition {string} 'fade' | 'push' | 'push-up' | 'push-down' | 'push-left' |
@@ -143,12 +143,20 @@ function mediaHtml(media) {
   };
 }
 
+// How a background video repeats: loop "once" or "twice" plays it that
+// many times (js/runtime.js counts the plays) and leaves it on its last
+// frame; anything else loops continually, as before.
+function loopAttrs(v) {
+  const plays = v && v.loop === 'once' ? 1 : v && v.loop === 'twice' ? 2 : 0;
+  return plays ? ` data-tl-plays="${plays}"` : ' loop';
+}
+
 // One background: the entry's video, else its image, else nothing.
 function backgroundHtml(entry, cls, autoplay) {
   if (entry.video && entry.video.url) {
     const poster = entry.video.poster ? ` poster="${escHtml(entry.video.poster)}"` : '';
     return `<div class="${cls}" data-type="video">
-        <video class="hse-tl__video"${autoplay ? ' autoplay' : ''} muted loop playsinline${poster} data-tl-video>
+        <video class="hse-tl__video"${autoplay ? ' autoplay' : ''} muted${loopAttrs(entry.video)} playsinline${poster} data-tl-video>
           <source src="${escHtml(entry.video.url)}" type="video/mp4">
         </video>
       </div>`;
@@ -229,7 +237,7 @@ function renderTimeline(section) {
       if (entry.video && entry.video.url) {
         const poster = entry.video.poster ? ` poster="${escHtml(entry.video.poster)}"` : '';
         return `<div class="${baseClass}" data-index="${i}" data-type="video">
-        <video class="hse-tl__video"${isFirst ? ' autoplay' : ''} muted loop playsinline${poster} data-tl-video>
+        <video class="hse-tl__video"${isFirst ? ' autoplay' : ''} muted${loopAttrs(entry.video)} playsinline${poster} data-tl-video>
           <source src="${escHtml(entry.video.url)}" type="video/mp4">
         </video>
       </div>`;
@@ -258,7 +266,7 @@ function renderTimeline(section) {
         // Played by js/runtime.js while its slide is current
         const poster = im.poster ? ` poster="${escHtml(im.poster)}"` : '';
         const label = im.alt ? ` aria-label="${escHtml(im.alt)}"` : '';
-        return `<div class="hse-tl__slide" data-type="video"><video class="hse-tl__video" muted loop playsinline preload="metadata"${poster}${label} data-tl-video><source src="${escHtml(im.url)}" type="${videoType(im.url)}"></video>${slideCaption(im)}</div>`;
+        return `<div class="hse-tl__slide" data-type="video"><video class="hse-tl__video" muted${loopAttrs(im)} playsinline preload="metadata"${poster}${label} data-tl-video><source src="${escHtml(im.url)}" type="${videoType(im.url)}"></video>${slideCaption(im)}</div>`;
       }
       const focal = im.focal ? `background-position:${escHtml(im.focal)};` : '';
       return `<div class="hse-tl__slide" style="background-image:url('${escHtml(im.url)}');${focal}" role="img" aria-label="${escHtml(im.alt || '')}" data-type="image">${slideCaption(im)}</div>`;
@@ -318,7 +326,7 @@ function renderTimeline(section) {
         const cap = im.caption ? `<span class="hse-tl__thumb-caption">${escHtml(im.caption)}</span>` : '';
         if (isVideo(im)) {
           const poster = im.poster ? ` poster="${escHtml(im.poster)}"` : '';
-          return `<video class="hse-tl__thumb hse-tl__thumb-video" muted loop playsinline autoplay preload="none"${poster}><source src="${escHtml(im.url)}" type="${videoType(im.url)}"></video>${cap}`;
+          return `<video class="hse-tl__thumb hse-tl__thumb-video" muted${loopAttrs(im)} playsinline autoplay preload="none"${poster}><source src="${escHtml(im.url)}" type="${videoType(im.url)}"></video>${cap}`;
         }
         const focal = im.focal ? `background-position:${escHtml(im.focal)};` : '';
         return `<div class="hse-tl__thumb" style="background-image:url('${escHtml(im.url)}');${focal}"></div>${im.caption ? `<span class="hse-tl__thumb-caption">${escHtml(im.caption)}</span>` : ''}`;

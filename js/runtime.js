@@ -607,10 +607,14 @@
           layer.querySelectorAll("video[data-tl-video]").forEach(function (video) {
             var slideEl = video.closest(".hse-tl__slide");
             if (active && (!slideEl || slideEl.classList.contains("is-current"))) {
-              video.play().catch(function () {});
+              // A video that has played its count stays on its last frame
+              if (!video.hasAttribute("data-tl-done")) video.play().catch(function () {});
             } else {
               video.pause();
               if (!active) video.currentTime = 0;
+              // Back in view later, it plays its count again
+              video.removeAttribute("data-tl-done");
+              video.removeAttribute("data-tl-played");
             }
           });
         });
@@ -651,6 +655,21 @@
         var mask = "linear-gradient(to " + (axis === "x" ? "right" : "bottom") + ", " + stops.join(", ") + ")";
         spine.style.maskImage = spine.style.webkitMaskImage = mask;
       }
+
+      // Videos set to play once or twice (data-tl-plays) don't loop: count
+      // the plays and stop on the last frame
+      section.querySelectorAll("video[data-tl-plays]").forEach(function (video) {
+        video.addEventListener("ended", function () {
+          var played = (parseInt(video.getAttribute("data-tl-played"), 10) || 0) + 1;
+          video.setAttribute("data-tl-played", played);
+          if (played < (parseInt(video.dataset.tlPlays, 10) || 1)) {
+            video.currentTime = 0;
+            video.play().catch(function () {});
+          } else {
+            video.setAttribute("data-tl-done", "");
+          }
+        });
+      });
 
       // Ensure only the first video plays on load
       layers.forEach(function (layer, i) {

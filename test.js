@@ -157,6 +157,11 @@ console.log('\n── Timeline extra images and chapter cards ──────
     images: [{ type: 'video', url: 'v.mp4', poster: 'p.jpg', alt: 'Crew at work', caption: 'Moving' }, { url: 'w.webm' }, { type: 'image', url: 'x.mp4' }] }] });
   assertContains('Extra video slide', vid, '<div class="hse-tl__slide" data-in="fade" data-out="fade" data-type="video"><video class="hse-tl__video" muted loop playsinline preload="metadata" poster="p.jpg" aria-label="Crew at work" data-tl-video><source src="v.mp4" type="video/mp4"></video><span class="hse-tl__slide-caption">Moving</span></div>');
   assertContains('Video recognised from its URL', vid, '<source src="w.webm" type="video/webm">');
+  const lp = renderTimeline({ id: 'tl', timeline_entries: [{ heading: 'A', video: { url: 'm.mp4', loop: 'once' },
+    images: [{ type: 'video', url: 'v.mp4', loop: 'twice' }, { type: 'video', url: 'w.mp4' }] }] });
+  assertContains('Main video plays once', lp, 'muted data-tl-plays="1" playsinline');
+  assertContains('Extra video plays twice', lp, 'muted data-tl-plays="2" playsinline preload');
+  assert('Videos loop by default', (lp.match(/ muted loop /g) || []).length === 2 && renderTimeline({ id: 'tl', timeline_entries: [{ heading: 'A', video: { url: 'm.mp4' } }] }).includes('muted loop playsinline'));
   assert('type image wins over the URL', vid.includes("background-image:url('x.mp4')"));
   assertContains('Phones get the video under the text', vid, 'class="hse-tl__thumb hse-tl__thumb-video"');
   const { readSection } = require('./renderer/readable');
