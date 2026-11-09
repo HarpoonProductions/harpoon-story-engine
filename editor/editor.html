@@ -4721,6 +4721,7 @@ function initTimelineEditor(sectionIndex) {
   // Which per-entry panels are open, so a re-render keeps them open
   const openPanels = new Set();
   const panelSummary = 'cursor:pointer;font-family:var(--font-mono);font-size:0.6rem;letter-spacing:0.08em;text-transform:uppercase;color:var(--ink-3)';
+  const TL_LOOPS = [['', 'Video: loop continually'], ['once', 'Video: play once'], ['twice', 'Video: play twice']];
   const TL_TRANSITIONS = [['fade', 'Fade'], ['push', 'Push (follows the journey)'], ['push-up', 'Push up'], ['push-down', 'Push down'], ['push-left', 'Push left'], ['push-right', 'Push right']];
   const escAttr = v => String(v == null ? '' : v).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
 
@@ -4768,6 +4769,7 @@ function initTimelineEditor(sectionIndex) {
           <input class="form-input tl-img-caption" data-i="${i}" placeholder="Image caption (optional)" value="${escAttr(entry.image && entry.image.caption)}">
           <input class="form-input tl-video-url" data-i="${i}" placeholder="Video URL .mp4 (overrides image on desktop)" value="${(entry.video && entry.video.url) || ''}">
           <input class="form-input tl-video-poster" data-i="${i}" placeholder="Video poster image URL (optional)" value="${(entry.video && entry.video.poster) || ''}">
+          ${entry.video && entry.video.url ? `<select class="form-select tl-video-loop" aria-label="How the video repeats">${TL_LOOPS.map(([v, l]) => `<option value="${v}"${((entry.video && entry.video.loop) || '') === v ? ' selected' : ''}>${l}</option>`).join('')}</select>` : ''}
           <details class="tl-panel" data-panel="more"${openPanels.has(`${i}-more`) ? ' open' : ''}>
             <summary style="${panelSummary}">More backgrounds (images or video)${extras.length ? ` · ${extras.length}` : ''}</summary>
             <div style="display:flex;flex-direction:column;gap:0.5rem;padding-top:0.4rem">
@@ -4790,6 +4792,7 @@ function initTimelineEditor(sectionIndex) {
                 </div>
                 ${vid ? `<input class="form-input tl-extra-field" data-field="url" placeholder="Video URL .mp4" value="${escAttr(im.url)}">
                 <input class="form-input tl-extra-field" data-field="poster" placeholder="Poster image URL (optional)" value="${escAttr(im.poster)}">
+                <select class="form-select tl-extra-field" data-field="loop" aria-label="How the video repeats">${TL_LOOPS.map(([v, l]) => `<option value="${v}"${(im.loop || '') === v ? ' selected' : ''}>${l}</option>`).join('')}</select>
                 <input class="form-input tl-extra-field" data-field="alt" placeholder="Description for screen readers" value="${escAttr(im.alt)}">` : `<input class="form-input tl-extra-field" data-field="url" id="tl-extra-url-${sectionIndex}-${i}-${k}" data-image-field ${im.print_include ? 'data-print-include="true"' : ''} ${im.focal ? `data-existing-focal="${escAttr(im.focal)}"` : ''} placeholder="Image URL https://…" value="${escAttr(im.url)}">
                 <input class="form-input tl-extra-field" data-field="alt" placeholder="Alt text" value="${escAttr(im.alt)}">`}
                 <input class="form-input tl-extra-field" data-field="caption" placeholder="Caption (optional)" value="${escAttr(im.caption)}">
@@ -4949,6 +4952,12 @@ function initTimelineEditor(sectionIndex) {
       item.querySelector('.tl-video-url').addEventListener('input', e => {
         if (!section.timeline_entries[i].video) section.timeline_entries[i].video = {};
         section.timeline_entries[i].video.url = e.target.value;
+        scheduleAutosave();
+      });
+      const loopSel = item.querySelector('.tl-video-loop');
+      if (loopSel) loopSel.addEventListener('change', e => {
+        if (e.target.value) section.timeline_entries[i].video.loop = e.target.value;
+        else delete section.timeline_entries[i].video.loop;
         scheduleAutosave();
       });
       item.querySelector('.tl-video-poster').addEventListener('input', e => {

@@ -921,7 +921,7 @@
               "heading": { "type": "string" },
               "body": { "type": "string" },
               "image": { "type": "object" },
-              "video": { "type": "object" },
+              "video": { "type": "object", "properties": { "url": { "type": "string" }, "poster": { "type": "string" }, "loop": { "type": "string", "enum": ["once", "twice", "always"], "description": "Play once, twice, or loop continually (the default)." } } },
               "media": {
                 "type": "object",
                 "description": "Inline image, video or embed shown with the entry's text.",
@@ -945,6 +945,7 @@
                     "type": { "type": "string", "enum": ["image", "video"], "description": "video: plays muted and looping while it is on screen. With no type, a .mp4/.webm/.mov URL is treated as video." },
                     "url": { "type": "string" },
                     "poster": { "type": "string", "description": "Video only: still shown before the video loads." },
+                    "loop": { "type": "string", "enum": ["once", "twice", "always"], "description": "Video only: play once, twice, or loop continually (the default)." },
                     "focal": { "type": "string" },
                     "alt": { "type": "string" },
                     "caption": { "type": "string" },
