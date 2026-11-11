@@ -358,6 +358,15 @@
     border-radius: 4px;
   }
 
+  /* The entry's own picture sits right of the line, in line with its
+     text, so it never covers the line */
+  .hse-tl__entry > .hse-tl__thumb {
+    align-self: stretch;
+    width: auto;
+    margin-left: calc(var(--tl-spine-inset) + var(--tl-gap) - var(--hse-page-pad));
+  }
+  video.hse-tl__thumb { object-fit: cover; }
+
   .hse-tl__thumb--video::after {
     content: '';
     display: block;
@@ -733,6 +742,17 @@
 .hse-tl__layer .hse-tl__slide[data-out-dir="left"]  { --tl-out: translateX(-100%); }
 .hse-tl__layer .hse-tl__slide[data-out-dir="right"] { --tl-out: translateX(100%); }
 
+.hse-tl__captions {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  pointer-events: none;
+}
+.hse-tl__captions .hse-tl__slide-caption {
+  opacity: 0;
+  transition: opacity 0.6s ease;
+}
+.hse-tl__captions .hse-tl__slide-caption.is-current { opacity: 1; }
 .hse-tl__slide-caption {
   position: absolute;
   right: var(--hse-page-pad);

@@ -167,14 +167,23 @@ function backgroundHtml(entry, cls, autoplay) {
         style="background-image:url('${escHtml(entry.image.url)}');${focal}"
         role="img"
         aria-label="${escHtml(entry.image.alt || '')}"
-        data-type="image">${slideCaption(entry.image)}</div>`;
+        data-type="image"></div>`;
   }
   return `<div class="${cls}" data-type="empty"></div>`;
 }
 
-// A background image's caption, shown over it (bottom right)
-function slideCaption(im) {
-  return im && im.caption ? `<span class="hse-tl__slide-caption">${escHtml(im.caption)}</span>` : '';
+// Background captions sit in one layer above the canvas gradient (so it
+// can't darken them), one per entry and slide; js/runtime.js shows the
+// one for the background in view.
+function captionsHtml(entries) {
+  const out = [];
+  entries.forEach((entry, i) => {
+    const first = !(entry.video && entry.video.url) && entry.image && entry.image.url ? entry.image.caption : '';
+    [first].concat(extraImages(entry).map(im => im.caption)).forEach((cap, k) => {
+      if (cap) out.push(`<span class="hse-tl__slide-caption${i === 0 && k === 0 ? ' is-current' : ''}" data-index="${i}" data-slide="${k}">${escHtml(cap)}</span>`);
+    });
+  });
+  return out.length ? `\n      <div class="hse-tl__captions">${out.join('')}</div>` : '';
 }
 
 // An extra background that is a video: type "video", or (with no type
@@ -249,7 +258,7 @@ function renderTimeline(section) {
         role="img"
         aria-label="${escHtml(entry.image.alt || '')}"
         data-index="${i}"
-        data-type="image">${slideCaption(entry.image)}</div>`;
+        data-type="image"></div>`;
       }
       return `<div class="${baseClass}" data-index="${i}" data-type="empty"></div>`;
     }
@@ -266,10 +275,10 @@ function renderTimeline(section) {
         // Played by js/runtime.js while its slide is current
         const poster = im.poster ? ` poster="${escHtml(im.poster)}"` : '';
         const label = im.alt ? ` aria-label="${escHtml(im.alt)}"` : '';
-        return `<div class="hse-tl__slide" data-type="video"><video class="hse-tl__video" muted${loopAttrs(im)} playsinline preload="metadata"${poster}${label} data-tl-video><source src="${escHtml(im.url)}" type="${videoType(im.url)}"></video>${slideCaption(im)}</div>`;
+        return `<div class="hse-tl__slide" data-type="video"><video class="hse-tl__video" muted${loopAttrs(im)} playsinline preload="metadata"${poster}${label} data-tl-video><source src="${escHtml(im.url)}" type="${videoType(im.url)}"></video></div>`;
       }
       const focal = im.focal ? `background-position:${escHtml(im.focal)};` : '';
-      return `<div class="hse-tl__slide" style="background-image:url('${escHtml(im.url)}');${focal}" role="img" aria-label="${escHtml(im.alt || '')}" data-type="image">${slideCaption(im)}</div>`;
+      return `<div class="hse-tl__slide" style="background-image:url('${escHtml(im.url)}');${focal}" role="img" aria-label="${escHtml(im.alt || '')}" data-type="image"></div>`;
     })).map((html, k) => {
       const a = ins[k - 1], b = ins[k];
       const attrs = (a ? ` data-in="${a.kind}"${a.dir ? ` data-dir="${a.dir}"` : ''}` : '')
@@ -288,10 +297,11 @@ function renderTimeline(section) {
 
     // Mobile thumbnail — hidden on desktop, visible on mobile
     let thumbHtml = '';
-    if (entry.video && entry.video.url && entry.video.poster) {
-      thumbHtml = `<div class="hse-tl__thumb" aria-hidden="true" style="background-image:url('${escHtml(entry.video.poster)}')"></div>`;
-    } else if (entry.video && entry.video.url) {
-      thumbHtml = `<div class="hse-tl__thumb hse-tl__thumb--video" aria-hidden="true"></div>`;
+    if (entry.video && entry.video.url) {
+      // Phones: the background video plays muted under the date while in
+      // view (js/runtime.js), from its poster if it has one
+      const poster = entry.video.poster ? ` poster="${escHtml(entry.video.poster)}"` : '';
+      thumbHtml = `<video class="hse-tl__thumb hse-tl__thumb-video" aria-hidden="true" muted${loopAttrs(entry.video)} playsinline preload="none"${poster} data-tl-thumb-video><source src="${escHtml(entry.video.url)}" type="video/mp4"></video>`;
     } else if (entry.image && entry.image.url) {
       const focal = entry.image.focal ? `background-position:${escHtml(entry.image.focal)};` : '';
       thumbHtml = `<div class="hse-tl__thumb" aria-hidden="true" style="background-image:url('${escHtml(entry.image.url)}');${focal}"></div>`;
@@ -326,7 +336,7 @@ function renderTimeline(section) {
         const cap = im.caption ? `<span class="hse-tl__thumb-caption">${escHtml(im.caption)}</span>` : '';
         if (isVideo(im)) {
           const poster = im.poster ? ` poster="${escHtml(im.poster)}"` : '';
-          return `<video class="hse-tl__thumb hse-tl__thumb-video" muted${loopAttrs(im)} playsinline autoplay preload="none"${poster}><source src="${escHtml(im.url)}" type="${videoType(im.url)}"></video>${cap}`;
+          return `<video class="hse-tl__thumb hse-tl__thumb-video" muted${loopAttrs(im)} playsinline preload="none"${poster} data-tl-thumb-video><source src="${escHtml(im.url)}" type="${videoType(im.url)}"></video>${cap}`;
         }
         const focal = im.focal ? `background-position:${escHtml(im.focal)};` : '';
         return `<div class="hse-tl__thumb" style="background-image:url('${escHtml(im.url)}');${focal}"></div>${im.caption ? `<span class="hse-tl__thumb-caption">${escHtml(im.caption)}</span>` : ''}`;
@@ -378,7 +388,7 @@ function renderTimeline(section) {
   <div class="hse-tl__sticky-wrap" aria-hidden="true">
     <div class="hse-tl__canvas">
       ${canvasHtml}
-      <div class="hse-tl__gradient"></div>
+      <div class="hse-tl__gradient"></div>${captionsHtml(entries)}
     </div>
   </div>
 

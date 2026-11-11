@@ -145,17 +145,19 @@ console.log('\n── Timeline extra images and chapter cards ──────
   assertContains('Gallery layer', g, 'data-type="gallery" data-transition="push" data-slides="3"');
   assert('A slide per image, blank URLs skipped', (g.match(/class="hse-tl__slide[ "]/g) || []).length === 3);
   assertContains('First slide shows first', g, 'class="hse-tl__slide is-current"');
-  assertContains('Slide caption', g, '<span class="hse-tl__slide-caption">Second</span>');
+  assertContains('Slide caption', g, '<span class="hse-tl__slide-caption" data-index="0" data-slide="1">Second</span>');
   assertContains('Slide focal point', g, 'background-position:20% 30%');
   const cap1 = renderTimeline({ id: 'tl', timeline_entries: [{ heading: 'A', image: { url: 'a.jpg', caption: 'First <b>' } }] });
-  assertContains('First background caption', cap1, 'data-type="image"><span class="hse-tl__slide-caption">First &lt;b&gt;</span></div>');
+  assertContains('First background caption', cap1, '<div class="hse-tl__captions"><span class="hse-tl__slide-caption is-current" data-index="0" data-slide="0">First &lt;b&gt;</span></div>');
+  assert('Captions sit above the gradient, not in the layers', cap1.indexOf('hse-tl__gradient') < cap1.indexOf('hse-tl__captions') && !/hse-tl__layer[^>]*>[^<]*<span/.test(cap1));
   const cap2 = renderTimeline({ id: 'tl', timeline_entries: [{ heading: 'A', image: { url: 'a.jpg', caption: 'One' }, images: [{ url: 'b.jpg' }] }] });
   assertContains('First background caption in a gallery', cap2, 'class="hse-tl__slide is-current"');
-  assert('Gallery first slide has its caption', /is-current"[^>]*>[^<]*<span class="hse-tl__slide-caption">One<\/span>/.test(cap2.replace(/\s+/g, ' ')));
+  assertContains('Gallery first slide has its caption', cap2, 'data-index="0" data-slide="0">One</span>');
   assert('No caption, no caption markup', !single.includes('slide-caption'));
   const vid = renderTimeline({ id: 'tl', timeline_entries: [{ heading: 'A', image: { url: 'a.jpg' },
     images: [{ type: 'video', url: 'v.mp4', poster: 'p.jpg', alt: 'Crew at work', caption: 'Moving' }, { url: 'w.webm' }, { type: 'image', url: 'x.mp4' }] }] });
-  assertContains('Extra video slide', vid, '<div class="hse-tl__slide" data-in="fade" data-out="fade" data-type="video"><video class="hse-tl__video" muted loop playsinline preload="metadata" poster="p.jpg" aria-label="Crew at work" data-tl-video><source src="v.mp4" type="video/mp4"></video><span class="hse-tl__slide-caption">Moving</span></div>');
+  assertContains('Extra video slide', vid, '<div class="hse-tl__slide" data-in="fade" data-out="fade" data-type="video"><video class="hse-tl__video" muted loop playsinline preload="metadata" poster="p.jpg" aria-label="Crew at work" data-tl-video><source src="v.mp4" type="video/mp4"></video></div>');
+  assertContains('Extra video caption', vid, 'data-index="0" data-slide="1">Moving</span>');
   assertContains('Video recognised from its URL', vid, '<source src="w.webm" type="video/webm">');
   const lp = renderTimeline({ id: 'tl', timeline_entries: [{ heading: 'A', video: { url: 'm.mp4', loop: 'once' },
     images: [{ type: 'video', url: 'v.mp4', loop: 'twice' }, { type: 'video', url: 'w.mp4' }] }] });
@@ -164,6 +166,9 @@ console.log('\n── Timeline extra images and chapter cards ──────
   assert('Videos loop by default', (lp.match(/ muted loop /g) || []).length === 2 && renderTimeline({ id: 'tl', timeline_entries: [{ heading: 'A', video: { url: 'm.mp4' } }] }).includes('muted loop playsinline'));
   assert('type image wins over the URL', vid.includes("background-image:url('x.mp4')"));
   assertContains('Phones get the video under the text', vid, 'class="hse-tl__thumb hse-tl__thumb-video"');
+  const mv = renderTimeline({ id: 'tl', timeline_entries: [{ heading: 'A', video: { url: 'm.mp4', poster: 'p.jpg' } }] });
+  assertContains('Phones play the background video itself', mv, '<video class="hse-tl__thumb hse-tl__thumb-video" aria-hidden="true" muted loop playsinline preload="none" poster="p.jpg" data-tl-thumb-video>');
+  assert('No autoplay on hidden phone videos', !/thumb-video[^>]*autoplay/.test(vid + mv));
   const { readSection } = require('./renderer/readable');
   const rv = JSON.stringify(readSection({ layout: 'timeline', timeline_entries: [{ heading: 'A', images: [{ type: 'video', url: 'v.mp4', print_include: true }, { url: 'b.jpg', print_include: true }] }] }));
   assert('Videos never print as images', !rv.includes('v.mp4') && rv.includes('b.jpg'));

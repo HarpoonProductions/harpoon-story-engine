@@ -586,6 +586,7 @@
     gsap.utils.toArray(".hse-section--timeline").forEach(function (section) {
       var entries = Array.from(section.querySelectorAll(".hse-tl__entry"));
       var layers  = Array.from(section.querySelectorAll(".hse-tl__layer"));
+      var captions = Array.from(section.querySelectorAll(".hse-tl__captions .hse-tl__slide-caption"));
 
       if (!entries.length) return;
 
@@ -602,6 +603,12 @@
             slides.forEach(function (s, j) {
               s.classList.toggle("is-current", j === k);
               s.classList.toggle("is-past", j < k);
+            });
+          }
+          if (active) {
+            var shown = slides.length ? Math.max(0, Math.min(slides.length - 1, slide || 0)) : 0;
+            captions.forEach(function (c) {
+              c.classList.toggle("is-current", +c.dataset.index === i && +c.dataset.slide === shown);
             });
           }
           layer.querySelectorAll("video[data-tl-video]").forEach(function (video) {
@@ -654,6 +661,30 @@
         stops.push("#000 100%");
         var mask = "linear-gradient(to " + (axis === "x" ? "right" : "bottom") + ", " + stops.join(", ") + ")";
         spine.style.maskImage = spine.style.webkitMaskImage = mask;
+      }
+
+      // Phones: background videos shown under the text play (muted) while
+      // they are on screen and pause when they leave it. Played from here
+      // rather than autoplay so mobile browsers start them reliably and
+      // hidden copies on desktop never download.
+      var thumbVideos = section.querySelectorAll("video[data-tl-thumb-video]");
+      if (thumbVideos.length && "IntersectionObserver" in window) {
+        var thumbObserver = new IntersectionObserver(function (items) {
+          items.forEach(function (item) {
+            var video = item.target;
+            if (item.isIntersecting && video.offsetParent !== null) {
+              if (!video.hasAttribute("data-tl-done")) {
+                video.preload = "auto";
+                video.play().catch(function () {});
+              }
+            } else {
+              video.pause();
+              video.removeAttribute("data-tl-done");
+              video.removeAttribute("data-tl-played");
+            }
+          });
+        }, { threshold: 0.25 });
+        thumbVideos.forEach(function (video) { thumbObserver.observe(video); });
       }
 
       // Videos set to play once or twice (data-tl-plays) don't loop: count
