@@ -1276,6 +1276,56 @@
                                 <p class="form-hint">Colour bleed effects</p>
                             </div>
 
+                            <p class="form-section-title">Fonts</p>
+                            <p class="form-hint" style="margin-top:-0.25rem">
+                                For stories that need fonts beyond their token set. They go out with Publish and Export and into the print page and PDF.
+                            </p>
+                            <div class="form-group">
+                                <label class="form-label" for="meta-fonts-google">Google Fonts link</label>
+                                <input
+                                    class="form-input"
+                                    id="meta-fonts-google"
+                                    data-path="meta.fonts.google_url"
+                                    placeholder="https://fonts.googleapis.com/css2?family=Lora:wght@400;700&amp;display=swap"
+                                />
+                                <p class="form-hint" id="meta-fonts-google-hint">
+                                    On fonts.google.com, pick the fonts and styles, choose "Get embed code" and paste the link from the href="…" part.
+                                </p>
+                            </div>
+                            <div class="form-group">
+                                <span class="form-label">Uploaded font files</span>
+                                <div id="meta-fonts-files" style="display:flex;flex-direction:column;gap:0.5rem"></div>
+                                <input type="file" id="meta-fonts-upload-input" accept=".woff2,.woff,.ttf,.otf" multiple hidden />
+                                <button type="button" class="tbtn tbtn--ghost" id="meta-fonts-upload" style="margin-top:0.4rem;width:100%;justify-content:center">↑ Upload font files</button>
+                                <p class="form-hint" id="meta-fonts-upload-status">
+                                    .woff2 is best (.woff, .ttf and .otf also work). Upload one file per weight and style, and give the files of one typeface the same family name. Only upload fonts whose licence covers web use on the sites this story goes to.
+                                </p>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label" for="meta-fonts-headings">Headings font</label>
+                                <input
+                                    class="form-input"
+                                    id="meta-fonts-headings"
+                                    data-path="meta.fonts.headings"
+                                    list="meta-fonts-families"
+                                    placeholder="Theme default"
+                                />
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label" for="meta-fonts-body">Body text font</label>
+                                <input
+                                    class="form-input"
+                                    id="meta-fonts-body"
+                                    data-path="meta.fonts.body"
+                                    list="meta-fonts-families"
+                                    placeholder="Theme default"
+                                />
+                                <datalist id="meta-fonts-families"></datalist>
+                                <p class="form-hint">
+                                    A family name from above, e.g. Lora. To choose a fallback, list it after a comma: Lora, Georgia, serif. Leave blank to keep the token set's font.
+                                </p>
+                            </div>
+
                             <div class="form-group">
                                 <label class="form-label" for="meta-custom-css">Custom CSS for this story</label>
                                 <textarea
@@ -2596,6 +2646,7 @@
                     injectStoryCssIntoPreview(e.target.value || "");
                     skipNextReload = true;
                 });
+                initStoryFonts();
                 renderSectionList();
                 initCoverCssPanel();
                 setupGraduationGuideTab();
@@ -3032,6 +3083,156 @@
                             });
                         scheduleAutosave();
                     });
+                });
+            }
+
+            // ── Story fonts (meta.fonts) ────────────────────────────────────────
+            // The Google link and the headings/body fields use data-path like
+            // the rest of the Meta tab; the uploaded files are a list here.
+            // Rendering: renderer/fonts.js.
+
+            const fontEsc = (v) => String(v == null ? "" : v).replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;");
+
+            const FONT_WEIGHTS = [
+                ["100", "100 Thin"], ["200", "200 Extra light"], ["300", "300 Light"],
+                ["400", "400 Regular"], ["500", "500 Medium"], ["600", "600 Semibold"],
+                ["700", "700 Bold"], ["800", "800 Extra bold"], ["900", "900 Black"],
+                ["100 900", "Variable (100–900)"],
+            ];
+
+            function storyFontFiles() {
+                if (!content.meta.fonts || typeof content.meta.fonts !== "object") content.meta.fonts = {};
+                if (!Array.isArray(content.meta.fonts.files)) content.meta.fonts.files = [];
+                return content.meta.fonts.files;
+            }
+
+            // Guess family, weight and style from a file name like
+            // "BrandSans-SemiboldItalic.woff2"
+            function guessFontFromFilename(name) {
+                const stem = name.replace(/\.[^.]+$/, "");
+                const lower = stem.toLowerCase();
+                const style = /italic|oblique/.test(lower) ? "italic" : "normal";
+                const weights = [
+                    [/hairline|thin/, "100"], [/extra-?light|ultra-?light/, "200"], [/light/, "300"],
+                    [/medium/, "500"], [/semi-?bold|demi-?bold/, "600"], [/extra-?bold|ultra-?bold/, "800"],
+                    [/black|heavy/, "900"], [/bold/, "700"], [/variable|\bvf\b/, "100 900"],
+                ];
+                const hit = weights.find(([re]) => re.test(lower));
+                const family = stem
+                    .split(/[-_]/)[0]
+                    .replace(/([a-z])([A-Z])/g, "$1 $2")
+                    .replace(/VF$|Variable$/i, "")
+                    .trim();
+                return { family: family || stem, weight: hit ? hit[1] : "400", style };
+            }
+
+            function storyFontFamilies() {
+                const names = new Set(storyFontFiles().map((f) => (f.family || "").trim()).filter(Boolean));
+                const g = (content.meta.fonts && content.meta.fonts.google_url) || "";
+                for (const m of g.matchAll(/family=([^:&]+)/g)) {
+                    names.add(decodeURIComponent(m[1].replace(/\+/g, " ")));
+                }
+                return [...names];
+            }
+
+            function refreshFontFamilies() {
+                const list = document.getElementById("meta-fonts-families");
+                list.replaceChildren(...storyFontFamilies().map((n) => {
+                    const o = document.createElement("option");
+                    o.value = n;
+                    return o;
+                }));
+                const g = ((content.meta.fonts && content.meta.fonts.google_url) || "").trim();
+                const hint = document.getElementById("meta-fonts-google-hint");
+                const bad = g && !/^https:\/\/fonts\.googleapis\.com\/css2?\?\S+$/.test(g);
+                hint.style.color = bad ? "var(--error-col)" : "";
+                hint.textContent = bad
+                    ? "That isn't a Google Fonts link. It should start with https://fonts.googleapis.com/css2?family= (paste only the link, not the whole <link> tag)."
+                    : 'On fonts.google.com, pick the fonts and styles, choose "Get embed code" and paste the link from the href="…" part.';
+            }
+
+            function renderStoryFontFiles() {
+                const wrap = document.getElementById("meta-fonts-files");
+                const files = storyFontFiles();
+                wrap.innerHTML = files.map((f, i) => `
+                  <div class="block-item" data-i="${i}" style="padding:0.5rem;display:flex;flex-direction:column;gap:0.35rem">
+                    <div style="display:flex;gap:0.35rem;align-items:center">
+                      <input class="form-input font-file-family" placeholder="Family name" aria-label="Family name" value="${fontEsc(f.family)}" style="flex:1">
+                      <button type="button" class="tbtn tbtn--ghost font-file-del" title="Remove this font" aria-label="Remove this font" style="padding:0.25rem 0.4rem;min-width:0">✕</button>
+                    </div>
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.35rem">
+                      <select class="form-select font-file-weight" aria-label="Weight">${FONT_WEIGHTS.map(([v, l]) => `<option value="${v}"${String(f.weight || "400") === v ? " selected" : ""}>${l}</option>`).join("")}</select>
+                      <select class="form-select font-file-style" aria-label="Style">
+                        <option value="normal"${f.style === "italic" ? "" : " selected"}>Upright</option>
+                        <option value="italic"${f.style === "italic" ? " selected" : ""}>Italic</option>
+                      </select>
+                    </div>
+                    <span style="font-family:var(--font-mono);font-size:0.6rem;color:var(--ink-3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${fontEsc(f.url)}">${fontEsc((f.url || "").split("/").pop())}</span>
+                  </div>`).join("");
+                wrap.querySelectorAll(".block-item").forEach((row) => {
+                    const f = files[+row.dataset.i];
+                    row.querySelector(".font-file-family").addEventListener("input", (e) => {
+                        f.family = e.target.value;
+                        refreshFontFamilies();
+                        scheduleAutosave();
+                    });
+                    row.querySelector(".font-file-weight").addEventListener("change", (e) => {
+                        f.weight = e.target.value;
+                        scheduleAutosave();
+                    });
+                    row.querySelector(".font-file-style").addEventListener("change", (e) => {
+                        f.style = e.target.value;
+                        scheduleAutosave();
+                    });
+                    row.querySelector(".font-file-del").addEventListener("click", () => {
+                        files.splice(+row.dataset.i, 1);
+                        renderStoryFontFiles();
+                        refreshFontFamilies();
+                        scheduleAutosave();
+                    });
+                });
+            }
+
+            async function uploadStoryFonts(fileList) {
+                const status = document.getElementById("meta-fonts-upload-status");
+                const btn = document.getElementById("meta-fonts-upload");
+                btn.disabled = true;
+                const failed = [];
+                for (const file of fileList) {
+                    if (!/\.(woff2|woff|ttf|otf)$/i.test(file.name)) {
+                        failed.push(`${file.name} (not a font file)`);
+                        continue;
+                    }
+                    status.textContent = `Uploading ${file.name}…`;
+                    try {
+                        const fd = new FormData();
+                        fd.append("file", file, file.name);
+                        const res = await fetch(`/api/project/${projectId}/upload`, { method: "POST", body: fd });
+                        const data = await res.json();
+                        if (!res.ok || !data.url) throw new Error(data.error || `HTTP ${res.status}`);
+                        storyFontFiles().push({ ...guessFontFromFilename(file.name), url: data.url });
+                    } catch (err) {
+                        failed.push(`${file.name} (${err.message})`);
+                    }
+                }
+                btn.disabled = false;
+                status.textContent = failed.length
+                    ? `Couldn't upload: ${failed.join(", ")}`
+                    : "Uploaded. Check each file's family name, weight and style.";
+                renderStoryFontFiles();
+                refreshFontFamilies();
+                scheduleAutosave();
+            }
+
+            function initStoryFonts() {
+                renderStoryFontFiles();
+                refreshFontFamilies();
+                document.getElementById("meta-fonts-google").addEventListener("input", refreshFontFamilies);
+                const input = document.getElementById("meta-fonts-upload-input");
+                document.getElementById("meta-fonts-upload").addEventListener("click", () => input.click());
+                input.addEventListener("change", () => {
+                    if (input.files.length) uploadStoryFonts([...input.files]);
+                    input.value = "";
                 });
             }
 

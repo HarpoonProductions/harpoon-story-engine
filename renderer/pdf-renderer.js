@@ -16,14 +16,16 @@
  */
 
 const { escHtml } = require('./shell/head');
+const { inlineFontsHtml } = require('./fonts');
 const { readSection } = require('./readable');
 const path = require('path');
 const fs   = require('fs');
 
 // ── Main entry ────────────────────────────────────────────────────
 
-function renderPdf(content) {
+function renderPdf(content, options) {
   const { meta, config, cover, sections } = content;
+  const fonts = (options && options.fonts) || null;
 
   const coverSection = (sections || []).find(s => s.layout === 'cover');
   const coverData    = coverSection || cover || {};
@@ -52,7 +54,7 @@ function renderPdf(content) {
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=DM+Sans:wght@300;400;500&family=DM+Mono:wght@400&display=swap" rel="stylesheet">`;
 
   const logoUrl  = meta.logo_url || registryEntry.logo_url || null;
-  const head     = buildHead(meta, fontsLink, tokenSetCss, accent, accent2, registryEntry);
+  const head     = buildHead(meta, fontsLink, tokenSetCss, accent, accent2, registryEntry, fonts);
   const coverHtml = buildCoverPage(meta, coverData, logoUrl, accent);
   const bodyHtml  = buildBodyPages(meta, bodySections, logoUrl, accent, registryEntry);
 
@@ -66,7 +68,7 @@ ${bodyHtml}
 
 // ── Head ──────────────────────────────────────────────────────────
 
-function buildHead(meta, fontsLink, tokenSetCss, accent, accent2, reg) {
+function buildHead(meta, fontsLink, tokenSetCss, accent, accent2, reg, fonts) {
   return `<!DOCTYPE html>
 <html lang="${escHtml(meta.language || 'en')}">
 <head>
@@ -443,7 +445,7 @@ function buildHead(meta, fontsLink, tokenSetCss, accent, accent2, reg) {
       /* Running header is screen-only; Puppeteer headerTemplate handles print */
       .hpdf-running-header { display: none; }
     }
-  </style>
+  </style>${inlineFontsHtml(fonts)}
 </head>`;
 }
 

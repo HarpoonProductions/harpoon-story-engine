@@ -48,6 +48,11 @@ const AWS_REGION =
 const { render, renderSection } = require("./renderer/index");
 const enginePin = require("./engine-pin");
 const { resolveGroup } = require("./renderer/groups");
+const {
+  loadStoryFonts,
+  fontExt: storyFontExt,
+  MIME: STORY_FONT_MIME,
+} = require("./renderer/fonts");
 
 const app = express();
 const PORT = 3001;
@@ -86,6 +91,7 @@ const CURRENT_ENGINE = {
   validate,
   renderPdf: (...a) => require("./renderer/pdf-renderer").renderPdf(...a),
   renderPrint: (...a) => require("./renderer/print-renderer").renderPrint(...a),
+  loadStoryFonts,
 };
 const loadedEngines = new Map();
 
@@ -771,7 +777,8 @@ app.post("/api/project/:id/upload", (req, res) => {
     const bb = Busboy({ headers: req.headers });
 
     bb.on("file", async (fieldname, fileStream, info) => {
-      const { filename, mimeType } = info;
+      const { filename } = info;
+      let { mimeType } = info;
       const safeName = (filename || "upload-" + Date.now()).replace(
         /[^a-zA-Z0-9._-]/g,
         "_",
@@ -790,6 +797,11 @@ app.post("/api/project/:id/upload", (req, res) => {
             !isVideo &&
             ((mimeType || "").startsWith("image/") ||
               /\.(jpe?g|png|webp|gif|tiff?)$/i.test(safeName));
+
+          // Font files (.woff2/.woff/.ttf/.otf) go under fonts/ with a
+          // proper font type, untouched (see renderer/fonts.js)
+          const fontExt = storyFontExt(safeName);
+          if (fontExt) mimeType = STORY_FONT_MIME[fontExt];
 
           const s3 = new S3Client({ region: AWS_REGION });
 
@@ -836,7 +848,7 @@ app.post("/api/project/:id/upload", (req, res) => {
             console.log(`✓  Compressed: ${origSize}KB → ${procSize}KB`);
           }
 
-          const s3Key = `${projectId}/images/${processedName}`;
+          const s3Key = `${projectId}/${fontExt ? "fonts" : "images"}/${processedName}`;
           await new Upload({
             client: s3,
             params: {
@@ -1506,7 +1518,10 @@ app.get("/pdf-preview/:id", async (req, res) => {
   try {
     const content = await db.getProject(req.params.id);
     if (!content) return res.status(404).send("Story not found");
-    const html = engineFor(content).renderPdf(content);
+    const engine = engineFor(content);
+    // Story fonts (meta.fonts) are inlined; frozen engines predate them
+    const fonts = engine.loadStoryFonts ? await engine.loadStoryFonts(content.meta) : null;
+    const html = engine.renderPdf(content, { fonts });
     res.setHeader("Content-Type", "text/html; charset=utf-8");
     res.send(html);
   } catch (err) {
@@ -1521,7 +1536,10 @@ app.get("/print/:id", async (req, res) => {
   try {
     const content = await db.getProject(req.params.id);
     if (!content) return res.status(404).send("Story not found");
-    const html = engineFor(content).renderPrint(content);
+    const engine = engineFor(content);
+    // Story fonts (meta.fonts) are inlined; frozen engines predate them
+    const fonts = engine.loadStoryFonts ? await engine.loadStoryFonts(content.meta) : null;
+    const html = engine.renderPrint(content, { fonts });
     res.setHeader("Content-Type", "text/html; charset=utf-8");
     res.send(html);
   } catch (err) {
