@@ -25,6 +25,37 @@
           "type": "string",
           "description": "Raw JavaScript for the whole story. Runs once the page and the engine's own scripts have loaded (DOMContentLoaded). Screen story only: print, PDF and audio never run it"
         },
+        "fonts": {
+          "type": "object",
+          "description": "Fonts for this story on top of its token set (theme): a Google Fonts link, uploaded font files, and which family to use for headings and body text",
+          "properties": {
+            "google_url": {
+              "type": "string",
+              "description": "A Google Fonts CSS link, e.g. https://fonts.googleapis.com/css2?family=Lora:wght@400;700&display=swap"
+            },
+            "files": {
+              "type": "array",
+              "description": "Uploaded font files (.woff2, .woff, .ttf or .otf). Copied into the story's fonts/ folder at render time",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "family": { "type": "string", "description": "The name to use in CSS, e.g. Brand Sans" },
+                  "weight": { "type": "string", "description": "100 to 900, or a range like '100 900' for a variable font" },
+                  "style": { "type": "string", "enum": ["normal", "italic"] },
+                  "url": { "type": "string", "description": "The uploaded file's URL" }
+                }
+              }
+            },
+            "headings": {
+              "type": "string",
+              "description": "Font for headings (sets --hse-font-display), e.g. Lora or 'Lora, Georgia, serif'"
+            },
+            "body": {
+              "type": "string",
+              "description": "Font for body text (sets --hse-font-body)"
+            }
+          }
+        },
         "scope_section_css": {
           "type": "boolean",
           "default": false,

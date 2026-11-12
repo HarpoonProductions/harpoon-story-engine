@@ -493,6 +493,71 @@ for (const example of examples) {
   assert('Story JS field passes the schema', validate(base({ custom_js: 'console.log(1)' })).length === 0);
 }
 
+// ── Story fonts (meta.fonts) ────────────────────────────────────
+{
+  console.log('\n── Story fonts ─────────────────────────────────────────');
+  const http = require('http');
+  const fontBytes = Buffer.from('wOF2-test-font-' + Date.now());
+  const server = http.createServer((req, res) => {
+    if (req.url.startsWith('/fonts/brand.woff2')) { res.writeHead(200, { 'Content-Type': 'font/woff2' }); res.end(fontBytes); }
+    else { res.writeHead(404); res.end(); }
+  });
+  await new Promise((r) => server.listen(0, '127.0.0.1', r));
+  const origin = `http://127.0.0.1:${server.address().port}`;
+  try {
+    const base = (meta) => ({
+      meta: { title: 'Fonts', project_id: 'fonts-test', ...meta },
+      cover: { headline: 'Fonts' },
+      sections: [{ id: 'intro', layout: 'default', title: 'Intro', body: '<p>Hi</p>' }],
+    });
+    const renderTo = async (content, name, opts) => {
+      const dir = path.join(outputBase, name);
+      fs.rmSync(dir, { recursive: true, force: true });
+      fs.mkdirSync(dir, { recursive: true });
+      await render(content, dir, opts);
+      return { dir, html: fs.readFileSync(path.join(dir, 'index.html'), 'utf8'), print: fs.readFileSync(path.join(dir, 'print/index.html'), 'utf8') };
+    };
+
+    const none = await renderTo(base({}), 'fonts-none');
+    assertAbsent('No story fonts block when unset', none.html, 'data-story-fonts');
+    assert('No fonts/ folder when unset', !fs.existsSync(path.join(none.dir, 'fonts')));
+    const empty = await renderTo(base({ fonts: { google_url: '', files: [], headings: '', body: '' } }), 'fonts-empty');
+    assertAbsent('Cleared font fields add nothing', empty.html, 'Story fonts');
+
+    const google = 'https://fonts.googleapis.com/css2?family=Lora:wght@400;700&display=swap';
+    const g = await renderTo(base({ generate_pdf: true, fonts: { google_url: google, headings: 'Lora, Georgia, serif' } }), 'fonts-google');
+    assertContains('Story Google Fonts link on the page', g.html, 'href="https://fonts.googleapis.com/css2?family=Lora:wght@400;700&amp;display=swap"');
+    assertContains('Story Google Fonts link on the print page', g.print, 'family=Lora');
+    assertContains('Story Google Fonts link in the PDF page', fs.readFileSync(path.join(g.dir, 'pdf-preview/index.html'), 'utf8'), 'family=Lora');
+    assertContains('Headings font sets --hse-font-display', g.html, '--hse-font-display: Lora, Georgia, serif;');
+    const bad = await renderTo(base({ fonts: { google_url: 'https://evil.example/x.css"><script>' } }), 'fonts-google-bad');
+    assertAbsent('A link that is not Google Fonts is ignored', bad.html, 'evil.example');
+
+    const files = [
+      { family: 'Brand Sans', weight: '700', style: 'italic', url: `${origin}/fonts/brand.woff2` },
+      { family: 'Missing', weight: '400', style: 'normal', url: `${origin}/fonts/missing.woff2` },
+      { family: 'Bad', weight: '400', url: 'javascript:alert(1).woff2' },
+    ];
+    const up = await renderTo(base({ generate_pdf: true, custom_css: 'p{}', fonts: { files, body: 'Brand Sans' } }), 'fonts-files', { basePath: '' });
+    const copied = path.join(up.dir, 'fonts/brand-sans-700-italic.woff2');
+    assert('Uploaded font copied into the story\'s fonts/ folder', fs.existsSync(copied) && fs.readFileSync(copied).equals(fontBytes));
+    assertContains('Page @font-face uses the copy', up.html, 'src: url("fonts/brand-sans-700-italic.woff2") format("woff2");');
+    assertContains('@font-face has the family, weight and style', up.html, 'font-family: "Brand Sans";\n  font-weight: 700;\n  font-style: italic;');
+    assertContains('A font that fails to download falls back to its URL', up.html, `url("${origin}/fonts/missing.woff2")`);
+    assertAbsent('A font with a bad URL is left out', up.html, 'javascript:');
+    assertContains('Body font sets --hse-font-body', up.html, '--hse-font-body: "Brand Sans", sans-serif;');
+    assert('Story fonts come before story CSS', up.html.indexOf('data-story-fonts') < up.html.indexOf('data-story-css'));
+    assertContains('Print page inlines the font', up.print, `data:font/woff2;base64,${fontBytes.toString('base64')}`);
+    assertContains('PDF page inlines the font', fs.readFileSync(path.join(up.dir, 'pdf-preview/index.html'), 'utf8'), 'data:font/woff2;base64,');
+    const deployed = await renderTo(base({ project_id: 'fonts-test', fonts: { files } }), 'fonts-files-deploy');
+    assertContains('Published story points at its own fonts/ folder', deployed.html, 'url("/fonts-test/fonts/brand-sans-700-italic.woff2")');
+    assertAbsent('Print page without fonts is unchanged', renderPrint(base({})), 'data-story-fonts');
+    assert('Fonts pass the schema', validate(base({ fonts: { google_url: google, files, headings: 'Lora', body: 'Brand Sans' } })).length === 0);
+  } finally {
+    server.close();
+  }
+}
+
 // ── Frozen engine versions (engine-pin.js) ──────────────────────
 // A story frozen to an engine commit is built from a copy of the repo at
 // that commit. Check the switch reads the freeze safely, and that a copy

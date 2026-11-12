@@ -11,6 +11,7 @@ const { renderCover } = require("./render-cover");
 const { getLayout } = require("./layouts/registry");
 const { renderPrint }           = require("./print-renderer");
 const { renderPdf }             = require("./pdf-renderer");
+const { loadStoryFonts, writeStoryFontFiles } = require("./fonts");
 const { renderGraduationGuide } = require("./kinds/graduation-guide");
 const { isEnabled: isPwaEnabled, writePwaFiles } = require("./pwa");
 const { resolveGroup } = require("./groups");
@@ -132,13 +133,18 @@ async function render(content, outputDir, options) {
 
   // Build the single-page HTML document
   const canonicalUrl = opts.canonicalUrl || meta.canonical_url || null;
-  const html = buildPage(meta, config, cover, sections, basePath, registryLogoUrl, navGroupMembers, canonicalUrl);
+  // Story fonts (meta.fonts): uploaded files are copied into fonts/ so they
+  // load from the story's own domain. null (and no change) when unset.
+  const fonts = await loadStoryFonts(meta);
+  writeStoryFontFiles(fonts, outputDir);
+
+  const html = buildPage(meta, config, cover, sections, basePath, registryLogoUrl, navGroupMembers, canonicalUrl, fonts);
 
   const outPath = path.join(outputDir, "index.html");
   fs.writeFileSync(outPath, html, "utf8");
 
   // Track 1 — print version (always generated)
-  const printHtml = renderPrint(content);
+  const printHtml = renderPrint(content, { fonts });
   const printDir  = path.join(outputDir, "print");
   fs.mkdirSync(printDir, { recursive: true });
   const printPath = path.join(printDir, "index.html");
@@ -149,7 +155,7 @@ async function render(content, outputDir, options) {
   // Track 2 — PDF preview HTML (only when meta.generate_pdf is true)
   // Puppeteer loads this file in CI to produce story.pdf
   if (meta.generate_pdf) {
-    const pdfHtml        = renderPdf(content);
+    const pdfHtml        = renderPdf(content, { fonts });
     const pdfPreviewDir  = path.join(outputDir, "pdf-preview");
     fs.mkdirSync(pdfPreviewDir, { recursive: true });
     const pdfPreviewPath = path.join(pdfPreviewDir, "index.html");
@@ -185,7 +191,7 @@ function pwaCacheVersion(meta) {
 
 // ── Page assembly ─────────────────────────────────────────────────
 
-function buildPage(meta, config, cover, sections, basePath, registryLogoUrl, groupMembers, canonicalUrl) {
+function buildPage(meta, config, cover, sections, basePath, registryLogoUrl, groupMembers, canonicalUrl, fonts) {
   const base = basePath
     ? "/" + basePath.replace(/^\//, "").replace(/\/$/, "")
     : "";
@@ -198,7 +204,7 @@ function buildPage(meta, config, cover, sections, basePath, registryLogoUrl, gro
 
   const heroImageUrl = coverData.hero_image?.url || coverData.hero_video?.poster || null;
   const usedLayouts = new Set(sections.map((s) => s.layout || "default"));
-  let head = renderHead(meta, config, null, basePath, false, heroImageUrl, canonicalUrl, usedLayouts);
+  let head = renderHead(meta, config, null, basePath, false, heroImageUrl, canonicalUrl, usedLayouts, fonts);
 
   // A project with meta.group_id gets the graduation-guide kind's own
   // .gg-nav bar instead of the plain narrative nav, so it looks identical

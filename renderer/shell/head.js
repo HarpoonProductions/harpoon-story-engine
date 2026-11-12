@@ -3,6 +3,7 @@ const fs   = require('fs');
 const path = require('path');
 const crypto = require('crypto');
 const { buildPwaHeadTags } = require('../pwa');
+const { pageFontsHtml } = require('../fonts');
 
 /**
  * Reads the Platform Core token-set CSS file for a given token_set id and
@@ -76,7 +77,7 @@ function extraLayoutLinks(css, usedLayouts) {
     .join('');
 }
 
-function renderHead(meta, config, title, basePath, staging, heroImageUrl, canonicalUrl, usedLayouts) {
+function renderHead(meta, config, title, basePath, staging, heroImageUrl, canonicalUrl, usedLayouts, fonts) {
   const pageTitle = title
     ? `${title} — ${meta.title}`
     : meta.title;
@@ -231,7 +232,7 @@ ${extraLayoutLinks(css, usedLayouts)}
       ${accentColor  ? `--hse-accent:   ${accentColor};`  : ''}
       ${accentColor2 ? `--hse-accent-2: ${accentColor2};` : ''}
     }
-  </style>` : ''}${storyCssHtml(meta.custom_css)}
+  </style>` : ''}${pageFontsHtml(fonts, (f) => (base ? `${base}/${f}` : f))}${storyCssHtml(meta.custom_css)}
 </head>`;
 }
 

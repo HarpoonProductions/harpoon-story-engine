@@ -12,20 +12,22 @@
  */
 
 const { escHtml } = require('./shell/head');
+const { inlineFontsHtml } = require('./fonts');
 const { readSection } = require('./readable');
 const path = require('path');
 const fs   = require('fs');
 
 // ── Main entry point ─────────────────────────────────────────────
 
-function renderPrint(content) {
+function renderPrint(content, options) {
   const { meta, config, cover, sections } = content;
+  const fonts = (options && options.fonts) || null;
 
   // Resolve cover data (section-based or legacy)
   const coverSection = (sections || []).find(s => s.layout === 'cover');
   const coverData    = coverSection || cover || {};
 
-  const head   = renderPrintHead(meta, config, coverData);
+  const head   = renderPrintHead(meta, config, coverData, fonts);
   const header = renderPrintCoverBlock(meta, coverData);
   const body   = (sections || [])
     .filter(s => s.layout !== 'cover')
@@ -49,7 +51,7 @@ ${body}
 
 // ── Head ─────────────────────────────────────────────────────────
 
-function renderPrintHead(meta, config, coverData) {
+function renderPrintHead(meta, config, coverData, fonts) {
   const accent  = meta.accent_color  || '#1A3F6F';
   const accent2 = meta.accent_color_2 || '#C9A84C';
 
@@ -270,7 +272,7 @@ function renderPrintHead(meta, config, coverData) {
       body { max-width: none; margin: 0; padding: 0; box-shadow: none; }
       a { color: inherit; text-decoration: none; }
     }
-  </style>
+  </style>${inlineFontsHtml(fonts)}
 </head>`;
 }
 
