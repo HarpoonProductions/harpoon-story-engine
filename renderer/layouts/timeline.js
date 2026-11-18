@@ -178,7 +178,9 @@ function backgroundHtml(entry, cls, autoplay) {
 function captionsHtml(entries) {
   const out = [];
   entries.forEach((entry, i) => {
-    const first = !(entry.video && entry.video.url) && entry.image && entry.image.url ? entry.image.caption : '';
+    // The first background is the video if there is one, else the image
+    const first = entry.video && entry.video.url ? entry.video.caption
+      : entry.image && entry.image.url ? entry.image.caption : '';
     [first].concat(extraImages(entry).map(im => im.caption)).forEach((cap, k) => {
       if (cap) out.push(`<span class="hse-tl__slide-caption${i === 0 && k === 0 ? ' is-current' : ''}" data-index="${i}" data-slide="${k}">${escHtml(cap)}</span>`);
     });

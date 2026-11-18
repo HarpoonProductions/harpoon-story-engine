@@ -4970,6 +4970,7 @@ function initTimelineEditor(sectionIndex) {
           <input class="form-input tl-img-caption" data-i="${i}" placeholder="Image caption (optional)" value="${escAttr(entry.image && entry.image.caption)}">
           <input class="form-input tl-video-url" data-i="${i}" placeholder="Video URL .mp4 (overrides image on desktop)" value="${(entry.video && entry.video.url) || ''}">
           <input class="form-input tl-video-poster" data-i="${i}" placeholder="Video poster image URL (optional)" value="${(entry.video && entry.video.poster) || ''}">
+          <input class="form-input tl-video-caption" data-i="${i}" placeholder="Video caption (optional)" value="${escAttr(entry.video && entry.video.caption)}">
           ${entry.video && entry.video.url ? `<select class="form-select tl-video-loop" aria-label="How the video repeats">${TL_LOOPS.map(([v, l]) => `<option value="${v}"${((entry.video && entry.video.loop) || '') === v ? ' selected' : ''}>${l}</option>`).join('')}</select>` : ''}
           <details class="tl-panel" data-panel="more"${openPanels.has(`${i}-more`) ? ' open' : ''}>
             <summary style="${panelSummary}">More backgrounds (images or video)${extras.length ? ` · ${extras.length}` : ''}</summary>
@@ -5159,6 +5160,12 @@ function initTimelineEditor(sectionIndex) {
       if (loopSel) loopSel.addEventListener('change', e => {
         if (e.target.value) section.timeline_entries[i].video.loop = e.target.value;
         else delete section.timeline_entries[i].video.loop;
+        scheduleAutosave();
+      });
+      item.querySelector('.tl-video-caption').addEventListener('input', e => {
+        if (!section.timeline_entries[i].video) section.timeline_entries[i].video = {};
+        if (e.target.value.trim()) section.timeline_entries[i].video.caption = e.target.value;
+        else delete section.timeline_entries[i].video.caption;
         scheduleAutosave();
       });
       item.querySelector('.tl-video-poster').addEventListener('input', e => {
