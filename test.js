@@ -157,8 +157,9 @@ console.log('\n── Timeline extra images and chapter cards ──────
   const vcap = renderTimeline({ id: 'tl', timeline_entries: [{ heading: 'A', video: { url: 'm.mp4', caption: 'On site' }, image: { url: 'a.jpg', caption: 'hidden behind the video' } }] });
   assertContains('Main video caption', vcap, '<span class="hse-tl__slide-caption is-current" data-index="0" data-slide="0">On site</span>');
   assert('Video caption wins over the image it covers', !vcap.includes('hidden behind the video'));
-  assertContains('Phones show the main video caption under its thumb', vcap, 'data-tl-thumb-video><source src="m.mp4" type="video/mp4"></video><span class="hse-tl__thumb-caption hse-tl__thumb-caption--main" aria-hidden="true">On site</span>');
-  assertContains('Phones show the main image caption under its thumb', cap1, '<span class="hse-tl__thumb-caption hse-tl__thumb-caption--main" aria-hidden="true">First &lt;b&gt;</span>');
+  assertContains('Phones show the main video caption under its thumb', vcap, 'data-tl-thumb-video><source src="m.mp4" type="video/mp4"></video><span class="hse-tl__thumb-caption hse-tl__thumb-caption--main">On site</span></div>');
+  assertContains('Main caption shares a wrapper with its thumb', vcap, '<div class="hse-tl__thumb-fig" aria-hidden="true"><video class="hse-tl__thumb');
+  assertContains('Phones show the main image caption under its thumb', cap1, '<span class="hse-tl__thumb-caption hse-tl__thumb-caption--main">First &lt;b&gt;</span></div>');
   assert('No main caption, no phone caption markup', !single.includes('thumb-caption'));
   const vid = renderTimeline({ id: 'tl', timeline_entries: [{ heading: 'A', image: { url: 'a.jpg' },
     images: [{ type: 'video', url: 'v.mp4', poster: 'p.jpg', alt: 'Crew at work', caption: 'Moving' }, { url: 'w.webm' }, { type: 'image', url: 'x.mp4' }] }] });
