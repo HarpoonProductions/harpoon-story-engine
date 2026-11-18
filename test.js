@@ -565,6 +565,107 @@ for (const example of examples) {
   }
 }
 
+// ── Export media bundling (export-assets.js) ───────────────────
+// A client export downloads every file we host into assets/ and points the
+// story at the copies, whichever of our addresses the story was built with.
+{
+  console.log('\n── Export media bundling ───────────────────────────────');
+  const http = require('http');
+  const ea = require('./export-assets');
+  const hosts = { buckets: ['harpn', 'harpoon-stories'], domains: ['stories.har.pn'] };
+  const served = new Map([
+    ['/brogan/images/hero shot.jpg', 'JPEG-hero'],
+    ['/brogan/images/clip.mp4', 'MP4-clip'],
+    ['/brogan/images/clip-poster.jpg', 'JPEG-poster'],
+    ['/brogan/fonts/brand.woff2', 'WOFF2'],
+    ['/brogan/images/bg.webp', 'WEBP-bg'],
+    ['/oceans/old.png', 'PNG-old'],
+    ['/brogan/seq/frame-001.jpg', 'F1'],
+    ['/brogan/seq/frame-002.jpg', 'F2'],
+    ['/brogan/seq/frame-003.jpg', 'F3'],
+  ]);
+  const requested = [];
+  const server = http.createServer((req, res) => {
+    const p = decodeURIComponent(req.url.split('?')[0]);
+    requested.push(p);
+    if (served.has(p)) { res.writeHead(200, { 'Content-Length': Buffer.byteLength(served.get(p)) }); res.end(req.method === 'HEAD' ? undefined : served.get(p)); }
+    else { res.writeHead(404); res.end('<Error>NoSuchKey</Error>'); }
+  });
+  await new Promise((r) => server.listen(0, '127.0.0.1', r));
+  const origin = `http://127.0.0.1:${server.address().port}`;
+  // Send every one of our hosts to the local server.
+  const fetchImpl = (url, opts) => fetch(url.replace(/^https?:\/\/[^/]+/, origin), opts);
+  try {
+    const dir = path.join(outputBase, 'export-media');
+    fs.rmSync(dir, { recursive: true, force: true });
+    fs.mkdirSync(path.join(dir, 'css'), { recursive: true });
+    const html = `<!doctype html><html><head>
+<link rel="canonical" href="https://stories.har.pn/brogan/">
+<style>.a{background:url(&quot;https://stories.har.pn/brogan/images/bg.webp&quot;)}</style></head><body>
+<img src="https://stories.har.pn/brogan/images/hero%20shot.jpg" srcset="https://stories.har.pn/brogan/images/hero%20shot.jpg 800w, https://stories.har.pn/brogan/images/hero%20shot.jpg?w=2 1600w">
+<video poster="https://harpoon-stories.s3.eu-west-2.amazonaws.com/brogan/images/clip-poster.jpg"><source src="https://harpoon-stories.s3-eu-west-2.amazonaws.com/brogan/images/clip.mp4"></video>
+<img src="https://harpn.s3-eu-west-2.amazonaws.com/oceans/old.png">
+<img src="https://stories.har.pn/brogan/images/gone.jpg">
+<a href="https://stories.har.pn/other-story/">Another story</a>
+<img src="https://analytics.har.pn/pixel.gif"><img src="https://example.com/x.jpg">
+<section class="hse-section" id="s" data-layout="frame-scrubber" data-base-url="https://stories.har.pn/brogan/seq/" data-frame-count="3" data-frame-prefix="frame-" data-frame-digits="3"></section>
+<script>var html = "<img src=\\"https://stories.har.pn/brogan/images/bg.webp\\">";</script>
+</body></html>`;
+    fs.writeFileSync(path.join(dir, 'index.html'), html);
+    fs.writeFileSync(path.join(dir, 'css', 'story.css'), '@font-face{src:url("https://stories.har.pn/brogan/fonts/brand.woff2") format("woff2")}');
+
+    const found = ea.findStoryMedia([html], hosts);
+    assert('Finds media on stories.har.pn and both buckets', found.has('assets/brogan/images/hero shot.jpg') && found.has('assets/brogan/images/clip.mp4') && found.has('assets/oceans/old.png'));
+    assert('Ignores links to other stories and other har.pn hosts', ![...found.values()].some((u) => /other-story|analytics/.test(u)));
+
+    const report = await ea.bundleMedia(dir, { hosts, fetchImpl });
+    const out = fs.readFileSync(path.join(dir, 'index.html'), 'utf8');
+    const css = fs.readFileSync(path.join(dir, 'css', 'story.css'), 'utf8');
+    const has = (p, body) => fs.existsSync(path.join(dir, p)) && fs.readFileSync(path.join(dir, p), 'utf8') === body;
+    assert('Image with a space in its name downloaded', has('assets/brogan/images/hero shot.jpg', 'JPEG-hero'));
+    assert('Video and poster from the new bucket downloaded', has('assets/brogan/images/clip.mp4', 'MP4-clip') && has('assets/brogan/images/clip-poster.jpg', 'JPEG-poster'));
+    assert('Old harpn bucket still bundled', has('assets/oceans/old.png', 'PNG-old'));
+    assert('Font referenced only from CSS downloaded', has('assets/brogan/fonts/brand.woff2', 'WOFF2'));
+    assert('Every frame of a sequence downloaded', has('assets/brogan/seq/frame-001.jpg', 'F1') && has('assets/brogan/seq/frame-003.jpg', 'F3'));
+    assertContains('Image src rewritten (encoded)', out, 'src="assets/brogan/images/hero%20shot.jpg"');
+    assertContains('srcset entries rewritten', out, 'srcset="assets/brogan/images/hero%20shot.jpg 800w, assets/brogan/images/hero%20shot.jpg 1600w"');
+    assertContains('Poster rewritten', out, 'poster="assets/brogan/images/clip-poster.jpg"');
+    assertContains('CSS url() inside a style attribute rewritten', out, 'url(&quot;assets/brogan/images/bg.webp&quot;)');
+    assertContains('URL inside a JS string rewritten', out, '\\"assets/brogan/images/bg.webp\\"');
+    assertContains('CSS file points up to assets/', css, 'url("../assets/brogan/fonts/brand.woff2")');
+    assertContains('Sequence folder rewritten', out, 'data-base-url="assets/brogan/seq/"');
+    assertContains('Canonical link left alone', out, 'href="https://stories.har.pn/brogan/"');
+    assertContains('Link to another story left alone', out, 'href="https://stories.har.pn/other-story/"');
+    assertContains('A file that failed keeps its URL', out, 'src="https://stories.har.pn/brogan/images/gone.jpg"');
+    assert('A 404 is not saved as a file', !fs.existsSync(path.join(dir, 'assets/brogan/images/gone.jpg')));
+    assert('Failure reported', report.failed.length === 1 && /gone\.jpg/.test(report.failed[0].url) && /404/.test(report.failed[0].error));
+    assert('Report counts files and bytes', report.files === 9 && report.bytes > 0);
+    assert('Other people\'s media listed as external', report.external.includes('example.com') && !report.external.includes('analytics.har.pn'));
+    assert('No stray .part files', !fs.readdirSync(path.join(dir, 'assets/brogan/images')).some((f) => f.endsWith('.part')));
+
+    // A sequence with a missing frame stays on our servers.
+    const dir2 = path.join(outputBase, 'export-media-seq');
+    fs.rmSync(dir2, { recursive: true, force: true });
+    fs.mkdirSync(dir2, { recursive: true });
+    fs.writeFileSync(path.join(dir2, 'index.html'), '<section data-layout="frame-scrubber" data-base-url="https://stories.har.pn/brogan/seq/" data-frame-count="4" data-frame-digits="3"></section>');
+    await ea.bundleMedia(dir2, { hosts, fetchImpl });
+    assertContains('Incomplete sequence keeps its URL', fs.readFileSync(path.join(dir2, 'index.html'), 'utf8'), 'data-base-url="https://stories.har.pn/brogan/seq/"');
+
+    // Estimate from content, sampling one frame per sequence.
+    requested.length = 0;
+    const est = await ea.estimateMedia({
+      sections: [
+        { layout: 'image', image: { src: 'https://stories.har.pn/brogan/images/clip.mp4' } },
+        { layout: 'frame-scrubber', scrubber: { base_url: 'https://stories.har.pn/brogan/seq/', frame_count: 3, frame_prefix: 'frame-', frame_digits: 3 } },
+      ],
+    }, { hosts, fetchImpl });
+    assert('Estimate counts files and bytes', est.files === 4 && est.bytes === Buffer.byteLength('MP4-clip') + 3 * 2 && est.unknown === 0);
+    assert('Estimate asks for one frame per sequence', requested.filter((p) => p.includes('/seq/')).length === 1);
+  } finally {
+    server.close();
+  }
+}
+
 // ── Frozen engine versions (engine-pin.js) ──────────────────────
 // A story frozen to an engine commit is built from a copy of the repo at
 // that commit. Check the switch reads the freeze safely, and that a copy

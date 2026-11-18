@@ -34,6 +34,7 @@ const chokidar = require("chokidar");
 
 const { validate } = require("./renderer/validate");
 const db = require("./db");
+const exportAssets = require("./export-assets");
 
 // AWS S3 upload (optional — only active if AWS credentials are set in environment)
 let S3Client, Upload, GetObjectCommand;
@@ -1262,13 +1263,32 @@ function engineStatus(content) {
   return { frozen: false, suggestion, current: enginePin.currentEngine() };
 }
 
+// ── Export media estimate ────────────────────────────────────────
+// How many of our media files the story uses and roughly how big they are,
+// so the editor can show it before the person picks self-host or CDN.
+app.get("/api/project/:id/export/estimate", async (req, res) => {
+  try {
+    let content = null;
+    if (db.isConfigured()) content = await db.getProject(req.params.id).catch(() => null);
+    else {
+      const contentPath = path.join(PROJECTS_DIR, req.params.id, "content.json");
+      if (fs.existsSync(contentPath)) content = JSON.parse(fs.readFileSync(contentPath, "utf8"));
+    }
+    if (!content) return res.status(404).json({ error: "Project not found" });
+    const est = await exportAssets.estimateMedia(content);
+    res.json({ ...est, label: exportAssets.formatBytes(est.bytes) });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // ── Export bundle ────────────────────────────────────────────────
 app.get("/api/project/:id/export", async (req, res) => {
   const projectId = req.params.id;
   const { execFile } = require("child_process");
-  const https = require("https");
-  const http  = require("http");
   const os = require("os");
+  // Already-compressed media gains nothing from zip; store it as-is.
+  const ZIP_STORE_SUFFIXES = ".jpg:.jpeg:.png:.gif:.webp:.avif:.mp4:.webm:.mov:.m4v:.mp3:.m4a:.aac:.ogg:.woff2:.woff:.pdf:.glb";
 
   try {
     let content = null;
@@ -1345,75 +1365,36 @@ app.get("/api/project/:id/export", async (req, res) => {
       }
     }
 
-    // ── Download story assets and rewrite HTML ────────────────────────
-
-    const indexPath = path.join(tmpDir, 'index.html');
-    let html = fs.readFileSync(indexPath, 'utf8');
-
-    // Find all absolute asset URLs that belong to our own S3 bucket
-    // Pattern: https://harpn.s3[-eu-west-2].amazonaws.com/[path]
-    const assetPattern = /https:\/\/harpn(?:\.s3(?:[^.]*)?\.amazonaws\.com|s3[^.]*\.amazonaws\.com)\/([^"'\s>]+)/g;
-    const assetUrls = new Map(); // url -> local relative path
-    let match;
-    while ((match = assetPattern.exec(html)) !== null) {
-      const url = match[0];
-      if (!assetUrls.has(url)) {
-        // Preserve subfolder structure: decode and use as-is under assets/
-        const rawPath = decodeURIComponent(match[1]);
-        // Strip leading bucket prefix (e.g. "oceans/") - keep the rest
-        const parts = rawPath.split('/');
-        const localPath = 'assets/' + parts.join('/');
-        assetUrls.set(url, localPath);
-      }
-    }
-
-    // Find external assets that can't be bundled (flag them)
-    const externalDomains = new Set();
-    const externalPattern = /https?:\/\/(?!harpn(?:\.s3|s3))([a-z0-9.-]+\.[a-z]{2,})\/[^\s"'>]+\.(jpg|jpeg|png|gif|webp|svg|mp4|mp3|woff2)/gi;
-    while ((match = externalPattern.exec(html)) !== null) {
-      externalDomains.add(match[1]);
-    }
-
-    if (assetUrls.size > 0) {
-      const assetsDir = path.join(tmpDir, 'assets');
-      fs.mkdirSync(assetsDir, { recursive: true });
-
-      const downloadFile = (url, dest) => new Promise((resolve, reject) => {
-        fs.mkdirSync(path.dirname(dest), { recursive: true });
-        const file = fs.createWriteStream(dest);
-        const proto = url.startsWith('https') ? https : http;
-        const req = proto.get(url, (response) => {
-          if (response.statusCode === 301 || response.statusCode === 302) {
-            file.close();
-            fs.rmSync(dest, { force: true });
-            return downloadFile(response.headers.location, dest).then(resolve).catch(reject);
-          }
-          response.pipe(file);
-          file.on('finish', () => file.close(resolve));
-        });
-        req.on('error', (err) => { fs.rmSync(dest, { force: true }); reject(err); });
+    // ── Bundle our media (or leave it on Harpoon's CDN) ───────────────
+    // media=bundle (default): download every image, video, poster, font,
+    // caption file and frame sequence we host into assets/ and point the
+    // story at those copies, so the client serves everything themselves.
+    // media=link: leave media on stories.har.pn / S3.
+    const bundleMediaFiles = req.query.media !== 'link';
+    let mediaReport = { files: 0, bytes: 0, failed: [], external: [] };
+    if (bundleMediaFiles) {
+      mediaReport = await exportAssets.bundleMedia(tmpDir, {
+        onProgress: ({ done, total }) => {
+          if (done === total || done % 25 === 0) console.log(`  Export media: ${done}/${total}`);
+        },
       });
-
-      await Promise.all([...assetUrls.entries()].map(async ([url, localPath]) => {
-        const dest = path.join(tmpDir, localPath);
-        try {
-          await downloadFile(url, dest);
-          console.log(`✓ Export asset: ${localPath}`);
-        } catch (e) {
-          console.warn(`Export: failed to download ${url}: ${e.message}`);
-        }
-      }));
-
-      // Rewrite asset URLs in HTML to relative paths
-      for (const [url, localPath] of assetUrls) {
-        html = html.split(url).join(localPath);
-      }
-      fs.writeFileSync(indexPath, html, 'utf8');
+      console.log(`✓ Export media: ${mediaReport.files} files, ${exportAssets.formatBytes(mediaReport.bytes)}` +
+        (mediaReport.failed.length ? `, ${mediaReport.failed.length} failed` : ''));
+      for (const f of mediaReport.failed) console.warn(`Export: failed to download ${f.url}: ${f.error}`);
+    } else {
+      const texts = [fs.readFileSync(path.join(tmpDir, 'index.html'), 'utf8')];
+      mediaReport.external = exportAssets.findExternalMedia(texts);
     }
+    const externalDomains = new Set(mediaReport.external);
 
     // ── Add README ────────────────────────────────────────────────────
     const externalNote = externalDomains.size > 0
       ? `\nNote: Some assets still reference external domains (${[...externalDomains].join(', ')}). These are not included in this bundle and must be re-hosted or replaced before going fully self-contained.\n`
+      : '';
+    const mediaNote = !bundleMediaFiles
+      ? `\nMEDIA\n-----\nThis export links to images, videos and fonts on Harpoon's servers\n(stories.har.pn). They are not included in this folder.\n`
+      : mediaReport.failed.length
+      ? `\nMISSING MEDIA\n-------------\nThese files could not be downloaded, so the story still loads them from\nHarpoon's servers. Re-export, or download them and update index.html:\n${mediaReport.failed.map(f => `  ${f.url} (${f.error})`).join('\n')}\n`
       : '';
     const readme = `Harpoon Story Engine — Export Package
 ======================================
@@ -1435,13 +1416,13 @@ INCLUDED
 - index.html       Main story page
 - css/             Stylesheets (this story's token set only)
 - js/              Runtime scripts (GSAP, ScrollTrigger, HSE runtime)
-- assets/          Images, videos, and other media${fs.existsSync(path.join(tmpDir, 'story.pdf')) ? '\n- story.pdf        Publication PDF' : ''}${fs.existsSync(path.join(tmpDir, 'story.mp3')) ? '\n- story.mp3        Narrated audio' : ''}
+${bundleMediaFiles ? `- assets/          Images, videos, fonts and other media (${mediaReport.files} file${mediaReport.files === 1 ? "" : "s"}, ${exportAssets.formatBytes(mediaReport.bytes)})` : ''}${fs.existsSync(path.join(tmpDir, 'story.pdf')) ? '\n- story.pdf        Publication PDF' : ''}${fs.existsSync(path.join(tmpDir, 'story.mp3')) ? '\n- story.mp3        Narrated audio' : ''}
 
 ANALYTICS
 ---------
 Harpoon analytics are included via a script tag in index.html pointing
 to analytics.har.pn. This requires no configuration on your end.
-${externalNote}`;
+${mediaNote}${externalNote}`;
     fs.writeFileSync(path.join(tmpDir, 'README.txt'), readme, 'utf8');
 
     // ── Fetch story.pdf and story.mp3 from S3 if they exist ──────────
@@ -1469,7 +1450,7 @@ ${externalNote}`;
     // ── Create zip ────────────────────────────────────────────────────
     const zipPath = path.join(os.tmpdir(), `${projectId}-export.zip`);
     await new Promise((resolve, reject) => {
-      execFile("zip", ["-r", zipPath, "."], { cwd: tmpDir }, (err) => err ? reject(err) : resolve());
+      execFile("zip", ["-r", "-n", ZIP_STORE_SUFFIXES, zipPath, "."], { cwd: tmpDir }, (err) => err ? reject(err) : resolve());
     });
 
     // Save export timestamp
@@ -1484,6 +1465,9 @@ ${externalNote}`;
     const filename = `${projectId}-export.zip`;
     res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
     res.setHeader('Content-Type', 'application/zip');
+    res.setHeader('X-Export-Media', bundleMediaFiles ? 'bundled' : 'linked');
+    res.setHeader('X-Export-Media-Files', String(mediaReport.files));
+    res.setHeader('X-Export-Media-Failed', String(mediaReport.failed.length));
     const stream = fs.createReadStream(zipPath);
     stream.pipe(res);
     stream.on('end', () => {
