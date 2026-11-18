@@ -311,8 +311,10 @@ function renderTimeline(section) {
     // Phones have no canvas captions, so the main caption sits under the thumb
     const mainCaption = entry.video && entry.video.url ? entry.video.caption
       : entry.image && entry.image.url ? entry.image.caption : '';
+    // Wrapped with its thumb, so on desktop the hidden wrapper keeps it
+    // hidden whatever a story's own CSS does to captions
     if (thumbHtml && mainCaption) {
-      thumbHtml += `<span class="hse-tl__thumb-caption hse-tl__thumb-caption--main" aria-hidden="true">${escHtml(mainCaption)}</span>`;
+      thumbHtml = `<div class="hse-tl__thumb-fig" aria-hidden="true">${thumbHtml}<span class="hse-tl__thumb-caption hse-tl__thumb-caption--main">${escHtml(mainCaption)}</span></div>`;
     }
 
     // Date and text are separate blocks so each can carry its own background
