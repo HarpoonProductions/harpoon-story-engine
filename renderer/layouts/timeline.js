@@ -308,6 +308,12 @@ function renderTimeline(section) {
       const focal = entry.image.focal ? `background-position:${escHtml(entry.image.focal)};` : '';
       thumbHtml = `<div class="hse-tl__thumb" aria-hidden="true" style="background-image:url('${escHtml(entry.image.url)}');${focal}"></div>`;
     }
+    // Phones have no canvas captions, so the main caption sits under the thumb
+    const mainCaption = entry.video && entry.video.url ? entry.video.caption
+      : entry.image && entry.image.url ? entry.image.caption : '';
+    if (thumbHtml && mainCaption) {
+      thumbHtml += `<span class="hse-tl__thumb-caption hse-tl__thumb-caption--main" aria-hidden="true">${escHtml(mainCaption)}</span>`;
+    }
 
     // Date and text are separate blocks so each can carry its own background
     const dateBlock = blockStyle(section.timeline_date_bg, entry.date_bg);
