@@ -316,7 +316,8 @@
 
 /* ── Mobile thumbnail (hidden on desktop) ────────────────────────── */
 
-.hse-tl__thumb {
+.hse-tl__thumb,
+.hse-tl__thumb-caption--main {
   display: none;
 }
 
@@ -800,6 +801,10 @@
     font-family: var(--hse-font-mono);
     font-size: var(--hse-font-size-micro, 0.7rem);
     color: var(--hse-warm-3, rgba(255,255,255,0.65));
+  }
+  /* The entry's own caption, under its picture and in line with it */
+  .hse-tl__entry > .hse-tl__thumb-caption--main {
+    margin: -0.85rem 0 1.25rem calc(var(--tl-spine-inset) + var(--tl-gap) - var(--hse-page-pad));
   }
 }
 
