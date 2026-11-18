@@ -316,9 +316,14 @@
 
 /* ── Mobile thumbnail (hidden on desktop) ────────────────────────── */
 
-.hse-tl__thumb,
-.hse-tl__thumb-caption--main {
+.hse-tl__thumb {
   display: none;
+}
+/* The entry's own caption is for phones only: on desktop its caption is
+   already in the corner of the background. !important so a story's own
+   caption styling can't bring it back above the entry */
+@media (min-width: 769px) {
+  .hse-tl__thumb-caption--main { display: none !important; }
 }
 
 /* ── Mobile — stacked flow ───────────────────────────────────────── */
