@@ -29,6 +29,7 @@ function renderTogglePanels(panels) {
   role="tabpanel"
   hidden="${i === 0 ? 'false' : 'true'}">
   <div class="hse-toggle__panel-inner">
+    ${panel.label ? `<p class="hse-toggle__print-label">${escHtml(panel.label)}</p>` : ''}
     <div class="hse-toggle__panel-body">${panel.body || ''}</div>
     ${panel.image ? renderImage(panel.image, 'hse-toggle__panel-image') : ''}
   </div>

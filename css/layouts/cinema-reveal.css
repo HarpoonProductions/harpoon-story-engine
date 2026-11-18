@@ -96,6 +96,15 @@
 /* ── Reduced motion: skip animation, show card at full width ─────── */
 
 @media (prefers-reduced-motion: reduce) {
+  /* No pinning: the title and the film sit in the page, so a tall film
+     can't push the title out of a 100vh box */
+  .hse-cr__sticky {
+    position: relative;
+    height: auto;
+    min-height: 100vh;
+    overflow: visible;
+    padding-block: var(--hse-space-xl);
+  }
   .hse-cr__card {
     width: 92vw;
     border-radius: 0.75rem;

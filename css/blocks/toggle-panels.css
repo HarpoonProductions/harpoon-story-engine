@@ -70,3 +70,8 @@
 @media (max-width: 640px) {
   .hse-toggle__panel-inner { grid-template-columns: 1fr; }
 }
+
+/* The panel's own label, for print only (on screen the tab buttons show it) */
+.hse-toggle__print-label {
+  display: none;
+}

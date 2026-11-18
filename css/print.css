@@ -56,9 +56,9 @@
   .hse-fs__progress-bar,
   .hse-cinema__card,
   .hse-sc__arrow,
-  .hse-pan__text-item,
   .hse-toggle__btn,
-  .hse-accordion__trigger,
+  .hse-accordion__chevron,
+  .hse-accordion__thumb,
   .hse-eyebrow,
   #hse-footer {
     display: none !important;
@@ -318,6 +318,74 @@
   .hse-sc__controls,
   .hse-sc__progress-wrap {
     display: none !important;
+  }
+
+  /* ── Text over a pinned full-screen panel ──────────────────────────
+     Crossfade, timeline, panoramic and split-reveal pin a 100vh box and
+     slide or fade text over it. In print the box goes and the text
+     comes back into the page, one block after another. */
+
+  .hse-cf__phases,
+  .hse-tl__phases {
+    margin-top: 0 !important;
+  }
+
+  .hse-cf__phase,
+  .hse-tl__entry {
+    min-height: 0 !important;
+  }
+
+  .hse-section--split-reveal,
+  .hse-section--panoramic-scroll,
+  .hse-sr__sticky,
+  .hse-sr__copy,
+  .hse-sr__copy-inner,
+  .hse-pan__sticky,
+  .hse-pan__texts,
+  .hse-pan__text-item {
+    display: block !important;
+    position: static !important;
+    height: auto !important;
+    width: auto !important;
+    max-width: none !important;
+    overflow: visible !important;
+    opacity: 1 !important;
+    transform: none !important;
+    border: 0 !important;
+  }
+
+  .hse-sr__copy-inner,
+  .hse-pan__text-item {
+    padding: 0 0 3mm !important;
+  }
+
+  /* ── Labels that carry content ───────────────────────────────────
+     Eyebrows are hidden above (section numbers and the like), but card
+     tags and contributor roles are words the reader needs. */
+
+  .hse-card__tag.hse-eyebrow,
+  .hse-cs__slide-tag.hse-eyebrow,
+  .hse-sc__card-tag.hse-eyebrow,
+  .hse-contributor__title.hse-eyebrow {
+    display: block !important;
+  }
+
+  /* ── Accordions: each title above its text ───────────────────────── */
+
+  .hse-accordion__trigger {
+    display: block !important;
+    border: 0 !important;
+    padding: 0 !important;
+    font-weight: 700 !important;
+    text-align: left !important;
+  }
+
+  /* ── Toggle panels: each panel gets its own label ────────────────── */
+
+  .hse-toggle__print-label {
+    display: block !important;
+    font-weight: 700 !important;
+    margin: 0 0 2mm !important;
   }
 
   /* ── Toggle panels + accordions — expand all ────────────────────── */
