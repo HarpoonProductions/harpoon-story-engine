@@ -154,6 +154,9 @@ console.log('\n── Timeline extra images and chapter cards ──────
   assertContains('First background caption in a gallery', cap2, 'class="hse-tl__slide is-current"');
   assertContains('Gallery first slide has its caption', cap2, 'data-index="0" data-slide="0">One</span>');
   assert('No caption, no caption markup', !single.includes('slide-caption'));
+  const vcap = renderTimeline({ id: 'tl', timeline_entries: [{ heading: 'A', video: { url: 'm.mp4', caption: 'On site' }, image: { url: 'a.jpg', caption: 'hidden behind the video' } }] });
+  assertContains('Main video caption', vcap, '<span class="hse-tl__slide-caption is-current" data-index="0" data-slide="0">On site</span>');
+  assert('Video caption wins over the image it covers', !vcap.includes('hidden behind the video'));
   const vid = renderTimeline({ id: 'tl', timeline_entries: [{ heading: 'A', image: { url: 'a.jpg' },
     images: [{ type: 'video', url: 'v.mp4', poster: 'p.jpg', alt: 'Crew at work', caption: 'Moving' }, { url: 'w.webm' }, { type: 'image', url: 'x.mp4' }] }] });
   assertContains('Extra video slide', vid, '<div class="hse-tl__slide" data-in="fade" data-out="fade" data-type="video"><video class="hse-tl__video" muted loop playsinline preload="metadata" poster="p.jpg" aria-label="Crew at work" data-tl-video><source src="v.mp4" type="video/mp4"></video></div>');

@@ -952,7 +952,7 @@
               "heading": { "type": "string" },
               "body": { "type": "string" },
               "image": { "type": "object" },
-              "video": { "type": "object", "properties": { "url": { "type": "string" }, "poster": { "type": "string" }, "loop": { "type": "string", "enum": ["once", "twice", "always"], "description": "Play once, twice, or loop continually (the default)." } } },
+              "video": { "type": "object", "properties": { "url": { "type": "string" }, "poster": { "type": "string" }, "caption": { "type": "string", "description": "Shown over the video, bottom right, like image captions." }, "loop": { "type": "string", "enum": ["once", "twice", "always"], "description": "Play once, twice, or loop continually (the default)." } } },
               "media": {
                 "type": "object",
                 "description": "Inline image, video or embed shown with the entry's text.",
