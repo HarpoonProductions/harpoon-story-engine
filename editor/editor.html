@@ -1009,6 +1009,31 @@
             </div>
         </div>
 
+        <!-- Export options modal -->
+        <div id="export-modal" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.55);align-items:center;justify-content:center">
+            <div role="dialog" aria-modal="true" aria-labelledby="export-modal-title" style="background:var(--surface,#fff);border-radius:10px;padding:1.75rem 2rem;max-width:460px;width:90%;box-shadow:0 8px 32px rgba(0,0,0,0.18)">
+                <p id="export-modal-title" style="font-size:1rem;font-weight:600;margin:0 0 1rem;color:var(--ink,#111)">Export for the client's own site</p>
+                <label style="display:flex;gap:0.6rem;align-items:flex-start;margin-bottom:0.85rem;cursor:pointer">
+                    <input type="radio" name="export-media" value="bundle" checked style="margin-top:0.2rem">
+                    <span>
+                        <span style="display:block;font-size:0.85rem;font-weight:500;color:var(--ink,#111)">Include all media (self-host)</span>
+                        <span id="export-modal-estimate" style="display:block;font-size:0.75rem;color:var(--ink-3,#666);margin-top:0.15rem">Images, videos, posters, fonts and frame sequences go in the zip. The client serves everything.</span>
+                    </span>
+                </label>
+                <label style="display:flex;gap:0.6rem;align-items:flex-start;margin-bottom:1.25rem;cursor:pointer">
+                    <input type="radio" name="export-media" value="link" style="margin-top:0.2rem">
+                    <span>
+                        <span style="display:block;font-size:0.85rem;font-weight:500;color:var(--ink,#111)">Link media to Harpoon's CDN</span>
+                        <span style="display:block;font-size:0.75rem;color:var(--ink-3,#666);margin-top:0.15rem">Small zip. Images and videos keep loading from stories.har.pn, so we serve them.</span>
+                    </span>
+                </label>
+                <div style="display:flex;gap:0.75rem;justify-content:flex-end">
+                    <button type="button" onclick="closeExportModal()" style="padding:0.5rem 1.1rem;border-radius:6px;border:1px solid var(--rule,#ddd);background:none;font-size:0.85rem;cursor:pointer;color:var(--ink,#111)">Cancel</button>
+                    <button type="button" id="export-modal-go" onclick="runExport()" style="padding:0.5rem 1.1rem;border-radius:6px;border:none;background:#2D7D46;color:#fff;font-size:0.85rem;cursor:pointer">Export ↓</button>
+                </div>
+            </div>
+        </div>
+
         <div class="shell">
             <!-- Toolbar -->
             <div id="presence-banner" style="display:none;background:#7c3a00;color:#fff;font-size:0.72rem;padding:0.3rem 1rem;text-align:center;position:sticky;top:0;z-index:999;"></div>
@@ -3912,14 +3937,38 @@
                     switchTab('meta', document.getElementById('tab-btn-meta'));
                     return;
                 }
-                showToast('⏳ Building export bundle…', false, 60000);
+                const modal = document.getElementById('export-modal');
+                const est = document.getElementById('export-modal-estimate');
+                est.textContent = 'Images, videos, posters, fonts and frame sequences go in the zip. Working out the size…';
+                modal.style.display = 'flex';
                 try {
-                    const res = await fetch(`/api/project/${projectId}/export`);
+                    const res = await fetch(`/api/project/${projectId}/export/estimate`);
+                    const data = await res.json();
+                    if (!res.ok) throw new Error(data.error || res.statusText);
+                    est.textContent = data.files
+                        ? `${data.files} media file${data.files === 1 ? '' : 's'}, about ${data.label}${data.unknown ? ` (${data.unknown} couldn't be sized)` : ''}. The client serves everything.`
+                        : 'This story has no media on our servers to include.';
+                } catch (err) {
+                    est.textContent = 'Images, videos, posters, fonts and frame sequences go in the zip. (Size unknown: ' + err.message + ')';
+                }
+            }
+
+            function closeExportModal() {
+                document.getElementById('export-modal').style.display = 'none';
+            }
+
+            async function runExport() {
+                const mode = (document.querySelector('input[name="export-media"]:checked') || {}).value || 'bundle';
+                closeExportModal();
+                showToast(mode === 'bundle' ? '⏳ Building export and downloading media… large videos can take a few minutes' : '⏳ Building export bundle…', false, 600000);
+                try {
+                    const res = await fetch(`/api/project/${projectId}/export?media=${mode}`);
                     if (!res.ok) {
                         const data = await res.json().catch(() => ({}));
                         showToast('✗ Export failed: ' + (data.error || res.statusText), true, 8000);
                         return;
                     }
+                    const failedMedia = parseInt(res.headers.get('X-Export-Media-Failed') || '0', 10);
                     const blob = await res.blob();
                     const url = URL.createObjectURL(blob);
                     const a = document.createElement('a');
@@ -3930,7 +3979,11 @@
                     a.remove();
                     URL.revokeObjectURL(url);
                     content.meta.last_exported_at = new Date().toISOString();
-                    showToast('✓ Export downloaded — ready to hand off to client', false, 8000);
+                    if (failedMedia > 0) {
+                        showToast(`⚠ Export downloaded, but ${failedMedia} media file${failedMedia === 1 ? '' : 's'} couldn't be fetched and still load from our servers. README.txt lists them.`, true, 15000);
+                    } else {
+                        showToast('✓ Export downloaded — ready to hand off to client', false, 8000);
+                    }
                     refreshStatusPanel();
                 } catch (err) {
                     showToast('✗ Export failed: ' + err.message, true, 8000);
