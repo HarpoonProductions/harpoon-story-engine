@@ -1,0 +1,67 @@
+/*
+ * ════════════════════════════════════════════════════════════════════
+ *  Harpoon Platform — Client Token Set: UCL Portico 2026
+ *  css/tokens-ucl.css
+ *
+ *  This is the canonical brand identity file for UCL Portico 2026
+ *  across all Harpoon products — Story Engine stories, Edition OS
+ *  magazines, Briefing Engine sessions, analytics reports, and any
+ *  future Harpoon product built for this client. It is the single
+ *  source of truth for this client's visual identity within the
+ *  Harpoon platform.
+ *
+ *  Generated from website extraction, November 2026.
+ *  This file contains overrides only. Base tokens not listed here
+ *  remain at their platform defaults defined in css/tokens.css.
+ * ════════════════════════════════════════════════════════════════════
+ */
+
+/* ── Extraction notes ───────────────────────────────────────────────
+   #993BFF is the strongest chromatic accent (×18 usage, ×9 as background, explicitly registered as --theme-backgroundcolor-3); #361A54 is the dominant dark brand surface used heavily as background and text (×60), making it a strong ink candidate — however the page default background is #000000 (×54) so #000000 is used as ink. All display and body fonts are proprietary @font-face families (UCL Sans Light/Medium/Semibold), so googleFontsUrl is empty. Designers should verify ink layering since #361A54 dominates as a mid-dark brand purple rather than a neutral dark surface.
+   Inferred, not found in source — check before publishing: ink2, ink3, warm3, textW, spacingScale
+*/
+
+/* ── Proprietary typeface — served from client CDN if available ─────
+   local() picks it up when hosted on client infrastructure.
+   Falls back to the generic stack if not available.
+*/
+@font-face {
+  font-family: 'UCL Sans Semibold';
+  src: local('UCL Sans Semibold');
+}
+
+:root {
+  /* ── Accent colours ── */
+  --hse-accent:   #993BFF;
+  --hse-accent-2: #0B987E;
+
+  /* ── Neutral palette ── */
+  --hse-ink:    #000000;
+  --hse-ink-2:  #141414;  /* inferred */
+  --hse-ink-3:  #292929;  /* inferred */
+  --hse-warm:   #FFFFFF;
+  --hse-warm-2: #FAFAFA;
+  --hse-warm-3: #CCCCCC;  /* inferred */
+
+  /* ── RGB channels ── */
+  --hse-ink-rgb:  0, 0, 0;
+  --hse-warm-rgb: 255, 255, 255;
+
+  /* ── Typography ── */
+  --hse-font-display: 'UCL Sans Semibold', 'UCL Sans Medium', sans-serif;
+  --hse-font-body:    'UCL Sans Light', sans-serif;
+  --hse-font-mono:    monospace;
+
+  /* ── Geometry ── */
+  --hse-max-w:  1400px;
+  --hse-text-w: 800px;  /* inferred */
+
+  /* ── Spacing — generous ── */
+  --hse-space-lg: 5rem;
+  --hse-space-xl: 8rem;
+
+  /* ── Motion — expressive ── */
+  --hse-duration-fast: 0.35s;
+  --hse-duration-mid:  0.65s;
+  --hse-duration-slow: 1.1s;
+}
